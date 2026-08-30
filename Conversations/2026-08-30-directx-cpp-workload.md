@@ -32,3 +32,27 @@ Sources:
 
 - [Direct3D 12 programming environment setup](https://learn.microsoft.com/en-us/windows/win32/direct3d12/directx-12-programming-environment-set-up)
 - [Visual Studio tools for 3D assets and DirectX apps](https://learn.microsoft.com/en-us/visualstudio/designers/working-with-3-d-assets-for-games-and-apps?view=visualstudio)
+
+## User follow-up
+
+> explain why you would get "Game development with C++"
+
+## Assistant
+
+You would select **Game development with C++** because it is a convenient, maintained bundle of game-oriented development tools—not because DirectX checks for that workload.
+
+For a from-scratch DirectX project, its most useful additions are:
+
+- **Graphics debugger and GPU profiler for DirectX**: captures a rendered frame and helps inspect draw calls, pipeline state, resources, and GPU performance. This is particularly valuable when the only symptom is a black screen or corrupted rendering.
+- **HLSL Tools**: shader-file editing support and integration for working with vertex, pixel, compute, and other HLSL shaders.
+- **C++ profiling and Build Insights**: helps find CPU performance problems and slow C++ build steps.
+- **MSVC AddressSanitizer**: catches many invalid memory accesses, use-after-free errors, and buffer overruns.
+- **A known-good C++/Windows SDK toolchain selection**: useful on a new machine because one workload selection brings in the compiler, runtime, and SDK-related components expected for Windows game work.
+- **Unreal Engine integration** if Unreal is used, including Blueprint-aware debugging and Unreal-specific IDE features. These are irrelevant to a from-scratch engine and can be left unchecked.
+- **Microsoft GDK support** when targeting the Microsoft Game Development Kit; Microsoft's GDK setup specifically requires the game-development workload.
+
+The workload is therefore worthwhile if you want Visual Studio to install and maintain the standard game-development toolbox with one checkbox. It does not change the resulting executable or make DirectX available at runtime. For a small from-scratch DirectX 12 game, selecting only **Desktop development with C++**, **HLSL Tools**, **Graphics debugger and GPU profiler for DirectX**, and a recent **Windows SDK** gives essentially the relevant subset without the Unreal components.
+
+Source:
+
+- [Visual Studio Community workload and component IDs](https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community?view=visualstudio)
