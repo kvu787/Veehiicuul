@@ -50,3 +50,13 @@ case WM_SYSCHAR:
 An even stricter design could remember that the immediately preceding Alt+Enter `WM_SYSKEYDOWN` was handled and consume its translated character, but that extra state is unnecessary for this window because Alt+Enter is unconditionally assigned to fullscreen while the window has focus.
 
 No application source code was changed.
+
+## User
+
+> make this change
+
+## Assistant
+
+Implemented the narrowly scoped `WM_SYSCHAR` handler in `src/Application.cpp`. It consumes only carriage return messages whose context bit reports that Alt was held, preventing the queued Alt+Enter system character from reaching `DefWindowProcW`. All unrelated `WM_SYSCHAR` messages continue through normal Windows processing.
+
+The existing Release configuration compiled and linked successfully with the Visual Studio C++ toolchain and Windows SDK. The application implementation was committed separately as `9a0e6fc` (`Handle Alt+Enter system character`).
