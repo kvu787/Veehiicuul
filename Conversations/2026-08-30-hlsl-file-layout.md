@@ -19,3 +19,15 @@ HLSL is commonly stored in a separate `.hlsl` file. It can be compiled at runtim
 For this project, a clean layout would be `shaders/Scene.hlsl`, compiled twice for `VSMain` and `PSMain`. Because the renderer currently uses the legacy `d3dcompiler` API and Shader Model 5.1 targets, moving the text to a file is a small change; adopting modern Shader Model 6 would instead use DXC.
 
 No project source files were changed. No images were attached to this conversation.
+
+## User
+
+> For this project, I’d use shaders/Scene.hlsl and compile it twice—once for VSMain and once for PSMain.
+>
+> why would you "compile it twice" if there is only one file?
+
+## Assistant
+
+Because a shader compilation produces bytecode for one entry point and one pipeline stage, not one output for the entire source file. `Scene.hlsl` contains two separate GPU programs: `VSMain` is compiled with the vertex-shader target `vs_5_1`, and `PSMain` is compiled with the pixel-shader target `ps_5_1`. This produces two distinct bytecode blobs, which DirectX 12 places into the vertex-shader and pixel-shader fields of the pipeline state respectively.
+
+“Compile it twice” therefore means running the compiler twice against the same source text with different entry-point and target arguments. This project already does exactly that at runtime in `Renderer.cpp`. Splitting the functions into `SceneVS.hlsl` and `ScenePS.hlsl` would still require two compiler invocations—one per shader stage.
