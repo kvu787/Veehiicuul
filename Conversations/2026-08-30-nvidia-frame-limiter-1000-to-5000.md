@@ -43,3 +43,28 @@ Fallback order:
 VSync, VRR, and DXGI maximum-frame-latency controls are not substitutes for an arbitrary 1,000-5,000-FPS cap. They synchronize to display/queue behavior rather than impose the requested present interval.
 
 Sources: [NVIDIA Control Panel Max Frame Rate reference](https://www.nvidia.com/content/Control-Panel-Help/vLatest/en-us/mergedProjects/3D%20Settings/Manage_3D_Settings_%28reference%29.htm), [NVIDIA's current NVAPI driver-setting definitions](https://github.com/NVIDIA/nvapi/blob/main/NvApiDriverSettings.h), [NVIDIA's NVAPI sleep-mode API](https://github.com/NVIDIA/nvapi/blob/main/nvapi.h), and [NVIDIA Streamline Reflex guide](https://github.com/NVIDIA-RTX/Streamline/blob/main/docs/ProgrammingGuideReflex.md).
+
+## User
+
+> what is the best frame rate limiter approach that accommodates any gpu, not just nvidia
+
+## Assistant
+
+For this Windows DirectX 12 game, the best GPU-vendor-neutral approach is an in-engine, CPU-side hybrid deadline limiter based on QueryPerformanceCounter. There is no standard cross-vendor driver-level API that supplies an arbitrary 1,000-5,000-FPS cap.
+
+The limiter should:
+
+1. Express each frame's target as an absolute QPC deadline derived from one epoch and a frame index. Do not sleep for a relative frame duration after rendering, because render time would be added to the target interval and the schedule would drift.
+2. Use a one-shot high-resolution waitable timer for the coarse portion when enough time remains. `SetWaitableTimerEx` supports due times in 100-nanosecond units, but its periodic interval is only whole milliseconds, so the periodic mode cannot represent 1-5 kHz.
+3. Stop sleeping before the deadline by a measured safety margin, then poll QPC with `_mm_pause()` for the short final interval. Adapt the safety margin from observed timer overshoot. At a 200-microsecond 5,000-FPS budget, the fine-spin stage may consume most or all of the wait, which costs one CPU core but avoids scheduler wake-up jitter.
+4. If a deadline is missed, advance to the next future deadline instead of rendering catch-up bursts.
+5. Perform the wait immediately before input sampling/simulation/rendering so the application uses the freshest input.
+6. Disable or bypass the limiter for VSync and minimized/background modes, and use a much lower background cap.
+
+For the current source layout, a small `FramePacer` owned by `Application` should run immediately before `m_renderer.Render()`. It should remain outside `Renderer`, since pacing is a game-loop policy rather than a GPU implementation detail. The current single-message `PeekMessageW` path should eventually be changed to drain pending messages in a batch; the coarse timer wait can use `MsgWaitForMultipleObjectsEx` so window messages can wake the application while it waits.
+
+Use integer QPC arithmetic or a quotient/remainder accumulator for fractional periods so rates such as 3,000 FPS do not accumulate rounding drift. `Sleep(1)`, a `timeBeginPeriod(1)` plus `Sleep`, and `std::this_thread::sleep_until` alone are not sufficiently predictable for a 200-1,000-microsecond target. Windows remains a soft-real-time environment, so measure PresentMon `MsBetweenPresents` percentiles, timer overshoot, missed-deadline rate, and CPU cost.
+
+RTSS is a reasonable user-installed, vendor-neutral external limiter for ordinary frame rates, but an injected external hook is not the best foundation for a game under direct control, particularly at 5,000 FPS where its overhead and supported upper range need empirical validation. VSync, VRR, and DXGI maximum-frame-latency controls are also not arbitrary high-rate limiters.
+
+Sources: [Microsoft high-resolution timestamp guidance](https://learn.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps), [CreateWaitableTimerEx and its high-resolution flag](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createwaitabletimerexw), and [SetWaitableTimerEx](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-setwaitabletimerex).
