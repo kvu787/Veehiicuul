@@ -146,3 +146,91 @@ Concrete cross-vendor hardware lists therefore apply to particular features, not
 For this project's simple shader, `vs_6_0`/`ps_6_0` needs no optional Shader Model 6 features. The broad and correct hardware policy is to attempt a DirectX 12 device and require `HighestShaderModel >= D3D_SHADER_MODEL_6_0`; retain the existing SM 5.1 bytecode as a fallback only if support for older drivers matters. Targeting a higher model without using its features would unnecessarily reject hardware.
 
 Sources consulted: Microsoft Learn's shader-model capability-query documentation, Microsoft's DirectXShaderCompiler/DXIL documentation, the DirectX 12 Ultimate feature-level announcement, Microsoft's Work Graphs hardware list, the retail SM 6.9 hardware-support table, and the SM 6.10 preview hardware table.
+
+## User
+
+> ultimately, what i want to do is reimplement https://github.com/kvu787/ZoomTracks as an engine-less game that only uses this shader: https://github.com/kvu787/SimplePaintShaders, and target sustained fps in the 1,000 to 5,000 fps range. given this, what choices should i make.
+
+## Assistant
+
+For that specific goal, I would build a deliberately tiny native Direct3D 12 program, use the Simple Paint shader as its only material shader, and treat **0.2-1.0 ms CPU/GPU frame time** as the engineering target. I would not define success as 1,000-5,000 visibly displayed frames per second: a 360 Hz monitor can scan out at most 360 complete refreshes per second, and excess `Present` calls may be torn or discarded. The high-rate target is still useful as render-time and simulation-latency headroom.
+
+| Decision | Choice |
+|---|---|
+| Platform | Win32, C++20, Direct3D 12, DXGI, DirectXMath, GameInput |
+| Shader source | One external `shaders/SimplePaint.hlsl` containing `VSMain` and `PSMain` |
+| Compilation | Build-time DXC, compiled once as `vs_6_0` and once as `ps_6_0` |
+| Packaging | Embed the two resulting DXIL blobs in the executable |
+| Rendering | Orthographic, unlit, one PSO, no MSAA/TAA/post-processing/shadows |
+| Simulation | Fixed 1,000 Hz, independent of rendering |
+| Presentation | Separate low-latency display mode from uncapped benchmark mode |
+| Assets | Offline conversion to small custom binary mesh/collision formats |
+
+Use Shader Model 6.0, not the newest Shader Model. The shader does not need ray tracing, mesh shaders, work graphs, advanced atomics, or other later features, and a higher target does not automatically make ordinary shader code faster. DXC is the right modern compiler, but use it during the build rather than at runtime. This keeps the HLSL separate and editable while avoiding compiler work, compiler DLLs, and file-path failures in the released game. The one source file is still compiled twice because it contains two GPU programs: a vertex entry point and a pixel entry point. [DXC's documented role is compiling SM 6 HLSL into DXIL.](https://github.com/microsoft/DirectXShaderCompiler)
+
+Port the current `K12.gdshader` faithfully before optimizing it. It is already unlit and disables shadows, fog, ambient light, and specular work. More importantly, its own comments say that all material-derived values should be computed by the CPU; do that once when a material is loaded or changed, rather than recomputing sine, cosine, and color coefficients per vertex. Because ZoomTracks uses an orthographic camera, the view direction is constant across the image: transform normals into view space in the vertex shader, interpolate them, normalize in the pixel shader, and remove the current per-pixel view normalization and basis construction. Keep 32-bit floats initially; test a Shader Model 6.2/FP16 variant only if profiling identifies the pixel shader as the bottleneck and image comparisons show no visible change. [The shader source and its optimization notes are here.](https://github.com/kvu787/SimplePaintShaders/blob/main/Godot/ShaderTest/Shaders/K12.gdshader)
+
+For the first complete renderer, draw the flattened track geometry and the car with that same shader every frame. Merge static geometry by material and aim for a handful of indexed draws, not a complex general-purpose scene system. Use immutable GPU-local vertex/index buffers, one root signature and PSO, preallocated command allocators, and a persistently mapped upload ring for the camera and car transforms. Create nothing, allocate nothing, compile nothing, and log nothing in the hot loop. Start with the shader's two-sided behavior for visual fidelity; test back-face culling later on closed vehicle meshes. Use a depth buffer for the car's self-occlusion, but disable MSAA, TAA, lighting, shadows, fog, HDR, and post-processing.
+
+The static environment creates a useful second-stage optimization. ZoomTracks explicitly describes the environment as static and flattenable to a 2D image. For the fixed-camera view, render it once with Simple Paint into a GPU texture, copy that image into each back buffer, then draw the moving car; this still requires no second shader. Rebuild the cache when the view or zoom changes. Smooth arbitrary follow-camera motion is different: integer texture copies cannot perform subpixel sampling or scaling. The clean high-performance solution is a tiny texture-blit/composite shader, making Simple Paint the only **material** shader rather than literally the only pixel shader. If the literal one-shader restriction is absolute, redraw the track during smooth follow/zoom. I would implement direct redraw first and relax this restriction only if profiling shows that the 5,000-FPS target requires caching. [ZoomTracks' own description supports this static-world split.](https://github.com/kvu787/ZoomTracks/blob/main/README.md)
+
+Keep the game loop single-threaded initially: nonblocking Win32 message pump, read the newest GameInput sample, advance fixed-step 2D simulation/collision, record the tiny command list, submit, and present. A fixed 1,000 Hz simulation gives deterministic behavior and at most roughly 1 ms of simulation sampling delay without pointlessly tying physics to a potentially 5,000 Hz render loop. GameInput is preferable to XInput for this project because it exposes timestamped readings and is Microsoft's recommended new-code input API; use timestamps and sequence numbers to measure the Razer controller's actual reports rather than assuming every poll is new. [GameInput readings are timestamped in microseconds.](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinputreading/igameinputreading)
+
+Provide two runtime modes because throughput and display latency require opposing queue policies:
+
+- **Play mode:** borderless flip-discard swap chain, two buffers, tearing support, `Present(0, DXGI_PRESENT_ALLOW_TEARING)`, frame-latency waitable object, and maximum frame latency 1. This prioritizes a fresh frame and prevents the CPU from building a latency-producing queue. Microsoft recommends flip model, and tearing is the DXGI mechanism required for VRR. [Flip-model guidance](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/for-best-performance--use-dxgi-flip-model), [VRR/tearing requirements](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/variable-refresh-rate-displays).
+- **Benchmark mode:** render offscreen or run with a small ring of in-flight command allocators without waiting on display cadence. Measure CPU production, GPU execution, and presentation separately. Do not call an offscreen 5,000-FPS result “display FPS.”
+
+At 2560x1440, one full-screen pass at 1,000 FPS represents about 3.69 billion pixel invocations per second; at 5,000 FPS it is 18.43 billion. The paint shader contains square roots, divisions, and normalization, so 5,000 FPS at native resolution is a measurement question even on the RTX 5090 laptop, not something the API or Shader Model can guarantee. Also test after the laptop reaches thermal steady state.
+
+Instrument from the beginning. Use `QueryPerformanceCounter` for CPU sections, Direct3D 12 timestamp queries for GPU sections, PresentMon for the presentation path, and PIX to identify the limiting pass. Microsoft specifically recommends PIX and documents D3D12 timestamp calibration/querying for accurate GPU timing. Report frame-time percentiles and worst stalls after warm-up, not just average FPS. [Direct3D 12 timing guidance](https://learn.microsoft.com/en-us/windows/win32/direct3d12/timing).
+
+The implementation order I would use is:
+
+1. Port K12 to `SimplePaint.hlsl` and validate screenshots against Godot.
+2. Add build-time DXC `vs_6_0`/`ps_6_0` compilation and embedded bytecode.
+3. Port the car simulation and static collision index with a fixed 1,000 Hz step.
+4. Convert one track and car offline; render them directly with a minimal number of draws.
+5. Add CPU, GPU, and presentation measurements and establish 1,000-FPS frame-time consistency.
+6. Only then optimize toward 5,000 FPS: orthographic shader specialization, draw/material consolidation, and—if necessary—the static-background cache.
+
+The important non-choices are just as concrete: no runtime shader compiler, no Shader Model above 6.0 without a measured reason, no engine-like renderer abstraction, no job system, no per-frame asset work, and no claim that uncapped `Present` throughput equals visible or low-latency FPS.
+
+## User
+
+> as part of this reimplementation, ZoomTracks will only render the vehicle as a 3d thing. everything else will be a 2d image.
+
+## Assistant
+
+That simplifies the design and changes one important recommendation: do not load or render track geometry at runtime. Each frame should consist of a background image operation, one indexed draw of the 3D vehicle using Simple Paint, and presentation.
+
+The best exact design depends on the camera:
+
+- With a completely fixed camera and an image already at the output resolution, upload the opaque image once and use `CopyTextureRegion` to copy it to the back buffer each frame. Then clear only the depth buffer and draw the vehicle. This needs no background shader at all.
+- If the camera follows the car, moves by subpixels, or zooms, render a full-screen triangle that samples a world/track image with a tiny texture shader. Use offline-generated mipmaps and bilinear or trilinear sampling. Store the world-to-image transform with the track so the background and the vehicle's orthographic view remain aligned.
+
+I would keep camera yaw fixed. Pan/follow and zoom work naturally with a 2D background, but changing the viewing direction cannot reveal correct new views of an already flattened image. This matches the current ZoomTracks implementation, in which camera rotation control is disabled.
+
+There is a semantic distinction in “only uses this shader.” Simple Paint can cleanly be the game's only **3D/material shader**, but its current pixel shader does not sample textures. Smoothly moving or scaling a 2D image therefore requires either a tiny background texture shader or a modified combined shader with a background mode. The clean choice is a separate background entry-point pair; contorting the paint pixel shader with a uniform branch adds complexity without avoiding the fact that two different rendering operations exist.
+
+If one HLSL source file is still desired, `shaders/Scene.hlsl` can contain four entry points:
+
+- `BackgroundVS` and `BackgroundPS`
+- `VehicleVS` and `VehiclePS`
+
+DXC would compile that file four times, once for each entry point. Both pairs can target Shader Model 6.0. Use two PSOs: an opaque background PSO with depth disabled, and a vehicle PSO with depth testing/writes enabled. If the fixed-camera copy path is sufficient, omit the background entry points and retain only the two vehicle compilations.
+
+For sampled backgrounds, use an offline-generated DDS texture with mipmaps. BC7 sRGB is a good starting format for a large world image; use an uncompressed RGBA8 image for the fixed-resolution copy path. If the desired world image exceeds the GPU's texture-size limit, split it into fixed-size tiles and render only visible tiles rather than adding a general-purpose asset/scene system.
+
+The steady-state render workload should therefore be only:
+
+1. Copy the fixed background, or draw one full-screen sampled triangle.
+2. Clear depth.
+3. Bind the vehicle PSO and draw one indexed vehicle mesh.
+4. Present.
+
+No color clear is needed because the opaque background covers every pixel. The car shader's square roots and divisions now affect only the small screen area covered by the vehicle, so optimizing it to FP16 or a later Shader Model is unlikely to matter. CPU-precompute its material coefficients and specialize its view math for the fixed orthographic direction, but focus measurement on the full-screen background operation and `Present`.
+
+At 2560x1440 and 5,000 FPS, a full-screen background operation still touches about 18.43 billion pixels per second. An uncompressed texture read plus a 4-byte render-target write represents roughly 147 GB/s of theoretical traffic before caching or compression, so the background is not free even though it is 2D. The 3D car will be comparatively negligible.
+
+All other earlier choices remain: native Win32/C++20/D3D12, build-time DXC with embedded DXIL, fixed 1,000 Hz simulation, GameInput, no MSAA/TAA/post-processing, and separate low-latency play and offscreen-throughput benchmark modes. First validate 1,000 FPS at native resolution with stable frame-time percentiles; treat 5,000 FPS as an offscreen/render-throughput target unless presentation measurements prove otherwise.
