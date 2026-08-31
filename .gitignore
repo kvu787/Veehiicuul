@@ -1,0 +1,10 @@
+/.vs/
+/build/
+/cmake-build-*/
+/out/
+
+CMakeUserPresets.json
+*.suo
+*.user
+*.VC.db
+*.VC.VC.opendb
