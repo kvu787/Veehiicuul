@@ -23,3 +23,30 @@ F11 is different: it arrives as an ordinary `WM_KEYDOWN`, and because a function
 The direct fix would be to consume the matching `WM_SYSCHAR` for Alt+Enter (return zero), while continuing to pass unrelated system-key messages to `DefWindowProcW` so normal Alt shortcuts keep working.
 
 No source code was changed as part of this explanation.
+
+## User
+
+> is there any issue with doing this: The usual fix is to consume the matching WM_SYSCHAR for Alt+Enter by returning zero
+
+## Assistant
+
+There is no practical issue if the handler is narrow and only consumes the system character corresponding to the Alt+Enter shortcut that the application already handled. Returning zero is how a window procedure reports that it processed the message.
+
+The important caveat is not to consume every `WM_SYSCHAR`. Windows uses other `WM_SYSCHAR` messages for Alt-based menu mnemonics and system-key behavior, so swallowing them indiscriminately would harm normal keyboard navigation and accessibility.
+
+A suitable handler is:
+
+```cpp
+case WM_SYSCHAR:
+    if (wParam == L'\r' && (lParam & (1LL << 29)) != 0)
+    {
+        return 0;
+    }
+    break;
+```
+
+`WM_SYSCHAR::wParam` is a character code, so `L'\r'` is clearer than treating it as a virtual-key code, even though carriage return and `VK_RETURN` both have the numeric value 13. Bit 29 confirms that Alt was down. Unrelated `WM_SYSCHAR` messages still fall through to `DefWindowProcW`.
+
+An even stricter design could remember that the immediately preceding Alt+Enter `WM_SYSKEYDOWN` was handled and consume its translated character, but that extra state is unnecessary for this window because Alt+Enter is unconditionally assigned to fullscreen while the window has focus.
+
+No application source code was changed.
