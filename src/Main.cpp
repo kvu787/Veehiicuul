@@ -14,7 +14,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, const int showCommand)
     }
     catch (const std::exception& error)
     {
-        MessageBoxA(nullptr, error.what(), "Simple DirectX 12 Scene", MB_OK | MB_ICONERROR);
+        MessageBoxA(nullptr, error.what(), "Simple DirectX 12 Car", MB_OK | MB_ICONERROR);
         return EXIT_FAILURE;
     }
 }

@@ -1,19 +1,31 @@
 #include "Renderer.h"
 
-#include "ScenePS.h"
-#include "SceneVS.h"
+#include "BackgroundPS.h"
+#include "BackgroundVS.h"
+#include "SimplePaintPS.h"
+#include "SimplePaintVS.h"
+#include "generated/CarMesh.generated.h"
+
+#include <wincodec.h>
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <cmath>
+#include <cctype>
 #include <cstring>
+#include <filesystem>
 #include <format>
+#include <fstream>
+#include <limits>
+#include <numbers>
 #include <stdexcept>
 #include <string>
+#include <string_view>
+#include <vector>
 
 using DirectX::XMFLOAT3;
 using DirectX::XMFLOAT4;
-using DirectX::XMFLOAT4X4;
 using DirectX::XMMATRIX;
 using DirectX::XMVECTOR;
 using Microsoft::WRL::ComPtr;
@@ -22,7 +34,10 @@ namespace
 {
 [[noreturn]] void ThrowFailure(const HRESULT result, const char* operation)
 {
-    throw std::runtime_error(std::format("{} failed with HRESULT 0x{:08X}", operation, static_cast<unsigned long>(result)));
+    throw std::runtime_error(std::format(
+        "{} failed with HRESULT 0x{:08X}",
+        operation,
+        static_cast<unsigned long>(result)));
 }
 
 void Check(const HRESULT result, const char* operation)
@@ -45,6 +60,22 @@ D3D12_RESOURCE_DESC BufferDescription(const std::uint64_t size)
     description.Format = DXGI_FORMAT_UNKNOWN;
     description.SampleDesc = {1, 0};
     description.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    description.Flags = D3D12_RESOURCE_FLAG_NONE;
+    return description;
+}
+
+D3D12_RESOURCE_DESC TextureDescription(const std::uint32_t width, const std::uint32_t height)
+{
+    D3D12_RESOURCE_DESC description{};
+    description.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    description.Alignment = 0;
+    description.Width = width;
+    description.Height = height;
+    description.DepthOrArraySize = 1;
+    description.MipLevels = 1;
+    description.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
+    description.SampleDesc = {1, 0};
+    description.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     description.Flags = D3D12_RESOURCE_FLAG_NONE;
     return description;
 }
@@ -87,6 +118,223 @@ void SetDebugName(ID3D12Object* object, const wchar_t* name)
     static_cast<void>(name);
 #endif
 }
+
+ComPtr<ID3D12RootSignature> CreateRootSignature(
+    ID3D12Device* device,
+    const D3D12_ROOT_SIGNATURE_DESC& description,
+    const char* operation)
+{
+    ComPtr<ID3DBlob> serialized;
+    ComPtr<ID3DBlob> errors;
+    const HRESULT serializationResult = D3D12SerializeRootSignature(
+        &description,
+        D3D_ROOT_SIGNATURE_VERSION_1,
+        &serialized,
+        &errors);
+    if (FAILED(serializationResult))
+    {
+        const std::string details = errors
+            ? std::string(
+                  static_cast<const char*>(errors->GetBufferPointer()),
+                  errors->GetBufferSize())
+            : "No serializer details.";
+        throw std::runtime_error(std::format("{} serialization failed: {}", operation, details));
+    }
+
+    ComPtr<ID3D12RootSignature> rootSignature;
+    Check(
+        device->CreateRootSignature(
+            0,
+            serialized->GetBufferPointer(),
+            serialized->GetBufferSize(),
+            IID_PPV_ARGS(&rootSignature)),
+        operation);
+    return rootSignature;
+}
+
+std::filesystem::path ModuleDirectory()
+{
+    std::wstring modulePath(32768, L'\0');
+    const DWORD length = GetModuleFileNameW(
+        nullptr,
+        modulePath.data(),
+        static_cast<DWORD>(modulePath.size()));
+    if (length == 0 || static_cast<std::size_t>(length) >= modulePath.size())
+    {
+        throw std::runtime_error(std::format(
+            "GetModuleFileNameW failed with Win32 error {}.",
+            GetLastError()));
+    }
+    modulePath.resize(length);
+    return std::filesystem::path(modulePath).parent_path();
+}
+
+class ScopedComInitialization final
+{
+public:
+    ScopedComInitialization()
+    {
+        const HRESULT result = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        if (result == RPC_E_CHANGED_MODE)
+        {
+            return;
+        }
+        Check(result, "CoInitializeEx");
+        m_uninitialize = true;
+    }
+
+    ~ScopedComInitialization()
+    {
+        if (m_uninitialize)
+        {
+            CoUninitialize();
+        }
+    }
+
+private:
+    bool m_uninitialize = false;
+};
+
+struct DecodedImage
+{
+    std::uint32_t width = 0;
+    std::uint32_t height = 0;
+    std::vector<std::byte> pixels;
+};
+
+DecodedImage DecodeRgbaImage(const std::filesystem::path& path)
+{
+    ScopedComInitialization comInitialization;
+
+    ComPtr<IWICImagingFactory> factory;
+    Check(
+        CoCreateInstance(
+            CLSID_WICImagingFactory,
+            nullptr,
+            CLSCTX_INPROC_SERVER,
+            IID_PPV_ARGS(&factory)),
+        "Create WIC imaging factory");
+
+    ComPtr<IWICBitmapDecoder> decoder;
+    Check(
+        factory->CreateDecoderFromFilename(
+            path.c_str(),
+            nullptr,
+            GENERIC_READ,
+            WICDecodeMetadataCacheOnLoad,
+            &decoder),
+        "Decode background image");
+
+    ComPtr<IWICBitmapFrameDecode> frame;
+    Check(decoder->GetFrame(0, &frame), "Get background image frame");
+
+    ComPtr<IWICFormatConverter> converter;
+    Check(factory->CreateFormatConverter(&converter), "Create WIC format converter");
+    Check(
+        converter->Initialize(
+            frame.Get(),
+            GUID_WICPixelFormat32bppRGBA,
+            WICBitmapDitherTypeNone,
+            nullptr,
+            0.0,
+            WICBitmapPaletteTypeCustom),
+        "Convert background image to RGBA");
+
+    UINT width = 0;
+    UINT height = 0;
+    Check(converter->GetSize(&width, &height), "Read background image size");
+    if (width == 0 || height == 0 || width > std::numeric_limits<UINT>::max() / 4u)
+    {
+        throw std::runtime_error("The background image has invalid dimensions.");
+    }
+
+    const UINT stride = width * 4u;
+    const std::uint64_t byteCount64 = static_cast<std::uint64_t>(stride) * height;
+    if (byteCount64 > std::numeric_limits<UINT>::max())
+    {
+        throw std::runtime_error("The background image is too large for WIC.");
+    }
+
+    DecodedImage image;
+    image.width = width;
+    image.height = height;
+    image.pixels.resize(static_cast<std::size_t>(byteCount64));
+    Check(
+        converter->CopyPixels(
+            nullptr,
+            stride,
+            static_cast<UINT>(byteCount64),
+            reinterpret_cast<BYTE*>(image.pixels.data())),
+        "Copy decoded background pixels");
+    return image;
+}
+
+std::string_view Trim(std::string_view value)
+{
+    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.front())) != 0)
+    {
+        value.remove_prefix(1);
+    }
+    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back())) != 0)
+    {
+        value.remove_suffix(1);
+    }
+    return value;
+}
+
+float ParseFloat(const std::string_view text, const std::size_t lineNumber)
+{
+    const std::string_view trimmed = Trim(text);
+    float value = 0.0f;
+    const auto [end, error] = std::from_chars(
+        trimmed.data(),
+        trimmed.data() + trimmed.size(),
+        value);
+    if (error != std::errc{} || end != trimmed.data() + trimmed.size() || !std::isfinite(value))
+    {
+        throw std::runtime_error(std::format(
+            "Invalid finite floating-point value on CarPaint.ini line {}.",
+            lineNumber));
+    }
+    return value;
+}
+
+XMFLOAT3 ParseColor(const std::string_view text, const std::size_t lineNumber)
+{
+    const std::size_t firstComma = text.find(',');
+    const std::size_t secondComma = firstComma == std::string_view::npos
+        ? std::string_view::npos
+        : text.find(',', firstComma + 1);
+    if (firstComma == std::string_view::npos ||
+        secondComma == std::string_view::npos ||
+        text.find(',', secondComma + 1) != std::string_view::npos)
+    {
+        throw std::runtime_error(std::format(
+            "Expected an R, G, B triple on CarPaint.ini line {}.",
+            lineNumber));
+    }
+
+    return {
+        ParseFloat(text.substr(0, firstComma), lineNumber),
+        ParseFloat(text.substr(firstComma + 1, secondComma - firstComma - 1), lineNumber),
+        ParseFloat(text.substr(secondComma + 1), lineNumber),
+    };
+}
+
+void RequireUnitRange(const float value, const std::string_view name)
+{
+    if (value < 0.0f || value > 1.0f)
+    {
+        throw std::runtime_error(std::format("{} must be in the range [0, 1].", name));
+    }
+}
+
+float SrgbToLinear(const float value)
+{
+    return value <= 0.04045f
+        ? value / 12.92f
+        : std::pow((value + 0.055f) / 1.055f, 2.4f);
+}
 }
 
 Renderer::~Renderer()
@@ -126,13 +374,14 @@ void Renderer::Initialize(HWND window, const std::uint32_t width, const std::uin
     m_width = width;
     m_height = height;
 
+    LoadPaintSettings();
     CreateDevice();
     CreateSwapChain();
     CreateDescriptorHeaps();
-    CreatePipeline();
+    CreatePipelines();
     CreateCommandObjects();
     CreateWindowSizeResources();
-    CreateMeshes();
+    CreateStaticResources();
     CreateConstantBuffer();
     UpdateCamera();
 
@@ -190,7 +439,11 @@ void Renderer::CreateDevice()
             continue;
         }
 
-        if (SUCCEEDED(D3D12CreateDevice(candidate.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)))
+        if (SUCCEEDED(D3D12CreateDevice(
+                candidate.Get(),
+                D3D_FEATURE_LEVEL_11_0,
+                __uuidof(ID3D12Device),
+                nullptr)))
         {
             selectedAdapter = candidate;
             break;
@@ -240,7 +493,7 @@ void Renderer::CreateSwapChain()
     DXGI_SWAP_CHAIN_DESC1 description{};
     description.Width = m_width;
     description.Height = m_height;
-    description.Format = BackBufferFormat;
+    description.Format = SwapChainFormat;
     description.Stereo = FALSE;
     description.SampleDesc = {1, 0};
     description.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -278,52 +531,83 @@ void Renderer::CreateDescriptorHeaps()
     dsvDescription.NumDescriptors = 1;
     dsvDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     Check(m_device->CreateDescriptorHeap(&dsvDescription, IID_PPV_ARGS(&m_dsvHeap)), "Create DSV descriptor heap");
+
+    D3D12_DESCRIPTOR_HEAP_DESC srvDescription{};
+    srvDescription.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    srvDescription.NumDescriptors = 1;
+    srvDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    Check(m_device->CreateDescriptorHeap(&srvDescription, IID_PPV_ARGS(&m_srvHeap)), "Create SRV descriptor heap");
 }
 
-void Renderer::CreatePipeline()
+void Renderer::CreatePipelines()
 {
-    D3D12_ROOT_PARAMETER rootParameter{};
-    rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameter.Descriptor.ShaderRegister = 0;
-    rootParameter.Descriptor.RegisterSpace = 0;
-    rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    D3D12_DESCRIPTOR_RANGE backgroundRange{};
+    backgroundRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    backgroundRange.NumDescriptors = 1;
+    backgroundRange.BaseShaderRegister = 0;
+    backgroundRange.RegisterSpace = 0;
+    backgroundRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_ROOT_SIGNATURE_DESC rootSignatureDescription{};
-    rootSignatureDescription.NumParameters = 1;
-    rootSignatureDescription.pParameters = &rootParameter;
-    rootSignatureDescription.NumStaticSamplers = 0;
-    rootSignatureDescription.pStaticSamplers = nullptr;
-    rootSignatureDescription.Flags =
+    std::array<D3D12_ROOT_PARAMETER, 2> backgroundParameters{};
+    backgroundParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    backgroundParameters[0].DescriptorTable.NumDescriptorRanges = 1;
+    backgroundParameters[0].DescriptorTable.pDescriptorRanges = &backgroundRange;
+    backgroundParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    backgroundParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+    backgroundParameters[1].Constants.ShaderRegister = 0;
+    backgroundParameters[1].Constants.RegisterSpace = 0;
+    backgroundParameters[1].Constants.Num32BitValues = 1;
+    backgroundParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+    D3D12_STATIC_SAMPLER_DESC sampler{};
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    sampler.MipLODBias = 0.0f;
+    sampler.MaxAnisotropy = 1;
+    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+    sampler.MinLOD = 0.0f;
+    sampler.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler.ShaderRegister = 0;
+    sampler.RegisterSpace = 0;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    D3D12_ROOT_SIGNATURE_DESC backgroundRootDescription{};
+    backgroundRootDescription.NumParameters = static_cast<std::uint32_t>(backgroundParameters.size());
+    backgroundRootDescription.pParameters = backgroundParameters.data();
+    backgroundRootDescription.NumStaticSamplers = 1;
+    backgroundRootDescription.pStaticSamplers = &sampler;
+    backgroundRootDescription.Flags =
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+    m_backgroundRootSignature = CreateRootSignature(
+        m_device.Get(),
+        backgroundRootDescription,
+        "Create background root signature");
+
+    D3D12_ROOT_PARAMETER carParameter{};
+    carParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    carParameter.Descriptor.ShaderRegister = 0;
+    carParameter.Descriptor.RegisterSpace = 0;
+    carParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    D3D12_ROOT_SIGNATURE_DESC carRootDescription{};
+    carRootDescription.NumParameters = 1;
+    carRootDescription.pParameters = &carParameter;
+    carRootDescription.NumStaticSamplers = 0;
+    carRootDescription.pStaticSamplers = nullptr;
+    carRootDescription.Flags =
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
-
-    ComPtr<ID3DBlob> serializedRootSignature;
-    ComPtr<ID3DBlob> errors;
-    const HRESULT serializationResult = D3D12SerializeRootSignature(
-        &rootSignatureDescription,
-        D3D_ROOT_SIGNATURE_VERSION_1,
-        &serializedRootSignature,
-        &errors);
-    if (FAILED(serializationResult))
-    {
-        const char* details = errors ? static_cast<const char*>(errors->GetBufferPointer()) : "No serializer details.";
-        throw std::runtime_error(std::format("Root signature serialization failed: {}", details));
-    }
-
-    Check(
-        m_device->CreateRootSignature(
-            0,
-            serializedRootSignature->GetBufferPointer(),
-            serializedRootSignature->GetBufferSize(),
-            IID_PPV_ARGS(&m_rootSignature)),
-        "CreateRootSignature");
-
-    const std::array inputElements = {
-        D3D12_INPUT_ELEMENT_DESC{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-        D3D12_INPUT_ELEMENT_DESC{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-    };
+    m_carRootSignature = CreateRootSignature(
+        m_device.Get(),
+        carRootDescription,
+        "Create car root signature");
 
     D3D12_RASTERIZER_DESC rasterizer{};
     rasterizer.FillMode = D3D12_FILL_MODE_SOLID;
@@ -352,32 +636,73 @@ void Renderer::CreatePipeline()
     blend.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
     blend.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
-    D3D12_DEPTH_STENCIL_DESC depthStencil{};
-    depthStencil.DepthEnable = TRUE;
-    depthStencil.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-    depthStencil.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-    depthStencil.StencilEnable = FALSE;
-    depthStencil.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
-    depthStencil.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+    D3D12_DEPTH_STENCIL_DESC backgroundDepth{};
+    backgroundDepth.DepthEnable = FALSE;
+    backgroundDepth.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+    backgroundDepth.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    backgroundDepth.StencilEnable = FALSE;
+    backgroundDepth.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
+    backgroundDepth.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
 
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDescription{};
-    pipelineDescription.pRootSignature = m_rootSignature.Get();
-    pipelineDescription.VS = {g_sceneVertexShader, sizeof(g_sceneVertexShader)};
-    pipelineDescription.PS = {g_scenePixelShader, sizeof(g_scenePixelShader)};
-    pipelineDescription.BlendState = blend;
-    pipelineDescription.SampleMask = UINT_MAX;
-    pipelineDescription.RasterizerState = rasterizer;
-    pipelineDescription.DepthStencilState = depthStencil;
-    pipelineDescription.InputLayout = {inputElements.data(), static_cast<std::uint32_t>(inputElements.size())};
-    pipelineDescription.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-    pipelineDescription.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    pipelineDescription.NumRenderTargets = 1;
-    pipelineDescription.RTVFormats[0] = BackBufferFormat;
-    pipelineDescription.DSVFormat = DepthBufferFormat;
-    pipelineDescription.SampleDesc = {1, 0};
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC backgroundPipeline{};
+    backgroundPipeline.pRootSignature = m_backgroundRootSignature.Get();
+    backgroundPipeline.VS = {g_backgroundVertexShader, sizeof(g_backgroundVertexShader)};
+    backgroundPipeline.PS = {g_backgroundPixelShader, sizeof(g_backgroundPixelShader)};
+    backgroundPipeline.BlendState = blend;
+    backgroundPipeline.SampleMask = UINT_MAX;
+    backgroundPipeline.RasterizerState = rasterizer;
+    backgroundPipeline.DepthStencilState = backgroundDepth;
+    backgroundPipeline.InputLayout = {nullptr, 0};
+    backgroundPipeline.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+    backgroundPipeline.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    backgroundPipeline.NumRenderTargets = 1;
+    backgroundPipeline.RTVFormats[0] = RenderTargetFormat;
+    backgroundPipeline.DSVFormat = DepthBufferFormat;
+    backgroundPipeline.SampleDesc = {1, 0};
     Check(
-        m_device->CreateGraphicsPipelineState(&pipelineDescription, IID_PPV_ARGS(&m_pipelineState)),
-        "CreateGraphicsPipelineState");
+        m_device->CreateGraphicsPipelineState(&backgroundPipeline, IID_PPV_ARGS(&m_backgroundPipelineState)),
+        "Create background pipeline state");
+
+    const std::array carInputElements = {
+        D3D12_INPUT_ELEMENT_DESC{
+            "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        D3D12_INPUT_ELEMENT_DESC{
+            "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        D3D12_INPUT_ELEMENT_DESC{
+            "MATERIAL", 0, DXGI_FORMAT_R32_UINT, 0, 24,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    D3D12_DEPTH_STENCIL_DESC carDepth{};
+    carDepth.DepthEnable = TRUE;
+    carDepth.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    carDepth.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+    carDepth.StencilEnable = FALSE;
+    carDepth.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
+    carDepth.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC carPipeline{};
+    carPipeline.pRootSignature = m_carRootSignature.Get();
+    carPipeline.VS = {g_simplePaintVertexShader, sizeof(g_simplePaintVertexShader)};
+    carPipeline.PS = {g_simplePaintPixelShader, sizeof(g_simplePaintPixelShader)};
+    carPipeline.BlendState = blend;
+    carPipeline.SampleMask = UINT_MAX;
+    carPipeline.RasterizerState = rasterizer;
+    carPipeline.DepthStencilState = carDepth;
+    carPipeline.InputLayout = {
+        carInputElements.data(),
+        static_cast<std::uint32_t>(carInputElements.size())};
+    carPipeline.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+    carPipeline.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    carPipeline.NumRenderTargets = 1;
+    carPipeline.RTVFormats[0] = RenderTargetFormat;
+    carPipeline.DSVFormat = DepthBufferFormat;
+    carPipeline.SampleDesc = {1, 0};
+    Check(
+        m_device->CreateGraphicsPipelineState(&carPipeline, IID_PPV_ARGS(&m_carPipelineState)),
+        "Create car pipeline state");
 }
 
 void Renderer::CreateCommandObjects()
@@ -396,7 +721,7 @@ void Renderer::CreateCommandObjects()
             0,
             D3D12_COMMAND_LIST_TYPE_DIRECT,
             m_commandAllocators[0].Get(),
-            m_pipelineState.Get(),
+            m_carPipelineState.Get(),
             IID_PPV_ARGS(&m_commandList)),
         "CreateCommandList");
     Check(m_commandList->Close(), "Close initial command list");
@@ -411,11 +736,17 @@ void Renderer::CreateCommandObjects()
 
 void Renderer::CreateWindowSizeResources()
 {
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDescription{};
+    rtvDescription.Format = RenderTargetFormat;
+    rtvDescription.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+    rtvDescription.Texture2D.MipSlice = 0;
+    rtvDescription.Texture2D.PlaneSlice = 0;
+
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
     for (std::uint32_t frameIndex = 0; frameIndex < FrameCount; ++frameIndex)
     {
         Check(m_swapChain->GetBuffer(frameIndex, IID_PPV_ARGS(&m_renderTargets[frameIndex])), "Get swap-chain buffer");
-        m_device->CreateRenderTargetView(m_renderTargets[frameIndex].Get(), nullptr, rtvHandle);
+        m_device->CreateRenderTargetView(m_renderTargets[frameIndex].Get(), &rtvDescription, rtvHandle);
         rtvHandle.ptr += m_rtvDescriptorSize;
     }
 
@@ -463,23 +794,64 @@ void Renderer::CreateWindowSizeResources()
         0.0f,
         1.0f,
     };
+    const float sceneWidth = std::min(
+        static_cast<float>(m_width),
+        static_cast<float>(m_height) * BackgroundAspectRatio);
+    m_sceneViewport = {
+        (static_cast<float>(m_width) - sceneWidth) * 0.5f,
+        0.0f,
+        sceneWidth,
+        static_cast<float>(m_height),
+        0.0f,
+        1.0f,
+    };
     m_scissorRect = {0, 0, static_cast<LONG>(m_width), static_cast<LONG>(m_height)};
 }
 
-Renderer::GpuMesh Renderer::UploadMesh(const MeshData& mesh, const wchar_t* debugName) const
+void Renderer::CreateStaticResources()
 {
-    if (mesh.vertices.empty() || mesh.indices.empty())
+    static_assert(sizeof(GeneratedCarMesh::Vertex) == 28);
+    static_assert(GeneratedCarMesh::MaterialCount == CarMaterialCount);
+
+    const std::filesystem::path backgroundPath =
+        ModuleDirectory() / L"assets" / L"SceneBackground.png";
+    const DecodedImage background = DecodeRgbaImage(backgroundPath);
+    if (background.width != 5120 || background.height != 1440)
     {
-        throw std::invalid_argument("Cannot upload an empty mesh.");
+        throw std::runtime_error(std::format(
+            "SceneBackground.png must be 5120x1440; found {}x{}.",
+            background.width,
+            background.height));
     }
 
-    GpuMesh gpuMesh;
-    const std::uint64_t vertexBytes = mesh.vertices.size() * sizeof(Vertex);
-    const std::uint64_t indexBytes = mesh.indices.size() * sizeof(std::uint32_t);
+    const std::uint64_t vertexBytes = sizeof(GeneratedCarMesh::Vertices);
+    const std::uint64_t indexBytes = sizeof(GeneratedCarMesh::Indices);
+    const D3D12_HEAP_PROPERTIES defaultHeap = HeapProperties(D3D12_HEAP_TYPE_DEFAULT);
     const D3D12_HEAP_PROPERTIES uploadHeap = HeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+
     const D3D12_RESOURCE_DESC vertexDescription = BufferDescription(vertexBytes);
     const D3D12_RESOURCE_DESC indexDescription = BufferDescription(indexBytes);
+    Check(
+        m_device->CreateCommittedResource(
+            &defaultHeap,
+            D3D12_HEAP_FLAG_NONE,
+            &vertexDescription,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&m_carMesh.vertexBuffer)),
+        "Create car vertex buffer");
+    Check(
+        m_device->CreateCommittedResource(
+            &defaultHeap,
+            D3D12_HEAP_FLAG_NONE,
+            &indexDescription,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&m_carMesh.indexBuffer)),
+        "Create car index buffer");
 
+    ComPtr<ID3D12Resource> vertexUpload;
+    ComPtr<ID3D12Resource> indexUpload;
     Check(
         m_device->CreateCommittedResource(
             &uploadHeap,
@@ -487,8 +859,8 @@ Renderer::GpuMesh Renderer::UploadMesh(const MeshData& mesh, const wchar_t* debu
             &vertexDescription,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
-            IID_PPV_ARGS(&gpuMesh.vertexBuffer)),
-        "Create vertex buffer");
+            IID_PPV_ARGS(&vertexUpload)),
+        "Create car vertex upload buffer");
     Check(
         m_device->CreateCommittedResource(
             &uploadHeap,
@@ -496,43 +868,141 @@ Renderer::GpuMesh Renderer::UploadMesh(const MeshData& mesh, const wchar_t* debu
             &indexDescription,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
-            IID_PPV_ARGS(&gpuMesh.indexBuffer)),
-        "Create index buffer");
+            IID_PPV_ARGS(&indexUpload)),
+        "Create car index upload buffer");
 
-    void* mappedData = nullptr;
     D3D12_RANGE noCpuReads{0, 0};
-    Check(gpuMesh.vertexBuffer->Map(0, &noCpuReads, &mappedData), "Map vertex buffer");
-    std::memcpy(mappedData, mesh.vertices.data(), static_cast<std::size_t>(vertexBytes));
-    D3D12_RANGE writtenVertices{0, static_cast<SIZE_T>(vertexBytes)};
-    gpuMesh.vertexBuffer->Unmap(0, &writtenVertices);
+    void* mappedData = nullptr;
+    Check(vertexUpload->Map(0, &noCpuReads, &mappedData), "Map car vertex upload buffer");
+    std::memcpy(mappedData, GeneratedCarMesh::Vertices, static_cast<std::size_t>(vertexBytes));
+    vertexUpload->Unmap(0, nullptr);
+    Check(indexUpload->Map(0, &noCpuReads, &mappedData), "Map car index upload buffer");
+    std::memcpy(mappedData, GeneratedCarMesh::Indices, static_cast<std::size_t>(indexBytes));
+    indexUpload->Unmap(0, nullptr);
 
-    Check(gpuMesh.indexBuffer->Map(0, &noCpuReads, &mappedData), "Map index buffer");
-    std::memcpy(mappedData, mesh.indices.data(), static_cast<std::size_t>(indexBytes));
-    D3D12_RANGE writtenIndices{0, static_cast<SIZE_T>(indexBytes)};
-    gpuMesh.indexBuffer->Unmap(0, &writtenIndices);
+    const D3D12_RESOURCE_DESC textureDescription =
+        TextureDescription(background.width, background.height);
+    Check(
+        m_device->CreateCommittedResource(
+            &defaultHeap,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDescription,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&m_backgroundTexture)),
+        "Create background texture");
 
-    gpuMesh.vertexView.BufferLocation = gpuMesh.vertexBuffer->GetGPUVirtualAddress();
-    gpuMesh.vertexView.SizeInBytes = static_cast<std::uint32_t>(vertexBytes);
-    gpuMesh.vertexView.StrideInBytes = sizeof(Vertex);
-    gpuMesh.indexView.BufferLocation = gpuMesh.indexBuffer->GetGPUVirtualAddress();
-    gpuMesh.indexView.SizeInBytes = static_cast<std::uint32_t>(indexBytes);
-    gpuMesh.indexView.Format = DXGI_FORMAT_R32_UINT;
-    gpuMesh.indexCount = static_cast<std::uint32_t>(mesh.indices.size());
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT textureFootprint{};
+    std::uint32_t rowCount = 0;
+    std::uint64_t rowSize = 0;
+    std::uint64_t textureUploadBytes = 0;
+    m_device->GetCopyableFootprints(
+        &textureDescription,
+        0,
+        1,
+        0,
+        &textureFootprint,
+        &rowCount,
+        &rowSize,
+        &textureUploadBytes);
+    const std::uint64_t expectedRowSize = static_cast<std::uint64_t>(background.width) * 4u;
+    if (rowCount != background.height || rowSize != expectedRowSize)
+    {
+        throw std::runtime_error("Unexpected background texture copy footprint.");
+    }
 
-    SetDebugName(gpuMesh.vertexBuffer.Get(), debugName);
-    return gpuMesh;
-}
+    const D3D12_RESOURCE_DESC textureUploadDescription = BufferDescription(textureUploadBytes);
+    ComPtr<ID3D12Resource> textureUpload;
+    Check(
+        m_device->CreateCommittedResource(
+            &uploadHeap,
+            D3D12_HEAP_FLAG_NONE,
+            &textureUploadDescription,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&textureUpload)),
+        "Create background texture upload buffer");
 
-void Renderer::CreateMeshes()
-{
-    m_groundMesh = UploadMesh(CreateGroundPlane(10.0f, 5.0f), L"Ground mesh vertex buffer");
-    m_cubeMesh = UploadMesh(CreateCube(1.0f), L"Cube mesh vertex buffer");
-    m_sphereMesh = UploadMesh(CreateSphere(0.5f, 33, 64), L"Sphere mesh vertex buffer");
+    Check(textureUpload->Map(0, &noCpuReads, &mappedData), "Map background texture upload buffer");
+    auto* destination = static_cast<std::byte*>(mappedData) + textureFootprint.Offset;
+    const std::size_t sourceRowBytes = static_cast<std::size_t>(background.width) * 4u;
+    for (std::uint32_t row = 0; row < rowCount; ++row)
+    {
+        std::memcpy(
+            destination + static_cast<std::size_t>(row) * textureFootprint.Footprint.RowPitch,
+            background.pixels.data() + static_cast<std::size_t>(row) * sourceRowBytes,
+            sourceRowBytes);
+    }
+    textureUpload->Unmap(0, nullptr);
+
+    Check(m_commandAllocators[0]->Reset(), "Reset upload command allocator");
+    Check(m_commandList->Reset(m_commandAllocators[0].Get(), nullptr), "Reset upload command list");
+    m_commandList->CopyBufferRegion(m_carMesh.vertexBuffer.Get(), 0, vertexUpload.Get(), 0, vertexBytes);
+    m_commandList->CopyBufferRegion(m_carMesh.indexBuffer.Get(), 0, indexUpload.Get(), 0, indexBytes);
+
+    D3D12_TEXTURE_COPY_LOCATION textureDestination{};
+    textureDestination.pResource = m_backgroundTexture.Get();
+    textureDestination.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    textureDestination.SubresourceIndex = 0;
+    D3D12_TEXTURE_COPY_LOCATION textureSource{};
+    textureSource.pResource = textureUpload.Get();
+    textureSource.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    textureSource.PlacedFootprint = textureFootprint;
+    m_commandList->CopyTextureRegion(&textureDestination, 0, 0, 0, &textureSource, nullptr);
+
+    const std::array uploadBarriers = {
+        TransitionBarrier(
+            m_carMesh.vertexBuffer.Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER),
+        TransitionBarrier(
+            m_carMesh.indexBuffer.Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_INDEX_BUFFER),
+        TransitionBarrier(
+            m_backgroundTexture.Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+    };
+    m_commandList->ResourceBarrier(
+        static_cast<std::uint32_t>(uploadBarriers.size()),
+        uploadBarriers.data());
+    Check(m_commandList->Close(), "Close upload command list");
+
+    ID3D12CommandList* commandLists[] = {m_commandList.Get()};
+    m_commandQueue->ExecuteCommandLists(1, commandLists);
+    WaitForGpu();
+
+    m_carMesh.vertexView.BufferLocation = m_carMesh.vertexBuffer->GetGPUVirtualAddress();
+    m_carMesh.vertexView.SizeInBytes = static_cast<std::uint32_t>(vertexBytes);
+    m_carMesh.vertexView.StrideInBytes = sizeof(GeneratedCarMesh::Vertex);
+    m_carMesh.indexView.BufferLocation = m_carMesh.indexBuffer->GetGPUVirtualAddress();
+    m_carMesh.indexView.SizeInBytes = static_cast<std::uint32_t>(indexBytes);
+    m_carMesh.indexView.Format = DXGI_FORMAT_R16_UINT;
+    m_carMesh.indexCount = static_cast<std::uint32_t>(
+        sizeof(GeneratedCarMesh::Indices) / sizeof(GeneratedCarMesh::Indices[0]));
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription{};
+    srvDescription.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDescription.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDescription.Texture2D.MostDetailedMip = 0;
+    srvDescription.Texture2D.MipLevels = 1;
+    srvDescription.Texture2D.PlaneSlice = 0;
+    srvDescription.Texture2D.ResourceMinLODClamp = 0.0f;
+    m_device->CreateShaderResourceView(
+        m_backgroundTexture.Get(),
+        &srvDescription,
+        m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+
+    SetDebugName(m_carMesh.vertexBuffer.Get(), L"Car vertex buffer");
+    SetDebugName(m_carMesh.indexBuffer.Get(), L"Car index buffer");
+    SetDebugName(m_backgroundTexture.Get(), L"Flattened scene background");
 }
 
 void Renderer::CreateConstantBuffer()
 {
-    const std::uint64_t bufferSize = sizeof(ObjectConstants) * FrameCount * SceneObjectCount;
+    const std::uint64_t bufferSize = sizeof(CarConstants) * FrameCount;
     const D3D12_HEAP_PROPERTIES uploadHeap = HeapProperties(D3D12_HEAP_TYPE_UPLOAD);
     const D3D12_RESOURCE_DESC description = BufferDescription(bufferSize);
     Check(
@@ -543,12 +1013,176 @@ void Renderer::CreateConstantBuffer()
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&m_constantBuffer)),
-        "Create constant buffer");
+        "Create car constant buffer");
 
     D3D12_RANGE noCpuReads{0, 0};
     void* mappedData = nullptr;
-    Check(m_constantBuffer->Map(0, &noCpuReads, &mappedData), "Map constant buffer");
+    Check(m_constantBuffer->Map(0, &noCpuReads, &mappedData), "Map car constant buffer");
     m_mappedConstants = static_cast<std::byte*>(mappedData);
+}
+
+void Renderer::LoadPaintSettings()
+{
+    PaintSettings settings;
+    settings.baseColorsSrgb = {
+        XMFLOAT3{0.678429127f, 0.678431321f, 0.678431321f},
+        XMFLOAT3{0.0f, 0.436627067f, 1.0f},
+        XMFLOAT3{0.506386429f, 0.756053146f, 1.0f},
+        XMFLOAT3{1.0f, 0.815686771f, 0.0f},
+        XMFLOAT3{0.345097446f, 0.345097446f, 0.345097446f},
+    };
+
+    const std::filesystem::path settingsPath = ModuleDirectory() / L"assets" / L"CarPaint.ini";
+    std::ifstream input(settingsPath);
+    if (!input)
+    {
+        throw std::runtime_error(std::format(
+            "Car paint settings were not found at {}.",
+            settingsPath.string()));
+    }
+
+    std::string section;
+    std::string line;
+    std::size_t lineNumber = 0;
+    while (std::getline(input, line))
+    {
+        ++lineNumber;
+        const std::size_t comment = line.find_first_of(";#");
+        const std::string_view content = Trim(std::string_view(line).substr(0, comment));
+        if (content.empty())
+        {
+            continue;
+        }
+
+        if (content.front() == '[' && content.back() == ']')
+        {
+            section = std::string(Trim(content.substr(1, content.size() - 2)));
+            if (section != "SimplePaint" && section != "BaseColors")
+            {
+                throw std::runtime_error(std::format(
+                    "Unknown CarPaint.ini section [{}] on line {}.",
+                    section,
+                    lineNumber));
+            }
+            continue;
+        }
+
+        const std::size_t equals = content.find('=');
+        if (equals == std::string_view::npos)
+        {
+            throw std::runtime_error(std::format(
+                "Expected key = value on CarPaint.ini line {}.",
+                lineNumber));
+        }
+        const std::string key(Trim(content.substr(0, equals)));
+        const std::string_view value = Trim(content.substr(equals + 1));
+        const std::string qualifiedKey = section + "." + key;
+
+        if (qualifiedKey == "SimplePaint.Brightness")
+        {
+            settings.brightness = ParseFloat(value, lineNumber);
+        }
+        else if (qualifiedKey == "SimplePaint.Shift")
+        {
+            settings.shift = ParseFloat(value, lineNumber);
+        }
+        else if (qualifiedKey == "SimplePaint.RotationDegrees")
+        {
+            settings.rotationDegrees = ParseFloat(value, lineNumber);
+        }
+        else if (qualifiedKey == "SimplePaint.DarkPoint")
+        {
+            settings.darkPoint = ParseFloat(value, lineNumber);
+        }
+        else if (qualifiedKey == "SimplePaint.LightPoint")
+        {
+            settings.lightPoint = ParseFloat(value, lineNumber);
+        }
+        else if (qualifiedKey == "SimplePaint.FacingCutoff")
+        {
+            settings.facingCutoff = ParseFloat(value, lineNumber);
+        }
+        else
+        {
+            constexpr std::array<std::string_view, CarMaterialCount> colorKeys = {
+                "BaseColors.Axles",
+                "BaseColors.Body",
+                "BaseColors.Cabin",
+                "BaseColors.Headlights",
+                "BaseColors.Wheels",
+            };
+            const auto colorKey = std::find(colorKeys.begin(), colorKeys.end(), qualifiedKey);
+            if (colorKey == colorKeys.end())
+            {
+                throw std::runtime_error(std::format(
+                    "Unknown CarPaint.ini key '{}' on line {}.",
+                    qualifiedKey,
+                    lineNumber));
+            }
+            settings.baseColorsSrgb[static_cast<std::size_t>(colorKey - colorKeys.begin())] =
+                ParseColor(value, lineNumber);
+        }
+    }
+
+    RequireUnitRange(settings.brightness, "Brightness");
+    RequireUnitRange(settings.shift, "Shift");
+    RequireUnitRange(settings.darkPoint, "DarkPoint");
+    RequireUnitRange(settings.lightPoint, "LightPoint");
+    RequireUnitRange(settings.facingCutoff, "FacingCutoff");
+    for (const XMFLOAT3& color : settings.baseColorsSrgb)
+    {
+        RequireUnitRange(color.x, "Base color red channel");
+        RequireUnitRange(color.y, "Base color green channel");
+        RequireUnitRange(color.z, "Base color blue channel");
+    }
+
+    constexpr float epsilon = 1.0e-5f;
+    const float safeBrightness = std::clamp(settings.brightness, epsilon, 1.0f - epsilon);
+    const float safeShift = std::min(settings.shift, 1.0f - epsilon);
+    const float rotationRadians = -DirectX::XMConvertToRadians(
+        std::fmod(settings.rotationDegrees, 360.0f));
+    m_paintWarp = {
+        std::cos(rotationRadians),
+        std::sin(rotationRadians),
+        safeShift,
+        std::sqrt(std::max(0.0f, 1.0f - safeShift * safeShift)),
+    };
+    m_paintTone = {
+        settings.lightPoint - settings.darkPoint,
+        settings.darkPoint,
+        settings.facingCutoff,
+        epsilon,
+    };
+
+    const float anchor = 1.0f - safeBrightness;
+    for (std::size_t materialIndex = 0; materialIndex < m_paintMaterials.size(); ++materialIndex)
+    {
+        const XMFLOAT3 source = settings.baseColorsSrgb[materialIndex];
+        const XMFLOAT3 baseColor{
+            std::clamp(SrgbToLinear(source.x), epsilon, 1.0f - epsilon),
+            std::clamp(SrgbToLinear(source.y), epsilon, 1.0f - epsilon),
+            std::clamp(SrgbToLinear(source.z), epsilon, 1.0f - epsilon),
+        };
+        PaintMaterialConstants& material = m_paintMaterials[materialIndex];
+        material.k1 = {
+            baseColor.x * safeBrightness,
+            baseColor.y * safeBrightness,
+            baseColor.z * safeBrightness,
+            0.0f,
+        };
+        material.k2 = {
+            baseColor.x - anchor,
+            baseColor.y - anchor,
+            baseColor.z - anchor,
+            0.0f,
+        };
+        material.k3 = {
+            anchor * (1.0f - baseColor.x),
+            anchor * (1.0f - baseColor.y),
+            anchor * (1.0f - baseColor.z),
+            0.0f,
+        };
+    }
 }
 
 void Renderer::UpdateCamera()
@@ -557,57 +1191,82 @@ void Renderer::UpdateCamera()
     const XMVECTOR target = DirectX::XMVectorZero();
     const XMVECTOR up = DirectX::XMVectorSet(-0.36863866f, 0.6755902f, -0.63850087f, 0.0f);
     const XMMATRIX view = DirectX::XMMatrixLookAtRH(eye, target, up);
-    const float aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
+    const float aspectRatio = std::min(
+        static_cast<float>(m_width) / static_cast<float>(m_height),
+        BackgroundAspectRatio);
     const XMMATRIX projection = DirectX::XMMatrixOrthographicRH(5.0f * aspectRatio, 5.0f, 1.0f, 20.0f);
     DirectX::XMStoreFloat4x4(&m_view, view);
     DirectX::XMStoreFloat4x4(&m_projection, projection);
 }
 
-float Renderer::SpherePosition() const
+Renderer::AnimationState Renderer::CurrentAnimationState() const
 {
-    constexpr double speed = 8.0;
+    constexpr double movementSpeed = 8.0;
     constexpr double travelDistance = 7.0;
     constexpr double fullCycleDistance = travelDistance * 4.0;
+    constexpr double rotationSpeed = std::numbers::pi / 2.0;
 
     const double elapsed = std::chrono::duration<double>(
         std::chrono::steady_clock::now() - m_animationStart).count();
-    const double phase = std::fmod(elapsed * speed + travelDistance, fullCycleDistance);
-    return static_cast<float>(travelDistance - std::abs(phase - travelDistance * 2.0));
+    const double phase = std::fmod(elapsed * movementSpeed + travelDistance, fullCycleDistance);
+
+    AnimationState state;
+    state.position = static_cast<float>(travelDistance - std::abs(phase - travelDistance * 2.0));
+    state.rotation = static_cast<float>(std::fmod(elapsed * rotationSpeed, std::numbers::pi * 2.0));
+    return state;
 }
 
-void Renderer::WriteObjectConstants(
+void Renderer::WriteCarConstants(
     const std::uint32_t frameIndex,
-    const std::uint32_t objectIndex,
-    DirectX::FXMMATRIX world,
-    const XMFLOAT4& color,
-    const bool unlit)
+    DirectX::FXMMATRIX world)
 {
     const XMMATRIX view = DirectX::XMLoadFloat4x4(&m_view);
     const XMMATRIX projection = DirectX::XMLoadFloat4x4(&m_projection);
+    const XMMATRIX worldView = world * view;
 
-    ObjectConstants constants{};
-    DirectX::XMStoreFloat4x4(&constants.worldViewProjection, world * view * projection);
-    DirectX::XMStoreFloat4x4(&constants.world, world);
-    constants.baseColor = color;
-    constants.lighting = {0.5f, 0.70710677f, 0.5f, unlit ? 1.0f : 0.0f};
-
-    const std::size_t slot = static_cast<std::size_t>(frameIndex) * SceneObjectCount + objectIndex;
-    std::memcpy(m_mappedConstants + slot * sizeof(ObjectConstants), &constants, sizeof(constants));
+    CarConstants constants{};
+    DirectX::XMStoreFloat4x4(&constants.worldViewProjection, worldView * projection);
+    DirectX::XMStoreFloat4x4(&constants.worldView, worldView);
+    constants.paintWarp = m_paintWarp;
+    constants.paintTone = m_paintTone;
+    constants.paintMaterials = m_paintMaterials;
+    std::memcpy(
+        m_mappedConstants + static_cast<std::size_t>(frameIndex) * sizeof(CarConstants),
+        &constants,
+        sizeof(constants));
 }
 
-void Renderer::DrawMesh(
-    const GpuMesh& mesh,
-    const std::uint32_t frameIndex,
-    const std::uint32_t objectIndex)
+void Renderer::DrawBackground()
 {
-    const std::uint64_t slot = static_cast<std::uint64_t>(frameIndex) * SceneObjectCount + objectIndex;
-    const D3D12_GPU_VIRTUAL_ADDRESS constantsAddress =
-        m_constantBuffer->GetGPUVirtualAddress() + slot * sizeof(ObjectConstants);
+    m_commandList->RSSetViewports(1, &m_viewport);
+    m_commandList->SetPipelineState(m_backgroundPipelineState.Get());
+    m_commandList->SetGraphicsRootSignature(m_backgroundRootSignature.Get());
+    ID3D12DescriptorHeap* descriptorHeaps[] = {m_srvHeap.Get()};
+    m_commandList->SetDescriptorHeaps(1, descriptorHeaps);
+    m_commandList->SetGraphicsRootDescriptorTable(
+        0,
+        m_srvHeap->GetGPUDescriptorHandleForHeapStart());
 
+    const float windowAspect = static_cast<float>(m_width) / static_cast<float>(m_height);
+    const float horizontalUvScale = windowAspect / BackgroundAspectRatio;
+    m_commandList->SetGraphicsRoot32BitConstants(1, 1, &horizontalUvScale, 0);
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_commandList->DrawInstanced(3, 1, 0, 0);
+}
+
+void Renderer::DrawCar(const std::uint32_t frameIndex)
+{
+    m_commandList->RSSetViewports(1, &m_sceneViewport);
+    m_commandList->SetPipelineState(m_carPipelineState.Get());
+    m_commandList->SetGraphicsRootSignature(m_carRootSignature.Get());
+    const D3D12_GPU_VIRTUAL_ADDRESS constantsAddress =
+        m_constantBuffer->GetGPUVirtualAddress() +
+        static_cast<std::uint64_t>(frameIndex) * sizeof(CarConstants);
     m_commandList->SetGraphicsRootConstantBufferView(0, constantsAddress);
-    m_commandList->IASetVertexBuffers(0, 1, &mesh.vertexView);
-    m_commandList->IASetIndexBuffer(&mesh.indexView);
-    m_commandList->DrawIndexedInstanced(mesh.indexCount, 1, 0, 0, 0);
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_commandList->IASetVertexBuffers(0, 1, &m_carMesh.vertexView);
+    m_commandList->IASetIndexBuffer(&m_carMesh.indexView);
+    m_commandList->DrawIndexedInstanced(m_carMesh.indexCount, 1, 0, 0, 0);
 }
 
 void Renderer::Render()
@@ -620,18 +1279,20 @@ void Renderer::Render()
     const std::uint32_t frameIndex = m_swapChain->GetCurrentBackBufferIndex();
     WaitForFrame(frameIndex);
 
-    const XMMATRIX groundWorld = DirectX::XMMatrixIdentity();
-    const XMMATRIX cubeWorld = DirectX::XMMatrixTranslation(0.0f, 0.5f, -1.5f);
-    const XMMATRIX sphereWorld = DirectX::XMMatrixTranslation(SpherePosition(), 0.5f, 0.0f);
-
-    WriteObjectConstants(frameIndex, 0, groundWorld, {0.08900002f, 0.89f, 0.48950002f, 1.0f}, false);
-    WriteObjectConstants(frameIndex, 1, cubeWorld, {0.88f, 0.1672f, 0.17907982f, 1.0f}, false);
-    WriteObjectConstants(frameIndex, 2, sphereWorld, {0.17000002f, 0.47433347f, 1.0f, 1.0f}, true);
+    const AnimationState animation = CurrentAnimationState();
+    constexpr float carScale = 0.25f;
+    const XMMATRIX carWorld =
+        DirectX::XMMatrixScaling(carScale, carScale, carScale) *
+        DirectX::XMMatrixRotationY(animation.rotation) *
+        DirectX::XMMatrixTranslation(animation.position, 0.0f, 0.0f);
+    WriteCarConstants(frameIndex, carWorld);
 
     Check(m_commandAllocators[frameIndex]->Reset(), "Reset command allocator");
-    Check(m_commandList->Reset(m_commandAllocators[frameIndex].Get(), m_pipelineState.Get()), "Reset command list");
-
-    m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    Check(
+        m_commandList->Reset(
+            m_commandAllocators[frameIndex].Get(),
+            m_backgroundPipelineState.Get()),
+        "Reset command list");
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
@@ -646,14 +1307,15 @@ void Renderer::Render()
     const D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
-    constexpr std::array clearColor{0.3f, 0.3f, 0.3f, 1.0f};
-    m_commandList->ClearRenderTargetView(rtvHandle, clearColor.data(), 0, nullptr);
-    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    DrawMesh(m_groundMesh, frameIndex, 0);
-    DrawMesh(m_cubeMesh, frameIndex, 1);
-    DrawMesh(m_sphereMesh, frameIndex, 2);
+    DrawBackground();
+    m_commandList->ClearDepthStencilView(
+        dsvHandle,
+        D3D12_CLEAR_FLAG_DEPTH,
+        1.0f,
+        0,
+        0,
+        nullptr);
+    DrawCar(frameIndex);
 
     D3D12_RESOURCE_BARRIER toPresent = TransitionBarrier(
         m_renderTargets[frameIndex].Get(),
@@ -699,7 +1361,7 @@ void Renderer::Resize(const std::uint32_t width, const std::uint32_t height)
             FrameCount,
             width,
             height,
-            BackBufferFormat,
+            SwapChainFormat,
             m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0),
         "ResizeBuffers");
     m_width = width;
