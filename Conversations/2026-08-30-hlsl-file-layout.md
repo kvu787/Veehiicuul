@@ -234,3 +234,34 @@ No color clear is needed because the opaque background covers every pixel. The c
 At 2560x1440 and 5,000 FPS, a full-screen background operation still touches about 18.43 billion pixels per second. An uncompressed texture read plus a 4-byte render-target write represents roughly 147 GB/s of theoretical traffic before caching or compression, so the background is not free even though it is 2D. The 3D car will be comparatively negligible.
 
 All other earlier choices remain: native Win32/C++20/D3D12, build-time DXC with embedded DXIL, fixed 1,000 Hz simulation, GameInput, no MSAA/TAA/post-processing, and separate low-latency play and offscreen-throughput benchmark modes. First validate 1,000 FPS at native resolution with stable frame-time percentiles; treat 5,000 FPS as an offscreen/render-throughput target unless presentation measurements prove otherwise.
+
+## User
+
+> okay, change this project to do this:
+
+## User
+
+> okay, change this project to do this:
+> DXC, Shader Model 6.0, and embedded DXIL
+>
+> also, ensure that hlsl code is in its own hlsl file(s)
+
+## Assistant
+
+Implemented the shader-toolchain and source-layout change without otherwise changing the current scene.
+
+- Moved the embedded shader source from `src/SceneShader.h` to the standalone `shaders/Scene.hlsl` file.
+- Updated CMake to find the Windows SDK's `dxc.exe` and compile `VSMain` as `vs_6_0` and `PSMain` as `ps_6_0` during the build.
+- Configured DXC to emit optimized DXIL objects and generated C++ byte-array headers. The renderer references those arrays, so both compiled shaders are linked into the executable.
+- Removed runtime `D3DCompile`, the `d3dcompiler.h` include, and the `d3dcompiler` linker dependency.
+- Added a runtime Direct3D 12 capability check requiring Shader Model 6.0.
+- Updated the README with the new build/runtime behavior and requirements.
+
+Verification completed successfully:
+
+- The Release build ran explicit `VSMain -> vs_6_0` and `PSMain -> ps_6_0` DXC steps and linked successfully.
+- DXC inspection reported `!{!"vs", i32 6, i32 0}` and `!{!"ps", i32 6, i32 0}` in the generated containers.
+- The executable imports `d3d12.dll` and `dxgi.dll`, but neither `d3dcompiler.dll` nor `dxcompiler.dll`.
+- The built application remained running through a three-second startup smoke test and was then stopped normally by the test harness.
+
+The implementation was committed as `ef23dbf` (`Compile embedded Shader Model 6 DXIL with DXC`).
