@@ -130,3 +130,19 @@ For all stable versions, a current stable DXC can compile older targets; an old 
 Direct3D feature level and shader model are separate axes. This project creates a DirectX 12 device at feature level 11_0, which does not by itself prevent Shader Model 6; the renderer should add a shader-model query if migrated to DXC. Its simple vertex and pixel shaders need only `vs_6_0` and `ps_6_0`, so the runtime requirement would be a DirectX 12 device whose driver reports at least `D3D_SHADER_MODEL_6_0`; none of the optional wave, raytracing, mesh, VRS, or native-16-bit features is needed.
 
 Sources consulted: Microsoft Learn's `D3D_SHADER_MODEL` and `D3D12_FEATURE_DATA_SHADER_MODEL` documentation, the DirectX 12 release history, the DirectXShaderCompiler documentation, the Agility SDK support and release pages, and Microsoft's Shader Model 6.7, 6.8, 6.9, and 6.10 announcements.
+
+## User
+
+> what hardware is needed for each version of 6.x
+
+## Assistant
+
+There is no authoritative fixed GPU-generation table for base Shader Model 6 targets. The exact hardware requirement for `vs_6_x` or `ps_6_x` is a DirectX 12 adapter whose installed driver reports at least `D3D_SHADER_MODEL_6_x` through `CheckFeatureSupport`. Shader Model is a driver/runtime execution contract rather than a direct silicon-generation label; driver updates and software implementations can change or emulate support. The GPU model name, DirectX feature level, Windows version, and shader-model number cannot substitute for the query.
+
+For ordinary vertex and pixel shaders, the base requirement at each revision is simply driver-reported support for 6.0, 6.1, and so on. The headline features added by a revision frequently require additional hardware capabilities: waves/int64 for 6.0; view instancing/barycentrics for 6.1; native 16-bit operations for 6.2; DXR for 6.3; VRS for 6.4; mesh shaders, sampler feedback, or DXR 1.1 for 6.5; advanced atomics for 6.6; advanced texture operations for 6.7; Work Graphs for 6.8; and relevant DXR capabilities for the raytracing portions of 6.9. A GPU may accept a plain shader targeting a given model without supporting every optional headline feature from that model.
+
+Concrete cross-vendor hardware lists therefore apply to particular features, not to every plain shader target. DirectX 12 Ultimate-class functionality associated with the 6.5 era broadly maps to NVIDIA RTX, AMD RDNA 2/Radeon RX 6000, and Intel Arc-class hardware, but each tier still needs querying. At the retail launch of Work Graphs, Microsoft listed AMD Radeon RX 7000 and NVIDIA RTX 30-series or newer with appropriate drivers. Microsoft's retail SM 6.9 feature table lists NVIDIA RTX hardware, Intel Arc B-series, and AMD RX 9000 for long vectors/16-bit special-float operations; OMM and SER support/performance differ further. Shader Model 6.10 remains preview-only, with feature-by-feature vendor support rather than a general consumer baseline.
+
+For this project's simple shader, `vs_6_0`/`ps_6_0` needs no optional Shader Model 6 features. The broad and correct hardware policy is to attempt a DirectX 12 device and require `HighestShaderModel >= D3D_SHADER_MODEL_6_0`; retain the existing SM 5.1 bytecode as a fallback only if support for older drivers matters. Targeting a higher model without using its features would unnecessarily reject hardware.
+
+Sources consulted: Microsoft Learn's shader-model capability-query documentation, Microsoft's DirectXShaderCompiler/DXIL documentation, the DirectX 12 Ultimate feature-level announcement, Microsoft's Work Graphs hardware list, the retail SM 6.9 hardware-support table, and the SM 6.10 preview hardware table.
