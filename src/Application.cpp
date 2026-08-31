@@ -179,23 +179,6 @@ LRESULT Application::HandleMessage(
         return 0;
     }
 
-    case WM_SYSKEYDOWN:
-        if (wParam == VK_RETURN &&
-            (lParam & (1LL << 29)) != 0 &&
-            (lParam & (1LL << 30)) == 0)
-        {
-            ToggleFullscreen();
-            return 0;
-        }
-        break;
-
-    case WM_SYSCHAR:
-        if (wParam == L'\r' && (lParam & (1LL << 29)) != 0)
-        {
-            return 0;
-        }
-        break;
-
     case WM_KEYDOWN:
         if ((lParam & (1LL << 30)) != 0)
         {
@@ -294,7 +277,7 @@ void Application::UpdateWindowTitle() const
     wchar_t title[256]{};
     swprintf_s(
         title,
-        L"Simple DirectX 12 Car | VSync: %s | %s | V: toggle VSync  F11/Alt+Enter: fullscreen  Esc: quit",
+        L"Simple DirectX 12 Car | VSync: %s | %s | V: toggle VSync  F11: fullscreen  Esc: quit",
         vsyncState,
         displayState);
     SetWindowTextW(m_window, title);

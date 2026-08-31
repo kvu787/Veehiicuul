@@ -42,7 +42,7 @@ directory.
 | Key | Action |
 | --- | --- |
 | `V` | Toggle VSync |
-| `F11` or `Alt+Enter` | Toggle borderless fullscreen |
+| `F11` | Toggle borderless fullscreen |
 | `Esc` or `Alt+F4` | Quit |
 
 The app starts windowed at 1280x720 with VSync off. Press F11 to toggle borderless fullscreen.
