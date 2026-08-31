@@ -11,7 +11,7 @@ The camera, object transforms, material colors, light direction, sphere speed, a
 
 ## Run
 
-Double-click `Run.cmd` in File Explorer. It discovers Visual Studio, configures a 64-bit Release build with its bundled CMake and Ninja, builds it, and launches the game. Subsequent launches rebuild only changed files.
+Double-click `Run.cmd` in File Explorer. This minimal wrapper starts `Run.ps1`, which discovers Visual Studio, configures a 64-bit Release build with its bundled CMake and Ninja, builds it, and launches the game. Subsequent launches rebuild only changed files.
 
 Requirements:
 
