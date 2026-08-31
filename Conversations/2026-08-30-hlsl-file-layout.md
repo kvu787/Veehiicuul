@@ -114,3 +114,19 @@ As of 2026-08-30, Shader Model 6.10 exists as a preview. Its preview includes li
 For this project's conventional vertex and pixel shaders, none of the specialized 6.1-and-later features is needed. If migrating to DXC, `vs_6_0` and `ps_6_0` are the broadest Shader Model 6 targets and are sufficient. Raising the target should be driven by a concrete feature requirement.
 
 Sources consulted: Microsoft's DirectXShaderCompiler Shader Model documentation, the published DirectX Shader Model 6.5 through 6.9 specifications, and the DirectX Developer Blog's Shader Model 6.10 preview announcement.
+
+## User
+
+> what are the requirements for each version
+
+## Assistant
+
+Shader Model requirements have four layers: DXC must recognize the target, the DirectX 12 runtime/DXIL validator must accept it, the installed GPU driver must report that shader model through `CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL)`, and any optional advanced feature used by the shader must pass its separate capability query. There is no reliable fixed list of GPU model names because driver updates can change reported support and many shader-model additions are optional features.
+
+The historical stock-Windows runtime baselines were Windows 10 1703 for SM 6.0, 1709 for 6.1, 1803 for 6.2, 1809 for 6.3, 1903 for 6.4, 2004 for 6.5, and Windows 11 for 6.6. The Agility SDK decouples newer user-mode D3D12 runtimes from OS releases: 6.6 is available through the Agility SDK on supported Windows 10 systems, 6.7 through Agility SDK 1.606.3, 6.8 through 1.613, and retail 6.9 through 1.619 with DXC 1.9.2602.16 or newer. Shader Model 6.10 remains preview-only and currently requires Agility SDK 1.720/1.721 preview, the corresponding preview DXC 1.10, preview-capable drivers, and the preview setup requirements.
+
+For all stable versions, a current stable DXC can compile older targets; an old matching compiler is unnecessary. Runtime code must query the device rather than infer support from the Windows version. SM 6.0 wave and int64 operations have separate support flags; SM 6.1 view instancing and barycentrics have capability checks; SM 6.2 native 16-bit operations require their device flag and `-enable-16bit-types`; SM 6.3 raytracing requires an appropriate DXR tier; SM 6.4 VRS requires a VRS tier; SM 6.5 mesh shaders, sampler feedback, and DXR 1.1 require their corresponding tiers; SM 6.6 advanced atomics require their support flags; SM 6.7 advanced texture operations are optional; SM 6.8 work graphs require a work-graphs tier; and SM 6.9's raytracing features require the relevant DXR support even though native 16-bit, wave, and int64 shader operations become mandatory for a device reporting SM 6.9.
+
+Direct3D feature level and shader model are separate axes. This project creates a DirectX 12 device at feature level 11_0, which does not by itself prevent Shader Model 6; the renderer should add a shader-model query if migrated to DXC. Its simple vertex and pixel shaders need only `vs_6_0` and `ps_6_0`, so the runtime requirement would be a DirectX 12 device whose driver reports at least `D3D_SHADER_MODEL_6_0`; none of the optional wave, raytracing, mesh, VRS, or native-16-bit features is needed.
+
+Sources consulted: Microsoft Learn's `D3D_SHADER_MODEL` and `D3D12_FEATURE_DATA_SHADER_MODEL` documentation, the DirectX 12 release history, the DirectXShaderCompiler documentation, the Agility SDK support and release pages, and Microsoft's Shader Model 6.7, 6.8, 6.9, and 6.10 announcements.
