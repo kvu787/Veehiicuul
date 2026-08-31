@@ -89,3 +89,28 @@ The Wikipedia article can create the opposite impression because it contains sep
 For this project, both existing targets belong to the same Shader Model 5.1 family: `VSMain` is compiled as `vs_5_1`, and `PSMain` as `ps_5_1`. A move to Shader Model 6 would normally update both to matching profiles such as `vs_6_0` and `ps_6_0`; they remain two separately compiled programs.
 
 Sources consulted: the referenced Wikipedia HLSL article and Microsoft Learn's HLSL programming guide, common-shader core documentation, and Shader Model 6.0 documentation.
+
+## User
+
+> explain the difference between each version of shader model version 6.x
+
+## Assistant
+
+Shader Model 6 revisions are cumulative: each minor version retains earlier capabilities and adds specific features. A higher target does not inherently make an ordinary shader faster or prettier, and some features remain optional hardware capabilities that require their own DirectX feature queries. Applications should normally target the lowest shader model containing the features they use.
+
+- 6.0 established the DXC/DXIL generation, adding wave intrinsics and 64-bit integer arithmetic.
+- 6.1 added view instancing through `SV_ViewID` and pixel-shader barycentrics through `SV_Barycentrics`/`GetAttributeAtVertex`.
+- 6.2 added real 16-bit scalar types usable in memory and selectable floating-point denormal behavior.
+- 6.3 added DirectX Raytracing support plus the `lib_6_3` shader-library and linking model.
+- 6.4 added variable-rate-shading semantics, packed low-precision dot-product intrinsics, and raytracing library subobjects.
+- 6.5 added mesh and amplification shader profiles, DXR 1.1 inline ray queries, sampler feedback, and additional grouped wave operations.
+- 6.6 added direct descriptor-heap indexing, expanded 64-bit and limited floating-point atomics, derivatives outside pixel shaders, `IsHelperLane`, pack/unpack operations, explicit wave-size selection, and ray-payload access qualifiers.
+- 6.7 added advanced texture operations such as raw gather, explicit-level comparison sampling, programmable offsets, and writable MSAA textures, plus quad voting and an option to include helper lanes in wave operations.
+- 6.8 added work-graph node shaders, comparison sampling with bias or gradients, start-vertex/start-instance system values, and wave-size ranges.
+- 6.9 makes native 16-bit operations, wave operations, and 64-bit integer operations mandatory for conforming implementations; it also adds opacity-micromap and shader-execution-reordering support for raytracing, correct 16-bit special-float tests, and vectors of 5 through 1024 elements with corresponding DXIL vector support.
+
+As of 2026-08-30, Shader Model 6.10 exists as a preview. Its preview includes linear-algebra matrix operations, thread-group wave indexing/counting, variable groupshared-memory limits, and additional raytracing intrinsics; it should not yet be treated as the stable compatibility target.
+
+For this project's conventional vertex and pixel shaders, none of the specialized 6.1-and-later features is needed. If migrating to DXC, `vs_6_0` and `ps_6_0` are the broadest Shader Model 6 targets and are sufficient. Raising the target should be driven by a concrete feature requirement.
+
+Sources consulted: Microsoft's DirectXShaderCompiler Shader Model documentation, the published DirectX Shader Model 6.5 through 6.9 specifications, and the DirectX Developer Blog's Shader Model 6.10 preview announcement.
