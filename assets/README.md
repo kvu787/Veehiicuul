@@ -2,8 +2,9 @@
 
 `SceneBackground.png` is a flattened image of the original gray background,
 green ground, and red cube. It is baked at a 32:9 aspect ratio so the renderer
-can center-crop it for windows up to 32:9 without changing the camera's vertical
-scale. At 16:9, the center half of the image maps one-to-one to 2560x1440.
+can center-crop it without changing the camera's vertical scale. Wider windows
+use a centered 32:9 scene viewport with matching side mattes. At 16:9, the
+center half of the image maps one-to-one to 2560x1440.
 
 `CarPaint.ini` exposes the user-facing SimplePaint controls and one base color
 for each material region in `Blender/Car.blend`. The normal build copies both
