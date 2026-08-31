@@ -45,8 +45,8 @@ directory.
 | `F11` or `Alt+Enter` | Toggle borderless fullscreen |
 | `Esc` or `Alt+F4` | Quit |
 
-The app starts windowed at 1280x720 with VSync on. To approximate an
-exclusive-fullscreen, VSync-off presentation, press `F11` and then `V`.
+The app starts windowed at 1280x720 with VSync off. To approximate an
+exclusive-fullscreen, VSync-off presentation, press `F11`.
 
 ## Adjust the car paint
 

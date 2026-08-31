@@ -105,7 +105,7 @@ private:
     std::uint32_t m_width = 0;
     std::uint32_t m_height = 0;
     bool m_initialized = false;
-    bool m_vsyncEnabled = true;
+    bool m_vsyncEnabled = false;
     bool m_tearingSupported = false;
 
     Microsoft::WRL::ComPtr<IDXGIFactory4> m_factory;
