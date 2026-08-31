@@ -1,8 +1,7 @@
 #include "Renderer.h"
 
-#include "SceneShader.h"
-
-#include <d3dcompiler.h>
+#include "ScenePS.h"
+#include "SceneVS.h"
 
 #include <algorithm>
 #include <array>
@@ -74,38 +73,6 @@ D3D12_RESOURCE_BARRIER TransitionBarrier(
     barrier.Transition.StateBefore = before;
     barrier.Transition.StateAfter = after;
     return barrier;
-}
-
-ComPtr<ID3DBlob> CompileShader(const char* entryPoint, const char* target)
-{
-    std::uint32_t flags = D3DCOMPILE_ENABLE_STRICTNESS;
-#if defined(_DEBUG)
-    flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-    flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
-#endif
-
-    ComPtr<ID3DBlob> shader;
-    ComPtr<ID3DBlob> errors;
-    const HRESULT result = D3DCompile(
-        SceneShader::Source,
-        std::strlen(SceneShader::Source),
-        "SceneShader.hlsl",
-        nullptr,
-        nullptr,
-        entryPoint,
-        target,
-        flags,
-        0,
-        &shader,
-        &errors);
-
-    if (FAILED(result))
-    {
-        const char* details = errors ? static_cast<const char*>(errors->GetBufferPointer()) : "No compiler details.";
-        throw std::runtime_error(std::format("Shader compilation failed: {}", details));
-    }
-    return shader;
 }
 
 void SetDebugName(ID3D12Object* object, const wchar_t* name)
@@ -240,6 +207,16 @@ void Renderer::CreateDevice()
         "D3D12CreateDevice");
     SetDebugName(m_device.Get(), L"D3D12 Device");
 
+    D3D12_FEATURE_DATA_SHADER_MODEL shaderModelSupport{D3D_SHADER_MODEL_6_0};
+    if (FAILED(m_device->CheckFeatureSupport(
+            D3D12_FEATURE_SHADER_MODEL,
+            &shaderModelSupport,
+            sizeof(shaderModelSupport))) ||
+        shaderModelSupport.HighestShaderModel < D3D_SHADER_MODEL_6_0)
+    {
+        throw std::runtime_error("The selected DirectX 12 adapter does not support Shader Model 6.0.");
+    }
+
 #if defined(_DEBUG)
     ComPtr<ID3D12InfoQueue> infoQueue;
     if (SUCCEEDED(m_device.As(&infoQueue)))
@@ -343,9 +320,6 @@ void Renderer::CreatePipeline()
             IID_PPV_ARGS(&m_rootSignature)),
         "CreateRootSignature");
 
-    const ComPtr<ID3DBlob> vertexShader = CompileShader("VSMain", "vs_5_1");
-    const ComPtr<ID3DBlob> pixelShader = CompileShader("PSMain", "ps_5_1");
-
     const std::array inputElements = {
         D3D12_INPUT_ELEMENT_DESC{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
         D3D12_INPUT_ELEMENT_DESC{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
@@ -388,8 +362,8 @@ void Renderer::CreatePipeline()
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDescription{};
     pipelineDescription.pRootSignature = m_rootSignature.Get();
-    pipelineDescription.VS = {vertexShader->GetBufferPointer(), vertexShader->GetBufferSize()};
-    pipelineDescription.PS = {pixelShader->GetBufferPointer(), pixelShader->GetBufferSize()};
+    pipelineDescription.VS = {g_sceneVertexShader, sizeof(g_sceneVertexShader)};
+    pipelineDescription.PS = {g_scenePixelShader, sizeof(g_scenePixelShader)};
     pipelineDescription.BlendState = blend;
     pipelineDescription.SampleMask = UINT_MAX;
     pipelineDescription.RasterizerState = rasterizer;

@@ -16,8 +16,9 @@ Double-click `Run.cmd` in File Explorer. It discovers Visual Studio, configures 
 Requirements:
 
 - Windows 10 or newer;
-- a DirectX 12-capable Windows system (hardware rendering is preferred; WARP software rendering is used as a fallback);
+- a DirectX 12 adapter and driver supporting Shader Model 6.0 (hardware rendering is preferred; WARP software rendering is used as a fallback when it meets that requirement);
 - Visual Studio 2022 or newer with the **Desktop development with C++** workload, the **C++ CMake tools for Windows** component, and a Windows SDK.
+- a current Windows SDK containing the DirectX Shader Compiler (`dxc.exe`).
 
 The generated executable is `build\release\SimpleDirectX12Game.exe`.
 
@@ -33,4 +34,6 @@ The app starts windowed at 1280×720 with VSync on. To approximate the reference
 
 ## Implementation
 
-The renderer uses a two-buffer flip-discard swap chain, per-back-buffer command allocators and fence values, a depth buffer, a root constant-buffer view, runtime-compiled embedded HLSL, and procedural cube/sphere/plane geometry. It handles resizing, DPI changes, minimizing/restoring, and GPU/CPU frame synchronization without external libraries or assets.
+The renderer uses a two-buffer flip-discard swap chain, per-back-buffer command allocators and fence values, a depth buffer, a root constant-buffer view, and procedural cube/sphere/plane geometry. Shader source lives in `shaders/Scene.hlsl`. During the build, DXC compiles its `VSMain` and `PSMain` entry points as Shader Model 6.0 DXIL and generates byte arrays that are embedded directly into the executable. The application therefore performs no runtime shader compilation and does not need shader source or compiler DLLs beside the executable.
+
+The renderer handles resizing, DPI changes, minimizing/restoring, and GPU/CPU frame synchronization without runtime shader/compiler files or other asset files.

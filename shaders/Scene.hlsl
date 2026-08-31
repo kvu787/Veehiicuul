@@ -1,8 +1,3 @@
-#pragma once
-
-namespace SceneShader
-{
-inline constexpr char Source[] = R"hlsl(
 cbuffer ObjectConstants : register(b0)
 {
     row_major float4x4 worldViewProjection;
@@ -42,6 +37,4 @@ float4 PSMain(PixelInput input) : SV_TARGET
     const float diffuse = saturate(dot(normal, normalize(lighting.xyz)));
     const float brightness = 0.28f + 0.72f * diffuse;
     return float4(baseColor.rgb * brightness, 1.0f);
-}
-)hlsl";
 }
