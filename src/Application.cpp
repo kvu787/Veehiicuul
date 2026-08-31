@@ -189,6 +189,13 @@ LRESULT Application::HandleMessage(
         }
         break;
 
+    case WM_SYSCHAR:
+        if (wParam == L'\r' && (lParam & (1LL << 29)) != 0)
+        {
+            return 0;
+        }
+        break;
+
     case WM_KEYDOWN:
         if ((lParam & (1LL << 30)) != 0)
         {
