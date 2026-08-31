@@ -57,13 +57,14 @@ def _script_arguments() -> argparse.Namespace:
 
 
 def _float32(value: float) -> float:
-    return struct.unpack("<f", struct.pack("<f", value))[0]
+    rounded = struct.unpack("<f", struct.pack("<f", value))[0]
+    # Keep the generated literals, deduplication keys, and binary fingerprint
+    # byte-for-byte consistent: C++ prints both signs of zero as 0.0f.
+    return 0.0 if rounded == 0.0 else rounded
 
 
 def _cpp_float(value: float) -> str:
     value = _float32(value)
-    if value == 0.0:
-        value = 0.0
     result = format(value, ".9g")
     if "." not in result and "e" not in result.lower():
         result += ".0"
