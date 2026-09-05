@@ -39,3 +39,5 @@ Do not attempt to maintain any sort of application compatibility between differe
 # Repository-specific
 
 Implement a Run.cmd file that launches the project when double-clicking the Run.cmd from File Explorer.
+
+Refer to `%UserProfile%\Repository\Godot\SimplePaintShaders` for the original development of SimplePaint shader.
