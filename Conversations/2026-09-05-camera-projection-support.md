@@ -52,3 +52,31 @@ Orthographic projection does **not** let us remove normal normalization—the sp
 
 I would start with explicit `w = 1` and `noperspective` as modest simplifications. I would benchmark the paint-rotation change before adopting it. **I would not expect a large speedup from the orthographic-only commitment alone.** These are code-review findings; I haven’t implemented or benchmarked them.
 
+
+## User
+
+Move paint rotation into the vertex shaderRotate the normal’s X/Y components per vertex, then normalize the interpolated result per pixel. A constant rotation preserves lengths and commutes with interpolation, so the pixel shader can use the resulting X component directly.Removes the rotatedX calculation from shifted pixels, at the cost of extra vertex work. Needs measurement and image comparison.
+
+this seems like an obvious win because pixel shader executions typically outnumber vertex shader executions. or is my intuition/mental model wrong?
+
+## Assistant
+
+I’ll check the exact tradeoff in this shader, especially how the zero-shift path affects your intuition.
+
+## Assistant final response
+
+**Your intuition is broadly correct.** When an object covers many pixels per processed vertex, moving equivalent work into the vertex shader is a standard optimization. Microsoft explicitly recommends considering this in its [HLSL optimization guidance](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-optimize).
+
+For this particular change, I would expect it to be a good candidate **when shifted paint covers a substantial screen area**. My earlier wording was cautious about the measurable benefit, not the underlying reasoning.
+
+The qualifications are:
+
+- **Count pixels that actually execute the calculation.** Here, rotation runs only for pixels that pass the facing cutoff and take the nonzero-shift path. All shipped materials have `Shift = 0`, so they currently skip it. An unconditional move would add vertex work without removing any executed pixel work in that configuration.
+- **The work is slightly different.** The current pixel shader calculates only rotated X. The proposed vertex shader must rotate both X and Y to preserve the normal’s length before pixel normalization. It also needs material rotation constants that it currently does not read. These are small costs, but relevant when triangles cover few pixels.
+- **Count this shader’s pixels, not the entire window.** The background uses a different shader. A small, densely tessellated sphere can have relatively little pixel work per vertex.
+- **Less arithmetic does not necessarily shorten the frame.** If CPU submission, memory traffic, or another rendering operation determines frame time, removing a few pixel instructions might have no measurable effect.
+
+There is also a favorable detail: **this change needs no additional interpolated values**. We can replace the existing three-component normal with the rotated normal, keeping normalization in the pixel shader.
+
+So, with nonzero shift and sufficiently large objects, **I would expect this to reduce shader work**. Measurement establishes how much that helps this app. Image comparison checks floating-point differences from changing the order of operations; the rotation/interpolation equivalence itself is mathematically sound when each triangle uses one material.
+
