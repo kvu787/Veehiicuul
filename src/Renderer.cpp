@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "UVSphere.h"
 
 #include "BackgroundPS.h"
 #include "BackgroundVS.h"
@@ -607,7 +608,7 @@ void Renderer::CreatePipelines()
     m_carRootSignature = CreateRootSignature(
         m_device.Get(),
         carRootDescription,
-        "Create car root signature");
+        "Create scene root signature");
 
     D3D12_RASTERIZER_DESC rasterizer{};
     rasterizer.FillMode = D3D12_FILL_MODE_SOLID;
@@ -702,7 +703,7 @@ void Renderer::CreatePipelines()
     carPipeline.SampleDesc = {1, 0};
     Check(
         m_device->CreateGraphicsPipelineState(&carPipeline, IID_PPV_ARGS(&m_carPipelineState)),
-        "Create car pipeline state");
+        "Create scene pipeline state");
 }
 
 void Renderer::CreateCommandObjects()
@@ -824,8 +825,22 @@ void Renderer::CreateStaticResources()
             background.height));
     }
 
-    const std::uint64_t vertexBytes = sizeof(GeneratedCarMesh::Vertices);
-    const std::uint64_t indexBytes = sizeof(GeneratedCarMesh::Indices);
+    const UVSphere::Mesh sphere = UVSphere::Generate(
+        m_sphereUResolution, m_sphereVResolution, CarMaterialCount);
+    std::vector<GeneratedCarMesh::Vertex> vertices(
+        std::begin(GeneratedCarMesh::Vertices), std::end(GeneratedCarMesh::Vertices));
+    std::vector<std::uint32_t> indices(
+        std::begin(GeneratedCarMesh::Indices), std::end(GeneratedCarMesh::Indices));
+    m_carIndexCount = static_cast<std::uint32_t>(indices.size());
+    const auto sphereVertexOffset = static_cast<std::uint32_t>(vertices.size());
+    vertices.insert(vertices.end(), sphere.vertices.begin(), sphere.vertices.end());
+    indices.reserve(indices.size() + sphere.indices.size());
+    for (const std::uint32_t index : sphere.indices)
+    {
+        indices.push_back(sphereVertexOffset + index);
+    }
+    const std::uint64_t vertexBytes = vertices.size() * sizeof(vertices[0]);
+    const std::uint64_t indexBytes = indices.size() * sizeof(indices[0]);
     const D3D12_HEAP_PROPERTIES defaultHeap = HeapProperties(D3D12_HEAP_TYPE_DEFAULT);
     const D3D12_HEAP_PROPERTIES uploadHeap = HeapProperties(D3D12_HEAP_TYPE_UPLOAD);
 
@@ -838,8 +853,8 @@ void Renderer::CreateStaticResources()
             &vertexDescription,
             D3D12_RESOURCE_STATE_COPY_DEST,
             nullptr,
-            IID_PPV_ARGS(&m_carMesh.vertexBuffer)),
-        "Create car vertex buffer");
+            IID_PPV_ARGS(&m_sceneMesh.vertexBuffer)),
+        "Create scene vertex buffer");
     Check(
         m_device->CreateCommittedResource(
             &defaultHeap,
@@ -847,8 +862,8 @@ void Renderer::CreateStaticResources()
             &indexDescription,
             D3D12_RESOURCE_STATE_COPY_DEST,
             nullptr,
-            IID_PPV_ARGS(&m_carMesh.indexBuffer)),
-        "Create car index buffer");
+            IID_PPV_ARGS(&m_sceneMesh.indexBuffer)),
+        "Create scene index buffer");
 
     ComPtr<ID3D12Resource> vertexUpload;
     ComPtr<ID3D12Resource> indexUpload;
@@ -860,7 +875,7 @@ void Renderer::CreateStaticResources()
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&vertexUpload)),
-        "Create car vertex upload buffer");
+        "Create scene vertex upload buffer");
     Check(
         m_device->CreateCommittedResource(
             &uploadHeap,
@@ -869,15 +884,15 @@ void Renderer::CreateStaticResources()
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&indexUpload)),
-        "Create car index upload buffer");
+        "Create scene index upload buffer");
 
     D3D12_RANGE noCpuReads{0, 0};
     void* mappedData = nullptr;
-    Check(vertexUpload->Map(0, &noCpuReads, &mappedData), "Map car vertex upload buffer");
-    std::memcpy(mappedData, GeneratedCarMesh::Vertices, static_cast<std::size_t>(vertexBytes));
+    Check(vertexUpload->Map(0, &noCpuReads, &mappedData), "Map scene vertex upload buffer");
+    std::memcpy(mappedData, vertices.data(), static_cast<std::size_t>(vertexBytes));
     vertexUpload->Unmap(0, nullptr);
-    Check(indexUpload->Map(0, &noCpuReads, &mappedData), "Map car index upload buffer");
-    std::memcpy(mappedData, GeneratedCarMesh::Indices, static_cast<std::size_t>(indexBytes));
+    Check(indexUpload->Map(0, &noCpuReads, &mappedData), "Map scene index upload buffer");
+    std::memcpy(mappedData, indices.data(), static_cast<std::size_t>(indexBytes));
     indexUpload->Unmap(0, nullptr);
 
     const D3D12_RESOURCE_DESC textureDescription =
@@ -937,8 +952,8 @@ void Renderer::CreateStaticResources()
 
     Check(m_commandAllocators[0]->Reset(), "Reset upload command allocator");
     Check(m_commandList->Reset(m_commandAllocators[0].Get(), nullptr), "Reset upload command list");
-    m_commandList->CopyBufferRegion(m_carMesh.vertexBuffer.Get(), 0, vertexUpload.Get(), 0, vertexBytes);
-    m_commandList->CopyBufferRegion(m_carMesh.indexBuffer.Get(), 0, indexUpload.Get(), 0, indexBytes);
+    m_commandList->CopyBufferRegion(m_sceneMesh.vertexBuffer.Get(), 0, vertexUpload.Get(), 0, vertexBytes);
+    m_commandList->CopyBufferRegion(m_sceneMesh.indexBuffer.Get(), 0, indexUpload.Get(), 0, indexBytes);
 
     D3D12_TEXTURE_COPY_LOCATION textureDestination{};
     textureDestination.pResource = m_backgroundTexture.Get();
@@ -952,11 +967,11 @@ void Renderer::CreateStaticResources()
 
     const std::array uploadBarriers = {
         TransitionBarrier(
-            m_carMesh.vertexBuffer.Get(),
+            m_sceneMesh.vertexBuffer.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST,
             D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER),
         TransitionBarrier(
-            m_carMesh.indexBuffer.Get(),
+            m_sceneMesh.indexBuffer.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST,
             D3D12_RESOURCE_STATE_INDEX_BUFFER),
         TransitionBarrier(
@@ -973,14 +988,13 @@ void Renderer::CreateStaticResources()
     m_commandQueue->ExecuteCommandLists(1, commandLists);
     WaitForGpu();
 
-    m_carMesh.vertexView.BufferLocation = m_carMesh.vertexBuffer->GetGPUVirtualAddress();
-    m_carMesh.vertexView.SizeInBytes = static_cast<std::uint32_t>(vertexBytes);
-    m_carMesh.vertexView.StrideInBytes = sizeof(GeneratedCarMesh::Vertex);
-    m_carMesh.indexView.BufferLocation = m_carMesh.indexBuffer->GetGPUVirtualAddress();
-    m_carMesh.indexView.SizeInBytes = static_cast<std::uint32_t>(indexBytes);
-    m_carMesh.indexView.Format = DXGI_FORMAT_R16_UINT;
-    m_carMesh.indexCount = static_cast<std::uint32_t>(
-        sizeof(GeneratedCarMesh::Indices) / sizeof(GeneratedCarMesh::Indices[0]));
+    m_sceneMesh.vertexView.BufferLocation = m_sceneMesh.vertexBuffer->GetGPUVirtualAddress();
+    m_sceneMesh.vertexView.SizeInBytes = static_cast<std::uint32_t>(vertexBytes);
+    m_sceneMesh.vertexView.StrideInBytes = sizeof(GeneratedCarMesh::Vertex);
+    m_sceneMesh.indexView.BufferLocation = m_sceneMesh.indexBuffer->GetGPUVirtualAddress();
+    m_sceneMesh.indexView.SizeInBytes = static_cast<std::uint32_t>(indexBytes);
+    m_sceneMesh.indexView.Format = DXGI_FORMAT_R32_UINT;
+    m_sceneMesh.indexCount = static_cast<std::uint32_t>(indices.size());
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription{};
     srvDescription.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -995,14 +1009,14 @@ void Renderer::CreateStaticResources()
         &srvDescription,
         m_srvHeap->GetCPUDescriptorHandleForHeapStart());
 
-    SetDebugName(m_carMesh.vertexBuffer.Get(), L"Car vertex buffer");
-    SetDebugName(m_carMesh.indexBuffer.Get(), L"Car index buffer");
+    SetDebugName(m_sceneMesh.vertexBuffer.Get(), L"Scene vertex buffer");
+    SetDebugName(m_sceneMesh.indexBuffer.Get(), L"Scene index buffer");
     SetDebugName(m_backgroundTexture.Get(), L"Flattened scene background");
 }
 
 void Renderer::CreateConstantBuffer()
 {
-    const std::uint64_t bufferSize = sizeof(CarConstants) * FrameCount;
+    const std::uint64_t bufferSize = sizeof(CarConstants) * ObjectsPerFrame * FrameCount;
     const D3D12_HEAP_PROPERTIES uploadHeap = HeapProperties(D3D12_HEAP_TYPE_UPLOAD);
     const D3D12_RESOURCE_DESC description = BufferDescription(bufferSize);
     Check(
@@ -1013,11 +1027,11 @@ void Renderer::CreateConstantBuffer()
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&m_constantBuffer)),
-        "Create car constant buffer");
+        "Create scene constant buffer");
 
     D3D12_RANGE noCpuReads{0, 0};
     void* mappedData = nullptr;
-    Check(m_constantBuffer->Map(0, &noCpuReads, &mappedData), "Map car constant buffer");
+    Check(m_constantBuffer->Map(0, &noCpuReads, &mappedData), "Map scene constant buffer");
     m_mappedConstants = static_cast<std::byte*>(mappedData);
 }
 
@@ -1029,6 +1043,7 @@ void Renderer::LoadPaintSettings()
         XMFLOAT3{0.0f, 0.436627067f, 1.0f},
         XMFLOAT3{0.506386429f, 0.756053146f, 1.0f},
         XMFLOAT3{1.0f, 0.815686771f, 0.0f},
+        XMFLOAT3{0.345097446f, 0.345097446f, 0.345097446f},
         XMFLOAT3{0.345097446f, 0.345097446f, 0.345097446f},
     };
 
@@ -1057,7 +1072,7 @@ void Renderer::LoadPaintSettings()
         if (content.front() == '[' && content.back() == ']')
         {
             section = std::string(Trim(content.substr(1, content.size() - 2)));
-            if (section != "SimplePaint" && section != "BaseColors")
+            if (section != "SimplePaint" && section != "BaseColors" && section != "Sphere")
             {
                 throw std::runtime_error(std::format(
                     "Unknown CarPaint.ini section [{}] on line {}.",
@@ -1102,14 +1117,30 @@ void Renderer::LoadPaintSettings()
         {
             settings.facingCutoff = ParseFloat(value, lineNumber);
         }
+        else if (qualifiedKey == "Sphere.UResolution" || qualifiedKey == "Sphere.VResolution")
+        {
+            std::uint32_t resolution = 0;
+            const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), resolution);
+            const bool isU = qualifiedKey == "Sphere.UResolution";
+            const std::uint32_t minimum = isU ? 3u : 2u;
+            if (error != std::errc{} || end != value.data() + value.size() ||
+                resolution < minimum || resolution > 512)
+            {
+                throw std::runtime_error(std::format(
+                    "{} must be an integer in [{}, 512] on CarPaint.ini line {}.",
+                    qualifiedKey, minimum, lineNumber));
+            }
+            (isU ? m_sphereUResolution : m_sphereVResolution) = resolution;
+        }
         else
         {
-            constexpr std::array<std::string_view, CarMaterialCount> colorKeys = {
+            constexpr std::array<std::string_view, PaintMaterialCount> colorKeys = {
                 "BaseColors.Axles",
                 "BaseColors.Body",
                 "BaseColors.Cabin",
                 "BaseColors.Headlights",
                 "BaseColors.Wheels",
+                "BaseColors.Sphere",
             };
             const auto colorKey = std::find(colorKeys.begin(), colorKeys.end(), qualifiedKey);
             if (colorKey == colorKeys.end())
@@ -1216,8 +1247,9 @@ Renderer::AnimationState Renderer::CurrentAnimationState() const
     return state;
 }
 
-void Renderer::WriteCarConstants(
+void Renderer::WriteObjectConstants(
     const std::uint32_t frameIndex,
+    const std::uint32_t objectIndex,
     DirectX::FXMMATRIX world)
 {
     const XMMATRIX view = DirectX::XMLoadFloat4x4(&m_view);
@@ -1231,7 +1263,8 @@ void Renderer::WriteCarConstants(
     constants.paintTone = m_paintTone;
     constants.paintMaterials = m_paintMaterials;
     std::memcpy(
-        m_mappedConstants + static_cast<std::size_t>(frameIndex) * sizeof(CarConstants),
+        m_mappedConstants + (static_cast<std::size_t>(frameIndex) * ObjectsPerFrame + objectIndex) *
+            sizeof(CarConstants),
         &constants,
         sizeof(constants));
 }
@@ -1254,19 +1287,22 @@ void Renderer::DrawBackground()
     m_commandList->DrawInstanced(3, 1, 0, 0);
 }
 
-void Renderer::DrawCar(const std::uint32_t frameIndex)
+void Renderer::DrawObjects(const std::uint32_t frameIndex)
 {
     m_commandList->RSSetViewports(1, &m_sceneViewport);
     m_commandList->SetPipelineState(m_carPipelineState.Get());
     m_commandList->SetGraphicsRootSignature(m_carRootSignature.Get());
     const D3D12_GPU_VIRTUAL_ADDRESS constantsAddress =
         m_constantBuffer->GetGPUVirtualAddress() +
-        static_cast<std::uint64_t>(frameIndex) * sizeof(CarConstants);
+        static_cast<std::uint64_t>(frameIndex) * ObjectsPerFrame * sizeof(CarConstants);
     m_commandList->SetGraphicsRootConstantBufferView(0, constantsAddress);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, &m_carMesh.vertexView);
-    m_commandList->IASetIndexBuffer(&m_carMesh.indexView);
-    m_commandList->DrawIndexedInstanced(m_carMesh.indexCount, 1, 0, 0, 0);
+    m_commandList->IASetVertexBuffers(0, 1, &m_sceneMesh.vertexView);
+    m_commandList->IASetIndexBuffer(&m_sceneMesh.indexView);
+    m_commandList->DrawIndexedInstanced(m_carIndexCount, 1, 0, 0, 0);
+    m_commandList->SetGraphicsRootConstantBufferView(0, constantsAddress + sizeof(CarConstants));
+    m_commandList->DrawIndexedInstanced(
+        m_sceneMesh.indexCount - m_carIndexCount, 1, m_carIndexCount, 0, 0);
 }
 
 void Renderer::Render()
@@ -1285,7 +1321,14 @@ void Renderer::Render()
         DirectX::XMMatrixScaling(carScale, carScale, carScale) *
         DirectX::XMMatrixRotationY(animation.rotation) *
         DirectX::XMMatrixTranslation(animation.position, 0.0f, 0.0f);
-    WriteCarConstants(frameIndex, carWorld);
+    WriteObjectConstants(frameIndex, 0, carWorld);
+    // Grounded beside the baked cube at (0, 0.5, -1.5): screen-right and
+    // below it, with clearance from the car's entire rotating sweep at Z=0.
+    constexpr float sphereRadius = 0.4f;
+    const XMMATRIX sphereWorld =
+        DirectX::XMMatrixScaling(sphereRadius, sphereRadius, sphereRadius) *
+        DirectX::XMMatrixTranslation(1.5f, sphereRadius, -1.5f);
+    WriteObjectConstants(frameIndex, 1, sphereWorld);
 
     Check(m_commandAllocators[frameIndex]->Reset(), "Reset command allocator");
     Check(
@@ -1315,7 +1358,7 @@ void Renderer::Render()
         0,
         0,
         nullptr);
-    DrawCar(frameIndex);
+    DrawObjects(frameIndex);
 
     D3D12_RESOURCE_BARRIER toPresent = TransitionBarrier(
         m_renderTargets[frameIndex].Get(),

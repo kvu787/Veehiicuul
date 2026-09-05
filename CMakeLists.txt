@@ -77,6 +77,7 @@ add_executable(SimpleDirectX12Game WIN32
     src/Main.cpp
     src/Renderer.cpp
     src/Renderer.h
+    src/UVSphere.h
 )
 
 add_dependencies(SimpleDirectX12Game CompiledShaders)
@@ -153,3 +154,11 @@ target_link_libraries(SimpleDirectX12Game PRIVATE
 )
 
 set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT SimpleDirectX12Game)
+
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(UVSphereTests tests/UVSphereTests.cpp)
+    target_include_directories(UVSphereTests PRIVATE src)
+    target_compile_features(UVSphereTests PRIVATE cxx_std_20)
+    add_test(NAME UVSphereGeometry COMMAND UVSphereTests)
+endif()

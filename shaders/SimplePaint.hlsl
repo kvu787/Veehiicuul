@@ -6,7 +6,7 @@
 // precomputed on the CPU. The original slice/Schlick/remap sequence is reduced
 // algebraically to one square root and one scalar divide per shifted pixel.
 
-static const uint MaterialCount = 5u;
+static const uint MaterialCount = 6u;
 
 struct PaintMaterial
 {

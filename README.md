@@ -6,14 +6,15 @@ Zoom Tracks:
 - a fixed orthographic camera with a 3/4 overhead view;
 - one 3D car, sourced from `Blender/Car.blend`, moving between `x = -7` and
   `x = +7` at 8 units per second while rotating at 90 degrees per second;
-- an optimized SimplePaint/K12 shader on the car; and
+- a stationary UV sphere below and to the right of the cube, clear of the car;
+- an optimized SimplePaint/K12 shader shared by the car and sphere; and
 - one flattened 2D image containing the gray background, green ground, and
   static red cube.
 
-The car is the only world-space 3D draw. The backdrop is a single textured
-full-screen triangle and never uses the depth buffer. The car then renders in
-one indexed draw with depth used only for its own surface occlusion. As in the
-Zoom Tracks design, the car always composites above the flattened environment.
+The car and sphere are world-space 3D draws. The backdrop is a single textured
+full-screen triangle and never uses the depth buffer. The car and sphere then
+render in separate indexed draws with shared depth and separate transforms.
+Both composite above the flattened environment.
 
 ## Run
 
@@ -52,7 +53,7 @@ The app starts windowed at 1280x720 with VSync off. Press F11 to toggle borderle
 
 With VSync off, presentation uses tearing when supported.
 
-## Adjust the car paint
+## Adjust the paint and sphere
 
 Edit `assets/CarPaint.ini`, then relaunch through `Run.cmd`. The settings are
 plain sRGB values and mirror the user-facing K12 controls:
@@ -65,7 +66,15 @@ plain sRGB values and mirror the user-facing K12 controls:
 | `DarkPoint` | 0 to 1 | Tone used at zero facing |
 | `LightPoint` | 0 to 1 | Tone used at maximum facing |
 | `FacingCutoff` | 0 to 1 | Front/back cutoff; K12 defaults to 0.01 |
-| material colors | RGB, 0 to 1 | Base colors for axles, body, cabin, headlights, and wheels |
+| material colors | RGB, 0 to 1 | Base colors for axles, body, cabin, headlights, wheels, and sphere |
+
+`[BaseColors]` includes `Sphere = 0.345097446, 0.345097446, 0.345097446`.
+All `[SimplePaint]` controls apply to the sphere as well as the car.
+In the same INI file, `[Sphere]` sets `UResolution = 64` (longitude segments,
+3 to 512) and `VResolution = 32` (pole-to-pole latitude segments, 2 to 512).
+Both must be integers. The mesh is generated at startup with smooth radial
+normals; restart through `Run.cmd` after editing the settings. The sphere has
+radius 0.4 and a fixed center at `(1.5, 0.4, -1.5)` so it rests on the ground.
 
 The [working input specification](docs/SimplePaintInputSpecification.md) defines proposed parameter limits for the numerical-stability review. These limits are not yet enforced by the implementation. See the [constrained analysis](Reports/ShaderNumerics/ConstrainedAnalysis.md) for the results.
 
@@ -85,8 +94,8 @@ normals to turn `Blender/Car.blend` into the checked-in generated mesh header.
 It also bakes the old static 3D scene into `assets/SceneBackground.png`. The
 background is 32:9 so normal windows can center-crop it while preserving the
 camera's vertical scale; its center half is a native 2560x1440 image at 16:9.
-Windows wider than 32:9 use matching side mattes and a centered 32:9 car
-viewport, so the live car never drifts relative to the baked scene.
+Windows wider than 32:9 use matching side mattes and a centered 32:9 scene
+viewport, so the live objects never drift relative to the baked scene.
 See `assets/README.md` for the regeneration command. If Blender 4.5.12 or 5.2.0
 is installed under `%UserProfile%\Program`, CMake also provides the explicit
 `RegenerateAssets` target.

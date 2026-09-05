@@ -31,6 +31,8 @@ public:
 private:
     static constexpr std::uint32_t FrameCount = 2;
     static constexpr std::uint32_t CarMaterialCount = 5;
+    static constexpr std::uint32_t PaintMaterialCount = CarMaterialCount + 1;
+    static constexpr std::uint32_t ObjectsPerFrame = 2;
     static constexpr float BackgroundAspectRatio = 32.0f / 9.0f;
     static constexpr DXGI_FORMAT SwapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
     static constexpr DXGI_FORMAT RenderTargetFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -49,8 +51,8 @@ private:
         DirectX::XMFLOAT4X4 worldView;
         DirectX::XMFLOAT4 paintWarp;
         DirectX::XMFLOAT4 paintTone;
-        std::array<PaintMaterialConstants, CarMaterialCount> paintMaterials;
-        std::array<std::byte, 112> padding{};
+        std::array<PaintMaterialConstants, PaintMaterialCount> paintMaterials;
+        std::array<std::byte, 64> padding{};
     };
 
     static_assert(sizeof(CarConstants) == 512);
@@ -63,7 +65,7 @@ private:
         float darkPoint = 0.0f;
         float lightPoint = 1.0f;
         float facingCutoff = 0.01f;
-        std::array<DirectX::XMFLOAT3, CarMaterialCount> baseColorsSrgb{};
+        std::array<DirectX::XMFLOAT3, PaintMaterialCount> baseColorsSrgb{};
     };
 
     struct GpuMesh
@@ -93,9 +95,9 @@ private:
 
     void UpdateCamera();
     [[nodiscard]] AnimationState CurrentAnimationState() const;
-    void WriteCarConstants(std::uint32_t frameIndex, DirectX::FXMMATRIX world);
+    void WriteObjectConstants(std::uint32_t frameIndex, std::uint32_t objectIndex, DirectX::FXMMATRIX world);
     void DrawBackground();
-    void DrawCar(std::uint32_t frameIndex);
+    void DrawObjects(std::uint32_t frameIndex);
 
     void WaitForFrame(std::uint32_t frameIndex);
     void WaitForGpu();
@@ -134,10 +136,13 @@ private:
     DirectX::XMFLOAT4X4 m_view{};
     DirectX::XMFLOAT4X4 m_projection{};
 
-    GpuMesh m_carMesh;
+    GpuMesh m_sceneMesh;
+    std::uint32_t m_sphereUResolution = 64;
+    std::uint32_t m_sphereVResolution = 32;
+    std::uint32_t m_carIndexCount = 0;
     DirectX::XMFLOAT4 m_paintWarp{};
     DirectX::XMFLOAT4 m_paintTone{};
-    std::array<PaintMaterialConstants, CarMaterialCount> m_paintMaterials{};
+    std::array<PaintMaterialConstants, PaintMaterialCount> m_paintMaterials{};
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
     std::byte* m_mappedConstants = nullptr;
