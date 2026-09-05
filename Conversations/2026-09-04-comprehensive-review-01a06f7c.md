@@ -2,7 +2,7 @@
 
 Dates: 2026-09-04 and 2026-09-05
 
-Reviewed commit: ba374bb
+Initial reviewed commit: ba374bb. Follow-up numerical analysis examines the same application source.
 
 The following user and assistant messages are preserved verbatim. Tool calls and tool output are excluded.
 
@@ -235,5 +235,141 @@ The test used `Brightness=0.01`, `DarkPoint=LightPoint=1`, and a base red value 
 So the effect depends on the paint settings. My finding was that **some allowed settings produce the wrong result because the safety rule is too aggressive**.
 
 The fix should preserve legitimate divisions involving small numbers while still handling actual zero-denominator cases safely.
+``````
+
+## 13. User
+
+``````text
+let's explore this issue further:
+The paint denominator clamp visibly changes valid colors. [SimplePaint.hlsl (line 81)](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/shaders/SimplePaint.hlsl:81) clamps legitimate positive denominators to 1e-5. With Brightness=0.01, DarkPoint=LightPoint=1, and body red 0.001, the reproduced linear red output is 0.0774 instead of approximately 1.0. Use a numerically stable formulation that preserves small positive denominators and handles singular endpoints explicitly.
+
+provide more example parameters that trigger this issue. also, do a comprehensive analysis on numerical stability issues for the shader and compile a list of issues with corresponding examples.
+
+``````
+
+## 14. Assistant
+
+``````text
+I’ll test more parameter combinations, check the shader’s calculations from start to finish, and separate clamp-induced color changes from floating-point precision problems and undefined endpoints.
+``````
+
+## 15. Assistant
+
+``````text
+The denominator clamp is only part of the picture. The CPU also clamps brightness, shift, and base colors, and several formulas subtract nearly equal numbers. I’m comparing those effects separately and checking representative cases with the actual compiled pixel shader on the GPU.
+``````
+
+## 16. Assistant
+
+``````text
+The first GPU sweep confirms several distinct effects: the color-denominator clamp, loss of precision from subtraction, and changes caused by clamping the input parameters. It also found a separate denominator-clamp problem in the shifted-highlight calculation when `FacingCutoff` is reduced. All 6,580 tested outputs were finite, so the main problem so far is incorrect colors rather than NaNs.
+``````
+
+## 17. Assistant
+
+``````text
+Removing the denominator floor alone is not enough. In one test it improved the output from `0.00310` to `0.51942`, but the stable calculation gives `1.0`; subtraction had already lost precision. An experimental formula using only nonnegative terms reduced the largest error in the color/brightness sweep to about `0.000000124`. The application shader is still unchanged.
+``````
+
+## 18. Assistant
+
+``````text
+The analysis now includes 6,593 cases, a detailed report, and ten ready-to-use settings files. It distinguishes confirmed arithmetic errors from changes caused by input clamps and from exact endpoints where the original formula has no unique answer. That distinction matters when deciding what a fix should do.
+``````
+
+## 19. Assistant
+
+``````text
+I tested **6,593 parameter/normal combinations with the compiled pixel shader**. The problem extends beyond the original denominator clamp.
+
+I saved the [full analysis](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Reports/ShaderNumerics/Analysis.md), [42 measured examples](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Reports/ShaderNumerics/Examples.csv), and ten complete INI presets, including [this near-white example](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Reports/ShaderNumerics/Presets/floor_light_B.ini).
+
+Here are **seven additional examples of the original denominator-clamp problem**.
+
+For each row, set:
+- `Brightness = B`
+- `Body = C, C, C` — these are sRGB input values.
+- `DarkPoint = T` and `LightPoint = T`
+- `Shift = 0`
+
+Making both tone endpoints equal removes dependence on the car’s orientation.
+
+| B | C | T | Current output | Stable reference |
+|---:|---:|---:|---:|---:|
+| 0.1 | 0.0002 | 1 | **0.154799** | **1.000000** |
+| 0.5 | 0.0002 | 1 | **0.773994** | **1.000000** |
+| 0.01 | 0.01 | 1 | **0.773994** | **1.000000** |
+| 0.999 | 0.9999 | 0.000001 | **0.099877** | **0.814434** |
+| 0.9999 | 0.9999 | 0.000001 | **0.099967** | **0.977739** |
+| 0.99 | 0.99999 | 0.000001 | **0.098998** | **0.813012** |
+| 0.0001 | 0.001 | 0.999999 | **0.000774** | **0.007582** |
+
+Outputs are **linear color-channel values**, before display conversion. The reference holds the stored float32 parameters fixed, so the comparison isolates arithmetic errors. None of these cases requires an undefined mathematical endpoint.
+
+Beyond that original clamp, the analysis found the following issues. For input-clamping issues, the comparison instead shows what the *requested* parameters mean.
+
+1. **Subtraction loses precision before the division.**  
+   The denominator combines a negative coefficient and a nearly equal positive coefficient. With `B=0.5, C=0.000259, T=1`, the output is **0.997992 instead of 1**, even though the denominator clamp is inactive. With `B=0.00001, C=0.04, T=1`, removing the clamp improves the output from **0.003096 to 0.519418**, but a stable calculation gives **1**. Simply deleting the clamp is insufficient.
+
+2. **Clamping base colors changes black and white.**  
+   The CPU replaces exact black with a small positive value and exact white with slightly less than one. The paint curve can amplify that change substantially:
+
+   - `B=0.9999, C=0, T=0.8`: **0.285662 instead of black, 0**.
+   - `B=0.5, C=1, T=0.0001`: **0.908986 instead of 1**.  
+   Both reference calculations are well-defined, and neither example activates the color-denominator floor.
+
+3. **Clamping brightness changes valid curves.**  
+   Brightness is restricted internally to approximately `0.00001–0.99999`. Using `C=0.735356983`, approximately linear gray 0.5:
+
+   - `B=0, T=0.99999`: **0.499322 instead of 0**.
+   - `B=1, T=0.00001`: **0.499661 instead of 1**.
+   - `B=0.0000001, T=0.999`: **0.009891 instead of approximately 0.000100**.
+
+The next examples involve surface orientation. They use neutral gray `C=0.735356983`, `Brightness=0.5`, `DarkPoint=0`, `LightPoint=1`, and `RotationDegrees=0`, unless stated otherwise. **N** is the surface normal expressed relative to the camera.
+
+4. **The shifted highlight has a second denominator-clamp problem.**  
+   With `Shift=0.99999`, `FacingCutoff=0`, and `N=(0.099999, 0.9949874371, 0.0004472125)`, output is **0.020014 instead of approximately 0.100000**. This case requires lowering the cutoff; the default cutoff rejects this grazing normal. It demonstrates a shader issue without asserting that the shipped car contains that exact visible normal.
+
+5. **The shifted-highlight arithmetic also suffers cancellation.**  
+   With `Shift=0.99999`, `FacingCutoff=0`, and `N≈(0.99999, 0, 0.0044721248)`, output is **0.999324 instead of approximately 1**. The denominator floor is inactive here. Separately, computing `sqrt(1 − Shift²)` loses precision near one: `Shift=0.99983`, `N=(0,0,1)` gives **0.01843869 instead of 0.01843790** for the stored parameters.
+
+6. **Clamping shift changes its requested behavior near one.**  
+   With `N=(0,0,1)`:
+
+   - `Shift=0.999999`: **0.004475 instead of 0.001414**.
+   - `Shift=1`: **0.004475 instead of 0**.  
+   Both settings are replaced by the same internal value.
+
+7. **Tone interpolation can erase a small light endpoint.**  
+   With `Shift=0`, `N=(0,0,1)`, `DarkPoint=1`, and `LightPoint=0.00000001`, output becomes **0 instead of approximately 0.00000001**. Storing `LightPoint − DarkPoint` as float32 loses the small endpoint before the shader runs. This is usually small in absolute terms.
+
+8. **Large rotation values lose precision before being reduced.**  
+   `RotationDegrees=1000000000000` should reduce to **280°**. Parsing it into float32 first changes it to a number that reduces to **144°**. With `Shift=0.8` and `N=(0.6,0,0.8)`, that produces **0.339225 instead of approximately 0.535306**. Parsing and reducing in double precision would preserve more useful digits.
+
+9. **Tiny nonzero shifts are treated as zero.**  
+   The fast path treats every shift up to `0.00001` as zero. With `Shift=0.00001` and `N=(0.6,0,0.8)`, output is **0.80000007 instead of 0.80000487**. This is a small deliberate approximation, rather than a severe instability.
+
+10. **Extremely small tones disappear through underflow.**  
+    Setting both tone endpoints to `1e-40` produced **0**, rather than approximately `1e-40`. The input is finite and accepted, but the result is visually negligible. This belongs in the numerical limits, not alongside the large visible errors.
+
+There are also two important boundaries to the findings:
+
+- **Some endpoint combinations are mathematically undefined.** For example, `Brightness=0` together with `tone=1` can produce `0/0`. Approaching that corner along different paths gives different limits. Such cases need an explicit artistic policy; there is no unique answer that an algebraic rearrangement can recover.
+- **Zero-length normals are invalid normalization inputs.** A diagnostic zero normal produced black on this GPU, but that behavior is not guaranteed. The shipped mesh’s normals remain safely away from zero under interpolation, so this was not demonstrated as a current mesh defect. [Microsoft’s normalization documentation](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-normalize).
+
+The strongest verified improvement is to express the color curve using **two nonnegative terms**:
+
+```text
+U = baseColor × Brightness × tone
+V = (1 − Brightness) × (1 − baseColor) × (1 − tone)
+
+color = U / (U + V)
+```
+
+This avoids subtracting nearly equal quantities. An experimental version reduced the maximum error in the color/brightness sweep to approximately **0.000000124**, while retaining the existing CPU clamps. It therefore validates the arithmetic improvement without resolving the separate input-clamping and endpoint-policy questions.
+
+All production outputs tested were finite. The main demonstrated failures are **incorrect finite colors**, not widespread NaNs. Near singular endpoints, input rounding can still matter even after the arithmetic is stabilized; the full report separates that sensitivity from implementation errors.
+
+The report and presets are committed. The application shader and active paint settings remain unchanged.
 ``````
 
