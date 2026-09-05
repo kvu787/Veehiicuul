@@ -3,7 +3,7 @@
 A small native Win32/C++ DirectX 12 scene moving toward the visual structure of
 Zoom Tracks:
 
-- a fixed orthographic camera with a 3/4 overhead view;
+- a fixed orthographic camera with a 3/4 overhead view (orthographic-only by design);
 - one 3D car, sourced from `Blender/Car.blend`, moving between `x = -7` and
   `x = +7` at 8 units per second while rotating at 90 degrees per second;
 - a stationary UV sphere below and to the right of the cube, clear of the car;
@@ -89,6 +89,25 @@ orthographic camera, it also removes K12's per-pixel view-basis construction
 and replaces the slice/Schlick/remap sequence with an algebraically equivalent
 one-square-root form. Input clamping, safe denominators, and saturated square
 roots prevent the original pole and exact-black/white endpoint NaNs.
+
+Orthographic projection is a permanent renderer invariant. Object and camera
+transforms are affine: the vertex shader computes clip XYZ with three dot
+products, supplies clip W = 1, and interpolates normals with noperspective.
+OrthographicTransforms.h represents projection as three scales and a depth
+offset; it builds packed transforms without a general projection-matrix multiply.
+Normals still require per-pixel normalization, and depth testing remains enabled.
+
+For nonzero paint shift, the vertex shader rotates both normal X/Y components
+using that triangle's material. It passes the rotated normal to the pixel shader,
+which normalizes it and uses X directly. This rotation preserves length and
+commutes with interpolation because every triangle has one material. The
+zero-shift path skips rotation, even when its configured angle is nonzero.
+
+Paint constants are uploaded once and shared by both objects and frame slots.
+The stationary sphere's transforms are populated at initialization and refreshed
+after resize, while the GPU is idle. Only the car's 96-byte transform block is
+updated each frame (each frame/object slot retains DirectX's 256-byte alignment).
+Object transforms assume uniform scale, as the car and sphere already use.
 
 ## Assets and implementation
 

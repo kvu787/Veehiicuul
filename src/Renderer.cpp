@@ -589,15 +589,17 @@ void Renderer::CreatePipelines()
         backgroundRootDescription,
         "Create background root signature");
 
-    D3D12_ROOT_PARAMETER carParameter{};
-    carParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    carParameter.Descriptor.ShaderRegister = 0;
-    carParameter.Descriptor.RegisterSpace = 0;
-    carParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    std::array<D3D12_ROOT_PARAMETER, 2> carParameters{};
+    carParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    carParameters[0].Descriptor.ShaderRegister = 0;
+    carParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    carParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    carParameters[1].Descriptor.ShaderRegister = 1;
+    carParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
     D3D12_ROOT_SIGNATURE_DESC carRootDescription{};
-    carRootDescription.NumParameters = 1;
-    carRootDescription.pParameters = &carParameter;
+    carRootDescription.NumParameters = static_cast<std::uint32_t>(carParameters.size());
+    carRootDescription.pParameters = carParameters.data();
     carRootDescription.NumStaticSamplers = 0;
     carRootDescription.pStaticSamplers = nullptr;
     carRootDescription.Flags =
@@ -1016,7 +1018,7 @@ void Renderer::CreateStaticResources()
 
 void Renderer::CreateConstantBuffer()
 {
-    const std::uint64_t bufferSize = sizeof(CarConstants) * ObjectsPerFrame * FrameCount;
+    const std::uint64_t bufferSize = MaterialConstantOffset + MaterialConstantSize;
     const D3D12_HEAP_PROPERTIES uploadHeap = HeapProperties(D3D12_HEAP_TYPE_UPLOAD);
     const D3D12_RESOURCE_DESC description = BufferDescription(bufferSize);
     Check(
@@ -1033,6 +1035,9 @@ void Renderer::CreateConstantBuffer()
     void* mappedData = nullptr;
     Check(m_constantBuffer->Map(0, &noCpuReads, &mappedData), "Map scene constant buffer");
     m_mappedConstants = static_cast<std::byte*>(mappedData);
+    // Settings are immutable after startup; both objects and both frames share them.
+    std::memcpy(m_mappedConstants + MaterialConstantOffset,
+        m_paintMaterials.data(), sizeof(m_paintMaterials));
 }
 
 void Renderer::LoadPaintSettings()
@@ -1241,9 +1246,20 @@ void Renderer::UpdateCamera()
     const float aspectRatio = std::min(
         static_cast<float>(m_width) / static_cast<float>(m_height),
         BackgroundAspectRatio);
-    const XMMATRIX projection = DirectX::XMMatrixOrthographicRH(5.0f * aspectRatio, 5.0f, 1.0f, 20.0f);
+    m_orthographicProjection = Orthographic::MakeProjection(
+        5.0f * aspectRatio, 5.0f, 1.0f, 20.0f);
     DirectX::XMStoreFloat4x4(&m_view, view);
-    DirectX::XMStoreFloat4x4(&m_projection, projection);
+
+    // UpdateCamera runs at initialization or after Resize has waited for the GPU.
+    // The stationary sphere needs new constants only when the viewport changes.
+    constexpr float sphereRadius = 0.4f;
+    const XMMATRIX sphereWorld =
+        DirectX::XMMatrixScaling(sphereRadius, sphereRadius, sphereRadius) *
+        DirectX::XMMatrixTranslation(1.5f, sphereRadius, -1.5f);
+    for (std::uint32_t frame = 0; frame < FrameCount; ++frame)
+    {
+        WriteObjectConstants(frame, 1, sphereWorld);
+    }
 }
 
 Renderer::AnimationState Renderer::CurrentAnimationState() const
@@ -1269,16 +1285,11 @@ void Renderer::WriteObjectConstants(
     DirectX::FXMMATRIX world)
 {
     const XMMATRIX view = DirectX::XMLoadFloat4x4(&m_view);
-    const XMMATRIX projection = DirectX::XMLoadFloat4x4(&m_projection);
-    const XMMATRIX worldView = world * view;
-
-    CarConstants constants{};
-    DirectX::XMStoreFloat4x4(&constants.worldViewProjection, worldView * projection);
-    DirectX::XMStoreFloat4x4(&constants.worldView, worldView);
-    constants.paintMaterials = m_paintMaterials;
+    const Orthographic::ObjectTransforms constants =
+        Orthographic::BuildObjectTransforms(world * view, m_orthographicProjection);
     std::memcpy(
         m_mappedConstants + (static_cast<std::size_t>(frameIndex) * ObjectsPerFrame + objectIndex) *
-            sizeof(CarConstants),
+            ObjectConstantStride,
         &constants,
         sizeof(constants));
 }
@@ -1308,13 +1319,15 @@ void Renderer::DrawObjects(const std::uint32_t frameIndex)
     m_commandList->SetGraphicsRootSignature(m_carRootSignature.Get());
     const D3D12_GPU_VIRTUAL_ADDRESS constantsAddress =
         m_constantBuffer->GetGPUVirtualAddress() +
-        static_cast<std::uint64_t>(frameIndex) * ObjectsPerFrame * sizeof(CarConstants);
+        static_cast<std::uint64_t>(frameIndex) * ObjectsPerFrame * ObjectConstantStride;
     m_commandList->SetGraphicsRootConstantBufferView(0, constantsAddress);
+    m_commandList->SetGraphicsRootConstantBufferView(
+        1, m_constantBuffer->GetGPUVirtualAddress() + MaterialConstantOffset);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_sceneMesh.vertexView);
     m_commandList->IASetIndexBuffer(&m_sceneMesh.indexView);
     m_commandList->DrawIndexedInstanced(m_carIndexCount, 1, 0, 0, 0);
-    m_commandList->SetGraphicsRootConstantBufferView(0, constantsAddress + sizeof(CarConstants));
+    m_commandList->SetGraphicsRootConstantBufferView(0, constantsAddress + ObjectConstantStride);
     m_commandList->DrawIndexedInstanced(
         m_sceneMesh.indexCount - m_carIndexCount, 1, m_carIndexCount, 0, 0);
 }
@@ -1336,13 +1349,6 @@ void Renderer::Render()
         DirectX::XMMatrixRotationY(animation.rotation) *
         DirectX::XMMatrixTranslation(animation.position, 0.0f, 0.0f);
     WriteObjectConstants(frameIndex, 0, carWorld);
-    // Grounded beside the baked cube at (0, 0.5, -1.5): screen-right and
-    // below it, with clearance from the car's entire rotating sweep at Z=0.
-    constexpr float sphereRadius = 0.4f;
-    const XMMATRIX sphereWorld =
-        DirectX::XMMatrixScaling(sphereRadius, sphereRadius, sphereRadius) *
-        DirectX::XMMatrixTranslation(1.5f, sphereRadius, -1.5f);
-    WriteObjectConstants(frameIndex, 1, sphereWorld);
 
     Check(m_commandAllocators[frameIndex]->Reset(), "Reset command allocator");
     Check(

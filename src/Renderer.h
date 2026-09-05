@@ -1,6 +1,6 @@
 #pragma once
 
-#include <DirectXMath.h>
+#include "OrthographicTransforms.h"
 #include <Windows.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -47,15 +47,15 @@ private:
         DirectX::XMFLOAT4 k3;
     };
 
-    struct CarConstants
-    {
-        DirectX::XMFLOAT4X4 worldViewProjection;
-        DirectX::XMFLOAT4X4 worldView;
-        std::array<PaintMaterialConstants, PaintMaterialCount> paintMaterials;
-        std::array<std::byte, 160> padding{};
-    };
-
-    static_assert(sizeof(CarConstants) == 768);
+    static constexpr std::uint32_t ObjectConstantStride =
+        D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT;
+    static_assert(sizeof(Orthographic::ObjectTransforms) <= ObjectConstantStride);
+    static_assert(sizeof(PaintMaterialConstants) == 80);
+    static constexpr std::uint32_t MaterialConstantOffset =
+        ObjectConstantStride * ObjectsPerFrame * FrameCount;
+    static constexpr std::uint32_t MaterialConstantSize =
+        (sizeof(PaintMaterialConstants) * PaintMaterialCount + ObjectConstantStride - 1) /
+        ObjectConstantStride * ObjectConstantStride;
 
     struct PaintSettings
     {
@@ -133,7 +133,7 @@ private:
     D3D12_VIEWPORT m_sceneViewport{};
     D3D12_RECT m_scissorRect{};
     DirectX::XMFLOAT4X4 m_view{};
-    DirectX::XMFLOAT4X4 m_projection{};
+    Orthographic::Projection m_orthographicProjection{};
 
     GpuMesh m_sceneMesh;
     std::uint32_t m_sphereUResolution = 64;

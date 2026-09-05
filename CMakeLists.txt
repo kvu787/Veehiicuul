@@ -77,6 +77,7 @@ add_executable(SimpleDirectX12Game WIN32
     src/Main.cpp
     src/Renderer.cpp
     src/Renderer.h
+    src/OrthographicTransforms.h
     src/UVSphere.h
 )
 
@@ -161,4 +162,8 @@ if(BUILD_TESTING)
     target_include_directories(UVSphereTests PRIVATE src)
     target_compile_features(UVSphereTests PRIVATE cxx_std_20)
     add_test(NAME UVSphereGeometry COMMAND UVSphereTests)
+    add_executable(OrthographicTransformTests tests/OrthographicTransformTests.cpp)
+    target_include_directories(OrthographicTransformTests PRIVATE src)
+    target_compile_features(OrthographicTransformTests PRIVATE cxx_std_20)
+    add_test(NAME OrthographicTransforms COMMAND OrthographicTransformTests)
 endif()

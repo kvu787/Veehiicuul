@@ -2,8 +2,8 @@
 // Source: https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader
 //
 // Orthographic projection is a permanent renderer invariant. It reduces K12's
-// view correction to a normalized view-space normal. Material coefficients, rotation trig, and range terms are
-// precomputed on the CPU. The original slice/Schlick/remap sequence is reduced
+// view correction to a normalized view-space normal. Material coefficients,
+// rotation trig, and range terms are precomputed on the CPU. The original slice/Schlick/remap sequence is reduced
 // algebraically to one square root and one scalar divide per shifted pixel.
 
 static const uint MaterialCount = 6u;
@@ -21,10 +21,15 @@ struct PaintMaterial
     float4 k3;
 };
 
-cbuffer CarConstants : register(b0)
+cbuffer ObjectConstants : register(b0)
 {
-    row_major float4x4 worldViewProjection;
-    row_major float4x4 worldView;
+    // Three packed columns of each affine transform; no perspective W column.
+    float4 worldToClip[3];
+    float4 normalToView[3];
+};
+
+cbuffer MaterialConstants : register(b1)
+{
     PaintMaterial paintMaterials[MaterialCount];
 };
 
@@ -45,8 +50,15 @@ struct PixelInput
 PixelInput VSMain(const VertexInput input)
 {
     PixelInput output;
-    output.position = mul(float4(input.position, 1.0f), worldViewProjection);
-    float3 normal = mul(float4(input.normal, 0.0f), worldView).xyz;
+    const float4 position = float4(input.position, 1.0f);
+    output.position = float4(
+        dot(position, worldToClip[0]),
+        dot(position, worldToClip[1]),
+        dot(position, worldToClip[2]), 1.0f);
+    float3 normal = float3(
+        dot(input.normal, normalToView[0].xyz),
+        dot(input.normal, normalToView[1].xyz),
+        dot(input.normal, normalToView[2].xyz));
     const PaintMaterial material = paintMaterials[input.materialIndex];
     // Every triangle has one material. This constant orthogonal rotation
     // commutes with interpolation and preserves length. Normalize per pixel.
