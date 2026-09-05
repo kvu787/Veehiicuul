@@ -58,15 +58,39 @@ try {
         }
     }
 
-    Invoke-Checked $cmake `
-        -S . `
-        -B 'build\release' `
+    $buildDirectory = Join-Path $PSScriptRoot 'build\release'
+    $cachePath = Join-Path $buildDirectory 'CMakeCache.txt'
+    $configureOptions = @()
+
+    if (Test-Path -LiteralPath $cachePath -PathType Leaf) {
+        $expectedDirectories = @{
+            CMAKE_HOME_DIRECTORY = $PSScriptRoot
+            CMAKE_CACHEFILE_DIR = $buildDirectory
+        }
+
+        foreach ($line in Get-Content -LiteralPath $cachePath) {
+            if ($line -match '^(CMAKE_HOME_DIRECTORY|CMAKE_CACHEFILE_DIR):INTERNAL=(.*)$') {
+                # CMake stores absolute paths, so a moved build needs a fresh configuration.
+                $cachedDirectory = $Matches[2].Replace('/', '\').TrimEnd('\')
+                $expectedDirectory = $expectedDirectories[$Matches[1]].Replace('/', '\').TrimEnd('\')
+                if ($cachedDirectory -ine $expectedDirectory) {
+                    Write-Host 'Repository or build folder moved. Refreshing CMake configuration.'
+                    $configureOptions += '--fresh'
+                    break
+                }
+            }
+        }
+    }
+
+    Invoke-Checked $cmake @configureOptions `
+        -S $PSScriptRoot `
+        -B $buildDirectory `
         -G Ninja `
         -DCMAKE_BUILD_TYPE=Release `
         "-DCMAKE_MAKE_PROGRAM=$ninja"
 
-    Invoke-Checked $cmake --build 'build\release' --parallel
-    Invoke-Checked (Join-Path $PSScriptRoot 'build\release\SimpleDirectX12Game.exe')
+    Invoke-Checked $cmake --build $buildDirectory --parallel
+    Invoke-Checked (Join-Path $buildDirectory 'SimpleDirectX12Game.exe')
 }
 catch {
     Write-Host

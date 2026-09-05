@@ -20,7 +20,9 @@ Zoom Tracks design, the car always composites above the flattened environment.
 Double-click `Run.cmd` in File Explorer. This minimal wrapper starts `Run.ps1`,
 which discovers Visual Studio, configures a 64-bit Release build with its
 bundled CMake and Ninja, stages the runtime assets, builds, and launches the
-game. Subsequent launches rebuild only changed files.
+game. Subsequent launches rebuild only changed files. If the repository or its
+build folder has moved, the launcher automatically refreshes the saved CMake
+configuration before building.
 
 Requirements:
 
@@ -29,7 +31,8 @@ Requirements:
   rendering is preferred; WARP software rendering is used as a fallback when
   it meets that requirement);
 - Visual Studio 2022 or newer with the **Desktop development with C++**
-  workload, the **C++ CMake tools for Windows** component, and a Windows SDK;
+  workload, the **C++ CMake tools for Windows** component (CMake 3.24 or newer),
+  and a Windows SDK;
   and
 - a current Windows SDK containing the DirectX Shader Compiler (`dxc.exe`).
 
