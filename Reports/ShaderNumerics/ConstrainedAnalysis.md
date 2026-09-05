@@ -2,7 +2,9 @@
 
 Date: 2026-09-05. Production implementation unchanged from the preceding numerical review.
 
-The [working input specification](../../docs/SimplePaintInputSpecification.md) uses e=0.01, RGB in [0,1], Brightness in [e,1-e], Shift in [0,1-e], Rotation in [0,360], DarkPoint in [0,1-e], and LightPoint in [e,1]. All bounds are inclusive. DarkPoint may exceed LightPoint.
+Historical scope: this report analyzes the earlier proposal with RGB in [0,1]. The current [working specification](../../docs/SimplePaintInputSpecification.md) and [RGB-constrained analysis](RgbConstrainedAnalysis.md) supersede it for the strict RGB margins. Its original examples and conclusions remain a record of that earlier domain.
+
+The previous input specification used e=0.01, RGB in [0,1], Brightness in [e,1-e], Shift in [0,1-e], Rotation in [0,360], DarkPoint in [0,1-e], and LightPoint in [e,1]. All bounds are inclusive. DarkPoint may exceed LightPoint.
 
 The user's local K12.gdshader was read directly. It fixes the normal-facing threshold at 0.01 on line 107. This analysis therefore holds the DirectX port's FacingCutoff at 0.01. It does not count the previous FacingCutoff=0 examples as failures under the new contract.
 

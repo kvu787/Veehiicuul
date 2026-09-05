@@ -1,51 +1,48 @@
 # SimplePaint input specification
 
 Status: working specification for numerical analysis before implementation changes.
-Date: 2026-09-05.
+Date: 2026-09-05. Revision: strict margins on RGB as well as the previously constrained controls.
+Implementation examined: 2700715; its shader and renderer source match 44459fa.
 
-This contract uses the user-facing parameters of K12.gdshader. It does not change the shader implementation, runtime validation, or active paint settings.
+This contract uses the user-facing parameters of K12.gdshader. In this repository it applies independently to the six materials in Settings.ini. It does not change shader code, runtime validation, or active paint settings.
 
 | Parameter | Constraint at general epsilon e | Current range, e = 0.01 |
 |---|---|---|
-| BaseColor R | 0 <= R <= 1 | 0 to 1 |
-| BaseColor G | 0 <= G <= 1 | 0 to 1 |
-| BaseColor B | 0 <= B <= 1 | 0 to 1 |
-| Brightness | e <= Brightness <= 1-e | 0.01 to 0.99 |
-| Shift | 0 <= Shift <= 1-e | 0 to 0.99 |
-| Rotation | 0 <= Rotation <= 360 | 0 to 360 degrees |
-| DarkPoint | 0 <= DarkPoint <= 1-e | 0 to 0.99 |
-| LightPoint | e <= LightPoint <= 1 | 0.01 to 1 |
+| BaseColor R | e < R < 1-e | Strictly between 0.01 and 0.99 |
+| BaseColor G | e < G < 1-e | Strictly between 0.01 and 0.99 |
+| BaseColor B | e < B < 1-e | Strictly between 0.01 and 0.99 |
+| Brightness | e <= Brightness <= 1-e | 0.01 to 0.99, inclusive |
+| Shift | 0 <= Shift <= 1-e | 0 to 0.99, inclusive |
+| Rotation | 0 <= Rotation <= 360 | 0 to 360 degrees, inclusive |
+| DarkPoint | 0 <= DarkPoint <= 1-e | 0 to 0.99, inclusive |
+| LightPoint | e <= LightPoint <= 1 | 0.01 to 1, inclusive |
 
-All values must be finite. Bounds are inclusive. RGB values are the existing user-facing sRGB values; the renderer converts them to linear values for the paint calculation. Rotation maps to RotationDegrees in this repository's INI file.
+All values must be finite. The strict RGB inequalities are intentional: 0.01 and 0.99 are not allowed RGB values. No DarkPoint <= LightPoint ordering is imposed. Equal tone endpoints are allowed in their overlapping ranges, and reversed ranges remain allowed. The combined intervals are nonempty only for 0 < e < 0.5.
 
-The current value e=0.01 is tentative. A nonempty Brightness interval requires 0 < e <= 0.5. Reducing e is not approved by this analysis as a globally error-free choice.
+RGB means the existing user-facing sRGB values, not the linear values used in the color formula. The renderer converts BaseColor using SrgbToLinear before computing coefficients. At e=0.01, each mathematical linear channel b therefore satisfies approximately:
 
-No additional DarkPoint <= LightPoint requirement has been specified. Reversed ranges and equal endpoints in the overlap are allowed.
-
-**Fixed K12 behavior**
-
-The local reference file is C:/Users/k/Repository/Godot/SimplePaintShaders/Godot/ShaderTest/Shaders/K12.gdshader. Its line 107 uses:
-
-~~~glsl
-float remappedFacingRatioSafe = normal.z < 0.01 ? 0.0 : remappedFacingRatio;
+~~~text
+0.000773993808 < b < 0.977401933806
 ~~~
 
-The threshold is fixed at 0.01, rather than being an additional user input. normal.z is the corrected normal's component toward the camera. Below the threshold, the facing value is zero and the tone becomes DarkPoint; the pixel is not discarded.
+Rotation maps to RotationDegrees in each material's INI section. Floating-point parsing and arithmetic may round a written value; strict decimal inequalities alone do not promise a numerical margin beyond these bounds.
 
-The DirectX port exposes this value as FacingCutoff. For this specification and its analysis, hold that implementation setting at 0.01. Earlier experiments with FacingCutoff=0 are outside this contract.
+**Fixed K12 behavior and separate constants**
 
-**Three separate constants**
+The local reference C:/Users/k/Repository/Godot/SimplePaintShaders/Godot/ShaderTest/Shaders/K12.gdshader fixes its normal-facing threshold at 0.01. The DirectX port exposes it globally as FacingCutoff; hold it at 0.01 for this contract. Below that normalized camera-facing component, facing becomes zero and the tone becomes DarkPoint. The pixel is not discarded.
 
-- Input margin e=0.01: the tentative parameter constraints above.
-- K12 normal threshold q=0.01: fixed shader behavior from the reference.
-- Existing DirectX numerical protection delta=0.00001: the current CPU clamps and shader denominator floors.
+- Input margin e=0.01: the tentative constraints above.
+- Facing threshold q=0.01: fixed K12 behavior for this analysis.
+- Implementation floor delta=0.00001: the current CPU protections and shader denominator floors.
 
-The first two currently have equal values but independent meanings. Specifying e=0.01 does not request changing the implementation's delta to 0.01.
+These have independent meanings. Changing the input specification does not change delta or q.
 
-**Output behavior still requiring specification**
+**Consequences and open accuracy criterion**
 
-These input constraints still permit a black channel at tone=1 and a white channel at tone=0. The unregularized rational paint formula is undefined at those two intersections. Input constraints alone do not choose their intended colors.
+The RGB margins exclude exact black/white and the original color formula's undefined endpoint combinations. At tone=0 the intended color is now unambiguously 0; at tone=1 it is unambiguously 1. A positive denominator bound exists throughout the valid mathematical color domain.
 
-The constraints also do not define an acceptable output-error tolerance. A claim that a smaller epsilon is safe should identify a criterion, such as a maximum linear-channel error or a maximum difference after display encoding, plus the supported arithmetic assumptions.
+At e=0.01, that bound is still below the current 1e-5 floor because of sRGB conversion. The revised analysis therefore does not certify this epsilon as accurate for the implementation. Selecting another margin requires an acceptable output-error tolerance, not just a requirement for finite outputs.
 
-See [the constrained numerical analysis](../Reports/ShaderNumerics/ConstrainedAnalysis.md) for proofs, measured counterexamples, and the distinction between mathematical domain safety and numerical accuracy.
+The current runtime still accepts broader ranges. Existing material settings that contain exact 0 or 1 RGB channels are outside this proposed contract. This revision documents the contract without migrating those settings or enforcing it.
+
+See [the RGB-constrained analysis](../Reports/ShaderNumerics/RgbConstrainedAnalysis.md) for proofs, current-shader measurements, and remaining issues. The [earlier analysis](../Reports/ShaderNumerics/ConstrainedAnalysis.md) records the previous proposal with RGB in [0,1].
