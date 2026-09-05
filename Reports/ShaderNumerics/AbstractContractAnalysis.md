@@ -146,7 +146,11 @@ Direct3D documents denormal flushing and finite instruction accuracy; [Microsoft
 
 Branch classification near the cutoff is sensitive to normal rounding. Positive margins on artistic inputs cannot guarantee a small uniform normal-to-color error across a discontinuity.
 
-**Valid geometry and adequate sampling remain separate requirements.** A zero-length interpolated normal has no direction; finite nonzero vertex normals alone do not exclude this. HLSL normalize has an indefinite result for a zero-length vector, as described in [Microsoft's normalize documentation](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-normalize). Very narrow but smooth highlights can also be undersampled by the mesh or screen, even with accurate arithmetic. These are geometry and sampling concerns, not failures of the rational color identity.
+**Normal validity is a renderer input requirement.** The renderer supplies a finite, unit-length surface normal in the required coordinate frame. Producing that normal belongs to the geometry and rendering pipeline, not to SimplePaint's artistic input constraints or epsilon selection.
+
+## Accepted non-issue: image sampling
+
+The user has explicitly accepted finite image sampling and undersampling of narrow highlights as a non-issue. Sampling is excluded from the remaining SimplePaint issues and epsilon-selection criteria; it does not create a requirement to change the shader mathematics or add antialiasing/filtering work. Do not revisit this settled topic unless the user explicitly reopens it. See the [specification decision](../../docs/SimplePaintInputSpecification.md#accepted-non-issue-image-sampling).
 
 ## Choosing margins after the numerical design
 

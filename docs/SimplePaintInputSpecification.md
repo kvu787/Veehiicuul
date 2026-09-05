@@ -100,6 +100,12 @@ Increasing Brightness moves the tone at which the base color appears toward zero
 
 This smoothness statement concerns the linear color curve. The complete shader contains the inherited hard facing cutoff. It generally jumps at z = q; the rejected branch selects F(d), while the admitted branch can select a different color. It must not be described as globally continuous or globally smooth in the surface normal. Geometry interpolation and the piecewise sRGB conversion have their own regularity limits.
 
+## Accepted non-issue: image sampling
+
+Decision recorded on 2026-09-05: the user understands and accepts finite image sampling, including undersampling of narrow smooth highlights and resulting aliasing or flicker, as a non-issue for SimplePaint.
+
+Do not list sampling among remaining shader or numerical issues, use it to justify input epsilons or changes to the shader mathematics, or introduce antialiasing/filtering work as a requirement. This topic is settled and must not be revisited unless the user explicitly reopens it.
+
 ## Numerical contract still to be selected
 
 The mathematical domain excludes singular color corners but is not a uniform floating-point accuracy guarantee. Its closure still contains singular corners, and allowed values can approach them arbitrarily closely.
