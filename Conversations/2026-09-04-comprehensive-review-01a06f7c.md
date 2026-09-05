@@ -2,7 +2,7 @@
 
 Dates: 2026-09-04 and 2026-09-05
 
-Initial reviewed commit: ba374bb. Follow-up numerical analysis examines the same application source.
+Initial reviewed commit: ba374bb. The first numerical reviews examined that application source. The strict RGB-margin follow-up examines 2700715, including the subsequent per-material and orthographic changes.
 
 The following user and assistant messages are preserved verbatim. Tool calls and tool output are excluded.
 
@@ -506,5 +506,151 @@ At `e=0.01`, this is approximately **0.00141067**, or **141 times** the implemen
 A stronger specification option would constrain **both DarkPoint and LightPoint to `[e, 1-e]`**. That would keep tone in the same interval and make the mathematical color denominator at least `e * e`: `0.0001` at e=0.01. It would exclude the undefined color corners and prevent this floor from activating in exact arithmetic. The CPU black/white clamp would still need attention. I documented this option without adopting it.
 
 The [full analysis](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Reports/ShaderNumerics/ConstrainedAnalysis.md) contains the proofs, remaining precision examples, and limitations. The [example data](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Reports/ShaderNumerics/ConstrainedExamples.csv) contains exact parameters and measured outputs. Verification covered **4,973 cases within the proposed ranges and 40 epsilon comparisons**; all measured outputs were finite. The specification, analysis, and conversation record are committed.
+``````
+
+## 30. User
+
+``````text
+let's say we add input constraints to the color channels instead of dark/light point.
+
+define the following constraints for the input parameters:
+0+e < R < 1-e
+0+e < G < 1-e
+0+e < B < 1-e
+0+e <= Brightness <= 1-e
+0 <= Shift <= 1-e
+0 <= Rotation <= 360
+0 <= Dark Point <= 1-e
+0+e <= Light Point <= 1
+epsilon (e) = 0.01
+
+redo analysis of the shader assuming these constraints.
+
+also, there have been many new commits since the last commit.
+
+``````
+
+## 31. Assistant
+
+``````text
+I’ll check the new commits and current shader first, then redo the analysis with the strict RGB bounds. I’ll also check how those bounds change after sRGB-to-linear conversion, since that affects the denominator’s minimum value.
+
+``````
+
+## 32. Assistant
+
+``````text
+The new commits moved paint rotation into the vertex shader and gave each material independent settings; the color formula and denominator floor are still present.
+
+The RGB restriction removes the exact-black/white problems. However, sRGB `0.01` converts to about `0.000774` in linear color, so legal colors just above the new lower bound can still trigger the floor at Brightness `0.01`. I’m checking the size of that error against the current shader.
+
+``````
+
+## 33. Assistant
+
+``````text
+The new bounds make the intended color formula well-defined at both tone endpoints, and the CPU color clamps no longer affect allowed inputs. The remaining floor error is smaller, but still substantial: near the RGB lower bound, the mathematical result can be reduced from `1` to about `0.774`.
+
+The GPU checks now use both the current vertex shader and pixel shader, so they include the recent rotation change.
+
+``````
+
+## 34. Assistant
+
+``````text
+The current shader produced `0.774071` instead of `1` for RGB `0.010001` and Brightness `0.01`. I also confirmed a smaller error with the floor inactive: a legal case produced `0.997159` instead of `1` because of cancellation.
+
+Unlike the previous unrestricted-RGB proposal, this one gives a positive lower bound for the color denominator. Increasing epsilon to roughly `0.01137` would put that mathematical bound above the floor, but it would leave almost no rounding margin and would not eliminate cancellation.
+
+``````
+
+## 35. Assistant
+
+``````text
+The revised specification and report are committed. The analysis covers 10,368 cases within the new bounds, plus eight epsilon comparisons. All measured outputs were finite, and the report separates the substantial floor error from smaller cancellation, rounding, and tiny-shift effects.
+
+I also checked the latest sphere-color commit; it changed settings only, so the tested shader is still current. I’m recording the conversation separately as required by the repository.
+
+``````
+
+## 36. Assistant
+
+``````text
+**The RGB constraints remove several issues, but `e=0.01` still allows a substantial denominator-floor error: approximately 22.6% loss of linear intensity.**
+
+I reviewed the changes through `2700715` and tested freshly compiled versions of both current shaders, including the rotation now performed in the vertex shader and the independent material settings. Your exact ranges, including the **strict RGB inequalities**, are recorded in the [updated specification](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/docs/SimplePaintInputSpecification.md).
+
+The important detail is that this repository interprets input RGB as **sRGB**. It converts those values to linear color before calculating the paint:
+
+```text
+sRGB 0.01 becomes approximately 0.000773994 linear
+sRGB 0.99 becomes approximately 0.977401934 linear
+```
+
+Therefore, the new lower RGB bound does not keep the shader's internal color above `0.01`.
+
+**The denominator now has a positive lower bound, but that bound is too small for the current floor.**
+
+Writing `b` for a linear color channel and `t` for the calculated tone, the mathematical denominator is:
+
+```text
+D = t*b*Brightness + (1-t)*(1-b)*(1-Brightness)
+```
+
+Under your constraints, we can prove:
+
+```text
+D > e * min(linear(e), 1-linear(1-e))
+
+At e=0.01:
+D > 0.000007739938
+```
+
+The shader's floor is `0.00001`, which is larger. Strict RGB inequalities still permit values arbitrarily close to the lower bound.
+
+These measured examples all obey your constraints. They use `R=G=B=C`, Brightness=`0.01`, DarkPoint=`0`, LightPoint=`1`, Shift=`0`, Rotation=`0`, and a surface normal directly toward the camera. **The expected linear output is 1 in every row.**
+
+| Input C, sRGB | Current linear output | Cause |
+|---:|---:|---|
+| 0.010001 | 0.774071 | Denominator floor |
+| 0.0101 | 0.781734 | Denominator floor |
+| 0.011 | 0.851393 | Denominator floor |
+| 0.012 | 0.928793 | Denominator floor |
+| 0.013 | 0.998882 | Cancellation; floor inactive |
+| 0.020 | 0.998882 | Cancellation; floor inactive |
+
+This can also change hue. With the same controls and RGB=`(0.0101, 0.02, 0.5)`, the output is approximately `(0.781734, 0.998882, 1)` instead of white.
+
+The revised status of the issues is:
+
+| Issue | Result with the new RGB constraints |
+|---|---|
+| CPU clamps changing black/white input colors | Eliminated for compliant inputs; those clamps are inactive. |
+| Undefined black/white color combinations | Eliminated. The intended formula is defined throughout the allowed color domain. |
+| Earlier near-white shadow-floor failures | Excluded by the upper RGB bound. |
+| Dark-color highlight denominator floor | Still present, as shown above. |
+| Cancellation in the color denominator | Still present, including cases above the floor. |
+| Amplification of tone/normal rounding | Reduced by the bounded domain, but still measurable. |
+| Tiny nonzero Shift treated as zero | Still present; the color curve can amplify this approximation. |
+| Shift denominator becoming too small | Still has the previous strong margin: at least about `0.001410674` mathematically. |
+| Brightness endpoints, Shift=1, huge rotations | Excluded by the other constraints. |
+| Extremely small DarkPoint disappearing | Still possible; the measured effect is visually negligible. |
+
+For example, a legal case with RGB=`0.0129`, Brightness=`0.01`, DarkPoint=`0.99`, LightPoint=`1`, and a nearly front-facing normal produced **0.985495 instead of 0.990192**, with the denominator floor inactive. An experimental stable color denominator improved it to **0.988330**; the remaining difference came from upstream rounding. The report supplies the exact normal and separates these effects.
+
+**Increasing epsilon can now help with the floor; decreasing it makes the bound worse.**
+
+Unlike the previous unrestricted-RGB proposal, this proposal gives us a useful mathematical threshold:
+
+```text
+e > sqrt(12.92 * 0.00001)
+e > approximately 0.01136661779
+```
+
+That addresses the floor in exact arithmetic. Values barely above the threshold leave little rounding margin. Even `e=0.012` does not eliminate cancellation: a compliant tested case still produced **0.997471 instead of 1**, with the floor inactive. It should therefore not be described as a fully safe epsilon.
+
+The [full analysis](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Reports/ShaderNumerics/RgbConstrainedAnalysis.md) contains the proofs and examples for each remaining issue; the [data file](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Reports/ShaderNumerics/RgbConstrainedExamples.csv) contains 44 named cases. Testing covered **10,368 cases within your constraints plus eight epsilon comparisons**. All measured outputs were finite.
+
+The documentation and conversation record are committed. The application implementation and your settings were not changed; the proposed constraints are not yet enforced.
 ``````
 
