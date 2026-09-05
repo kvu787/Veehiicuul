@@ -438,3 +438,67 @@ I’ll record sampling as an accepted non-issue in the specification and remove 
 ``````text
 Recorded and committed in the [specification](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/docs/SimplePaintInputSpecification.md:103): **sampling is an accepted non-issue and must not be revisited unless you explicitly reopen it.** The analysis now reflects that decision too.
 ``````
+
+## 19. User
+
+``````text
+explain the meaning and definition of "tone"
+
+``````
+
+## 20. Assistant
+
+``````text
+I’ll use the specification’s definition and show how tone relates to facing, Brightness, and the final color.
+``````
+
+## 21. Assistant
+
+``````text
+In SimplePaint, **tone is a number from 0 to 1 that selects a position along the shader’s color curve**. It is an internal calculated value, not an additional user-facing parameter.
+
+Think of the curve as a color ramp:
+
+- **Tone 0** selects black.
+- **Tone 1** selects white.
+- **Intermediate tones** select colors along the ramp shaped by Base Color and Brightness.
+
+Those endpoint statements apply under your proposed input constraints.
+
+**Tone is calculated by mapping the facing value into the Dark Point–Light Point range:**
+
+```text
+tone = DarkPoint * (1 - facing) + LightPoint * facing
+```
+
+Here, `facing` is the value produced by the surface-normal, Shift, Rotation, and cutoff calculations.
+
+For example, with Dark Point = `0.2` and Light Point = `0.8`:
+
+| Facing | Tone |
+|---:|---:|
+| 0 | 0.2 |
+| 0.25 | 0.35 |
+| 0.5 | 0.5 |
+| 0.75 | 0.65 |
+| 1 | 0.8 |
+
+So those controls make the surface use the portion of the color curve between tones 0.2 and 0.8. With Dark Point = 0 and Light Point = 1, tone simply equals facing.
+
+**Tone is not the final pixel brightness.** For example, tone `0.5` does not necessarily produce gray or half-intensity RGB. The color curve converts that one tone into three output channel values.
+
+Brightness determines where the chosen base color appears on that curve:
+
+```text
+tone = 1 - Brightness  →  output equals the linear base color
+```
+
+Thus:
+
+- With Brightness = `0.5`, tone `0.5` produces the base color.
+- With Brightness = `0.2`, tone `0.8` produces the base color.
+
+Changing Brightness changes the curve’s response to tone; it does not change how tone itself is calculated. The same tone value feeds all three channel curves.
+
+In the original K12 code, the corresponding variable is named `lightDarkAdjustedFacingRatio`. “Tone” is the shorter name used in our mathematical specification for that adjusted facing value.
+``````
