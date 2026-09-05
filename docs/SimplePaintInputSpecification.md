@@ -1,48 +1,121 @@
-# SimplePaint input specification
+# SimplePaint interface and mathematical specification
 
-Status: working specification for numerical analysis before implementation changes.
-Date: 2026-09-05. Revision: strict margins on RGB as well as the previously constrained controls.
-Implementation examined: 2700715; its shader and renderer source match 44459fa.
+Status: working specification; numerical input margins and an error tolerance are not yet selected.
+Date: 2026-09-05.
+Source examined: 2f0659a; the application shader and renderer match the source tested in the previous RGB-margin analysis.
 
-This contract uses the user-facing parameters of K12.gdshader. In this repository it applies independently to the six materials in Settings.ini. It does not change shader code, runtime validation, or active paint settings.
+This revision supersedes the earlier tentative shared epsilon of 0.01. The intended K12 visuals and real-number mathematics are the reference. Arithmetic safeguards, coefficient layouts, and approximation thresholds in the current DirectX implementation are not definitions of the shader.
 
-| Parameter | Constraint at general epsilon e | Current range, e = 0.01 |
+The contract applies independently to each material. Runtime enforcement and material settings have not been changed.
+
+## User interface
+
+| Parameter | Abstract domain | Meaning |
 |---|---|---|
-| BaseColor R | e < R < 1-e | Strictly between 0.01 and 0.99 |
-| BaseColor G | e < G < 1-e | Strictly between 0.01 and 0.99 |
-| BaseColor B | e < B < 1-e | Strictly between 0.01 and 0.99 |
-| Brightness | e <= Brightness <= 1-e | 0.01 to 0.99, inclusive |
-| Shift | 0 <= Shift <= 1-e | 0 to 0.99, inclusive |
-| Rotation | 0 <= Rotation <= 360 | 0 to 360 degrees, inclusive |
-| DarkPoint | 0 <= DarkPoint <= 1-e | 0 to 0.99, inclusive |
-| LightPoint | e <= LightPoint <= 1 | 0.01 to 1, inclusive |
+| R, G, B | Each in (0, 1) | Base color in the existing user-facing sRGB space |
+| Brightness | (0, 1) | Positions the base-color anchor on the tone curve |
+| Shift | [0, 1) | Warps the facing lobe in the direction selected by Rotation |
+| Rotation | [0, 360) degrees | Circular orientation of the shift; equivalent to RotationDegrees in Settings.ini |
+| Dark Point | [0, 1) | Tone selected when the warped facing value is zero |
+| Light Point | (0, 1] | Tone selected when the warped facing value is one |
 
-All values must be finite. The strict RGB inequalities are intentional: 0.01 and 0.99 are not allowed RGB values. No DarkPoint <= LightPoint ordering is imposed. Equal tone endpoints are allowed in their overlapping ranges, and reversed ranges remain allowed. The combined intervals are nonempty only for 0 < e < 0.5.
+All inputs must be finite. Parentheses exclude an endpoint; brackets include it. These are mathematical domains, not yet a complete rule for which decimal strings or machine values the UI accepts.
 
-RGB means the existing user-facing sRGB values, not the linear values used in the color formula. The renderer converts BaseColor using SrgbToLinear before computing coefficients. At e=0.01, each mathematical linear channel b therefore satisfies approximately:
+No Dark Point <= Light Point ordering is imposed. Reversed tone ranges are valid. Equal endpoints are allowed inside (0, 1) and give a constant color. Dark Point and Light Point control the input of the color curve; they are not final output intensities.
+
+Rotation is periodic: the direction at 360 degrees equals the direction at zero, and [0, 360) is its canonical representation. Shift = 0 makes Rotation irrelevant.
+
+The fixed K12 facing cutoff is q = 0.01. It is not an additional artistic control in this specification and is independent of all future numerical margins. The DirectX port's global FacingCutoff setting must equal q for the conclusions here to apply.
+
+## Core real-number mathematics
+
+The following equations specify one color channel. Apply them independently to red, green, and blue. Products, differences, square roots, and divisions here are exact real-number operations, not prescribed floating-point instruction sequences.
+
+### Color interpretation
+
+Let C be one user-facing sRGB channel and c its linear value. Preserve the existing interpretation:
 
 ~~~text
-0.000773993808 < b < 0.977401933806
+c = C / 12.92                            if C <= 0.04045
+c = ((C + 0.055) / 1.055) ^ 2.4         otherwise
 ~~~
 
-Rotation maps to RotationDegrees in each material's INI section. Floating-point parsing and arithmetic may round a written value; strict decimal inequalities alone do not promise a numerical margin beyond these bounds.
+Thus 0 < c < 1. The shader output is linear color; presentation performs the existing sRGB encoding. UI RGB margins must be translated through this conversion when deriving bounds on c.
 
-**Fixed K12 behavior and separate constants**
+### Surface facing and shift
 
-The local reference C:/Users/k/Repository/Godot/SimplePaintShaders/Godot/ShaderTest/Shaders/K12.gdshader fixes its normal-facing threshold at 0.01. The DirectX port exposes it globally as FacingCutoff; hold it at 0.01 for this contract. Below that normalized camera-facing component, facing becomes zero and the tone becomes DarkPoint. The pixel is not discarded.
+The geometric input is a finite, nonzero interpolated normal, expressed in the camera-corrected frame and normalized to unit length. For this repository's orthographic projection this is the view-space frame used by the current renderer. Material rotation is by the negative of the user angle around its Z axis.
 
-- Input margin e=0.01: the tentative constraints above.
-- Facing threshold q=0.01: fixed K12 behavior for this analysis.
-- Implementation floor delta=0.00001: the current CPU protections and shader denominator floors.
+After rotation, write the unit normal as (x, y, z). Let s = Shift:
 
-These have independent meanings. Changing the input specification does not change delta or q.
+~~~text
+r = sqrt(x*x + z*z)
+h = sqrt((1-s)*(1+s))
 
-**Consequences and open accuracy criterion**
+f = 0                              if z < q
+f = r*z*h / (r-s*x)                if z >= q
+~~~
 
-The RGB margins exclude exact black/white and the original color formula's undefined endpoint combinations. At tone=0 the intended color is now unambiguously 0; at tone=1 it is unambiguously 1. A positive denominator bound exists throughout the valid mathematical color domain.
+This is the algebraic reduction of K12's slice/Schlick/remap construction on the admitted branch. Rejected normals select f = 0; the pixel is not discarded. Evaluating the cutoff before the warp avoids irrelevant intermediate singularities in the original construction.
 
-At e=0.01, that bound is still below the current 1e-5 floor because of sRGB conversion. The revised analysis therefore does not certify this epsilon as accurate for the implementation. Selecting another margin requires an acceptable output-error tolerance, not just a requirement for finite outputs.
+For s = 0 the admitted expression reduces exactly to f = z. For admitted normals, 0 < f <= r <= 1. The denominator is positive. Normals rejected by the cutoff give f = 0.
 
-The current runtime still accepts broader ranges. Existing material settings that contain exact 0 or 1 RGB channels are outside this proposed contract. This revision documents the contract without migrating those settings or enforcing it.
+### Tone and color
 
-See [the RGB-constrained analysis](../Reports/ShaderNumerics/RgbConstrainedAnalysis.md) for proofs, current-shader measurements, and remaining issues. The [earlier analysis](../Reports/ShaderNumerics/ConstrainedAnalysis.md) records the previous proposal with RGB in [0,1].
+Let p = Brightness, d = Dark Point, and l = Light Point:
+
+~~~text
+t = d*(1-f) + l*f
+
+A = c*p
+B = (1-c)*(1-p)
+
+F(t) = A*t / (A*t + B*(1-t))
+~~~
+
+A and B are strictly positive, and 0 <= t <= 1. These equations reproduce the original real-number curve:
+
+~~~text
+original numerator   = c*p*t
+original denominator = (c-(1-p))*t + (1-p)*(1-c)
+                     = A*t + B*(1-t)
+~~~
+
+An implementation may use algebraically equivalent representations but must approximate this function over its supported input domain. In particular, a floor replacing a valid positive denominator is not part of the reference function.
+
+## Properties to preserve
+
+For every allowed c and p:
+
+~~~text
+F(0) = 0
+F(1) = 1
+F(1-p) = c
+F'(t) = A*B / (A*t + B*(1-t))^2 > 0
+~~~
+
+The color curve is analytic in c, p, and t wherever the denominator is positive, including neighborhoods of t = 0 and t = 1 for fixed interior c and p. Changing to an equivalent positive-term expression preserves all its derivatives, curvature, and anchor properties.
+
+Increasing Brightness moves the tone at which the base color appears toward zero. The tone remap retains its endpoint values and its direction, including reversed ranges. Its final endpoint colors are F(d) and F(l).
+
+This smoothness statement concerns the linear color curve. The complete shader contains the inherited hard facing cutoff. It generally jumps at z = q; the rejected branch selects F(d), while the admitted branch can select a different color. It must not be described as globally continuous or globally smooth in the surface normal. Geometry interpolation and the piecewise sRGB conversion have their own regularity limits.
+
+## Numerical contract still to be selected
+
+The mathematical domain excludes singular color corners but is not a uniform floating-point accuracy guarantee. Its closure still contains singular corners, and allowed values can approach them arbitrarily closely.
+
+Select the supported machine domain separately from the equations:
+
+- Define endpoint margins, potentially different for RGB, Brightness, Shift, Dark Point, and Light Point, and potentially asymmetric.
+- Specify RGB margins in sRGB and derive their linear-color consequences.
+- Define parsing, rounding, storage, and behavior when an input cannot be represented inside the supported domain. The intended policy is explicit validation rather than silently changing a valid requested material.
+- Preserve the exact allowed endpoints Shift = 0, Dark Point = 0, and Light Point = 1.
+- Choose an output-error criterion, its color space, and whether comparison starts from requested inputs or stored inputs. Finite outputs alone are insufficient.
+- Specify the precision and dynamic range required of positive coefficients and intermediates; positivity before conversion does not imply positivity after rounding or underflow.
+- State geometric preconditions, including nonzero interpolated normals, and handle invalid geometry separately.
+
+There is no adopted common epsilon in this revision. In particular, the earlier approximately 0.01137 threshold only kept a particular 1e-5 denominator floor inactive under a shared-margin proposal. It is not a mathematical requirement of SimplePaint.
+
+The current runtime accepts values outside this proposed domain, and some active materials contain exact RGB endpoints. Enforcing this contract later will require an explicit choice of margins and adjustment of those materials.
+
+See [the implementation and remaining-issues analysis](../Reports/ShaderNumerics/AbstractContractAnalysis.md). The [previous RGB-margin report](../Reports/ShaderNumerics/RgbConstrainedAnalysis.md) and [earlier unrestricted-RGB report](../Reports/ShaderNumerics/ConstrainedAnalysis.md) remain historical analyses of their stated proposals.

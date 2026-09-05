@@ -79,7 +79,7 @@ Both must be integers. The mesh is generated at startup with smooth radial
 normals; restart through `Run.cmd` after editing the settings. The sphere has
 radius 0.4 and a fixed center at `(1.5, 0.4, -1.5)` so it rests on the ground.
 
-The [working input specification](docs/SimplePaintInputSpecification.md) defines proposed parameter limits for the numerical-stability review. These limits are not yet enforced by the implementation. See the [RGB-constrained analysis](Reports/ShaderNumerics/RgbConstrainedAnalysis.md) for the current results; the [earlier analysis](Reports/ShaderNumerics/ConstrainedAnalysis.md) covers unrestricted RGB.
+The [working specification](docs/SimplePaintInputSpecification.md) defines the proposed SimplePaint interface and implementation-independent mathematics. Numerical input margins remain undecided, and the proposed limits are not yet enforced. See the [current analysis](Reports/ShaderNumerics/AbstractContractAnalysis.md) for ways to preserve the curve while improving numerical evaluation. The [RGB-constrained analysis](Reports/ShaderNumerics/RgbConstrainedAnalysis.md) and [earlier analysis](Reports/ShaderNumerics/ConstrainedAnalysis.md) record previous input proposals.
 
 The original
 [K12 Godot shader](https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader)
