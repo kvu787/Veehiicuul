@@ -10,14 +10,14 @@ The contract applies independently to each material. Runtime enforcement and mat
 
 ## User interface
 
-| Parameter | Abstract domain | Meaning |
-|---|---|---|
-| R, G, B | Each in (0, 1) | Base color in the existing user-facing sRGB space |
-| Brightness | (0, 1) | Positions the base-color anchor on the tone curve |
-| Shift | [0, 1) | Warps the facing lobe in the direction selected by Rotation |
-| Rotation | [0, 360) degrees | Circular orientation of the shift; equivalent to RotationDegrees in Settings.ini |
-| Dark Point | [0, 1) | Tone selected when the warped facing value is zero |
-| Light Point | (0, 1] | Tone selected when the warped facing value is one |
+| Parameter   | Abstract domain  | Meaning                                                                          |
+| ----------- | ---------------- | -------------------------------------------------------------------------------- |
+| R, G, B     | Each in (0, 1)   | Base color in the existing user-facing sRGB space                                |
+| Brightness  | (0, 1)           | Positions the base-color anchor on the tone curve                                |
+| Shift       | [0, 1)           | Warps the facing lobe in the direction selected by Rotation                      |
+| Rotation    | [0, 360) degrees | Circular orientation of the shift; equivalent to RotationDegrees in Settings.ini |
+| Dark Point  | [0, 1)           | Tone selected when the warped facing value is zero                               |
+| Light Point | (0, 1]           | Tone selected when the warped facing value is one                                |
 
 All inputs must be finite. Parentheses exclude an endpoint; brackets include it. These are mathematical domains, not yet a complete rule for which decimal strings or machine values the UI accepts.
 
