@@ -26,7 +26,7 @@ Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must di
 Record and commit all conversations in a `Conversations` folder located at the root of this Git repo.
 Use one file per conversation.
 Prefix these commits with `[record]`.
-If I attach images to prompts, you save and record these in the conversation logs.
+If I attach images to prompts, save and record these in the conversation logs.
 
 ## Compatibility
 
