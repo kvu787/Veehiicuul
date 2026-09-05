@@ -48,3 +48,29 @@ All migrated values match the original file exactly. The checks confirmed that e
 Renamed to [Settings.ini](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/assets/Settings.ini), with independent paint sections for all six materials and all existing values preserved. `FacingCutoff` remains global.
 
 Updated the loader, shader, build, and documentation. Build, rendering, and settings checks passed. Changes and conversation log committed separately.
+
+## User
+
+explain the change to simplepaint.hlsl in commit b4b4b2bb6debfec0da8149be9232e862bbc10ce4
+
+## Assistant
+
+I’ll check the shader diff in that commit and explain how it makes the paint controls independent.
+
+## Assistant final response
+
+The change makes the shader read **each material’s own paint settings**. The paint equations themselves are unchanged.
+
+Previously, `paintWarp` and `paintTone` lived directly in `CarConstants`, so every material shared them. The commit moves them into [PaintMaterial](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/shaders/SimplePaint.hlsl:11), alongside the existing color coefficients:
+
+- `paintWarp` contains the precomputed rotation and shift values.
+- `paintTone` contains the dark/light range, facing cutoff, and numerical epsilon.
+- `k1`, `k2`, and `k3` remain the coefficients derived from base color and brightness.
+
+At the beginning of [PSMain](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/shaders/SimplePaint.hlsl:54), the shader now selects `paintMaterials[input.materialIndex]` and reads its `paintWarp` and `paintTone`. Material selection previously happened later, only when calculating the final color; it now happens before calculating facing and tone as well.
+
+For example, changing the body’s `Shift` now changes the body’s highlight without changing the wheels or sphere.
+
+**`FacingCutoff` is still global in the INI.** The CPU copies that same value into every material’s `paintTone.z`; it is duplicated in GPU storage, but is not independently configurable per material.
+
+The vertex shader and paint calculations are unchanged. With the preserved settings, this restructuring is intended to preserve the existing appearance.
