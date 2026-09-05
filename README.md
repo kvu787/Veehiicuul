@@ -67,6 +67,8 @@ plain sRGB values and mirror the user-facing K12 controls:
 | `FacingCutoff` | 0 to 1 | Front/back cutoff; K12 defaults to 0.01 |
 | material colors | RGB, 0 to 1 | Base colors for axles, body, cabin, headlights, and wheels |
 
+The [working input specification](docs/SimplePaintInputSpecification.md) defines proposed parameter limits for the numerical-stability review. These limits are not yet enforced by the implementation. See the [constrained analysis](Reports/ShaderNumerics/ConstrainedAnalysis.md) for the results.
+
 The original
 [K12 Godot shader](https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader)
 computes invariant material values in the vertex shader and carries them as 15
