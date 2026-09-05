@@ -294,7 +294,7 @@ float ParseFloat(const std::string_view text, const std::size_t lineNumber)
     if (error != std::errc{} || end != trimmed.data() + trimmed.size() || !std::isfinite(value))
     {
         throw std::runtime_error(std::format(
-            "Invalid finite floating-point value on CarPaint.ini line {}.",
+            "Invalid finite floating-point value on Settings.ini line {}.",
             lineNumber));
     }
     return value;
@@ -311,7 +311,7 @@ XMFLOAT3 ParseColor(const std::string_view text, const std::size_t lineNumber)
         text.find(',', secondComma + 1) != std::string_view::npos)
     {
         throw std::runtime_error(std::format(
-            "Expected an R, G, B triple on CarPaint.ini line {}.",
+            "Expected an R, G, B triple on Settings.ini line {}.",
             lineNumber));
     }
 
@@ -1037,8 +1037,17 @@ void Renderer::CreateConstantBuffer()
 
 void Renderer::LoadPaintSettings()
 {
-    PaintSettings settings;
-    settings.baseColorsSrgb = {
+    constexpr std::array<std::string_view, PaintMaterialCount> materialSections = {
+        "SimplePaintShader_Axles",
+        "SimplePaintShader_Body",
+        "SimplePaintShader_Cabin",
+        "SimplePaintShader_Headlights",
+        "SimplePaintShader_Wheels",
+        "SimplePaintShader_Sphere",
+    };
+    std::array<PaintSettings, PaintMaterialCount> materialSettings{};
+    float facingCutoff = 0.01f;
+    const std::array<XMFLOAT3, PaintMaterialCount> defaultColors = {
         XMFLOAT3{0.678429127f, 0.678431321f, 0.678431321f},
         XMFLOAT3{0.0f, 0.436627067f, 1.0f},
         XMFLOAT3{0.506386429f, 0.756053146f, 1.0f},
@@ -1047,12 +1056,17 @@ void Renderer::LoadPaintSettings()
         XMFLOAT3{0.345097446f, 0.345097446f, 0.345097446f},
     };
 
-    const std::filesystem::path settingsPath = ModuleDirectory() / L"assets" / L"CarPaint.ini";
+    for (std::size_t index = 0; index < materialSettings.size(); ++index)
+    {
+        materialSettings[index].baseColorSrgb = defaultColors[index];
+    }
+
+    const std::filesystem::path settingsPath = ModuleDirectory() / L"assets" / L"Settings.ini";
     std::ifstream input(settingsPath);
     if (!input)
     {
         throw std::runtime_error(std::format(
-            "Car paint settings were not found at {}.",
+            "Settings were not found at {}.",
             settingsPath.string()));
     }
 
@@ -1072,10 +1086,11 @@ void Renderer::LoadPaintSettings()
         if (content.front() == '[' && content.back() == ']')
         {
             section = std::string(Trim(content.substr(1, content.size() - 2)));
-            if (section != "SimplePaint" && section != "BaseColors" && section != "Sphere")
+            if (section != "SimplePaintShader_GlobalParameters" && section != "Sphere" &&
+                std::find(materialSections.begin(), materialSections.end(), section) == materialSections.end())
             {
                 throw std::runtime_error(std::format(
-                    "Unknown CarPaint.ini section [{}] on line {}.",
+                    "Unknown Settings.ini section [{}] on line {}.",
                     section,
                     lineNumber));
             }
@@ -1086,36 +1101,16 @@ void Renderer::LoadPaintSettings()
         if (equals == std::string_view::npos)
         {
             throw std::runtime_error(std::format(
-                "Expected key = value on CarPaint.ini line {}.",
+                "Expected key = value on Settings.ini line {}.",
                 lineNumber));
         }
         const std::string key(Trim(content.substr(0, equals)));
         const std::string_view value = Trim(content.substr(equals + 1));
         const std::string qualifiedKey = section + "." + key;
 
-        if (qualifiedKey == "SimplePaint.Brightness")
+        if (qualifiedKey == "SimplePaintShader_GlobalParameters.FacingCutoff")
         {
-            settings.brightness = ParseFloat(value, lineNumber);
-        }
-        else if (qualifiedKey == "SimplePaint.Shift")
-        {
-            settings.shift = ParseFloat(value, lineNumber);
-        }
-        else if (qualifiedKey == "SimplePaint.RotationDegrees")
-        {
-            settings.rotationDegrees = ParseFloat(value, lineNumber);
-        }
-        else if (qualifiedKey == "SimplePaint.DarkPoint")
-        {
-            settings.darkPoint = ParseFloat(value, lineNumber);
-        }
-        else if (qualifiedKey == "SimplePaint.LightPoint")
-        {
-            settings.lightPoint = ParseFloat(value, lineNumber);
-        }
-        else if (qualifiedKey == "SimplePaint.FacingCutoff")
-        {
-            settings.facingCutoff = ParseFloat(value, lineNumber);
+            facingCutoff = ParseFloat(value, lineNumber);
         }
         else if (qualifiedKey == "Sphere.UResolution" || qualifiedKey == "Sphere.VResolution")
         {
@@ -1127,74 +1122,95 @@ void Renderer::LoadPaintSettings()
                 resolution < minimum || resolution > 512)
             {
                 throw std::runtime_error(std::format(
-                    "{} must be an integer in [{}, 512] on CarPaint.ini line {}.",
+                    "{} must be an integer in [{}, 512] on Settings.ini line {}.",
                     qualifiedKey, minimum, lineNumber));
             }
             (isU ? m_sphereUResolution : m_sphereVResolution) = resolution;
         }
         else
         {
-            constexpr std::array<std::string_view, PaintMaterialCount> colorKeys = {
-                "BaseColors.Axles",
-                "BaseColors.Body",
-                "BaseColors.Cabin",
-                "BaseColors.Headlights",
-                "BaseColors.Wheels",
-                "BaseColors.Sphere",
-            };
-            const auto colorKey = std::find(colorKeys.begin(), colorKeys.end(), qualifiedKey);
-            if (colorKey == colorKeys.end())
+            const auto materialSection = std::find(materialSections.begin(), materialSections.end(), section);
+            if (materialSection == materialSections.end())
             {
                 throw std::runtime_error(std::format(
-                    "Unknown CarPaint.ini key '{}' on line {}.",
-                    qualifiedKey,
-                    lineNumber));
+                    "Unknown Settings.ini key '{}' on line {}.", qualifiedKey, lineNumber));
             }
-            settings.baseColorsSrgb[static_cast<std::size_t>(colorKey - colorKeys.begin())] =
-                ParseColor(value, lineNumber);
+            PaintSettings& settings = materialSettings[
+                static_cast<std::size_t>(materialSection - materialSections.begin())];
+            if (key == "BaseColor")
+            {
+                settings.baseColorSrgb = ParseColor(value, lineNumber);
+            }
+            else if (key == "Brightness")
+            {
+                settings.brightness = ParseFloat(value, lineNumber);
+            }
+            else if (key == "Shift")
+            {
+                settings.shift = ParseFloat(value, lineNumber);
+            }
+            else if (key == "RotationDegrees")
+            {
+                settings.rotationDegrees = ParseFloat(value, lineNumber);
+            }
+            else if (key == "DarkPoint")
+            {
+                settings.darkPoint = ParseFloat(value, lineNumber);
+            }
+            else if (key == "LightPoint")
+            {
+                settings.lightPoint = ParseFloat(value, lineNumber);
+            }
+            else
+            {
+                throw std::runtime_error(std::format(
+                    "Unknown Settings.ini key '{}' on line {}.", qualifiedKey, lineNumber));
+            }
         }
     }
 
-    RequireUnitRange(settings.brightness, "Brightness");
-    RequireUnitRange(settings.shift, "Shift");
-    RequireUnitRange(settings.darkPoint, "DarkPoint");
-    RequireUnitRange(settings.lightPoint, "LightPoint");
-    RequireUnitRange(settings.facingCutoff, "FacingCutoff");
-    for (const XMFLOAT3& color : settings.baseColorsSrgb)
-    {
-        RequireUnitRange(color.x, "Base color red channel");
-        RequireUnitRange(color.y, "Base color green channel");
-        RequireUnitRange(color.z, "Base color blue channel");
-    }
-
+    RequireUnitRange(facingCutoff, "SimplePaintShader_GlobalParameters.FacingCutoff");
     constexpr float epsilon = 1.0e-5f;
-    const float safeBrightness = std::clamp(settings.brightness, epsilon, 1.0f - epsilon);
-    const float safeShift = std::min(settings.shift, 1.0f - epsilon);
-    const float rotationRadians = -DirectX::XMConvertToRadians(
-        std::fmod(settings.rotationDegrees, 360.0f));
-    m_paintWarp = {
-        std::cos(rotationRadians),
-        std::sin(rotationRadians),
-        safeShift,
-        std::sqrt(std::max(0.0f, 1.0f - safeShift * safeShift)),
-    };
-    m_paintTone = {
-        settings.lightPoint - settings.darkPoint,
-        settings.darkPoint,
-        settings.facingCutoff,
-        epsilon,
-    };
 
-    const float anchor = 1.0f - safeBrightness;
     for (std::size_t materialIndex = 0; materialIndex < m_paintMaterials.size(); ++materialIndex)
     {
-        const XMFLOAT3 source = settings.baseColorsSrgb[materialIndex];
+        const PaintSettings& settings = materialSettings[materialIndex];
+        const auto requireRange = [&](const float value, const std::string_view key)
+        {
+            RequireUnitRange(value, std::format("{}.{}", materialSections[materialIndex], key));
+        };
+        requireRange(settings.brightness, "Brightness");
+        requireRange(settings.shift, "Shift");
+        requireRange(settings.darkPoint, "DarkPoint");
+        requireRange(settings.lightPoint, "LightPoint");
+        const XMFLOAT3 source = settings.baseColorSrgb;
+        requireRange(source.x, "BaseColor red channel");
+        requireRange(source.y, "BaseColor green channel");
+        requireRange(source.z, "BaseColor blue channel");
+
+        const float safeBrightness = std::clamp(settings.brightness, epsilon, 1.0f - epsilon);
+        const float safeShift = std::min(settings.shift, 1.0f - epsilon);
+        const float rotationRadians = -DirectX::XMConvertToRadians(
+            std::fmod(settings.rotationDegrees, 360.0f));
+        const float anchor = 1.0f - safeBrightness;
         const XMFLOAT3 baseColor{
             std::clamp(SrgbToLinear(source.x), epsilon, 1.0f - epsilon),
             std::clamp(SrgbToLinear(source.y), epsilon, 1.0f - epsilon),
             std::clamp(SrgbToLinear(source.z), epsilon, 1.0f - epsilon),
         };
         PaintMaterialConstants& material = m_paintMaterials[materialIndex];
+        material.paintWarp = {
+            std::cos(rotationRadians),
+            std::sin(rotationRadians),
+            safeShift,
+            std::sqrt(std::max(0.0f, 1.0f - safeShift * safeShift)),
+        };
+        material.paintTone = {
+            settings.lightPoint - settings.darkPoint,
+            settings.darkPoint,
+            facingCutoff,
+            epsilon,
+        };
         material.k1 = {
             baseColor.x * safeBrightness,
             baseColor.y * safeBrightness,
@@ -1259,8 +1275,6 @@ void Renderer::WriteObjectConstants(
     CarConstants constants{};
     DirectX::XMStoreFloat4x4(&constants.worldViewProjection, worldView * projection);
     DirectX::XMStoreFloat4x4(&constants.worldView, worldView);
-    constants.paintWarp = m_paintWarp;
-    constants.paintTone = m_paintTone;
     constants.paintMaterials = m_paintMaterials;
     std::memcpy(
         m_mappedConstants + (static_cast<std::size_t>(frameIndex) * ObjectsPerFrame + objectIndex) *

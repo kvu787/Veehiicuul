@@ -40,6 +40,8 @@ private:
 
     struct PaintMaterialConstants
     {
+        DirectX::XMFLOAT4 paintWarp;
+        DirectX::XMFLOAT4 paintTone;
         DirectX::XMFLOAT4 k1;
         DirectX::XMFLOAT4 k2;
         DirectX::XMFLOAT4 k3;
@@ -49,23 +51,20 @@ private:
     {
         DirectX::XMFLOAT4X4 worldViewProjection;
         DirectX::XMFLOAT4X4 worldView;
-        DirectX::XMFLOAT4 paintWarp;
-        DirectX::XMFLOAT4 paintTone;
         std::array<PaintMaterialConstants, PaintMaterialCount> paintMaterials;
-        std::array<std::byte, 64> padding{};
+        std::array<std::byte, 160> padding{};
     };
 
-    static_assert(sizeof(CarConstants) == 512);
+    static_assert(sizeof(CarConstants) == 768);
 
     struct PaintSettings
     {
-        float brightness = 0.20136449f;
+        DirectX::XMFLOAT3 baseColorSrgb{};
+        float brightness = 0.5f;
         float shift = 0.0f;
         float rotationDegrees = 0.0f;
         float darkPoint = 0.0f;
-        float lightPoint = 1.0f;
-        float facingCutoff = 0.01f;
-        std::array<DirectX::XMFLOAT3, PaintMaterialCount> baseColorsSrgb{};
+        float lightPoint = 0.8f;
     };
 
     struct GpuMesh
@@ -140,8 +139,6 @@ private:
     std::uint32_t m_sphereUResolution = 64;
     std::uint32_t m_sphereVResolution = 32;
     std::uint32_t m_carIndexCount = 0;
-    DirectX::XMFLOAT4 m_paintWarp{};
-    DirectX::XMFLOAT4 m_paintTone{};
     std::array<PaintMaterialConstants, PaintMaterialCount> m_paintMaterials{};
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;

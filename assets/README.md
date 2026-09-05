@@ -6,8 +6,9 @@ can center-crop it without changing the camera's vertical scale. Wider windows
 use a centered 32:9 scene viewport with matching side mattes. At 16:9, the
 center half of the image maps one-to-one to 2560x1440.
 
-`CarPaint.ini` exposes the user-facing SimplePaint controls and one base color
-for each material region in `Blender/Car.blend`. The normal build copies both
+`Settings.ini` exposes independent SimplePaint controls and a base color
+for each car material and the sphere. `FacingCutoff` is shared in
+`[SimplePaintShader_GlobalParameters]`; `[Sphere]` controls mesh resolution. The normal build copies both
 files beside the executable. Edit the source INI and relaunch through `Run.cmd`
 to apply changes.
 

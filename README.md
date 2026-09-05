@@ -38,7 +38,7 @@ Requirements:
 - a current Windows SDK containing the DirectX Shader Compiler (`dxc.exe`).
 
 The generated executable is `build\release\SimpleDirectX12Game.exe`. CMake
-places `SceneBackground.png` and `CarPaint.ini` in its adjacent `assets`
+places `SceneBackground.png` and `Settings.ini` in its adjacent `assets`
 directory.
 
 ## Controls
@@ -55,8 +55,11 @@ With VSync off, presentation uses tearing when supported.
 
 ## Adjust the paint and sphere
 
-Edit `assets/CarPaint.ini`, then relaunch through `Run.cmd`. The settings are
-plain sRGB values and mirror the user-facing K12 controls:
+Edit `assets/Settings.ini`, then relaunch through `Run.cmd`. The settings are
+loaded at startup. Each `[SimplePaintShader_Axles]`, `[SimplePaintShader_Body]`,
+`[SimplePaintShader_Cabin]`, `[SimplePaintShader_Headlights]`,
+`[SimplePaintShader_Wheels]`, and `[SimplePaintShader_Sphere]` section has its
+own six K12 paint controls:
 
 | Setting | Range | Effect |
 | --- | ---: | --- |
@@ -65,11 +68,11 @@ plain sRGB values and mirror the user-facing K12 controls:
 | `RotationDegrees` | any degrees | Rotates the direction of a nonzero shift |
 | `DarkPoint` | 0 to 1 | Tone used at zero facing |
 | `LightPoint` | 0 to 1 | Tone used at maximum facing |
-| `FacingCutoff` | 0 to 1 | Front/back cutoff; K12 defaults to 0.01 |
-| material colors | RGB, 0 to 1 | Base colors for axles, body, cabin, headlights, wheels, and sphere |
+| `BaseColor` | sRGB triple, 0 to 1 | Base color for this material |
 
-`[BaseColors]` includes `Sphere = 0.345097446, 0.345097446, 0.345097446`.
-All `[SimplePaint]` controls apply to the sphere as well as the car.
+`[SimplePaintShader_GlobalParameters]` contains `FacingCutoff = 0.01`
+(range 0 to 1), shared by all six materials. The shipped colors and paint
+values preserve the existing appearance.
 In the same INI file, `[Sphere]` sets `UResolution = 64` (longitude segments,
 3 to 512) and `VResolution = 32` (pole-to-pole latitude segments, 2 to 512).
 Both must be integers. The mesh is generated at startup with smooth radial

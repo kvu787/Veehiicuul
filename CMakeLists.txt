@@ -89,16 +89,16 @@ set_source_files_properties(
 target_include_directories(SimpleDirectX12Game PRIVATE "${SHADER_GENERATED_DIRECTORY}")
 
 set(BACKGROUND_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/assets/SceneBackground.png")
-set(CAR_PAINT_SETTINGS "${CMAKE_CURRENT_SOURCE_DIR}/assets/CarPaint.ini")
+set(GAME_SETTINGS "${CMAKE_CURRENT_SOURCE_DIR}/assets/Settings.ini")
 add_custom_target(RuntimeAssets ALL
     COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
         "${BACKGROUND_IMAGE}"
         "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets/SceneBackground.png"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-        "${CAR_PAINT_SETTINGS}"
-        "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets/CarPaint.ini"
-    DEPENDS "${BACKGROUND_IMAGE}" "${CAR_PAINT_SETTINGS}"
+        "${GAME_SETTINGS}"
+        "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets/Settings.ini"
+    DEPENDS "${BACKGROUND_IMAGE}" "${GAME_SETTINGS}"
     COMMENT "Staging runtime image and paint settings"
     VERBATIM
 )

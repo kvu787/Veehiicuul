@@ -10,6 +10,12 @@ static const uint MaterialCount = 6u;
 
 struct PaintMaterial
 {
+    // x = cos(-rotation), y = sin(-rotation), z = shift,
+    // w = sqrt(1 - shift * shift)
+    float4 paintWarp;
+    // x = lightPoint - darkPoint, y = darkPoint,
+    // z = facing cutoff, w = numerical epsilon
+    float4 paintTone;
     float4 k1;
     float4 k2;
     float4 k3;
@@ -19,12 +25,6 @@ cbuffer CarConstants : register(b0)
 {
     row_major float4x4 worldViewProjection;
     row_major float4x4 worldView;
-    // x = cos(-rotation), y = sin(-rotation), z = shift,
-    // w = sqrt(1 - shift * shift)
-    float4 paintWarp;
-    // x = lightPoint - darkPoint, y = darkPoint,
-    // z = facing cutoff, w = numerical epsilon
-    float4 paintTone;
     PaintMaterial paintMaterials[MaterialCount];
 };
 
@@ -53,6 +53,9 @@ PixelInput VSMain(const VertexInput input)
 
 float4 PSMain(const PixelInput input) : SV_TARGET
 {
+    const PaintMaterial material = paintMaterials[input.materialIndex];
+    const float4 paintWarp = material.paintWarp;
+    const float4 paintTone = material.paintTone;
     const float3 normal = normalize(input.viewNormal);
     float facing = 0.0f;
 
@@ -77,7 +80,6 @@ float4 PSMain(const PixelInput input) : SV_TARGET
     }
 
     const float tone = mad(paintTone.x, facing, paintTone.y);
-    const PaintMaterial material = paintMaterials[input.materialIndex];
     const float3 denominator = max(
         mad(material.k2.xyz, tone, material.k3.xyz),
         paintTone.www);
