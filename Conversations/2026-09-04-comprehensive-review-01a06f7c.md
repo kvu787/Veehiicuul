@@ -287,6 +287,7 @@ I saved the [full analysis](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_
 Here are **seven additional examples of the original denominator-clamp problem**.
 
 For each row, set:
+
 - `Brightness = B`
 - `Body = C, C, C` — these are sRGB input values.
 - `DarkPoint = T` and `LightPoint = T`
@@ -371,5 +372,139 @@ This avoids subtracting nearly equal quantities. An experimental version reduced
 All production outputs tested were finite. The main demonstrated failures are **incorrect finite colors**, not widespread NaNs. Near singular endpoints, input rounding can still matter even after the arithmetic is stabilized; the full report separates that sensitivity from implementation errors.
 
 The report and presets are committed. The application shader and active paint settings remain unchanged.
+``````
+
+## 20. User
+
+``````text
+before changing the shader implementation, let's adjust the specification to constrain the input and see if that simplifies or eliminates the issues.
+
+define the following constraints for the input parameters:
+0 <= R <= 1
+0 <= G <= 1
+0 <= B <= 1
+0+e <= Brightness <= 1-e
+0 <= Shift <= 1-e
+0 <= Rotation <= 360
+0 <= Dark Point <= 1-e
+0+e <= Light Point <= 1
+epsilon (e) = 0.01
+
+the epsilon value is tentative. ideally, it will be smaller as long as we can prove smaller values don't cause issues.
+
+redo analysis of the shader assuming these constraints.
+
+``````
+
+## 21. Assistant
+
+``````text
+I’ll treat these as the proposed input contract, keep the shader unchanged, and recheck which issues remain at ε = 0.01. I’ll also examine whether reducing ε can be justified mathematically, rather than relying only on sampled tests.
+``````
+
+## 22. Assistant
+
+``````text
+The new ranges exclude several troublesome cases, but they do not eliminate the original clamp error. `LightPoint=1` is still allowed, so a front-facing surface can reach tone 1 with an arbitrarily dark base color. Also, the proposed bounds still allow `DarkPoint > LightPoint`; I’m preserving that behavior in the analysis.
+``````
+
+## 23. User
+
+``````text
+<send_user_message_question_reply>
+[{"questionItemId":"[\"request_user_input_async\",\"call_xqeKMGPeE4ERKknGUov0nbNP\",0]","question":"The proposed ranges don’t mention FacingCutoff. Should it retain its current allowed range of 0–1, or be fixed at the current default of 0.01? I’ll analyze the color issues independently and distinguish both cutoff cases.","answer":"what is facing cutoff? i'm using the shader params from C:\\Users\\k\\Repository\\Godot\\SimplePaintShaders\\Godot\\ShaderTest\\Shaders\\K12.gdshader"}]
+</send_user_message_question_reply>
+``````
+
+## 24. Assistant
+
+``````text
+`FacingCutoff` is an extra setting exposed by this DirectX port. In the K12 version I previously checked, the same threshold was hard-coded to `0.01`: normals whose camera-facing component is below that threshold use the darkest end of the paint ramp.
+
+I’ll check your local K12 file and use its behavior as the reference, so you don’t need to add another parameter to your specification.
+``````
+
+## 25. Assistant
+
+``````text
+Your local K12 file confirms that `0.01` is fixed in the shader. It is not one of its input parameters. Below that threshold, the shader sets the facing value to zero and uses `DarkPoint`; it does not discard the pixel.
+
+I’ll keep that fixed K12 behavior. This also removes the earlier examples that required changing `FacingCutoff` to zero. The proposed input ε and this threshold happen to share the value `0.01`, but serve different purposes.
+``````
+
+## 26. Assistant
+
+``````text
+With K12’s fixed threshold, the constraints give a useful bound: at ε = 0.01, the shifted-highlight denominator stays at least about `0.00141`, well above the port’s `0.00001` floor.
+
+The color calculation still fails for legal inputs. One unchanged case produces `0.773994` instead of `1`, and it remains legal for every ε that leaves the Brightness range nonempty. So changing ε alone cannot eliminate the original issue.
+``````
+
+## 27. Assistant
+
+``````text
+I’ve documented the proposed ranges and separated the issues they remove from those that remain. One useful finding: bounding **both** DarkPoint and LightPoint to `[e, 1−e]` would also keep the calculated tone away from zero and one. Your current bounds still allow both endpoints, which is why the color error survives. I’ve left that stronger restriction as an option for discussion.
+
+``````
+
+## 28. Assistant
+
+``````text
+The analysis and specification are committed. The tests covered 4,973 cases within the proposed ranges, plus 40 comparisons using different epsilon values. Every measured output was finite, but several legal inputs still produced substantially incorrect colors. I’m saving the conversation record required by this repository.
+
+``````
+
+## 29. Assistant
+
+``````text
+FacingCutoff is a name added by this DirectX port. Your [K12 shader](C:/Users/k/Repository/Godot/SimplePaintShaders/Godot/ShaderTest/Shaders/K12.gdshader:107) hardcodes the threshold to `0.01`: when a surface normal points almost sideways or away from the camera, it sets the paint's facing value to zero, selecting DarkPoint. It does not discard the pixel. I used that fixed value throughout this analysis.
+
+Your requested ranges are recorded in the [working input specification](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/docs/SimplePaintInputSpecification.md). **The shader implementation remains unchanged.** The clamp findings below concern this repository's DirectX port.
+
+**The constraints help, but no choice of epsilon alone eliminates the color error.**
+
+Your bounds still allow DarkPoint=0 and LightPoint=1. Consequently, the calculated tone can still reach both zero and one. Restricting Brightness and Shift does not prevent that.
+
+These examples all satisfy your ranges at `e=0.01`. Here, `C` means `R=G=B=C` in the user-facing sRGB color. Shift and Rotation are zero. Outputs are linear color values.
+
+| C | Brightness | DarkPoint | LightPoint | Surface orientation | Current output | Expected |
+|---:|---:|---:|---:|---|---:|---:|
+| 0.001 | 0.01 | 0 | 1 | Directly toward camera | 0.077399 | 1 |
+| 0.0002 | 0.01 | 0 | 1 | Directly toward camera | 0.015480 | 1 |
+| 0.0002 | 0.5 | 0 | 1 | Directly toward camera | 0.773994 | 1 |
+| 0.000259 | 0.5 | 0 | 1 | Directly toward camera | 0.997992 | 1 |
+| 0 | 0.99 | 0.99 | 0.99 | Any | 0.089263 | 0 |
+| 1 | 0.5 | 0.0001 | 0.01 | Away from camera | 0.908986 | 1 |
+
+The first three demonstrate the denominator floor. The fourth demonstrates cancellation even when the floor is inactive. The last two demonstrate the separate CPU clamp that moves exact black and white inward.
+
+The third row is particularly useful: **it remains legal for every feasible epsilon**. Brightness=0.5 fits whenever `0 < e <= 0.5`; larger epsilon makes the Brightness interval empty. Its correct denominator is approximately `0.000007739938`, which the shader replaces with `0.00001`. Changing epsilon cannot exclude this example under your other stated bounds.
+
+The revised status of the numerical issues is:
+
+| Issue | Result under the proposed constraints |
+|---|---|
+| Brightness endpoint clamps | Excluded at e=0.01. |
+| Shift=1 singularity and large-shift input clamp | Excluded at e=0.01. |
+| Huge rotation values losing angular information | Excluded by Rotation <= 360. |
+| Shift-denominator floor | Has a strong safety margin with the fixed K12 cutoff. |
+| Color-denominator floor and cancellation | Remain, as demonstrated above. |
+| CPU black/white color clamps | Remain because RGB includes both endpoints. |
+| Upstream rounding amplified near color endpoints | Remains; limiting the other parameters does not bound RGB or tone away from those endpoints. |
+| Tiny shifts treated as zero | Remains; Shift has no positive minimum. |
+| Tiny tones flushing to zero | Remains for tiny positive DarkPoint; visually negligible examples exist. |
+| Undefined color combinations | Black at tone=1 and white at tone=0 remain allowed and require specified behavior. |
+
+For the shifted-highlight calculation, we can prove the mathematical bound:
+
+```text
+shift denominator >= 0.01 * sqrt(e * (2 - e))
+```
+
+At `e=0.01`, this is approximately **0.00141067**, or **141 times** the implementation's `0.00001` floor. At `e=0.001`, the bound is still about 45 times the floor. This supports investigating smaller margins for that stage, but does not prove whole-shader accuracy or remove the color counterexamples.
+
+A stronger specification option would constrain **both DarkPoint and LightPoint to `[e, 1-e]`**. That would keep tone in the same interval and make the mathematical color denominator at least `e * e`: `0.0001` at e=0.01. It would exclude the undefined color corners and prevent this floor from activating in exact arithmetic. The CPU black/white clamp would still need attention. I documented this option without adopting it.
+
+The [full analysis](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Reports/ShaderNumerics/ConstrainedAnalysis.md) contains the proofs, remaining precision examples, and limitations. The [example data](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Reports/ShaderNumerics/ConstrainedExamples.csv) contains exact parameters and measured outputs. Verification covered **4,973 cases within the proposed ranges and 40 epsilon comparisons**; all measured outputs were finite. The specification, analysis, and conversation record are committed.
 ``````
 
