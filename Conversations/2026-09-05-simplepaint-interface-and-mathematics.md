@@ -255,3 +255,116 @@ Valid interpolated normals and adequate image sampling are additional requiremen
 
 I committed the [revised specification](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/docs/SimplePaintInputSpecification.md) and [detailed analysis](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Reports/ShaderNumerics/AbstractContractAnalysis.md). Epsilons remain undecided. Shader code and settings are unchanged; this revision was validated with algebraic and CPU numerical checks.
 ``````
+
+## 9. User
+
+``````text
+explain this further:
+Third, the complete shader already contains a discontinuity at the facing cutoff. The color curve is smooth, but switching immediately from Dark Point to the admitted facing branch generally is not. With neutral linear color, Brightness 0.5, Dark Point 0, Light Point 1, and Shift 0.99, a suitable normal crossing that cutoff produces a jump from zero to approximately 0.14037. Smoothing that transition would change the specified mathematics.
+Valid interpolated normals and adequate image sampling are additional requirements. A smooth highlight can become narrower than the available samples.
+
+``````
+
+## 10. Assistant
+
+``````text
+I’ll break this into three separate effects: the cutoff’s abrupt jump, invalid normals, and highlights that fall between samples. I’ll use the same numerical example so the distinction is concrete.
+``````
+
+## 11. Assistant
+
+``````text
+The numbers show that the shifted-facing calculation changes smoothly across the threshold: about `0.1403586`, `0.1403725`, then `0.1403864`. The cutoff creates the jump by replacing the first value with zero.
+
+The normal and sampling points are separate: they can cause problems even in a shader whose mathematical function is continuous.
+``````
+
+## 12. Assistant
+
+``````text
+I bundled three different issues together. **Only the facing cutoff is a discontinuity in the shader’s mathematical definition.**
+
+**The cutoff abruptly switches between two rules.**
+
+A surface normal is an arrow indicating which way the surface faces. After normalization, its camera-facing component, `z`, means:
+
+- `z = 1`: the normal points directly toward the camera.
+- `z = 0`: it points sideways.
+- `z < 0`: it points away from the camera.
+
+K12’s cutoff is near the sideways orientation. Its rule is:
+
+```text
+If z < 0.01:
+    facing = 0
+Otherwise:
+    facing = the shifted-facing calculation
+```
+
+This selects Dark Point below the threshold. It does not discard the pixel.
+
+The problem for continuity is that **the shifted-facing calculation does not generally equal zero at that threshold**. Consequently, the two branches do not meet.
+
+To make the example easy to interpret, choose:
+
+```text
+Linear RGB = (0.5, 0.5, 0.5)
+Brightness = 0.5
+Dark Point = 0
+Light Point = 1
+Shift = 0.99
+Rotation = 0
+```
+
+Here, tone equals facing, and the color curve returns that tone unchanged. Thus the final linear RGB channels all equal the facing value. In the existing sRGB UI, linear RGB `0.5` corresponds to approximately `0.735357`.
+
+Now consider normals pointing almost sideways in the shift direction:
+
+```text
+normal = (sqrt(1-z*z), 0, z)
+```
+
+As that normal turns very slightly:
+
+| Normal’s z | Shifted facing before the cutoff | Final linear channel |
+|---:|---:|---:|
+| 0.009999 | 0.1403586 | **0** |
+| 0.010000 | 0.1403725 | **0.1403725** |
+| 0.010001 | 0.1403864 | **0.1403864** |
+
+The shifted-facing values change smoothly. **The cutoff replaces the first value with zero**, creating the jump.
+
+Even if we choose orientations arbitrarily close to the threshold on either side, the output difference approaches approximately `0.1403725`; it does not approach zero. That is what *discontinuity* means here. These are linear channel values, not percentages of perceived brightness.
+
+On a smoothly curved surface, this can create an abrupt color boundary despite the surface normal changing smoothly. The jump’s size depends on the material and normal direction; `0.14037` is this particular example.
+
+Smoothing that boundary would require introducing intermediate facing values over some transition region. Those normals would then receive different results from K12’s current rule. **That would change the abstract shader function.** An algebraically equivalent implementation can preserve the cutoff and evaluate it more accurately, but cannot remove its jump.
+
+**Valid normals are a separate requirement.**
+
+The shader needs a direction at each shaded point. It interpolates vertex normals and then normalizes the result.
+
+Two individually valid normals can, in an unsuitable configuration, cancel during interpolation:
+
+```text
+First normal:   ( 1, 0, 0)
+Second normal:  (-1, 0, 0)
+Their average:  ( 0, 0, 0)
+```
+
+The zero vector has no direction and cannot be normalized. A nearly zero vector can also have a direction that changes greatly under tiny perturbations.
+
+This was a general input requirement, **not a demonstrated defect in your current meshes**. Constraining RGB or Brightness does not address it.
+
+**Sampling concerns how a continuous result becomes pixels.**
+
+Imagine a perfectly smooth, very narrow bright stripe on an otherwise dark surface:
+
+- If the stripe falls between neighboring pixel sample locations, both samples may see darkness.
+- Move it slightly so that a sample lands inside the stripe, and that pixel becomes bright.
+- During motion, the stripe can appear to flicker or disappear.
+
+The underlying function can be smooth throughout. The image changes abruptly because the renderer evaluates it at a finite set of locations.
+
+SimplePaint shades per pixel, so increasing triangle count alone does not necessarily resolve a highlight narrower than a pixel. More shading samples per pixel, or suitable filtering, can reduce this effect while retaining the same underlying pointwise shader equation. That changes how the image samples or averages the function; smoothing the facing cutoff changes the function itself.
+``````
