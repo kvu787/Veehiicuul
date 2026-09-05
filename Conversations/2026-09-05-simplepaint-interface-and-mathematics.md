@@ -417,3 +417,24 @@ For the SimplePaint specification, we can simply state:
 
 Producing that normal belongs to the geometry and rendering pipeline. **It is not an additional problem we need to solve through SimplePaint’s artistic input constraints or epsilon choices.**
 ``````
+
+## 16. User
+
+``````text
+Sampling concerns how a continuous result becomes pixels.
+
+^i understand this, and it is a non-issue. record that this is a non-issue in the spec so that we don't retread it
+
+``````
+
+## 17. Assistant
+
+``````text
+I’ll record sampling as an accepted non-issue in the specification and remove it from the analysis’s list of remaining concerns.
+``````
+
+## 18. Assistant
+
+``````text
+Recorded and committed in the [specification](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/docs/SimplePaintInputSpecification.md:103): **sampling is an accepted non-issue and must not be revisited unless you explicitly reopen it.** The analysis now reflects that decision too.
+``````
