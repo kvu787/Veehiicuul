@@ -84,3 +84,42 @@ Invalid inputs now throw in C++. The facing cutoff is removed, and excluded endp
 Release and Debug tests pass, including 30,208 production shader cases per NVIDIA/WARP run. App startup and clean shutdown also passed.
 
 Implementation, tests, documentation, and conversation are committed separately.
+
+## User
+
+what is an hlsli file?
+
+## Assistant
+
+An `.hlsli` file is an **HLSL include file**, similar to a `.h` header in C++.
+
+It contains reusable shader functions, structures, and constants that another shader includes:
+
+```hlsl
+#include "SimplePaintCore.hlsli"
+```
+
+In this project:
+
+- **`SimplePaintCore.hlsli`** contains the reusable SimplePaint math.
+- **`SimplePaint.hlsl`** connects that math to the app’s vertex inputs, constant buffers, and vertex/pixel shader entry points.
+
+The include file becomes part of the compiled shader. It isn’t loaded separately at runtime and adds no runtime overhead.
+
+## User
+
+remove C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\docs\SimplePaintInputSpecification.md and delete the docs folder, and update the repo as necessary. then, create a folder called `Documentation` and reorganize documentation files into there.
+
+## Assistant
+
+I’ll remove the obsolete specification and `docs` folder, move the current guides into `Documentation`, and update the repository’s links.
+
+## Assistant
+
+I’ll consolidate the app guide, shader guides, asset instructions, and historical reports under `Documentation`. The root README will become a short entry point, and `Conversations` will stay at the root as required by `AGENTS.md`.
+
+## Assistant
+
+Moved the guides, asset instructions, and historical reports into [Documentation](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Documentation/README.md). Removed the obsolete specification and `docs` folder.
+
+Updated and verified 44 local links. Changes and conversation log are committed separately; the working tree is clean.
