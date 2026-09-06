@@ -43,11 +43,11 @@ directory.
 
 ## Controls
 
-| Key | Action |
-| --- | --- |
-| `V` | Toggle VSync |
-| `F11` | Toggle borderless fullscreen |
-| `Esc` or `Alt+F4` | Quit |
+| Key               | Action                       |
+| ----------------- | ---------------------------- |
+| `V`               | Toggle VSync                 |
+| `F11`             | Toggle borderless fullscreen |
+| `Esc` or `Alt+F4` | Quit                         |
 
 The app starts windowed at 1280x720 with VSync off. Press F11 to toggle borderless fullscreen.
 
@@ -55,59 +55,39 @@ With VSync off, presentation uses tearing when supported.
 
 ## Adjust the paint and sphere
 
-Edit `assets/Settings.ini`, then relaunch through `Run.cmd`. The settings are
-loaded at startup. Each `[SimplePaintShader_Axles]`, `[SimplePaintShader_Body]`,
-`[SimplePaintShader_Cabin]`, `[SimplePaintShader_Headlights]`,
-`[SimplePaintShader_Wheels]`, and `[SimplePaintShader_Sphere]` section has its
-own six K12 paint controls:
+Edit `assets/Settings.ini`, then relaunch through `Run.cmd`. Each of the Axles,
+Body, Cabin, Headlights, Wheels, and Sphere sections has independent paint
+controls. See [Usage.md](Usage.md) for accepted numerical ranges, examples,
+and instructions for embedding the shader in another C++/DX12 project.
+[Specification.md](Specification.md) defines the mathematics, numerical
+contract, cutoff decision, GPU layout, optimizations, and test results.
 
-| Setting | Range | Effect |
-| --- | ---: | --- |
-| `Brightness` | 0 to 1 | Selects the facing angle where each base color appears |
-| `Shift` | 0 to 1 | Moves the paint highlight sideways; 0 is symmetric |
-| `RotationDegrees` | any degrees | Rotates the direction of a nonzero shift |
-| `DarkPoint` | 0 to 1 | Tone used at zero facing |
-| `LightPoint` | 0 to 1 | Tone used at maximum facing |
-| `BaseColor` | sRGB triple, 0 to 1 | Base color for this material |
+The rewritten SimplePaint validates materials in C++ before uploading them.
+It preserves the K12 Schlick curve, facing lobe warp, and dark/light tone
+remap, while using positive contributions to preserve highlight accuracy.
+It removes the positive facing cutoff and all input clamps and denominator
+floors. The base colors in the shipped settings now obey the explicit
+numerical domain.
 
-`[SimplePaintShader_GlobalParameters]` contains `FacingCutoff = 0.01`
-(range 0 to 1), shared by all six materials. The shipped colors and paint
-values preserve the existing appearance.
 In the same INI file, `[Sphere]` sets `UResolution = 64` (longitude segments,
 3 to 512) and `VResolution = 32` (pole-to-pole latitude segments, 2 to 512).
-Both must be integers. The mesh is generated at startup with smooth radial
-normals; restart through `Run.cmd` after editing the settings. The sphere has
-radius 0.4 and a fixed center at `(1.5, 0.4, -1.5)` so it rests on the ground.
+Both must be integers. The sphere is generated at startup with smooth radial
+normals, radius 0.4, and a center at `(1.5, 0.4, -1.5)`.
 
-The [working specification](docs/SimplePaintInputSpecification.md) defines the proposed SimplePaint interface and implementation-independent mathematics. Numerical input margins remain undecided, and the proposed limits are not yet enforced. See the [current analysis](Reports/ShaderNumerics/AbstractContractAnalysis.md) for ways to preserve the curve while improving numerical evaluation. The [RGB-constrained analysis](Reports/ShaderNumerics/RgbConstrainedAnalysis.md) and [earlier analysis](Reports/ShaderNumerics/ConstrainedAnalysis.md) record previous input proposals.
-
-The original
-[K12 Godot shader](https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader)
-computes invariant material values in the vertex shader and carries them as 15
-flat varyings. This port computes them once on the CPU. For the fixed
-orthographic camera, it also removes K12's per-pixel view-basis construction
-and replaces the slice/Schlick/remap sequence with an algebraically equivalent
-one-square-root form. Input clamping, safe denominators, and saturated square
-roots prevent the original pole and exact-black/white endpoint NaNs.
-
-Orthographic projection is a permanent renderer invariant. Object and camera
-transforms are affine: the vertex shader computes clip XYZ with three dot
-products, supplies clip W = 1, and interpolates normals with noperspective.
-OrthographicTransforms.h represents projection as three scales and a depth
-offset; it builds packed transforms without a general projection-matrix multiply.
-Normals still require per-pixel normalization, and depth testing remains enabled.
-
-For nonzero paint shift, the vertex shader rotates both normal X/Y components
-using that triangle's material. It passes the rotated normal to the pixel shader,
-which normalizes it and uses X directly. This rotation preserves length and
-commutes with interpolation because every triangle has one material. The
-zero-shift path skips rotation, even when its configured angle is nonzero.
+Orthographic projection is a permanent renderer invariant. Object and view
+transforms are affine; the vertex shader supplies clip W = 1 and passes
+normals with `noperspective`. The C++ transform helper rejects perspective,
+shear, and nonuniform scale. Mesh validation rejects invalid indices,
+material assignments, and normals before upload.
 
 Paint constants are uploaded once and shared by both objects and frame slots.
-The stationary sphere's transforms are populated at initialization and refreshed
-after resize, while the GPU is idle. Only the car's 96-byte transform block is
-updated each frame (each frame/object slot retains DirectX's 256-byte alignment).
-Object transforms assume uniform scale, as the car and sphere already use.
+The stationary sphere's transforms refresh at initialization and after resize
+while the GPU is idle. Only the car's 96-byte transform block changes each
+frame; each object slot retains DirectX's 256-byte alignment.
+
+Run `.\Run.ps1 -Test` for the Release CPU and production GPU tests, or add
+`-Configuration Debug` for Debug. `-BuildOnly` builds without launching.
+The GPU tests exercise both the preferred adapter and WARP.
 
 ## Assets and implementation
 
