@@ -143,3 +143,40 @@ Yes, it’s common, though there’s no universal convention. Both layouts are n
 Shaders are source code, so putting them under `src` is a natural choice. Their different compilation process doesn’t require a separate top-level folder.
 
 For this repo, `src/shaders/` would be a straightforward, conventional organization.
+
+
+## User
+
+Rename the src folder to Source.
+Put all shader code under Source.
+Reorganize all source code for SimplePaint into a single folder so that SimplePaint can be easily used in other project by copy/pasting that folder over.
+
+## Assistant
+
+I’ll rename `src` to `Source`, move the shaders under it, and collect SimplePaint’s C++ and HLSL files into one reusable folder. Then I’ll update the build paths and documentation and run the tests.
+
+## Assistant
+
+`Source/SimplePaint` will contain the material compiler, mesh validator, orthographic transform helper, and both paint shader files. I’ll add a CMake target and a short integration README so the copied folder can build independently. The background shader will go in `Source/Shaders`.
+
+## Assistant
+
+The Release build and all six tests pass. The new isolation test copies only `SimplePaint` into a fresh project, builds and runs its C++ code, and compiles both shader stages with one and three materials. This checks that the folder has no build dependency on the rest of the app.
+
+I’m updating the documentation and asset-generation paths, then checking Debug.
+
+## Assistant
+
+Release and Debug both pass all six tests, including the isolated copy test and the production GPU checks on NVIDIA and WARP. The GPU results are unchanged.
+
+All shader files are now under `Source`, and the SimplePaint folder has its own build target and instructions. I’m finishing the link checks and separate commits.
+
+## Assistant
+
+Done. `src` is now `Source`, and all shaders are under it.
+
+Copy [Source/SimplePaint](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/README.md) to reuse the complete module. It includes the C++ code, HLSL, transform helper, CMake target, and integration instructions.
+
+Updated build paths, includes, asset generation, and documentation. All six tests pass in Release and Debug, including the independent copied-folder build.
+
+Committed separately from the conversation log; working tree clean.
