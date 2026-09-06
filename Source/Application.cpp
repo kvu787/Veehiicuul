@@ -59,20 +59,21 @@ void Application::CreateMainWindow(HINSTANCE instance, const int showCommand)
 {
     static_cast<void>(showCommand);
 
-    WNDCLASSEXW windowClass{};
-    windowClass.cbSize = sizeof(windowClass);
-    windowClass.style = CS_HREDRAW | CS_VREDRAW;
-    windowClass.lpfnWndProc = WindowProcedure;
-    windowClass.hInstance = instance;
-    windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-    windowClass.lpszClassName = WindowClassName;
+    WNDCLASSEXW windowClass{
+        .cbSize = sizeof(windowClass),
+        .style = CS_HREDRAW | CS_VREDRAW,
+        .lpfnWndProc = WindowProcedure,
+        .hInstance = instance,
+        .hCursor = LoadCursorW(nullptr, IDC_ARROW),
+        .lpszClassName = WindowClassName,
+    };
     if (RegisterClassExW(&windowClass) == 0)
     {
         throw std::runtime_error("RegisterClassExW failed.");
     }
 
     constexpr DWORD windowStyle = WS_OVERLAPPEDWINDOW;
-    RECT windowRectangle{0, 0, 1280, 720};
+    RECT windowRectangle{.left = 0, .top = 0, .right = 1280, .bottom = 720};
     const UINT dpi = GetDpiForSystem();
     if (!AdjustWindowRectExForDpi(&windowRectangle, windowStyle, FALSE, 0, dpi))
     {
@@ -233,7 +234,7 @@ void Application::ToggleFullscreen()
         m_windowedPlacement.length = sizeof(WINDOWPLACEMENT);
         GetWindowPlacement(m_window, &m_windowedPlacement);
 
-        MONITORINFO monitorInfo{sizeof(MONITORINFO)};
+        MONITORINFO monitorInfo{.cbSize = sizeof(MONITORINFO)};
         GetMonitorInfoW(MonitorFromWindow(m_window, MONITOR_DEFAULTTONEAREST), &monitorInfo);
         SetWindowLongPtrW(
             m_window,

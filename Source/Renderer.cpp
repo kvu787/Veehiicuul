@@ -52,45 +52,45 @@ void Check(const HRESULT result, const char* operation)
 
 D3D12_RESOURCE_DESC BufferDescription(const std::uint64_t size)
 {
-    D3D12_RESOURCE_DESC description{};
-    description.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    description.Alignment = 0;
-    description.Width = size;
-    description.Height = 1;
-    description.DepthOrArraySize = 1;
-    description.MipLevels = 1;
-    description.Format = DXGI_FORMAT_UNKNOWN;
-    description.SampleDesc = {1, 0};
-    description.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    description.Flags = D3D12_RESOURCE_FLAG_NONE;
-    return description;
+    return {
+        .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+        .Alignment = 0,
+        .Width = size,
+        .Height = 1,
+        .DepthOrArraySize = 1,
+        .MipLevels = 1,
+        .Format = DXGI_FORMAT_UNKNOWN,
+        .SampleDesc = {.Count = 1, .Quality = 0},
+        .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+        .Flags = D3D12_RESOURCE_FLAG_NONE,
+    };
 }
 
 D3D12_RESOURCE_DESC TextureDescription(const std::uint32_t width, const std::uint32_t height)
 {
-    D3D12_RESOURCE_DESC description{};
-    description.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    description.Alignment = 0;
-    description.Width = width;
-    description.Height = height;
-    description.DepthOrArraySize = 1;
-    description.MipLevels = 1;
-    description.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
-    description.SampleDesc = {1, 0};
-    description.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    description.Flags = D3D12_RESOURCE_FLAG_NONE;
-    return description;
+    return {
+        .Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+        .Alignment = 0,
+        .Width = width,
+        .Height = height,
+        .DepthOrArraySize = 1,
+        .MipLevels = 1,
+        .Format = DXGI_FORMAT_R8G8B8A8_TYPELESS,
+        .SampleDesc = {.Count = 1, .Quality = 0},
+        .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+        .Flags = D3D12_RESOURCE_FLAG_NONE,
+    };
 }
 
 D3D12_HEAP_PROPERTIES HeapProperties(const D3D12_HEAP_TYPE type)
 {
-    D3D12_HEAP_PROPERTIES properties{};
-    properties.Type = type;
-    properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-    properties.CreationNodeMask = 1;
-    properties.VisibleNodeMask = 1;
-    return properties;
+    return {
+        .Type = type,
+        .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
+        .MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
+        .CreationNodeMask = 1,
+        .VisibleNodeMask = 1,
+    };
 }
 
 D3D12_RESOURCE_BARRIER TransitionBarrier(
@@ -98,14 +98,16 @@ D3D12_RESOURCE_BARRIER TransitionBarrier(
     const D3D12_RESOURCE_STATES before,
     const D3D12_RESOURCE_STATES after)
 {
-    D3D12_RESOURCE_BARRIER barrier{};
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrier.Transition.pResource = resource;
-    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    barrier.Transition.StateBefore = before;
-    barrier.Transition.StateAfter = after;
-    return barrier;
+    return {
+        .Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+        .Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
+        .Transition = {
+            .pResource = resource,
+            .Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+            .StateBefore = before,
+            .StateAfter = after,
+        },
+    };
 }
 
 void SetDebugName(ID3D12Object* object, const wchar_t* name)
@@ -257,9 +259,10 @@ DecodedImage DecodeRgbaImage(const std::filesystem::path& path)
         throw std::runtime_error("The background image is too large for WIC.");
     }
 
-    DecodedImage image;
-    image.width = width;
-    image.height = height;
+    DecodedImage image{
+        .width = width,
+        .height = height,
+    };
     image.pixels.resize(static_cast<std::size_t>(byteCount64));
     Check(
         converter->CopyPixels(
@@ -448,7 +451,7 @@ void Renderer::CreateDevice()
         "D3D12CreateDevice");
     SetDebugName(m_device.Get(), L"D3D12 Device");
 
-    D3D12_FEATURE_DATA_SHADER_MODEL shaderModelSupport{D3D_SHADER_MODEL_6_0};
+    D3D12_FEATURE_DATA_SHADER_MODEL shaderModelSupport{.HighestShaderModel = D3D_SHADER_MODEL_6_0};
     if (FAILED(m_device->CheckFeatureSupport(
             D3D12_FEATURE_SHADER_MODEL,
             &shaderModelSupport,
@@ -467,29 +470,31 @@ void Renderer::CreateDevice()
     }
 #endif
 
-    D3D12_COMMAND_QUEUE_DESC queueDescription{};
-    queueDescription.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-    queueDescription.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-    queueDescription.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    queueDescription.NodeMask = 0;
+    D3D12_COMMAND_QUEUE_DESC queueDescription{
+        .Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
+        .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
+        .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
+        .NodeMask = 0,
+    };
     Check(m_device->CreateCommandQueue(&queueDescription, IID_PPV_ARGS(&m_commandQueue)), "CreateCommandQueue");
     SetDebugName(m_commandQueue.Get(), L"Direct Command Queue");
 }
 
 void Renderer::CreateSwapChain()
 {
-    DXGI_SWAP_CHAIN_DESC1 description{};
-    description.Width = m_width;
-    description.Height = m_height;
-    description.Format = SwapChainFormat;
-    description.Stereo = FALSE;
-    description.SampleDesc = {1, 0};
-    description.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    description.BufferCount = FrameCount;
-    description.Scaling = DXGI_SCALING_STRETCH;
-    description.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    description.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-    description.Flags = m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+    DXGI_SWAP_CHAIN_DESC1 description{
+        .Width = m_width,
+        .Height = m_height,
+        .Format = SwapChainFormat,
+        .Stereo = FALSE,
+        .SampleDesc = {.Count = 1, .Quality = 0},
+        .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
+        .BufferCount = FrameCount,
+        .Scaling = DXGI_SCALING_STRETCH,
+        .SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD,
+        .AlphaMode = DXGI_ALPHA_MODE_IGNORE,
+        .Flags = m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u,
+    };
 
     ComPtr<IDXGISwapChain1> swapChain;
     Check(
@@ -507,189 +512,237 @@ void Renderer::CreateSwapChain()
 
 void Renderer::CreateDescriptorHeaps()
 {
-    D3D12_DESCRIPTOR_HEAP_DESC rtvDescription{};
-    rtvDescription.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvDescription.NumDescriptors = FrameCount;
-    rtvDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    D3D12_DESCRIPTOR_HEAP_DESC rtvDescription{
+        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+        .NumDescriptors = FrameCount,
+        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+    };
     Check(m_device->CreateDescriptorHeap(&rtvDescription, IID_PPV_ARGS(&m_rtvHeap)), "Create RTV descriptor heap");
     m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-    D3D12_DESCRIPTOR_HEAP_DESC dsvDescription{};
-    dsvDescription.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-    dsvDescription.NumDescriptors = 1;
-    dsvDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    D3D12_DESCRIPTOR_HEAP_DESC dsvDescription{
+        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+        .NumDescriptors = 1,
+        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+    };
     Check(m_device->CreateDescriptorHeap(&dsvDescription, IID_PPV_ARGS(&m_dsvHeap)), "Create DSV descriptor heap");
 
-    D3D12_DESCRIPTOR_HEAP_DESC srvDescription{};
-    srvDescription.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    srvDescription.NumDescriptors = 1;
-    srvDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    D3D12_DESCRIPTOR_HEAP_DESC srvDescription{
+        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+        .NumDescriptors = 1,
+        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+    };
     Check(m_device->CreateDescriptorHeap(&srvDescription, IID_PPV_ARGS(&m_srvHeap)), "Create SRV descriptor heap");
 }
 
 void Renderer::CreatePipelines()
 {
-    D3D12_DESCRIPTOR_RANGE backgroundRange{};
-    backgroundRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    backgroundRange.NumDescriptors = 1;
-    backgroundRange.BaseShaderRegister = 0;
-    backgroundRange.RegisterSpace = 0;
-    backgroundRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    D3D12_DESCRIPTOR_RANGE backgroundRange{
+        .RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+        .NumDescriptors = 1,
+        .BaseShaderRegister = 0,
+        .RegisterSpace = 0,
+        .OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND,
+    };
 
-    std::array<D3D12_ROOT_PARAMETER, 2> backgroundParameters{};
-    backgroundParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    backgroundParameters[0].DescriptorTable.NumDescriptorRanges = 1;
-    backgroundParameters[0].DescriptorTable.pDescriptorRanges = &backgroundRange;
-    backgroundParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    backgroundParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-    backgroundParameters[1].Constants.ShaderRegister = 0;
-    backgroundParameters[1].Constants.RegisterSpace = 0;
-    backgroundParameters[1].Constants.Num32BitValues = 1;
-    backgroundParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    const std::array<D3D12_ROOT_PARAMETER, 2> backgroundParameters = {{
+        {
+            .ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+            .DescriptorTable = {
+                .NumDescriptorRanges = 1,
+                .pDescriptorRanges = &backgroundRange,
+            },
+            .ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL,
+        },
+        {
+            .ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
+            .Constants = {
+                .ShaderRegister = 0,
+                .RegisterSpace = 0,
+                .Num32BitValues = 1,
+            },
+            .ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX,
+        },
+    }};
 
-    D3D12_STATIC_SAMPLER_DESC sampler{};
-    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    sampler.MipLODBias = 0.0f;
-    sampler.MaxAnisotropy = 1;
-    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-    sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
-    sampler.MinLOD = 0.0f;
-    sampler.MaxLOD = D3D12_FLOAT32_MAX;
-    sampler.ShaderRegister = 0;
-    sampler.RegisterSpace = 0;
-    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    D3D12_STATIC_SAMPLER_DESC sampler{
+        .Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+        .AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+        .AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+        .AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+        .MipLODBias = 0.0f,
+        .MaxAnisotropy = 1,
+        .ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS,
+        .BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,
+        .MinLOD = 0.0f,
+        .MaxLOD = D3D12_FLOAT32_MAX,
+        .ShaderRegister = 0,
+        .RegisterSpace = 0,
+        .ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL,
+    };
 
-    D3D12_ROOT_SIGNATURE_DESC backgroundRootDescription{};
-    backgroundRootDescription.NumParameters = static_cast<std::uint32_t>(backgroundParameters.size());
-    backgroundRootDescription.pParameters = backgroundParameters.data();
-    backgroundRootDescription.NumStaticSamplers = 1;
-    backgroundRootDescription.pStaticSamplers = &sampler;
-    backgroundRootDescription.Flags =
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+    D3D12_ROOT_SIGNATURE_DESC backgroundRootDescription{
+        .NumParameters = static_cast<std::uint32_t>(backgroundParameters.size()),
+        .pParameters = backgroundParameters.data(),
+        .NumStaticSamplers = 1,
+        .pStaticSamplers = &sampler,
+        .Flags =
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS,
+    };
     m_backgroundRootSignature = CreateRootSignature(
         m_device.Get(),
         backgroundRootDescription,
         "Create background root signature");
 
-    std::array<D3D12_ROOT_PARAMETER, 2> carParameters{};
-    carParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    carParameters[0].Descriptor.ShaderRegister = 0;
-    carParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-    carParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    carParameters[1].Descriptor.ShaderRegister = 1;
-    carParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    const std::array<D3D12_ROOT_PARAMETER, 2> carParameters = {{
+        {
+            .ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV,
+            .Descriptor = {.ShaderRegister = 0},
+            .ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX,
+        },
+        {
+            .ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV,
+            .Descriptor = {.ShaderRegister = 1},
+            .ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+        },
+    }};
 
-    D3D12_ROOT_SIGNATURE_DESC carRootDescription{};
-    carRootDescription.NumParameters = static_cast<std::uint32_t>(carParameters.size());
-    carRootDescription.pParameters = carParameters.data();
-    carRootDescription.NumStaticSamplers = 0;
-    carRootDescription.pStaticSamplers = nullptr;
-    carRootDescription.Flags =
-        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+    D3D12_ROOT_SIGNATURE_DESC carRootDescription{
+        .NumParameters = static_cast<std::uint32_t>(carParameters.size()),
+        .pParameters = carParameters.data(),
+        .NumStaticSamplers = 0,
+        .pStaticSamplers = nullptr,
+        .Flags =
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS,
+    };
     m_carRootSignature = CreateRootSignature(
         m_device.Get(),
         carRootDescription,
         "Create scene root signature");
 
-    D3D12_RASTERIZER_DESC rasterizer{};
-    rasterizer.FillMode = D3D12_FILL_MODE_SOLID;
-    rasterizer.CullMode = D3D12_CULL_MODE_NONE;
-    rasterizer.FrontCounterClockwise = FALSE;
-    rasterizer.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
-    rasterizer.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
-    rasterizer.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
-    rasterizer.DepthClipEnable = TRUE;
-    rasterizer.MultisampleEnable = FALSE;
-    rasterizer.AntialiasedLineEnable = FALSE;
-    rasterizer.ForcedSampleCount = 0;
-    rasterizer.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+    D3D12_RASTERIZER_DESC rasterizer{
+        .FillMode = D3D12_FILL_MODE_SOLID,
+        .CullMode = D3D12_CULL_MODE_NONE,
+        .FrontCounterClockwise = FALSE,
+        .DepthBias = D3D12_DEFAULT_DEPTH_BIAS,
+        .DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP,
+        .SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS,
+        .DepthClipEnable = TRUE,
+        .MultisampleEnable = FALSE,
+        .AntialiasedLineEnable = FALSE,
+        .ForcedSampleCount = 0,
+        .ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF,
+    };
 
-    D3D12_BLEND_DESC blend{};
-    blend.AlphaToCoverageEnable = FALSE;
-    blend.IndependentBlendEnable = FALSE;
-    blend.RenderTarget[0].BlendEnable = FALSE;
-    blend.RenderTarget[0].LogicOpEnable = FALSE;
-    blend.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
-    blend.RenderTarget[0].DestBlend = D3D12_BLEND_ZERO;
-    blend.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-    blend.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-    blend.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-    blend.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-    blend.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
-    blend.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+    D3D12_BLEND_DESC blend{
+        .AlphaToCoverageEnable = FALSE,
+        .IndependentBlendEnable = FALSE,
+        .RenderTarget = {{
+            .BlendEnable = FALSE,
+            .LogicOpEnable = FALSE,
+            .SrcBlend = D3D12_BLEND_ONE,
+            .DestBlend = D3D12_BLEND_ZERO,
+            .BlendOp = D3D12_BLEND_OP_ADD,
+            .SrcBlendAlpha = D3D12_BLEND_ONE,
+            .DestBlendAlpha = D3D12_BLEND_ZERO,
+            .BlendOpAlpha = D3D12_BLEND_OP_ADD,
+            .LogicOp = D3D12_LOGIC_OP_NOOP,
+            .RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL,
+        }},
+    };
 
-    D3D12_DEPTH_STENCIL_DESC backgroundDepth{};
-    backgroundDepth.DepthEnable = FALSE;
-    backgroundDepth.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-    backgroundDepth.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-    backgroundDepth.StencilEnable = FALSE;
-    backgroundDepth.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
-    backgroundDepth.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+    D3D12_DEPTH_STENCIL_DESC backgroundDepth{
+        .DepthEnable = FALSE,
+        .DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO,
+        .DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS,
+        .StencilEnable = FALSE,
+        .StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK,
+        .StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK,
+    };
 
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC backgroundPipeline{};
-    backgroundPipeline.pRootSignature = m_backgroundRootSignature.Get();
-    backgroundPipeline.VS = {g_backgroundVertexShader, sizeof(g_backgroundVertexShader)};
-    backgroundPipeline.PS = {g_backgroundPixelShader, sizeof(g_backgroundPixelShader)};
-    backgroundPipeline.BlendState = blend;
-    backgroundPipeline.SampleMask = UINT_MAX;
-    backgroundPipeline.RasterizerState = rasterizer;
-    backgroundPipeline.DepthStencilState = backgroundDepth;
-    backgroundPipeline.InputLayout = {nullptr, 0};
-    backgroundPipeline.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-    backgroundPipeline.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    backgroundPipeline.NumRenderTargets = 1;
-    backgroundPipeline.RTVFormats[0] = RenderTargetFormat;
-    backgroundPipeline.DSVFormat = DepthBufferFormat;
-    backgroundPipeline.SampleDesc = {1, 0};
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC backgroundPipeline{
+        .pRootSignature = m_backgroundRootSignature.Get(),
+        .VS = {.pShaderBytecode = g_backgroundVertexShader, .BytecodeLength = sizeof(g_backgroundVertexShader)},
+        .PS = {.pShaderBytecode = g_backgroundPixelShader, .BytecodeLength = sizeof(g_backgroundPixelShader)},
+        .BlendState = blend,
+        .SampleMask = UINT_MAX,
+        .RasterizerState = rasterizer,
+        .DepthStencilState = backgroundDepth,
+        .InputLayout = {.pInputElementDescs = nullptr, .NumElements = 0},
+        .IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
+        .PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+        .NumRenderTargets = 1,
+        .RTVFormats = {RenderTargetFormat},
+        .DSVFormat = DepthBufferFormat,
+        .SampleDesc = {.Count = 1, .Quality = 0},
+    };
     Check(
         m_device->CreateGraphicsPipelineState(&backgroundPipeline, IID_PPV_ARGS(&m_backgroundPipelineState)),
         "Create background pipeline state");
 
     const std::array carInputElements = {
         D3D12_INPUT_ELEMENT_DESC{
-            "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            .SemanticName = "POSITION",
+            .SemanticIndex = 0,
+            .Format = DXGI_FORMAT_R32G32B32_FLOAT,
+            .InputSlot = 0,
+            .AlignedByteOffset = 0,
+            .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            .InstanceDataStepRate = 0,
+        },
         D3D12_INPUT_ELEMENT_DESC{
-            "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            .SemanticName = "NORMAL",
+            .SemanticIndex = 0,
+            .Format = DXGI_FORMAT_R32G32B32_FLOAT,
+            .InputSlot = 0,
+            .AlignedByteOffset = 12,
+            .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            .InstanceDataStepRate = 0,
+        },
         D3D12_INPUT_ELEMENT_DESC{
-            "MATERIAL", 0, DXGI_FORMAT_R32_UINT, 0, 24,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            .SemanticName = "MATERIAL",
+            .SemanticIndex = 0,
+            .Format = DXGI_FORMAT_R32_UINT,
+            .InputSlot = 0,
+            .AlignedByteOffset = 24,
+            .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            .InstanceDataStepRate = 0,
+        },
     };
 
-    D3D12_DEPTH_STENCIL_DESC carDepth{};
-    carDepth.DepthEnable = TRUE;
-    carDepth.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-    carDepth.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-    carDepth.StencilEnable = FALSE;
-    carDepth.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
-    carDepth.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+    D3D12_DEPTH_STENCIL_DESC carDepth{
+        .DepthEnable = TRUE,
+        .DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL,
+        .DepthFunc = D3D12_COMPARISON_FUNC_LESS,
+        .StencilEnable = FALSE,
+        .StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK,
+        .StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK,
+    };
 
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC carPipeline{};
-    carPipeline.pRootSignature = m_carRootSignature.Get();
-    carPipeline.VS = {g_simplePaintVertexShader, sizeof(g_simplePaintVertexShader)};
-    carPipeline.PS = {g_simplePaintPixelShader, sizeof(g_simplePaintPixelShader)};
-    carPipeline.BlendState = blend;
-    carPipeline.SampleMask = UINT_MAX;
-    carPipeline.RasterizerState = rasterizer;
-    carPipeline.DepthStencilState = carDepth;
-    carPipeline.InputLayout = {
-        carInputElements.data(),
-        static_cast<std::uint32_t>(carInputElements.size())};
-    carPipeline.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-    carPipeline.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    carPipeline.NumRenderTargets = 1;
-    carPipeline.RTVFormats[0] = RenderTargetFormat;
-    carPipeline.DSVFormat = DepthBufferFormat;
-    carPipeline.SampleDesc = {1, 0};
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC carPipeline{
+        .pRootSignature = m_carRootSignature.Get(),
+        .VS = {.pShaderBytecode = g_simplePaintVertexShader, .BytecodeLength = sizeof(g_simplePaintVertexShader)},
+        .PS = {.pShaderBytecode = g_simplePaintPixelShader, .BytecodeLength = sizeof(g_simplePaintPixelShader)},
+        .BlendState = blend,
+        .SampleMask = UINT_MAX,
+        .RasterizerState = rasterizer,
+        .DepthStencilState = carDepth,
+        .InputLayout = {
+            .pInputElementDescs = carInputElements.data(),
+            .NumElements = static_cast<std::uint32_t>(carInputElements.size()),
+        },
+        .IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
+        .PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+        .NumRenderTargets = 1,
+        .RTVFormats = {RenderTargetFormat},
+        .DSVFormat = DepthBufferFormat,
+        .SampleDesc = {.Count = 1, .Quality = 0},
+    };
     Check(
         m_device->CreateGraphicsPipelineState(&carPipeline, IID_PPV_ARGS(&m_carPipelineState)),
         "Create scene pipeline state");
@@ -726,11 +779,14 @@ void Renderer::CreateCommandObjects()
 
 void Renderer::CreateWindowSizeResources()
 {
-    D3D12_RENDER_TARGET_VIEW_DESC rtvDescription{};
-    rtvDescription.Format = RenderTargetFormat;
-    rtvDescription.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-    rtvDescription.Texture2D.MipSlice = 0;
-    rtvDescription.Texture2D.PlaneSlice = 0;
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDescription{
+        .Format = RenderTargetFormat,
+        .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+        .Texture2D = {
+            .MipSlice = 0,
+            .PlaneSlice = 0,
+        },
+    };
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
     for (std::uint32_t frameIndex = 0; frameIndex < FrameCount; ++frameIndex)
@@ -740,21 +796,23 @@ void Renderer::CreateWindowSizeResources()
         rtvHandle.ptr += m_rtvDescriptorSize;
     }
 
-    D3D12_RESOURCE_DESC depthDescription{};
-    depthDescription.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    depthDescription.Alignment = 0;
-    depthDescription.Width = m_width;
-    depthDescription.Height = m_height;
-    depthDescription.DepthOrArraySize = 1;
-    depthDescription.MipLevels = 1;
-    depthDescription.Format = DepthBufferFormat;
-    depthDescription.SampleDesc = {1, 0};
-    depthDescription.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    depthDescription.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+    D3D12_RESOURCE_DESC depthDescription{
+        .Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+        .Alignment = 0,
+        .Width = m_width,
+        .Height = m_height,
+        .DepthOrArraySize = 1,
+        .MipLevels = 1,
+        .Format = DepthBufferFormat,
+        .SampleDesc = {.Count = 1, .Quality = 0},
+        .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+        .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+    };
 
-    D3D12_CLEAR_VALUE clearValue{};
-    clearValue.Format = DepthBufferFormat;
-    clearValue.DepthStencil = {1.0f, 0};
+    D3D12_CLEAR_VALUE clearValue{
+        .Format = DepthBufferFormat,
+        .DepthStencil = {.Depth = 1.0f, .Stencil = 0},
+    };
     const D3D12_HEAP_PROPERTIES defaultHeap = HeapProperties(D3D12_HEAP_TYPE_DEFAULT);
     Check(
         m_device->CreateCommittedResource(
@@ -766,36 +824,44 @@ void Renderer::CreateWindowSizeResources()
             IID_PPV_ARGS(&m_depthBuffer)),
         "Create depth buffer");
 
-    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDescription{};
-    dsvDescription.Format = DepthBufferFormat;
-    dsvDescription.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-    dsvDescription.Flags = D3D12_DSV_FLAG_NONE;
-    dsvDescription.Texture2D.MipSlice = 0;
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDescription{
+        .Format = DepthBufferFormat,
+        .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
+        .Flags = D3D12_DSV_FLAG_NONE,
+        .Texture2D = {
+            .MipSlice = 0,
+        },
+    };
     m_device->CreateDepthStencilView(
         m_depthBuffer.Get(),
         &dsvDescription,
         m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
 
     m_viewport = {
-        0.0f,
-        0.0f,
-        static_cast<float>(m_width),
-        static_cast<float>(m_height),
-        0.0f,
-        1.0f,
+        .TopLeftX = 0.0f,
+        .TopLeftY = 0.0f,
+        .Width = static_cast<float>(m_width),
+        .Height = static_cast<float>(m_height),
+        .MinDepth = 0.0f,
+        .MaxDepth = 1.0f,
     };
     const float sceneWidth = std::min(
         static_cast<float>(m_width),
         static_cast<float>(m_height) * BackgroundAspectRatio);
     m_sceneViewport = {
-        (static_cast<float>(m_width) - sceneWidth) * 0.5f,
-        0.0f,
-        sceneWidth,
-        static_cast<float>(m_height),
-        0.0f,
-        1.0f,
+        .TopLeftX = (static_cast<float>(m_width) - sceneWidth) * 0.5f,
+        .TopLeftY = 0.0f,
+        .Width = sceneWidth,
+        .Height = static_cast<float>(m_height),
+        .MinDepth = 0.0f,
+        .MaxDepth = 1.0f,
     };
-    m_scissorRect = {0, 0, static_cast<LONG>(m_width), static_cast<LONG>(m_height)};
+    m_scissorRect = {
+        .left = 0,
+        .top = 0,
+        .right = static_cast<LONG>(m_width),
+        .bottom = static_cast<LONG>(m_height),
+    };
 }
 
 void Renderer::CreateStaticResources()
@@ -876,7 +942,7 @@ void Renderer::CreateStaticResources()
             IID_PPV_ARGS(&indexUpload)),
         "Create scene index upload buffer");
 
-    D3D12_RANGE noCpuReads{0, 0};
+    const D3D12_RANGE noCpuReads{.Begin = 0, .End = 0};
     void* mappedData = nullptr;
     Check(vertexUpload->Map(0, &noCpuReads, &mappedData), "Map scene vertex upload buffer");
     std::memcpy(mappedData, vertices.data(), static_cast<std::size_t>(vertexBytes));
@@ -945,14 +1011,16 @@ void Renderer::CreateStaticResources()
     m_commandList->CopyBufferRegion(m_sceneMesh.vertexBuffer.Get(), 0, vertexUpload.Get(), 0, vertexBytes);
     m_commandList->CopyBufferRegion(m_sceneMesh.indexBuffer.Get(), 0, indexUpload.Get(), 0, indexBytes);
 
-    D3D12_TEXTURE_COPY_LOCATION textureDestination{};
-    textureDestination.pResource = m_backgroundTexture.Get();
-    textureDestination.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-    textureDestination.SubresourceIndex = 0;
-    D3D12_TEXTURE_COPY_LOCATION textureSource{};
-    textureSource.pResource = textureUpload.Get();
-    textureSource.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-    textureSource.PlacedFootprint = textureFootprint;
+    D3D12_TEXTURE_COPY_LOCATION textureDestination{
+        .pResource = m_backgroundTexture.Get(),
+        .Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+        .SubresourceIndex = 0,
+    };
+    D3D12_TEXTURE_COPY_LOCATION textureSource{
+        .pResource = textureUpload.Get(),
+        .Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT,
+        .PlacedFootprint = textureFootprint,
+    };
     m_commandList->CopyTextureRegion(&textureDestination, 0, 0, 0, &textureSource, nullptr);
 
     const std::array uploadBarriers = {
@@ -978,22 +1046,29 @@ void Renderer::CreateStaticResources()
     m_commandQueue->ExecuteCommandLists(1, commandLists);
     WaitForGpu();
 
-    m_sceneMesh.vertexView.BufferLocation = m_sceneMesh.vertexBuffer->GetGPUVirtualAddress();
-    m_sceneMesh.vertexView.SizeInBytes = static_cast<std::uint32_t>(vertexBytes);
-    m_sceneMesh.vertexView.StrideInBytes = sizeof(GeneratedCarMesh::Vertex);
-    m_sceneMesh.indexView.BufferLocation = m_sceneMesh.indexBuffer->GetGPUVirtualAddress();
-    m_sceneMesh.indexView.SizeInBytes = static_cast<std::uint32_t>(indexBytes);
-    m_sceneMesh.indexView.Format = DXGI_FORMAT_R32_UINT;
+    m_sceneMesh.vertexView = {
+        .BufferLocation = m_sceneMesh.vertexBuffer->GetGPUVirtualAddress(),
+        .SizeInBytes = static_cast<std::uint32_t>(vertexBytes),
+        .StrideInBytes = sizeof(GeneratedCarMesh::Vertex),
+    };
+    m_sceneMesh.indexView = {
+        .BufferLocation = m_sceneMesh.indexBuffer->GetGPUVirtualAddress(),
+        .SizeInBytes = static_cast<std::uint32_t>(indexBytes),
+        .Format = DXGI_FORMAT_R32_UINT,
+    };
     m_sceneMesh.indexCount = static_cast<std::uint32_t>(indices.size());
 
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription{};
-    srvDescription.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-    srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDescription.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDescription.Texture2D.MostDetailedMip = 0;
-    srvDescription.Texture2D.MipLevels = 1;
-    srvDescription.Texture2D.PlaneSlice = 0;
-    srvDescription.Texture2D.ResourceMinLODClamp = 0.0f;
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription{
+        .Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+        .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+        .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+        .Texture2D = {
+            .MostDetailedMip = 0,
+            .MipLevels = 1,
+            .PlaneSlice = 0,
+            .ResourceMinLODClamp = 0.0f,
+        },
+    };
     m_device->CreateShaderResourceView(
         m_backgroundTexture.Get(),
         &srvDescription,
@@ -1019,7 +1094,7 @@ void Renderer::CreateConstantBuffer()
             IID_PPV_ARGS(&m_constantBuffer)),
         "Create scene constant buffer");
 
-    D3D12_RANGE noCpuReads{0, 0};
+    const D3D12_RANGE noCpuReads{.Begin = 0, .End = 0};
     void* mappedData = nullptr;
     Check(m_constantBuffer->Map(0, &noCpuReads, &mappedData), "Map scene constant buffer");
     m_mappedConstants = static_cast<std::byte*>(mappedData);
@@ -1050,10 +1125,12 @@ void Renderer::LoadPaintSettings()
 
     for (std::size_t index = 0; index < materialSettings.size(); ++index)
     {
-        materialSettings[index].baseColorSrgb = defaultColors[index];
-        materialSettings[index].lightPoint = index == CarMaterialCount ? 1.0 : 0.8;
+        materialSettings[index] = {
+            .baseColorSrgb = defaultColors[index],
+            .brightness = index == CarMaterialCount ? 0.126 : 0.5,
+            .lightPoint = index == CarMaterialCount ? 1.0 : 0.8,
+        };
     }
-    materialSettings[CarMaterialCount].brightness = 0.126;
 
     const std::filesystem::path settingsPath = ModuleDirectory() / L"assets" / L"Settings.ini";
     std::ifstream input(settingsPath);
@@ -1208,10 +1285,10 @@ Renderer::AnimationState Renderer::CurrentAnimationState() const
         std::chrono::steady_clock::now() - m_animationStart).count();
     const double phase = std::fmod(elapsed * movementSpeed + travelDistance, fullCycleDistance);
 
-    AnimationState state;
-    state.position = static_cast<float>(travelDistance - std::abs(phase - travelDistance * 2.0));
-    state.rotation = static_cast<float>(std::fmod(elapsed * rotationSpeed, std::numbers::pi * 2.0));
-    return state;
+    return {
+        .position = static_cast<float>(travelDistance - std::abs(phase - travelDistance * 2.0)),
+        .rotation = static_cast<float>(std::fmod(elapsed * rotationSpeed, std::numbers::pi * 2.0)),
+    };
 }
 
 void Renderer::WriteObjectConstants(

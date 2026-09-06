@@ -41,11 +41,12 @@ Material Material::Compile(const Parameters& p)
     if (!std::isfinite(p.rotationDegrees) || p.rotationDegrees < 0.0 || p.rotationDegrees >= 360.0)
         throw std::invalid_argument("SimplePaint Rotation must be finite and in [0, 360) degrees.");
 
-    GpuMaterial gpu{};
     const double radians = -p.rotationDegrees * std::numbers::pi / 180.0;
-    gpu.warp = {static_cast<float>(std::cos(radians)), static_cast<float>(std::sin(radians)),
-        static_cast<float>(std::sqrt((1.0 - p.shift) / (1.0 + p.shift))),
-        p.shift == 0.0 ? 0.0f : 1.0f};
+    GpuMaterial gpu{
+        .warp = {static_cast<float>(std::cos(radians)), static_cast<float>(std::sin(radians)),
+            static_cast<float>(std::sqrt((1.0 - p.shift) / (1.0 + p.shift))),
+            p.shift == 0.0 ? 0.0f : 1.0f},
+    };
     for (std::size_t channel = 0; channel < 3; ++channel)
     {
         const double c = DecodeSrgb(p.baseColorSrgb[channel]);

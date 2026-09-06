@@ -32,5 +32,5 @@ private:
     bool m_fullscreen = false;
     std::uint32_t m_pendingWidth = 1280;
     std::uint32_t m_pendingHeight = 720;
-    WINDOWPLACEMENT m_windowedPlacement{sizeof(WINDOWPLACEMENT)};
+    WINDOWPLACEMENT m_windowedPlacement{.length = sizeof(WINDOWPLACEMENT)};
 };

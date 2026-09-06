@@ -29,7 +29,10 @@ inline Projection MakeProjection(float width, float height, float nearZ, float f
         width > 1.0e6f || height > 1.0e6f || nearZ < 0.0f || farZ > 1.0e6f || farZ-nearZ < 1.0e-4f)
         throw std::invalid_argument("Orthographic projection requires bounded positive dimensions and 0 <= near < far.");
     const float depthScale = 1.0f / (nearZ - farZ);
-    return {{2.0f / width, 2.0f / height, depthScale}, depthScale * nearZ};
+    return {
+        .scale = {2.0f / width, 2.0f / height, depthScale},
+        .depthOffset = depthScale * nearZ,
+    };
 }
 
 inline ObjectTransforms BuildObjectTransforms(

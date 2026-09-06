@@ -30,7 +30,15 @@ inline Mesh Generate(
     Mesh mesh;
     mesh.vertices.reserve(2 + uResolution * (vResolution - 1));
     mesh.indices.reserve(6 * uResolution * (vResolution - 1));
-    mesh.vertices.push_back({0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, materialIndex});
+    mesh.vertices.push_back({
+        .positionX = 0.0f,
+        .positionY = 1.0f,
+        .positionZ = 0.0f,
+        .normalX = 0.0f,
+        .normalY = 1.0f,
+        .normalZ = 0.0f,
+        .materialIndex = materialIndex,
+    });
     for (std::uint32_t v = 1; v < vResolution; ++v)
     {
         const float latitude = std::numbers::pi_v<float> * static_cast<float>(v) /
@@ -42,11 +50,27 @@ inline Mesh Generate(
             const float x = std::sin(latitude) * std::cos(longitude);
             const float y = std::cos(latitude);
             const float z = std::sin(latitude) * std::sin(longitude);
-            mesh.vertices.push_back({x, y, z, x, y, z, materialIndex});
+            mesh.vertices.push_back({
+                .positionX = x,
+                .positionY = y,
+                .positionZ = z,
+                .normalX = x,
+                .normalY = y,
+                .normalZ = z,
+                .materialIndex = materialIndex,
+            });
         }
     }
     const auto bottom = static_cast<std::uint32_t>(mesh.vertices.size());
-    mesh.vertices.push_back({0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, materialIndex});
+    mesh.vertices.push_back({
+        .positionX = 0.0f,
+        .positionY = -1.0f,
+        .positionZ = 0.0f,
+        .normalX = 0.0f,
+        .normalY = -1.0f,
+        .normalZ = 0.0f,
+        .materialIndex = materialIndex,
+    });
 
     // Wrap longitude without duplicating the seam. Separate pole fans avoid
     // zero-area triangles, including at the minimum V resolution.
