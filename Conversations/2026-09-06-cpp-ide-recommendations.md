@@ -24,3 +24,33 @@ Visual Studio is the strongest fit because the launcher already uses its C++ too
 
 **Project-specific setup:** Keep the Visual Studio components and Windows SDK installed even if you edit in CLion or Qt Creator: `Run.cmd` currently relies on them. IDE builds also need access to the SDK’s `dxc.exe` shader compiler. Give each IDE its own build directory to avoid conflicting with the launcher’s `build\release` cache.
 
+## User
+
+provide a complete guide for using visual studio with this project
+
+## Assistant (commentary)
+
+I’ll check the build scripts and Visual Studio setup requirements, then write a project-specific guide for opening, building, debugging, and testing the game.
+
+## Assistant (commentary)
+
+Your machine already has Visual Studio Community 2026, the required C++/CMake components, and the SDK shader compiler. The guide will use separate Debug and Release build folders and explain two project-specific details: settings are copied beside the executable, and shaders remain optimized even in a C++ Debug build.
+
+## Assistant (commentary)
+
+The guide is written, including copyable Debug/Release presets, a source-code walkthrough, debugging steps, all 11 tests, and troubleshooting. CMake accepted the example presets, and the local documentation links checked out. I’m saving the guide and conversation in separate commits.
+
+## Assistant
+
+Created the [complete Visual Studio guide](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Documentation/VisualStudio.md), also linked from README.
+
+It covers:
+
+- Installation and opening the project.
+- Copyable x64 Debug/Release CMake presets.
+- Building, launching, and navigating the C++ code.
+- Breakpoints, exceptions, and Direct3D diagnostics.
+- Editing settings, shaders, and assets.
+- Running tests and troubleshooting common failures.
+
+Your installed Visual Studio Community 2026 already has the required build components. I validated the example presets with CMake; the IDE workflow itself was not exercised. The presets are provided as instructions, ready for you to copy.
