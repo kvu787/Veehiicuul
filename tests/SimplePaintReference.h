@@ -69,17 +69,24 @@ inline std::vector<Case> Cases()
     for (double rotation : {0.0, 90.0, 187.0, 359.999999})
     for (const auto range : {std::array{0.0,1.0}, std::array{InteriorMaximum,Margin}, std::array{0.5,0.5}})
     {
-        Parameters p{{color, 0.223, InteriorMaximum},brightness,shift,rotation,range[0],range[1]};
+        const Parameters p{
+            .baseColorSrgb = {color, 0.223, InteriorMaximum},
+            .brightness = brightness,
+            .shift = shift,
+            .rotationDegrees = rotation,
+            .darkPoint = range[0],
+            .lightPoint = range[1],
+        };
         for (Normal n : {Normal{0,0,1}, {0,0,-1}, {1,0,0}, {0,1,0}, {0,-1,0},
             {0,1,1.0e-30f}, {1.0e-30f,1,1.0e-30f}, {1,0,0.009999f}, {1,0,0.010001f}})
-            cases.push_back({p,n});
+            cases.push_back({.parameters = p, .normal = n});
         // Dense rings around the lobe maximum: these expose loss of 1-facing
         // much more effectively than uniformly random normals.
         for (double offset : {-0.01,-0.001,-0.0001,-0.00001,0.0,0.00001,0.0001,0.001,0.01})
         {
             const double a = std::asin(shift)+offset;
             const double rotationAngle = rotation*std::numbers::pi/180.0;
-            cases.push_back({p,{float(std::sin(a)*std::cos(rotationAngle)),
+            cases.push_back({.parameters = p, .normal = {float(std::sin(a)*std::cos(rotationAngle)),
                 float(std::sin(a)*std::sin(rotationAngle)),float(std::cos(a))}});
         }
     }
@@ -88,13 +95,19 @@ inline std::vector<Case> Cases()
     for (unsigned i = 0; i < 16384; ++i)
     {
         const auto interior = [&]{return Margin + (1.0-2.0*Margin)*unit(random);};
-        Parameters p{{interior(),interior(),interior()},interior(),InteriorMaximum*unit(random),
-            360.0*unit(random),InteriorMaximum*unit(random),Margin+InteriorMaximum*unit(random)};
+        const Parameters p{
+            .baseColorSrgb = {interior(),interior(),interior()},
+            .brightness = interior(),
+            .shift = InteriorMaximum*unit(random),
+            .rotationDegrees = 360.0*unit(random),
+            .darkPoint = InteriorMaximum*unit(random),
+            .lightPoint = Margin+InteriorMaximum*unit(random),
+        };
         Normal n{float(signedUnit(random)),float(signedUnit(random)),float(signedUnit(random))};
         const float length = std::sqrt(n[0]*n[0]+n[1]*n[1]+n[2]*n[2]);
         const float scale = std::exp2(float(-10.0+20.0*unit(random)));
         for (auto& component : n) component *= scale/length;
-        cases.push_back({p,n});
+        cases.push_back({.parameters = p, .normal = n});
     }
     return cases;
 }

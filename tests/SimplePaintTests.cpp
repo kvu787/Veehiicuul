@@ -46,7 +46,14 @@ int main()
         for (double c : {Margin,0.04045,0.223,0.5,InteriorMaximum})
         for (double b : {Margin,0.126,0.5,InteriorMaximum})
         {
-            p = {{c,c,c},b,0,0,0,1};
+            p = {
+                .baseColorSrgb = {c,c,c},
+                .brightness = b,
+                .shift = 0,
+                .rotationDegrees = 0,
+                .darkPoint = 0,
+                .lightPoint = 1,
+            };
             const auto m = Material::Compile(p).Constants();
             double previous = -1.0;
             for (unsigned i = 0; i <= 4096; ++i)

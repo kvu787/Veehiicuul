@@ -18,13 +18,14 @@ Include headers as `#include "SimplePaint/Material.h"`. The target provides the 
 ```cpp
 #include "SimplePaint/Material.h"
 
-SimplePaint::Parameters p;
-p.baseColorSrgb = {0.107, 0.223, 0.578};
-p.brightness = 0.5;
-p.shift = 0.6;
-p.rotationDegrees = 45;
-p.darkPoint = 0.05;
-p.lightPoint = 0.95;
+const SimplePaint::Parameters p{
+    .baseColorSrgb = {0.107, 0.223, 0.578},
+    .brightness = 0.5,
+    .shift = 0.6,
+    .rotationDegrees = 45,
+    .darkPoint = 0.05,
+    .lightPoint = 0.95,
+};
 const auto material = SimplePaint::Material::Compile(p);
 const SimplePaint::GpuMaterial gpu = material.Constants(); // Copy before material dies.
 ```

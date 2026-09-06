@@ -75,13 +75,14 @@ Without CMake, compile the copied `Material.cpp` as C++20 and add the folder's p
 ```cpp
 #include "SimplePaint/Material.h"
 
-SimplePaint::Parameters parameters;
-parameters.baseColorSrgb = {0.107, 0.223, 0.578};
-parameters.brightness = 0.5;
-parameters.shift = 0.6;
-parameters.rotationDegrees = 45.0;
-parameters.darkPoint = 0.05;
-parameters.lightPoint = 0.95;
+const SimplePaint::Parameters parameters{
+    .baseColorSrgb = {0.107, 0.223, 0.578},
+    .brightness = 0.5,
+    .shift = 0.6,
+    .rotationDegrees = 45.0,
+    .darkPoint = 0.05,
+    .lightPoint = 0.95,
+};
 
 const auto material = SimplePaint::Material::Compile(parameters);
 const SimplePaint::GpuMaterial gpu = material.Constants(); // Own a copy for upload.
