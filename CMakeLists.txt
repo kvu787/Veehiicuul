@@ -75,6 +75,15 @@ add_custom_target(CompiledShaders DEPENDS ${SHADER_OUTPUTS})
 
 add_subdirectory(Source/SimplePaint)
 
+add_library(ApplicationSettings Source/ApplicationSettings.cpp Source/ApplicationSettings.h)
+target_link_libraries(ApplicationSettings PUBLIC SimplePaint)
+target_include_directories(ApplicationSettings PUBLIC Source)
+target_compile_features(ApplicationSettings PUBLIC cxx_std_20)
+target_compile_definitions(ApplicationSettings PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN UNICODE _UNICODE)
+if(MSVC)
+    target_compile_options(ApplicationSettings PRIVATE /W4 /WX /EHsc /permissive-)
+endif()
+
 set(CAR_MESH_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/Source/generated/CarMesh.generated.h")
 add_executable(SimpleDirectX12Game WIN32
     ${SHADER_HEADERS}
@@ -204,4 +213,13 @@ if(BUILD_TESTING)
     target_include_directories(OrthographicTransformTests PRIVATE Source)
     target_compile_features(OrthographicTransformTests PRIVATE cxx_std_20)
     add_test(NAME OrthographicTransforms COMMAND OrthographicTransformTests)
+endif()
+
+if(BUILD_TESTING)
+    add_executable(ApplicationSettingsTests tests/ApplicationSettingsTests.cpp)
+    target_link_libraries(ApplicationSettingsTests PRIVATE ApplicationSettings)
+    if(MSVC)
+        target_compile_options(ApplicationSettingsTests PRIVATE /W4 /WX /EHsc /permissive-)
+    endif()
+    add_test(NAME ApplicationSettingsContract COMMAND ApplicationSettingsTests)
 endif()
