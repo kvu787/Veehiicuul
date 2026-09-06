@@ -123,3 +123,23 @@ I’ll consolidate the app guide, shader guides, asset instructions, and histori
 Moved the guides, asset instructions, and historical reports into [Documentation](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Documentation/README.md). Removed the obsolete specification and `docs` folder.
 
 Updated and verified 44 local links. Changes and conversation log are committed separately; the working tree is clean.
+
+
+## User
+
+in general, is shader code typically put in the same parent folder (i.e. a src folder) as non-shader code
+
+## Assistant
+
+Both layouts are common. Shaders are source code, so putting them under `src` is conventional, but a separate `shaders` folder is also normal.
+
+## Assistant
+
+Yes, it’s common, though there’s no universal convention. Both layouts are normal:
+
+- **Shared source root:** `src/Renderer.cpp` and `src/shaders/SimplePaint.hlsl`
+- **Separate source folders:** `src/Renderer.cpp` and `shaders/SimplePaint.hlsl`
+
+Shaders are source code, so putting them under `src` is a natural choice. Their different compilation process doesn’t require a separate top-level folder.
+
+For this repo, `src/shaders/` would be a straightforward, conventional organization.
