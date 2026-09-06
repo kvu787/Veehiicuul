@@ -708,3 +708,53 @@ Enabling VSync would not erase the pipeline’s `AllowTearing` preference. Turni
 `MinimizeInputLatency` with `VSync = true` would mean **minimize input latency subject to the user’s VSync requirement**. `Standard` with `VSync = false` would retain its balanced queueing and waiting settings while presenting without VSync.
 
 This also removes the need to disable the `V` hotkey, which I suggested in the previous design.
+
+## User
+
+okay, approved. do the change.
+
+## Assistant
+
+I’ll implement the three pipeline modes with VSync independent of them, add the INI validation and frame-wait logic, then build and test the result. I’ll keep the implementation vendor-neutral and omit any FPS limiter.
+
+## Assistant
+
+I’m separating frame resources from swap-chain buffers so the GPU-frame limit can be enforced independently. I’ll also keep the INI’s VSync value separate from the presets, with the `V` key continuing to toggle it at runtime.
+
+## Assistant
+
+The application builds with the new settings and frame loop. I’m now adding tests for inactive custom settings, independent VSync, mismatched frame/buffer counts, and cancellation during waits. I also corrected adapter selection to try another adapter or WARP when a hardware adapter lacks the required shader support.
+
+## Assistant
+
+The Release suite passed all ten tests, including hardware and WARP rendering, VSync changes, and the app’s window lifecycle. The Debug suite also passed before the final smoke-test refinements. I’m finishing documentation and reviewing the wait cancellation paths before the final checks.
+
+## Assistant
+
+All ten tests now pass in both Release and Debug. The shipped configuration uses `Standard` with VSync off, and the `V` key works independently of the mode. I’m committing the settings parser, renderer changes, documentation, and conversation separately.
+
+## Verification record
+
+- `9b42329`: settings resolver, presets, independent VSync, and configuration contract tests.
+- `30f48d6`: independent frame contexts, presentation modes, message-aware admission, active/event waits, runtime VSync, and integration tests.
+- `de98b84`: configuration documentation and capability-fallback notes.
+- `Run.ps1 -Test`: all 10 tests passed; final Release run took 8.18 seconds.
+- `Run.ps1 -Test -Configuration Debug`: all 10 tests passed; final Debug run took 8.71 seconds.
+- GPU tests covered selected-adapter and WARP rendering, unequal frame/buffer counts, limits up to 16, both VSync states, event/spin waits, cancellation during a deliberately blocked GPU queue, resize, and minimize/restore. The D3D12 debug layer was checked.
+- The application lifecycle smoke test covered independent VSync hotkeys, fullscreen transitions, minimize/restore, and close, using only its own UI thread's window.
+- No physical input-to-photon measurements were taken.
+
+## Assistant final response
+
+Implemented. Configure it in [Settings.ini](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/assets/Settings.ini).
+
+- Three modes: `MinimizeInputLatency`, `Standard`, and `Custom`.
+- VSync is independent in every mode; the `V` hotkey still works.
+- Custom settings are ignored outside Custom mode.
+- Defaults: `Standard`, VSync off. No app-owned FPS limiter or vendor-specific code.
+
+All **10 tests passed in both Release and Debug**, including GPU/WARP synchronization and window lifecycle tests.
+
+The latency preset uses the agreed initial settings; physical input-to-photon latency was not measured. [Configuration details](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Documentation/Pipeline.md).
+
+Implementation, documentation, and conversation are committed separately; working tree is clean.
