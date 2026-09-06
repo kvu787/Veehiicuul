@@ -17,3 +17,22 @@ The platform and frame rate policies are duplicated. I’ll place them under a s
 [README.md](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/README.md:33) now owns the shared constraints. [AGENTS.md](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/AGENTS.md:3) links to that section and retains agent-specific guidance.
 
 Verified with `git diff --check`. Documentation and conversation log committed separately.
+
+## User
+
+i changed the agents.md and readme.md to the structure i want. review and check for any issues.
+
+## Assistant (commentary)
+
+I’ll review your updated structure for duplicated constraints, missing requirements, and broken references.
+
+## Assistant
+
+No issues found in your revised structure.
+
+- Platform/GPU and frame rate constraints appear only in README.md.
+- AGENTS.md correctly links to `README.md#constraints`.
+- The original template instructions remain intact in AGENTS.md.
+- All local links and anchors in both files resolve.
+
+My earlier change moved more than you intended. Your structure preserves the template while centralizing the shared project policies. Neither file needed changes.
