@@ -1,6 +1,6 @@
 #pragma once
 
-#include "OrthographicTransforms.h"
+#include "SimplePaint/OrthographicTransforms.h"
 #include "SimplePaint/Material.h"
 #include <Windows.h>
 #include <d3d12.h>
@@ -33,6 +33,7 @@ private:
     static constexpr std::uint32_t FrameCount = 2;
     static constexpr std::uint32_t CarMaterialCount = 5;
     static constexpr std::uint32_t PaintMaterialCount = CarMaterialCount + 1;
+    static_assert(PaintMaterialCount == SIMPLE_PAINT_MATERIAL_COUNT);
     static constexpr std::uint32_t ObjectsPerFrame = 2;
     static constexpr float BackgroundAspectRatio = 32.0f / 9.0f;
     static constexpr DXGI_FORMAT SwapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;

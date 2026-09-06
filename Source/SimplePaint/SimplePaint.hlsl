@@ -1,7 +1,14 @@
 #include "SimplePaintCore.hlsli"
 
-// Application adapter: these counts/bindings are not part of the paint core.
-static const uint MaterialCount = 6u;
+// Reusable DX12 adapter. Define the count when compiling BOTH entry points;
+// the host must upload the same number of 80-byte material records at b1.
+#ifndef SIMPLE_PAINT_MATERIAL_COUNT
+#define SIMPLE_PAINT_MATERIAL_COUNT 1
+#endif
+#if SIMPLE_PAINT_MATERIAL_COUNT < 1
+#error SIMPLE_PAINT_MATERIAL_COUNT must be positive
+#endif
+static const uint MaterialCount = SIMPLE_PAINT_MATERIAL_COUNT;
 cbuffer ObjectConstants : register(b0)
 {
     // Three columns of affine transforms; clip W is always one.

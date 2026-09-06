@@ -18,13 +18,18 @@ if(NOT DXC_EXECUTABLE)
 endif()
 
 set(SHADER_GENERATED_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated/shaders")
-set(BACKGROUND_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/Background.hlsl")
-set(SIMPLE_PAINT_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/SimplePaint.hlsl")
-set(SIMPLE_PAINT_CORE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/SimplePaintCore.hlsli")
+set(BACKGROUND_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Source/Shaders/Background.hlsl")
+set(SIMPLE_PAINT_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Source/SimplePaint/SimplePaint.hlsl")
+set(SIMPLE_PAINT_CORE "${CMAKE_CURRENT_SOURCE_DIR}/Source/SimplePaint/SimplePaintCore.hlsli")
+set(SIMPLE_PAINT_MATERIAL_COUNT 6)
 
 function(compile_shader source_file output_name entry_point target_profile variable_name)
     set(object_file "${SHADER_GENERATED_DIRECTORY}/${output_name}.dxil")
     set(header_file "${SHADER_GENERATED_DIRECTORY}/${output_name}.h")
+    set(shader_definitions)
+    if(source_file STREQUAL SIMPLE_PAINT_SHADER_SOURCE)
+        set(shader_definitions -D "SIMPLE_PAINT_MATERIAL_COUNT=${SIMPLE_PAINT_MATERIAL_COUNT}")
+    endif()
 
     add_custom_command(
         OUTPUT "${object_file}" "${header_file}"
@@ -39,6 +44,7 @@ function(compile_shader source_file output_name entry_point target_profile varia
             -Ges
             -WX
             -all_resources_bound
+            ${shader_definitions}
             -Qstrip_debug
             -Qstrip_reflect
             "${source_file}"
@@ -67,26 +73,20 @@ compile_shader("${SIMPLE_PAINT_SHADER_SOURCE}" SimplePaintPS PSMain ps_6_0 g_sim
 
 add_custom_target(CompiledShaders DEPENDS ${SHADER_OUTPUTS})
 
-add_library(SimplePaint STATIC src/SimplePaint/Material.cpp src/SimplePaint/Material.h src/SimplePaint/Geometry.h)
-target_include_directories(SimplePaint PUBLIC src)
-target_compile_features(SimplePaint PUBLIC cxx_std_20)
-if(MSVC)
-    target_compile_options(SimplePaint PRIVATE /W4 /WX /permissive- /EHsc /fp:precise)
-endif()
+add_subdirectory(Source/SimplePaint)
 
-set(CAR_MESH_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/generated/CarMesh.generated.h")
+set(CAR_MESH_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/Source/generated/CarMesh.generated.h")
 add_executable(SimpleDirectX12Game WIN32
     ${SHADER_HEADERS}
     ${BACKGROUND_SHADER_SOURCE}
     ${SIMPLE_PAINT_SHADER_SOURCE}
     ${CAR_MESH_HEADER}
-    src/Application.cpp
-    src/Application.h
-    src/Main.cpp
-    src/Renderer.cpp
-    src/Renderer.h
-    src/OrthographicTransforms.h
-    src/UVSphere.h
+    Source/Application.cpp
+    Source/Application.h
+    Source/Main.cpp
+    Source/Renderer.cpp
+    Source/Renderer.h
+    Source/UVSphere.h
 )
 
 add_dependencies(SimpleDirectX12Game CompiledShaders)
@@ -144,6 +144,7 @@ target_compile_definitions(SimpleDirectX12Game PRIVATE
     UNICODE
     _UNICODE
     WIN32_LEAN_AND_MEAN
+    SIMPLE_PAINT_MATERIAL_COUNT=${SIMPLE_PAINT_MATERIAL_COUNT}
 )
 
 if(MSVC)
@@ -167,6 +168,19 @@ set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT
 
 include(CTest)
 if(BUILD_TESTING)
+    add_test(NAME SimplePaintStandalone
+        COMMAND "${CMAKE_COMMAND}"
+            "-DMODULE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/Source/SimplePaint"
+            "-DCONSUMER_DIR=${CMAKE_CURRENT_SOURCE_DIR}/tests/SimplePaintStandalone"
+            "-DSMOKE_ROOT=${CMAKE_CURRENT_BINARY_DIR}/SimplePaintCopyCheck"
+            "-DGENERATOR=${CMAKE_GENERATOR}"
+            "-DCXX_COMPILER=${CMAKE_CXX_COMPILER}"
+            "-DMAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
+            "-DCONFIGURATION=$<CONFIG>"
+            "-DDXC_EXECUTABLE=${DXC_EXECUTABLE}"
+            "-DCTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/VerifySimplePaintStandalone.cmake")
+    set_tests_properties(SimplePaintStandalone PROPERTIES TIMEOUT 120)
     add_executable(SimplePaintTests tests/SimplePaintTests.cpp)
     target_link_libraries(SimplePaintTests PRIVATE SimplePaint)
     add_test(NAME SimplePaintContract COMMAND SimplePaintTests)
@@ -183,11 +197,11 @@ if(BUILD_TESTING)
     add_test(NAME SimplePaintGpuWarp COMMAND SimplePaintGpuTests --warp)
     set_tests_properties(SimplePaintGpuHardware SimplePaintGpuWarp PROPERTIES TIMEOUT 120 RUN_SERIAL TRUE)
     add_executable(UVSphereTests tests/UVSphereTests.cpp)
-    target_include_directories(UVSphereTests PRIVATE src)
+    target_include_directories(UVSphereTests PRIVATE Source)
     target_compile_features(UVSphereTests PRIVATE cxx_std_20)
     add_test(NAME UVSphereGeometry COMMAND UVSphereTests)
     add_executable(OrthographicTransformTests tests/OrthographicTransformTests.cpp)
-    target_include_directories(OrthographicTransformTests PRIVATE src)
+    target_include_directories(OrthographicTransformTests PRIVATE Source)
     target_compile_features(OrthographicTransformTests PRIVATE cxx_std_20)
     add_test(NAME OrthographicTransforms COMMAND OrthographicTransformTests)
 endif()

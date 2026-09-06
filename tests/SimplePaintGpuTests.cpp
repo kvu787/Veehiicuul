@@ -1,5 +1,5 @@
 #include "SimplePaintReference.h"
-#include "OrthographicTransforms.h"
+#include "SimplePaint/OrthographicTransforms.h"
 #include "SimplePaintVS.h"
 #include "SimplePaintPS.h"
 #include <Windows.h>

@@ -5,7 +5,7 @@ corner normals and triangulation:
 
     blender --background --factory-startup --disable-autoexec Blender/Car.blend \
         --python-exit-code 1 --python tools/GenerateAssets.py -- \
-        --car-output src/generated/CarMesh.generated.h \
+        --car-output Source/generated/CarMesh.generated.h \
         --background-output assets/SceneBackground.png
 
 The normal game build consumes the generated files and does not require
@@ -46,7 +46,7 @@ def _script_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--car-output",
         type=Path,
-        default=Path("src/generated/CarMesh.generated.h"),
+        default=Path("Source/generated/CarMesh.generated.h"),
     )
     parser.add_argument(
         "--background-output",

@@ -2,11 +2,10 @@
 #define SIMPLE_PAINT_CORE_HLSLI
 
 // Reusable SimplePaint core. The application owns bindings and vertex layout.
-// CPU contract: src/SimplePaint/Material.h and Geometry.h;
-// see Documentation/Specification.md.
+// CPU contract: Material.h and Geometry.h in this directory; see README.md.
 // All colors are linear RGB. No lighting, gamma encoding, or material repair.
-// Reimplements Kevin Vu's K12 Simple Paint mathematics; derivation and original
-// source attribution are in Documentation/Specification.md.
+// Reimplements Kevin Vu's K12 Simple Paint mathematics:
+// https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader
 struct SimplePaintMaterial
 {
     float4 warp;

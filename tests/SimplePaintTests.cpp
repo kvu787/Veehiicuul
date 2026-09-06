@@ -1,6 +1,6 @@
 #include "SimplePaintReference.h"
 #include "SimplePaint/Geometry.h"
-#include "OrthographicTransforms.h"
+#include "SimplePaint/OrthographicTransforms.h"
 #include "UVSphere.h"
 #include <iostream>
 #include <limits>

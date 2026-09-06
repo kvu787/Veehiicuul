@@ -8,8 +8,9 @@
 namespace SimplePaint
 {
 // Practical binary32 domain, distinct from the open real-number domain.
-// See Documentation/Specification.md for the error criterion and input limits,
-// never shader clamps. Exact powers of two make boundary tests unambiguous.
+// See this folder's README.md for the input contract and integration steps.
+// These limits reject inputs; they are never shader clamps. Exact powers of two
+// make boundary tests unambiguous.
 inline constexpr double Margin = 1.0 / 1024.0;
 inline constexpr double InteriorMaximum = 1.0 - Margin;
 
