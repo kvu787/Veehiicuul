@@ -1,3 +1,10 @@
+param(
+    [switch] $BuildOnly,
+    [switch] $Test,
+    [ValidateSet('Release', 'Debug')]
+    [string] $Configuration = 'Release'
+)
+
 Set-StrictMode -Version Latest
 
 $ErrorActionPreference = 'Stop'
@@ -58,7 +65,7 @@ try {
         }
     }
 
-    $buildDirectory = Join-Path $PSScriptRoot 'build\release'
+    $buildDirectory = Join-Path $PSScriptRoot ('build\' + $Configuration.ToLowerInvariant())
     $cachePath = Join-Path $buildDirectory 'CMakeCache.txt'
     $configureOptions = @()
 
@@ -86,16 +93,21 @@ try {
         -S $PSScriptRoot `
         -B $buildDirectory `
         -G Ninja `
-        -DCMAKE_BUILD_TYPE=Release `
+        "-DCMAKE_BUILD_TYPE=$Configuration" `
         "-DCMAKE_MAKE_PROGRAM=$ninja"
 
     Invoke-Checked $cmake --build $buildDirectory --parallel
-    Invoke-Checked (Join-Path $buildDirectory 'SimpleDirectX12Game.exe')
+    if ($Test) {
+        Invoke-Checked (Join-Path (Split-Path $cmake) 'ctest.exe') --test-dir $buildDirectory --output-on-failure
+    }
+    elseif (-not $BuildOnly) {
+        Invoke-Checked (Join-Path $buildDirectory 'SimpleDirectX12Game.exe')
+    }
 }
 catch {
     Write-Host
     Write-Host $_.Exception.Message -ForegroundColor Red
     Write-Host 'Build or launch failed. Review the messages above.' -ForegroundColor Red
-    Read-Host 'Press Enter to continue'
+    if (-not ($BuildOnly -or $Test)) { Read-Host 'Press Enter to continue' }
     exit 1
 }
