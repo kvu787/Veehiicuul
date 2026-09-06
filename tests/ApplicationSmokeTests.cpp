@@ -7,8 +7,11 @@
 #include <string>
 #include <thread>
 
-int main()
+int main(int argc, char** argv)
 {
+    const bool maximizeFps = argc > 1 && std::string_view(argv[1]) == "--maximize-fps";
+    const auto expectedPipeline = maximizeFps ? L"MaximizeFps | GPU:3 Present:inactive Buffers:4 | Spin" :
+        L"Standard | GPU:2 Present:2 Buffers:3 | Event";
     const DWORD uiThread = GetCurrentThreadId();
     std::atomic<bool> done = false;
     std::string failure;
@@ -38,7 +41,7 @@ int main()
                     *reinterpret_cast<HWND*>(target) = candidate;
                     return FALSE;
                 }, reinterpret_cast<LPARAM>(&window));
-                return window && titleContains(L"Standard | GPU:2 Present:2 Buffers:3"); }))
+                return window && titleContains(expectedPipeline); }))
                 throw std::runtime_error("Application did not initialize the INI pipeline");
             if (!titleContains(L"VSync: Off")) throw std::runtime_error("Initial VSync was not read from INI");
             PostMessageW(window, WM_KEYDOWN, 'V', 0);
@@ -52,7 +55,7 @@ int main()
             PostMessageW(window, WM_KEYDOWN, VK_F11, 0);
             if (!wait([&] { return titleContains(L"Windowed"); })) throw std::runtime_error("Windowed restore failed");
             PostMessageW(window, WM_KEYDOWN, 'V', 0);
-            if (!wait([&] { return titleContains(L"VSync: Off") && titleContains(L"Standard | GPU:2"); }))
+            if (!wait([&] { return titleContains(L"VSync: Off") && titleContains(expectedPipeline); }))
                 throw std::runtime_error("VSync toggle changed the pipeline mode");
             PostMessageW(window, WM_CLOSE, 0, 0);
         }
@@ -65,7 +68,8 @@ int main()
     try
     {
         Application application;
-        std::istringstream ini("[Rendering]\nVSync=false\n[Pipeline]\nMode=Standard\n");
+        std::istringstream ini(std::string("[Rendering]\nVSync=false\n[Pipeline]\nMode=") +
+            (maximizeFps ? "MaximizeFps\n" : "Standard\n"));
         const auto settings = ParseApplicationSettings(ini);
         const int result = application.Run(GetModuleHandleW(nullptr), SW_SHOWNOACTIVATE, settings);
         done = true;

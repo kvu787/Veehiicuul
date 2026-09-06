@@ -15,6 +15,7 @@ struct RendererTestAccess
         return gate;
     }
     static void Flush(Renderer& renderer) { renderer.WaitForGpu(); }
+    static bool HasPresentationWait(const Renderer& renderer) { return renderer.m_presentationEvent != nullptr; }
 };
 namespace
 {
@@ -59,7 +60,7 @@ int main(int argc, char** argv)
         std::istringstream ini("[Rendering]\nVSync=false\n[Pipeline]\nMode=Standard\n");
         auto settings = ParseApplicationSettings(ini);
         const PipelineSettings configurations[] = {
-            MinimumLatencyPipeline, StandardPipeline,
+            MinimumLatencyPipeline, StandardPipeline, MaximizeFpsPipeline,
             {.maxGpuFramesInFlight=3, .maxPresentLatency=1, .waitForPresentation=false, .backBufferCount=2, .allowTearing=true, .waitStrategy=WaitStrategy::Spin},
             {.maxGpuFramesInFlight=1, .maxPresentLatency=2, .waitForPresentation=true, .backBufferCount=3, .allowTearing=true, .waitStrategy=WaitStrategy::Event},
             {.maxGpuFramesInFlight=1, .maxPresentLatency=1, .waitForPresentation=false, .backBufferCount=2, .allowTearing=false, .waitStrategy=WaitStrategy::Event},
@@ -69,11 +70,14 @@ int main(int argc, char** argv)
         {
             settings.pipeline = pipeline;
             settings.pipelineMode = pipeline == MinimumLatencyPipeline ? PipelineMode::MinimizeInputLatency :
-                pipeline == StandardPipeline ? PipelineMode::Standard : PipelineMode::Custom;
+                pipeline == StandardPipeline ? PipelineMode::Standard :
+                pipeline == MaximizeFpsPipeline ? PipelineMode::MaximizeFps : PipelineMode::Custom;
             settings.vsync = pipeline.waitStrategy == WaitStrategy::Event;
             Renderer renderer;
             renderer.Initialize(window.handle, 320, 180, settings, warp);
             Require(renderer.IsVsyncEnabled() == settings.vsync, "INI VSync ignored during initialization");
+            Require(RendererTestAccess::HasPresentationWait(renderer) == pipeline.waitForPresentation,
+                "Swap-chain presentation wait does not match the selected pipeline");
             for (int frame = 0; frame < 24; ++frame)
             {
                 if (frame == 6) renderer.SetVsyncEnabled(true);

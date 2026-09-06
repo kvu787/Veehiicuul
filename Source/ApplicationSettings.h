@@ -7,7 +7,7 @@
 #include <istream>
 #include <string_view>
 
-enum class PipelineMode { MinimizeInputLatency, Standard, Custom };
+enum class PipelineMode { MinimizeInputLatency, Standard, MaximizeFps, Custom };
 enum class WaitStrategy { Event, Spin };
 
 struct PipelineSettings
@@ -27,6 +27,14 @@ inline constexpr PipelineSettings MinimumLatencyPipeline{
     .maxPresentLatency = 1,
     .waitForPresentation = true,
     .backBufferCount = 2,
+    .allowTearing = true,
+    .waitStrategy = WaitStrategy::Spin,
+};
+inline constexpr PipelineSettings MaximizeFpsPipeline{
+    .maxGpuFramesInFlight = 3,
+    .maxPresentLatency = 2, // Inactive without presentation admission waiting.
+    .waitForPresentation = false,
+    .backBufferCount = 4,
     .allowTearing = true,
     .waitStrategy = WaitStrategy::Spin,
 };

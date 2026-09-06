@@ -26,7 +26,8 @@ int main()
 {
     try
     {
-        for (const auto& mode : {std::string("Standard"), std::string("MinimizeInputLatency"), std::string("Custom")})
+        for (const auto& mode : {std::string("Standard"), std::string("MinimizeInputLatency"),
+            std::string("MaximizeFps"), std::string("Custom")})
         {
             const std::string prefix = "[Pipeline]\nMode=" + mode + "\n[Rendering]\nVSync=";
             const auto off = Parse(prefix + "false\n" + custom);
@@ -35,6 +36,12 @@ int main()
             Require(off.pipeline == on.pipeline, "VSync changed pipeline configuration");
             if (mode == "Standard") Require(off.pipeline == StandardPipeline, "Standard preset overridden");
             if (mode == "MinimizeInputLatency") Require(off.pipeline == MinimumLatencyPipeline, "Latency preset overridden");
+            if (mode == "MaximizeFps")
+            {
+                Require(off.pipelineMode == PipelineMode::MaximizeFps && off.pipeline == MaximizeFpsPipeline,
+                    "MaximizeFps preset not selected or overridden");
+                Require(PipelineModeName(off.pipelineMode) == L"MaximizeFps", "MaximizeFps diagnostic name lost");
+            }
             if (mode == "Custom")
             {
                 Require(off.pipeline.maxGpuFramesInFlight == 3 && off.pipeline.backBufferCount == 2, "Independent buffer/frame counts lost");
@@ -45,10 +52,16 @@ int main()
         }
         // Position, duplicate keys, unknown keys, and invalid values in inactive custom sections do not matter.
         const std::string inactive = "[Pipeline.Custom]\nMaxGpuFramesInFlight=garbage\nMaxGpuFramesInFlight=-3\nVSync=bad\nUnknown=\n";
-        for (const auto mode : {"Standard", "MinimizeInputLatency"})
+        for (const auto mode : {"Standard", "MinimizeInputLatency", "MaximizeFps"})
         {
-            const auto result = Parse(inactive + "[Rendering]\nVSync=false\n[Pipeline]\nMode=" + mode + "\n");
-            Require(result.pipelineMode != PipelineMode::Custom, "Inactive values affected mode");
+            const auto preset = "[Rendering]\nVSync=false\n[Pipeline]\nMode=" + std::string(mode) + "\n";
+            const auto expected = Parse(preset);
+            for (const auto& text : {inactive + preset, preset + inactive})
+            {
+                const auto result = Parse(text);
+                Require(result.pipelineMode == expected.pipelineMode && result.pipeline == expected.pipeline,
+                    "Inactive custom values affected preset");
+            }
         }
         const std::string base = "[Pipeline]\nMode=Custom\n[Rendering]\nVSync=false\n";
         Reject(base, "Missing [Pipeline.Custom].MaxGpuFramesInFlight");
@@ -56,6 +69,7 @@ int main()
         Reject(base + custom + "MaxGpuFramesInFlight=1\n", "duplicate setting");
         Reject(base + custom + "[Rendering]\nVSync=true\n", "duplicate setting");
         Reject("[Pipeline]\nMode=unknown\n[Rendering]\nVSync=false\n", "line 2");
+        Reject("[Pipeline]\nMode=MaximizeFPS\n[Rendering]\nVSync=false\n", "MaximizeFps");
         Reject("[Pipeline]\nMode=Standard\n", "Missing [Rendering].VSync");
         Reject("[Rendering]\nVSync=false\n", "Missing [Pipeline].Mode");
         Reject("[Pipeline]\nMode=Standard\n[Rendering]\nVSync=1\n", "expected true or false");

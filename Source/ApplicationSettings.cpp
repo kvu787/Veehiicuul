@@ -124,6 +124,7 @@ std::wstring_view PipelineModeName(const PipelineMode mode)
     {
     case PipelineMode::MinimizeInputLatency: return L"MinimizeInputLatency";
     case PipelineMode::Standard: return L"Standard";
+    case PipelineMode::MaximizeFps: return L"MaximizeFps";
     case PipelineMode::Custom: return L"Custom";
     }
     throw std::invalid_argument("Invalid pipeline mode.");
@@ -177,11 +178,18 @@ ApplicationSettings ParseApplicationSettings(std::istream& input)
         haveMode = true;
         if (entry.value == "MinimizeInputLatency") result.pipelineMode = PipelineMode::MinimizeInputLatency;
         else if (entry.value == "Standard") result.pipelineMode = PipelineMode::Standard;
+        else if (entry.value == "MaximizeFps") result.pipelineMode = PipelineMode::MaximizeFps;
         else if (entry.value == "Custom") result.pipelineMode = PipelineMode::Custom;
-        else Invalid(entry, "expected MinimizeInputLatency, Standard, or Custom");
+        else Invalid(entry, "expected MinimizeInputLatency, Standard, MaximizeFps, or Custom");
     }
     if (!haveMode) throw std::runtime_error("Missing [Pipeline].Mode in Settings.ini.");
-    result.pipeline = result.pipelineMode == PipelineMode::MinimizeInputLatency ? MinimumLatencyPipeline : StandardPipeline;
+    switch (result.pipelineMode)
+    {
+    case PipelineMode::MinimizeInputLatency: result.pipeline = MinimumLatencyPipeline; break;
+    case PipelineMode::MaximizeFps: result.pipeline = MaximizeFpsPipeline; break;
+    case PipelineMode::Standard:
+    case PipelineMode::Custom: result.pipeline = StandardPipeline; break;
+    }
 
     std::array<SimplePaint::Parameters, 6> materials{};
     constexpr std::array<std::array<double, 3>, 6> colors = {{
