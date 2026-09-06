@@ -65,30 +65,6 @@ GPU fences, resource-availability waits, DXGI presentation waits, and VSync
 remain valid synchronization mechanisms. They must not be supplemented with
 app-owned timing delays to impose an FPS target.
 
-### Compatibility
-
-Do not attempt to maintain any sort of application compatibility between different commits of the repo. This creates unwanted complexity.
-
-### Launchers
-
-Keep a `Run.cmd` file that launches the project when double-clicked from File Explorer.
-
-If you create a Godot project, include a `Run.cmd` file that builds and launches the standalone exe of the Godot project by double-clicking it from File Explorer.
-
-### Git
-
-When implementing stuff, avoid difficult-to-review "mega-commits".
-Split large work into multiple commits to make it easier to review.
-Separate commits that record conversations from other commits.
-
-### Markdown tables
-
-Tables in Markdown must be padded and aligned in a way to make them easy to read in a plaintext editor, not only in a Markdown viewer.
-
-### Mathematical notation in Markdown
-
-Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must display properly in VSCode's Markdown previewer, GitHub.com's Markdown displayer, and the markdown viewer in the Windows 11 ChatGPT app.
-
 ## Run
 
 Double-click `Run.cmd` in File Explorer. This minimal wrapper starts `Run.ps1`,
