@@ -50,6 +50,17 @@ hardware adapter passes the earlier device-creation check; it does not retry
 WARP after a Shader Model check fails. Completing vendor-neutral fallback
 coverage to satisfy the platform policy remains implementation work.
 
+## Frame rate policy
+
+The app must not implement any frame rate limiting of its own. Do not add
+an FPS cap, target-frame-rate or `FrameRateLimit` setting, or timer, sleep,
+spin, or pacing logic intended to enforce a frame rate. This prohibition
+includes optional limiters and background FPS caps.
+
+GPU fences, resource-availability waits, DXGI presentation waits, and VSync
+remain valid synchronization mechanisms. They must not be supplemented with
+app-owned timing delays to impose an FPS target.
+
 ## Run
 
 Double-click `Run.cmd` in File Explorer. This minimal wrapper starts `Run.ps1`,

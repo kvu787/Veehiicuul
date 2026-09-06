@@ -55,3 +55,14 @@ Refer to `%UserProfile%\Repository\Godot\SimplePaintShaders` for the original de
   detection and fallback paths.
 - Apply this policy to rendering, latency, queueing, and all other repository
   code. Resolve unsupported capabilities through vendor-neutral fallbacks.
+
+## Frame rate policy
+
+The app must not implement any frame rate limiting of its own. Do not add
+an FPS cap, target-frame-rate or `FrameRateLimit` setting, or timer, sleep,
+spin, or pacing logic intended to enforce a frame rate. This prohibition
+includes optional limiters and background FPS caps.
+
+GPU fences, resource-availability waits, DXGI presentation waits, and VSync
+remain valid synchronization mechanisms. They must not be supplemented with
+app-owned timing delays to impose an FPS target.
