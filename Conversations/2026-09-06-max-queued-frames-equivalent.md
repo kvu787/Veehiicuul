@@ -490,3 +490,19 @@ Repeat
 Both readiness conditions must be satisfied; if either is already satisfied, it adds no deliberate delay. There is no FPS timer in this loop. Its throughput is determined by rendering, presentation, resource availability, and synchronization overhead.
 
 This provides a strict baseline for minimizing intentional frame backlog. Measuring input-to-visible-response latency would establish whether allowing some CPU/GPU overlap produces a better result on a particular system.
+
+## User
+
+record somewhere for agents/devs that this app must not implement any frame rate limiting of its own.
+
+## Assistant
+
+I’ll add that rule to `AGENTS.md` and the developer documentation, then commit it separately from the conversation log.
+
+## Assistant final response
+
+Recorded in [AGENTS.md](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/AGENTS.md:59) and [README.md](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/README.md:53): **no app-owned FPS limiting**, including optional limiters, background caps, or `FrameRateLimit` settings.
+
+GPU/DXGI synchronization waits and VSync remain allowed.
+
+Policy and conversation committed separately.
