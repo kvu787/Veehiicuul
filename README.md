@@ -6,6 +6,8 @@ Double-click [Run.cmd](Run.cmd) to build and launch the app.
 
 ## Documentation
 
+- [Visual Studio guide](Documentation/VisualStudio.md): setup, code navigation, builds, debugging, tests, and troubleshooting.
+
 - [SimplePaint usage](Documentation/Usage.md): controls, numerical limits, and C++/DX12 integration.
 - [Copyable SimplePaint module](Source/SimplePaint/README.md): self-contained C++/HLSL folder and integration instructions.
 - [SimplePaint specification](Documentation/Specification.md): mathematics, rationale, and verification.
