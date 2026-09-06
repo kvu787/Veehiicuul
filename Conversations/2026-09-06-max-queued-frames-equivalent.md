@@ -506,3 +506,166 @@ Recorded in [AGENTS.md](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game
 GPU/DXGI synchronization waits and VSync remain allowed.
 
 Policy and conversation committed separately.
+
+## User
+
+i want the following:
+- A "pipeline mode" setting that supports these values "MinimizeInputLatency", "Standard", "Custom"
+- MinimizeInputLatency configures things to minimize input latency above all else
+- Standard configures things to match a typical game in which input latency is balanced with other factors
+- Custom configures things as specified by a set of custom settings in the INI. those custom settings are ignored if pipeline mode isn't custom
+
+how would you implement this?
+
+## Assistant
+
+I’ll check how the INI is loaded and how the frame loop is structured, then propose the mode definitions, custom settings, and implementation changes.
+
+## Assistant
+
+I’d resolve the selected mode into one set of settings before creating the renderer. Presets would completely ignore the custom values, and the frame loop would use only the resolved settings. For `MinimizeInputLatency`, I’d start with shallow queues and active waiting, then validate response latency: the smallest queue is not always the fastest response.
+
+## Assistant final response
+
+I would implement this as **two built-in presets plus one explicit custom configuration**, all resolved into the same renderer settings before initialization.
+
+The renderer would not contain scattered checks for `MinimizeInputLatency` or `Standard`. It would receive one validated configuration and implement those settings consistently.
+
+**The INI would have a mode selector and a separate custom section.**
+
+```ini
+[Pipeline]
+Mode = Standard
+
+; Used only when Mode = Custom.
+[Pipeline.Custom]
+MaxGpuFramesInFlight = 2
+MaxPresentLatency = 2
+WaitForPresentation = true
+BackBufferCount = 3
+VSync = true
+AllowTearing = false
+WaitStrategy = Event
+```
+
+`Mode` would accept exactly your three names: `MinimizeInputLatency`, `Standard`, and `Custom`. I would ship `Standard` as the default selection.
+
+There would be **no frame-rate-limit setting or app-owned FPS limiter**, in any mode.
+
+**My initial preset definitions would be:**
+
+| Setting              | MinimizeInputLatency | Standard |
+| -------------------- | -------------------- | -------- |
+| MaxGpuFramesInFlight | 1                    | 2        |
+| MaxPresentLatency    | 1                    | 2        |
+| WaitForPresentation  | true                 | true     |
+| BackBufferCount      | 2                    | 3        |
+| VSync                | false                | true     |
+| AllowTearing         | true                 | false    |
+| WaitStrategy         | Spin                 | Event    |
+
+For **MinimizeInputLatency**, the intent is fresh input, minimal intentional backlog, and immediate presentation where supported. `Spin` means actively checking synchronization readiness, accepting higher CPU usage to avoid parking and waking the render thread. It does not wait for an FPS deadline.
+
+For **Standard**, two frames allow CPU/GPU overlap, three image buffers provide presentation capacity, VSync favors tear-free output, and event waits avoid consuming a CPU core while blocked. Microsoft describes increasing presentation latency from one to two as a way to improve CPU/GPU parallelism. [DXGI latency guidance](https://learn.microsoft.com/en-us/windows/uwp/gaming/reduce-latency-with-dxgi-1-3-swap-chains).
+
+These would be our documented definitions of the presets. There is no single configuration used by every “typical game.”
+
+**I would treat the latency preset’s values as initial candidates to validate.** Your requirement prioritizes actual input latency, which is not always minimized by the smallest queue or by spinning. A second frame can improve the sampling cadence enough to help, and active waiting can compete with other CPU work, especially software rendering. Before finalizing that preset, I would compare actual response latency for one versus two GPU frames and waitable versus ordinary presentation. Any preset adjustment would follow those measurements; FPS alone would not select it.
+
+**Custom settings would be genuinely ignored outside Custom mode.**
+
+I would use two-stage loading:
+
+```text
+Read the INI structure and Pipeline.Mode
+    ↓
+MinimizeInputLatency → use the built-in latency preset
+Standard            → use the built-in standard preset
+Custom              → parse and validate Pipeline.Custom
+```
+
+For either preset, custom values would not be parsed, validated, merged, or used as overrides. For example, this would still run in Standard mode:
+
+```ini
+[Pipeline]
+Mode = Standard
+
+[Pipeline.Custom]
+MaxGpuFramesInFlight = invalid
+```
+
+The file must still have valid INI structure. In Custom mode, missing required settings, unknown keys, invalid values, and duplicate settings would produce useful errors naming the section, key, and line.
+
+The resolver would be a small function that can be tested without creating a window or D3D12 device:
+
+```cpp
+PipelineSettings ResolvePipelineSettings(const IniDocument& ini)
+{
+    switch (ReadPipelineMode(ini))
+    {
+    case PipelineMode::MinimizeInputLatency:
+        return MinimizeInputLatencyPreset;
+
+    case PipelineMode::Standard:
+        return StandardPreset;
+
+    case PipelineMode::Custom:
+        return ParseAndValidateCustomPipeline(ini);
+    }
+
+    throw std::runtime_error("Invalid pipeline mode.");
+}
+```
+
+I would extract the current INI reading from [Renderer.cpp](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/Renderer.cpp:1106) into a small application-settings component. The existing paint and sphere settings would keep their own validation.
+
+**The renderer would separate frame resources from presentation buffers.**
+
+Currently, [`FrameCount`](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/Renderer.h:33) controls both. I would introduce:
+
+- **Frame contexts:** command allocators, changing constants, and completion-fence records, sized for the permitted GPU frames in flight.
+- **Swap-chain buffers:** presentable images and render-target descriptors, sized by `BackBufferCount`.
+- **A frame sequence:** tracks submitted frames independently of DXGI’s current back-buffer index.
+
+Before preparing another frame, the CPU would wait until doing so fits the configured GPU-frame budget. Resource-reuse checks would remain mandatory in every mode.
+
+When `WaitForPresentation = true`, create a waitable swap chain, apply `MaxPresentLatency`, and obtain its wait handle. When false, use ordinary non-waitable presentation and mark `MaxPresentLatency` inactive. The per-swap-chain setter requires a waitable swap chain. [Microsoft’s API contract](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency).
+
+**The frame loop would wait before taking the input state used for rendering.**
+
+```text
+Process window events
+    ↓
+Wait for enabled presentation admission,
+GPU-frame budget, and reusable frame resources
+    ↓
+Process newly arrived input and sample the latest state
+    ↓
+Simulate → record → submit → present → record completion fence
+```
+
+Event mode would use message-aware Windows waits. Spin mode would poll readiness with CPU pause instructions and periodically service messages. A message arriving during a wait would not count as rendering permission.
+
+Resize, minimize, or shutdown messages would cancel the pending frame attempt as needed. After a resize, readiness would be checked against the current resources. The loop would service input without requiring the Windows message queue to become permanently empty, avoiding starvation from a sustained stream of messages.
+
+These waits enforce synchronization and queue limits. Neither strategy would insert a timer-based delay to control FPS.
+
+**Requested settings and effective settings would be recorded separately.**
+
+For example, if tearing is requested but unavailable:
+
+```text
+Mode: MinimizeInputLatency
+AllowTearing: requested=true, effective=false
+Reason: DXGI tearing support unavailable
+```
+
+Likewise, the tearing presentation flag is inactive when VSync is enabled. Capability checks and fallbacks would use vendor-neutral interfaces, without GPU-vendor branches or SDKs. The app already has a DXGI tearing capability check that this design can reuse.
+
+**I would initially load the pipeline configuration only at startup.**
+
+Changing the INI would require a restart, matching the existing settings workflow. This avoids runtime swap-chain reconstruction and partially applied configurations. Waitable-swap-chain mode changes require recreation rather than just changing the resize flags. [Microsoft’s creation requirements](https://learn.microsoft.com/en-us/windows/uwp/gaming/reduce-latency-with-dxgi-1-3-swap-chains).
+
+I would also remove the current `V` hotkey’s direct VSync override. Otherwise, selecting `MinimizeInputLatency` could silently become a different configuration, or Custom could stop matching the INI. A future settings UI could explicitly change the mode to Custom when editing individual settings.
+
+Validation would cover preset resolution, complete isolation of inactive custom settings, invalid active settings, GPU-frame-budget invariants, and D3D12 rendering with different buffer counts. Runtime checks would include resizing and closing while waiting, both wait strategies, and available hardware plus WARP. The latency preset would additionally need an input-driven visual response test to compare latency and its variation, rather than relying on the existing time-driven animation or an FPS counter.
