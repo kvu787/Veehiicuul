@@ -320,3 +320,173 @@ Wait for GPU/presentation/resource readiness
 ```
 
 An FPS limiter can be added independently later.
+
+## User
+
+provide a detailed explanation for each of these:
+MaxGpuFramesInFlight = 1
+MaxPresentLatency = 1
+WaitForPresentation = true
+BackBufferCount = 2
+VSync = false
+AllowTearing = true
+WaitStrategy = event
+
+## Assistant
+
+I’ll explain what each setting controls, where it makes the CPU wait, and how the settings interact. These are still proposed controls, rather than options the app currently implements.
+
+## Assistant
+
+Two distinctions matter here: GPU completion does not mean an image has reached the screen, and `WaitForPresentation` does not mean VSync. The first limits unfinished rendering work; the second waits for DXGI to admit another frame, even when VSync is off.
+
+## Assistant final response
+
+These are **proposed application settings**, with the meanings described below. Some map directly to DXGI APIs; others define policies that we would implement ourselves. All can use vendor-neutral Windows/D3D12/DXGI interfaces.
+
+**`MaxGpuFramesInFlight = 1` limits how far the CPU gets ahead of GPU completion.**
+
+A frame is “in flight” after its commands have been submitted and before its completion fence has finished. The count includes a frame currently executing on the GPU.
+
+For the strict policy we discussed, a value of `1` means:
+
+1. Submit frame A and arrange a completion fence.
+2. Before sampling input and preparing frame B, wait for A’s fence.
+3. Sample fresh input, prepare B, and submit it.
+
+This prevents the app from accumulating additional frames behind its own unfinished frame. It does not make the entire GPU idle: Windows or another application can still have work scheduled.
+
+The placement of the wait is part of the policy. Merely limiting submission while allowing the CPU to prepare B early would permit B’s input state to become stale while waiting.
+
+With `2`, preparation of B can overlap GPU execution of A. That can substantially improve throughput. For example, with hypothetical CPU preparation of 0.2 ms and GPU execution of 0.3 ms, serialization takes approximately 0.5 ms per frame; ideal overlap approaches 0.3 ms. Presentation and synchronization overhead add to both.
+
+Implementation uses a queue-signaled D3D12 fence and a **CPU-side** wait. `ID3D12CommandQueue::Wait` alone does not implement this limit: it queues a GPU-side wait and returns immediately. [Microsoft: CPU versus GPU fence waits](https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-wait).
+
+**`MaxPresentLatency = 1` limits queuing at the swap chain.**
+
+This maps to:
+
+```cpp
+swapChain->SetMaximumFrameLatency(1);
+```
+
+It sets DXGI’s maximum number of queued back-buffer frames for that swap chain. The swap chain must have been created with `DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT`. [Microsoft: SetMaximumFrameLatency](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency).
+
+This is a different boundary from the GPU fence:
+
+- The GPU fence answers whether the relevant submitted GPU work has completed.
+- The presentation mechanism governs admitting and presenting swap-chain frames.
+
+A presentation can be queued while its rendering is still unfinished. Therefore, this is not simply a count of fully rendered images waiting on a shelf.
+
+The value `1` is a queue limit measured in frames. It does **not** mean 1 ms of latency or guarantee exactly one monitor refresh of input latency. Likewise, a completed GPU fence does not prove that the monitor has displayed the image.
+
+Increasing this limit can give the presentation pipeline more room, potentially reducing stalls at the cost of allowing more backlog. Another constraint—such as the GPU frame limit—may prevent that extra capacity from being used.
+
+**`WaitForPresentation = true` makes the CPU wait for permission to begin another frame.**
+
+The app obtains DXGI’s waitable handle:
+
+```cpp
+HANDLE ready = swapChain->GetFrameLatencyWaitableObject();
+```
+
+Before each frame, including the first, the app waits for that handle. Operationally, we use it as permission from DXGI to begin the next frame under the configured presentation limit. [Microsoft: presentation waitable object](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-getframelatencywaitableobject).
+
+The benefit comes from **waiting before sampling input and doing rendering work**. Otherwise, the app can prepare an image using older input and subsequently stall inside `Present`. Waiting earlier lets it prepare the image closer to when the presentation pipeline can accept it. [Microsoft’s low-latency rendering loop](https://learn.microsoft.com/en-us/windows/uwp/gaming/reduce-latency-with-dxgi-1-3-swap-chains).
+
+`MaxPresentLatency` and `WaitForPresentation` work together: one selects the queue limit, and the other selects proactive waiting at frame start. They do not describe two additional queues.
+
+**This is compatible with VSync being off.** Waiting for presentation capacity does not request synchronization to vertical blank.
+
+For the ordinary, non-waitable presentation mode discussed earlier, this wait would be absent and `MaxPresentLatency` would be inactive. GPU/resource fence waits would still apply, and `Present` could still block. Switching between waitable and non-waitable swap chains requires recreating the swap chain; that creation flag cannot be changed through `ResizeBuffers`. [Microsoft’s swap-chain creation guidance](https://learn.microsoft.com/en-us/windows/uwp/gaming/reduce-latency-with-dxgi-1-3-swap-chains).
+
+**`BackBufferCount = 2` provides two presentable image buffers.**
+
+This maps to `DXGI_SWAP_CHAIN_DESC1::BufferCount`. These are the image resources into which the renderer draws and which DXGI manages for presentation. Two is the minimum for the flip-model swap chain this app uses. [Microsoft: swap-chain buffer requirements](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_2/ns-dxgi1_2-dxgi_swap_chain_desc1).
+
+Buffer count describes **storage capacity**, not how many frames the CPU must queue.
+
+Consequently, these settings are compatible:
+
+```ini
+BackBufferCount = 2
+MaxGpuFramesInFlight = 1
+MaxPresentLatency = 1
+```
+
+The renderer has two images to rotate between, while the other settings restrict outstanding work. It still must respect GPU resource ownership and DXGI’s buffer-availability rules.
+
+Increasing the count to `3` uses more memory and may reduce buffer-availability stalls. It does not automatically add a frame of latency if the queue limits remain tight, nor does it guarantee higher FPS.
+
+The app currently uses one `FrameCount` constant for both swap-chain buffers and per-frame resource slots. We would separate those concepts. Command allocators and changing constant-buffer data need enough independent storage for the permitted GPU work, but their count need not be identical to the swap-chain buffer count.
+
+**`VSync = false` requests presentation without a vertical-blank synchronization interval.**
+
+In this app’s presentation call, this means a sync interval of zero:
+
+```cpp
+swapChain->Present(0, presentFlags);
+```
+
+With `VSync = true`, the usual equivalent is `Present(1, 0)`, requesting synchronization for at least one vertical blank. Sync interval zero also allows superseded flip-model presentations to be discarded instead of displaying every submitted frame. It does not cancel GPU rendering commands already submitted. [Microsoft: Present semantics](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present).
+
+Turning VSync off removes that requested refresh synchronization. It does **not** remove:
+
+- GPU completion waits;
+- presentation-admission waits;
+- buffer-availability stalls;
+- Windows scheduling and composition effects.
+
+Thus, `VSync = false` neither guarantees an immediately returning `Present` call nor guarantees a particular FPS.
+
+It also does not make a 144 Hz monitor scan out 2,500 complete images per second. Rendering and presentation submissions can occur more frequently than complete display refreshes.
+
+**`AllowTearing = true` permits presenting updates without preserving a complete refresh of one image.**
+
+When supported, the app enables `DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING` at swap-chain creation and passes `DXGI_PRESENT_ALLOW_TEARING` when presenting with sync interval zero.
+
+For this app’s windowed/borderless mode, the intended call is:
+
+```cpp
+swapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
+```
+
+The presentation flag is valid only with sync interval zero and the appropriate swap-chain configuration. It is not used with VSync enabled. [Microsoft: tearing flag requirements](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dxgi-present).
+
+If an update becomes visible during scanout, different parts of the screen can come from different frames, producing a tear line. Allowing this can expose newer input-dependent pixels sooner, at the cost of image continuity.
+
+“Allow” means permission; it does not force visible tearing. The same DXGI permission is used for variable-refresh-rate presentation, which can provide tear-free updates under suitable display conditions. [Microsoft: VSync-off and VRR support](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/variable-refresh-rate-displays).
+
+Under your repository policy, unsupported tearing must not become a GPU prerequisite. We would query support through DXGI and use a vendor-neutral fallback, reporting that the effective tearing setting is off.
+
+**`WaitStrategy = event` determines how the CPU waits when a required condition is not ready.**
+
+For a GPU fence, the app first checks whether the target fence value has completed. If it has, execution continues immediately. Otherwise, it registers an event using `SetEventOnCompletion` and waits for that event. The presentation wait uses the handle supplied by DXGI.
+
+An event wait suspends the waiting thread until the condition is signaled, rather than continuously polling on a CPU core. If the handle is already signaled, the wait can return immediately. This is not an instruction to sleep for a fixed interval such as 1 ms. [Microsoft: wait behavior](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject).
+
+Its tradeoff is CPU efficiency versus wake-up overhead. Once signaled, the thread still needs to be scheduled to run. At very high frame rates, that overhead can be a meaningful fraction of a frame. A spin or hybrid strategy could reduce some wake-up delay while consuming more CPU time; it would not change the configured queue limits.
+
+Because this app renders on its window thread, the implementation should use message-aware waiting, such as `MsgWaitForMultipleObjectsEx`, so it can respond to window messages while waiting. After handling messages, it must still satisfy the rendering readiness conditions. [Microsoft: message-aware waits](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-msgwaitformultipleobjectsex).
+
+With all seven settings together, the intended sequence is:
+
+```text
+Wait for DXGI to admit another frame
+Wait for the previous GPU frame to complete
+Ensure the selected resources can be reused
+    ↓
+Consume pending input and sample the latest state
+    ↓
+Simulate and record commands
+    ↓
+Submit rendering, present with sync interval 0
+and tearing enabled if supported, and signal a GPU fence
+    ↓
+Repeat
+```
+
+Both readiness conditions must be satisfied; if either is already satisfied, it adds no deliberate delay. There is no FPS timer in this loop. Its throughput is determined by rendering, presentation, resource availability, and synchronization overhead.
+
+This provides a strict baseline for minimizing intentional frame backlog. Measuring input-to-visible-response latency would establish whether allowing some CPU/GPU overlap produces a better result on a particular system.
