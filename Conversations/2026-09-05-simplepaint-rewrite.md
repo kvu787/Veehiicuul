@@ -180,3 +180,15 @@ Copy [Source/SimplePaint](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Ga
 Updated build paths, includes, asset generation, and documentation. All six tests pass in Release and Debug, including the independent copied-folder build.
 
 Committed separately from the conversation log; working tree clean.
+
+## User
+
+what version of c++ does this project use
+
+## Assistant
+
+I’ll check the CMake configuration.
+
+## Assistant
+
+The project uses **C++20**, configured with `cxx_std_20` in [CMakeLists.txt](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/CMakeLists.txt:141). The reusable SimplePaint module also requires C++20.
