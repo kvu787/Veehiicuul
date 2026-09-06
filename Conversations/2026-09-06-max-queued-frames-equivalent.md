@@ -669,3 +669,42 @@ Changing the INI would require a restart, matching the existing settings workflo
 I would also remove the current `V` hotkey’s direct VSync override. Otherwise, selecting `MinimizeInputLatency` could silently become a different configuration, or Custom could stop matching the INI. A future settings UI could explicitly change the mode to Custom when editing individual settings.
 
 Validation would cover preset resolution, complete isolation of inactive custom settings, invalid active settings, GPU-frame-budget invariants, and D3D12 rendering with different buffer counts. Runtime checks would include resizing and closing while waiting, both wait strategies, and available hardware plus WARP. The latency preset would additionally need an input-driven visual response test to compare latency and its variation, rather than relying on the existing time-driven animation or an FPS counter.
+
+## User
+
+i want VSync to be a setting outside of pipelinemode setting that may be set to true/false in any mode. is that possible
+
+## Assistant
+
+Yes. VSync can be independent of pipeline mode. I’ll record that change to the design, including how it affects tearing and the `V` hotkey.
+
+## Assistant final response
+
+**Yes. VSync should be an independent rendering setting that applies in every pipeline mode.**
+
+For example:
+
+```ini
+[Rendering]
+VSync = false
+
+[Pipeline]
+Mode = MinimizeInputLatency
+```
+
+The rules would be:
+
+- Neither preset sets or overrides VSync.
+- `[Pipeline.Custom]` contains the other pipeline settings, with no VSync entry.
+- The renderer combines the selected pipeline configuration with the independent VSync value.
+- The existing `V` hotkey can toggle VSync in any mode without changing the pipeline mode. As today, that would be a runtime change rather than rewriting the INI.
+
+**Tearing would follow the effective VSync state:**
+
+With VSync enabled, the tearing presentation flag is disabled. With VSync disabled, tearing is permitted if requested by the pipeline and supported.
+
+Enabling VSync would not erase the pipeline’s `AllowTearing` preference. Turning VSync off again would make that preference applicable again.
+
+`MinimizeInputLatency` with `VSync = true` would mean **minimize input latency subject to the user’s VSync requirement**. `Standard` with `VSync = false` would retain its balanced queueing and waiting settings while presenting without VSync.
+
+This also removes the need to disable the `V` hotkey, which I suggested in the previous design.
