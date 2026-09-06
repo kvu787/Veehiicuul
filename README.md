@@ -48,11 +48,11 @@ Anti-Lag 2 are prohibited**, including optional integrations. Rendering and
 latency/queueing work must use vendor-neutral Windows, Direct3D 12, and DXGI
 capability queries and fallbacks.
 
-Current implementation gap: the renderer selects a Direct3D 12 adapter, then
-rejects it if Shader Model 6.0 is unavailable. It tries WARP only when no
-hardware adapter passes the earlier device-creation check; it does not retry
-WARP after a Shader Model check fails. Completing vendor-neutral fallback
-coverage to satisfy the platform policy remains implementation work.
+Hardware adapter selection checks both Direct3D 12 device creation and Shader
+Model 6.0 support. If no hardware adapter qualifies, the renderer tries WARP.
+The compiled shaders still require Shader Model 6.0 in the selected runtime,
+including WARP. Support for Windows installations whose WARP runtime lacks
+that capability remains an implementation gap.
 
 ### Frame rate policy
 
@@ -96,7 +96,20 @@ directory.
 
 The app starts windowed at 1280x720 with VSync off. Press F11 to toggle borderless fullscreen.
 
-With VSync off, presentation uses tearing when supported.
+With VSync off, presentation permits tearing only when the selected pipeline requests it and DXGI supports it.
+
+## Rendering pipeline
+
+Edit `assets/Settings.ini` and restart the app to select `[Pipeline].Mode`:
+`MinimizeInputLatency`, `Standard` (the shipped default), or `Custom`.
+`[Rendering].VSync` is independent of every mode and defaults to `false` in the
+shipped INI. The `V` key changes VSync at runtime without changing the mode or
+rewriting the INI. Custom pipeline values are ignored outside Custom mode.
+
+See [Pipeline configuration](Documentation/Pipeline.md) for presets, accepted
+custom settings, wait behavior, and validation. The window title reports the
+selected pipeline, queue limits, buffer count, wait strategy, and effective
+tearing state.
 
 ## Adjust the paint and sphere
 
@@ -147,9 +160,10 @@ See [Asset generation](Documentation/Assets.md) for the regeneration command. If
 is installed under `%UserProfile%\Program`, CMake also provides the explicit
 `RegenerateAssets` target.
 
-The renderer uses a two-buffer flip-discard swap chain, per-back-buffer command
-allocators and fence values, default-heap mesh/texture resources, a persistent
-mapped per-frame constant buffer, and an sRGB render-target view. The background
+The renderer uses a configurable flip-discard swap chain, independently sized
+frame contexts with command allocators and fence values, default-heap
+mesh/texture resources, a persistent mapped per-frame constant buffer, and an
+sRGB render-target view. The background
 image is sampled as sRGB, while SimplePaint works in linear color; hardware
 sRGB conversion keeps both paths correct without a per-pixel gamma function.
 
