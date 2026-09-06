@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SimplePaint/OrthographicTransforms.h"
-#include "SimplePaint/Material.h"
+#include "ApplicationSettings.h"
 #include <Windows.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -11,6 +11,9 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <string>
+#include <vector>
 
 class Renderer final
 {
@@ -21,7 +24,13 @@ public:
     Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
 
-    void Initialize(HWND window, std::uint32_t width, std::uint32_t height);
+    void Initialize(HWND window, std::uint32_t width, std::uint32_t height,
+        const ApplicationSettings& settings, bool useSoftwareAdapter = false);
+    // Service messages without mutating renderer resources; return false to cancel the attempt.
+    [[nodiscard]] bool PrepareFrame(const std::function<bool()>& serviceMessages);
+    [[nodiscard]] std::wstring PipelineDescription() const;
+    [[nodiscard]] std::uint32_t PendingGpuFrames() const;
+    void CheckDebugMessages() const;
     void Resize(std::uint32_t width, std::uint32_t height);
     void Render();
 
@@ -30,7 +39,7 @@ public:
     [[nodiscard]] bool IsInitialized() const noexcept { return m_initialized; }
 
 private:
-    static constexpr std::uint32_t FrameCount = 2;
+    friend struct RendererTestAccess;
     static constexpr std::uint32_t CarMaterialCount = 5;
     static constexpr std::uint32_t PaintMaterialCount = CarMaterialCount + 1;
     static_assert(PaintMaterialCount == SIMPLE_PAINT_MATERIAL_COUNT);
@@ -46,13 +55,9 @@ private:
         D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT;
     static_assert(sizeof(Orthographic::ObjectTransforms) <= ObjectConstantStride);
     static_assert(sizeof(PaintMaterialConstants) == 80);
-    static constexpr std::uint32_t MaterialConstantOffset =
-        ObjectConstantStride * ObjectsPerFrame * FrameCount;
     static constexpr std::uint32_t MaterialConstantSize =
         (sizeof(PaintMaterialConstants) * PaintMaterialCount + ObjectConstantStride - 1) /
         ObjectConstantStride * ObjectConstantStride;
-
-    using PaintSettings = SimplePaint::Parameters;
 
     struct GpuMesh
     {
@@ -77,7 +82,6 @@ private:
     void CreateWindowSizeResources();
     void CreateStaticResources();
     void CreateConstantBuffer();
-    void LoadPaintSettings();
 
     void UpdateCamera();
     [[nodiscard]] AnimationState CurrentAnimationState() const;
@@ -85,9 +89,9 @@ private:
     void DrawBackground();
     void DrawObjects(std::uint32_t frameIndex);
 
-    void WaitForFrame(std::uint32_t frameIndex);
     void WaitForGpu();
-    void SignalFrame(std::uint32_t frameIndex);
+    void SignalFrame();
+    [[nodiscard]] std::uint64_t CompletedFence() const;
 
     HWND m_window = nullptr;
     std::uint32_t m_width = 0;
@@ -95,6 +99,17 @@ private:
     bool m_initialized = false;
     bool m_vsyncEnabled = false;
     bool m_tearingSupported = false;
+    bool m_useSoftwareAdapter = false;
+    PipelineMode m_pipelineMode = PipelineMode::Standard;
+    PipelineSettings m_pipeline{};
+    UINT m_swapChainFlags = 0;
+    HANDLE m_presentationEvent = nullptr;
+    bool m_presentationAdmitted = false;
+    bool m_framePrepared = false;
+    std::uint64_t m_frameSequence = 0;
+    std::uint32_t m_frameIndex = 0;
+    std::uint32_t m_backBufferIndex = 0;
+    std::uint64_t m_waitFenceValue = 0;
 
     Microsoft::WRL::ComPtr<IDXGIFactory4> m_factory;
     Microsoft::WRL::ComPtr<ID3D12Device> m_device;
@@ -105,14 +120,20 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> m_backgroundPipelineState;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> m_carPipelineState;
 
-    std::array<Microsoft::WRL::ComPtr<ID3D12CommandAllocator>, FrameCount> m_commandAllocators;
+    struct FrameContext
+    {
+        Microsoft::WRL::ComPtr<ID3D12CommandAllocator> allocator;
+        std::uint64_t fenceValue = 0;
+    };
+    std::vector<FrameContext> m_frames;
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvHeap;
     std::uint32_t m_rtvDescriptorSize = 0;
-    std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, FrameCount> m_renderTargets;
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> m_renderTargets;
+    std::vector<std::uint64_t> m_backBufferFences;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_depthBuffer;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_backgroundTexture;
 
@@ -130,9 +151,9 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
     std::byte* m_mappedConstants = nullptr;
+    std::uint32_t m_materialConstantOffset = 0;
 
     Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
-    std::array<std::uint64_t, FrameCount> m_frameFenceValues{};
     std::uint64_t m_nextFenceValue = 1;
     HANDLE m_fenceEvent = nullptr;
 

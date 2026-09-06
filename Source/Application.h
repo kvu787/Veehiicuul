@@ -11,12 +11,13 @@ class Application final
 public:
     ~Application();
 
-    int Run(HINSTANCE instance, int showCommand);
+    int Run(HINSTANCE instance, int showCommand, const ApplicationSettings& settings);
 
 private:
     static LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
     LRESULT HandleMessage(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
 
+    bool ServiceMessages();
     void CreateMainWindow(HINSTANCE instance, int showCommand);
     void ApplyPendingResize();
     void ToggleFullscreen();
@@ -30,6 +31,8 @@ private:
     bool m_inSizeMove = false;
     bool m_resizePending = false;
     bool m_fullscreen = false;
+    bool m_quit = false;
+    int m_exitCode = 0;
     std::uint32_t m_pendingWidth = 1280;
     std::uint32_t m_pendingHeight = 720;
     WINDOWPLACEMENT m_windowedPlacement{.length = sizeof(WINDOWPLACEMENT)};

@@ -12,13 +12,10 @@
 
 #include <algorithm>
 #include <array>
-#include <charconv>
 #include <cmath>
-#include <cctype>
 #include <cstring>
 #include <filesystem>
 #include <format>
-#include <fstream>
 #include <limits>
 #include <numbers>
 #include <stdexcept>
@@ -156,23 +153,6 @@ ComPtr<ID3D12RootSignature> CreateRootSignature(
     return rootSignature;
 }
 
-std::filesystem::path ModuleDirectory()
-{
-    std::wstring modulePath(32768, L'\0');
-    const DWORD length = GetModuleFileNameW(
-        nullptr,
-        modulePath.data(),
-        static_cast<DWORD>(modulePath.size()));
-    if (length == 0 || static_cast<std::size_t>(length) >= modulePath.size())
-    {
-        throw std::runtime_error(std::format(
-            "GetModuleFileNameW failed with Win32 error {}.",
-            GetLastError()));
-    }
-    modulePath.resize(length);
-    return std::filesystem::path(modulePath).parent_path();
-}
-
 class ScopedComInitialization final
 {
 public:
@@ -274,62 +254,12 @@ DecodedImage DecodeRgbaImage(const std::filesystem::path& path)
     return image;
 }
 
-std::string_view Trim(std::string_view value)
-{
-    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.front())) != 0)
-    {
-        value.remove_prefix(1);
-    }
-    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back())) != 0)
-    {
-        value.remove_suffix(1);
-    }
-    return value;
-}
-
-double ParseFloat(const std::string_view text, const std::size_t lineNumber)
-{
-    const std::string_view trimmed = Trim(text);
-    double value = 0.0;
-    const auto [end, error] = std::from_chars(
-        trimmed.data(),
-        trimmed.data() + trimmed.size(),
-        value);
-    if (error != std::errc{} || end != trimmed.data() + trimmed.size() || !std::isfinite(value))
-    {
-        throw std::runtime_error(std::format(
-            "Invalid finite floating-point value on Settings.ini line {}.",
-            lineNumber));
-    }
-    return value;
-}
-
-std::array<double, 3> ParseColor(const std::string_view text, const std::size_t lineNumber)
-{
-    const std::size_t firstComma = text.find(',');
-    const std::size_t secondComma = firstComma == std::string_view::npos
-        ? std::string_view::npos
-        : text.find(',', firstComma + 1);
-    if (firstComma == std::string_view::npos ||
-        secondComma == std::string_view::npos ||
-        text.find(',', secondComma + 1) != std::string_view::npos)
-    {
-        throw std::runtime_error(std::format(
-            "Expected an R, G, B triple on Settings.ini line {}.",
-            lineNumber));
-    }
-
-    return {
-        ParseFloat(text.substr(0, firstComma), lineNumber),
-        ParseFloat(text.substr(firstComma + 1, secondComma - firstComma - 1), lineNumber),
-        ParseFloat(text.substr(secondComma + 1), lineNumber),
-    };
-}
 
 }
 
 Renderer::~Renderer()
 {
+    if (m_presentationEvent != nullptr) CloseHandle(m_presentationEvent);
     if (m_commandQueue && m_fence && m_fenceEvent != nullptr)
     {
         try
@@ -354,7 +284,8 @@ Renderer::~Renderer()
     }
 }
 
-void Renderer::Initialize(HWND window, const std::uint32_t width, const std::uint32_t height)
+void Renderer::Initialize(HWND window, const std::uint32_t width, const std::uint32_t height,
+    const ApplicationSettings& settings, const bool useSoftwareAdapter)
 {
     if (window == nullptr || width == 0 || height == 0)
     {
@@ -365,7 +296,18 @@ void Renderer::Initialize(HWND window, const std::uint32_t width, const std::uin
     m_width = width;
     m_height = height;
 
-    LoadPaintSettings();
+    ValidatePipelineSettings(settings.pipeline);
+    m_pipelineMode = settings.pipelineMode;
+    m_pipeline = settings.pipeline;
+    m_vsyncEnabled = settings.vsync;
+    m_useSoftwareAdapter = useSoftwareAdapter;
+    m_sphereUResolution = settings.sphereUResolution;
+    m_sphereVResolution = settings.sphereVResolution;
+    m_paintMaterials = settings.paintMaterials;
+    m_frames.resize(m_pipeline.maxGpuFramesInFlight);
+    m_renderTargets.resize(m_pipeline.backBufferCount);
+    m_backBufferFences.resize(m_pipeline.backBufferCount);
+    m_materialConstantOffset = ObjectConstantStride * ObjectsPerFrame * m_pipeline.maxGpuFramesInFlight;
     CreateDevice();
     CreateSwapChain();
     CreateDescriptorHeaps();
@@ -378,6 +320,7 @@ void Renderer::Initialize(HWND window, const std::uint32_t width, const std::uin
 
     m_animationStart = std::chrono::steady_clock::now();
     m_initialized = true;
+    OutputDebugStringW((PipelineDescription() + L"\n").c_str());
 }
 
 void Renderer::CreateDevice()
@@ -408,7 +351,7 @@ void Renderer::CreateDevice()
     ComPtr<IDXGIFactory6> factory6;
     const bool supportsGpuPreference = SUCCEEDED(m_factory.As(&factory6));
     ComPtr<IDXGIAdapter1> selectedAdapter;
-    for (std::uint32_t adapterIndex = 0;; ++adapterIndex)
+    for (std::uint32_t adapterIndex = 0; !m_useSoftwareAdapter; ++adapterIndex)
     {
         ComPtr<IDXGIAdapter1> candidate;
         const HRESULT enumerationResult = supportsGpuPreference
@@ -430,11 +373,11 @@ void Renderer::CreateDevice()
             continue;
         }
 
-        if (SUCCEEDED(D3D12CreateDevice(
-                candidate.Get(),
-                D3D_FEATURE_LEVEL_11_0,
-                __uuidof(ID3D12Device),
-                nullptr)))
+        ComPtr<ID3D12Device> candidateDevice;
+        D3D12_FEATURE_DATA_SHADER_MODEL candidateModel{.HighestShaderModel = D3D_SHADER_MODEL_6_0};
+        if (SUCCEEDED(D3D12CreateDevice(candidate.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&candidateDevice))) &&
+            SUCCEEDED(candidateDevice->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &candidateModel, sizeof(candidateModel))) &&
+            candidateModel.HighestShaderModel >= D3D_SHADER_MODEL_6_0)
         {
             selectedAdapter = candidate;
             break;
@@ -482,6 +425,8 @@ void Renderer::CreateDevice()
 
 void Renderer::CreateSwapChain()
 {
+    m_swapChainFlags = m_pipeline.allowTearing && m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
+    if (m_pipeline.waitForPresentation) m_swapChainFlags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
     DXGI_SWAP_CHAIN_DESC1 description{
         .Width = m_width,
         .Height = m_height,
@@ -489,11 +434,11 @@ void Renderer::CreateSwapChain()
         .Stereo = FALSE,
         .SampleDesc = {.Count = 1, .Quality = 0},
         .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
-        .BufferCount = FrameCount,
+        .BufferCount = m_pipeline.backBufferCount,
         .Scaling = DXGI_SCALING_STRETCH,
         .SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD,
         .AlphaMode = DXGI_ALPHA_MODE_IGNORE,
-        .Flags = m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u,
+        .Flags = m_swapChainFlags,
     };
 
     ComPtr<IDXGISwapChain1> swapChain;
@@ -507,6 +452,12 @@ void Renderer::CreateSwapChain()
             &swapChain),
         "CreateSwapChainForHwnd");
     Check(swapChain.As(&m_swapChain), "Query IDXGISwapChain3");
+    if (m_pipeline.waitForPresentation)
+    {
+        Check(m_swapChain->SetMaximumFrameLatency(m_pipeline.maxPresentLatency), "SetMaximumFrameLatency");
+        m_presentationEvent = m_swapChain->GetFrameLatencyWaitableObject();
+        if (m_presentationEvent == nullptr) throw std::runtime_error("DXGI did not provide a presentation wait handle.");
+    }
     Check(m_factory->MakeWindowAssociation(m_window, DXGI_MWA_NO_ALT_ENTER), "MakeWindowAssociation");
 }
 
@@ -514,7 +465,7 @@ void Renderer::CreateDescriptorHeaps()
 {
     D3D12_DESCRIPTOR_HEAP_DESC rtvDescription{
         .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
-        .NumDescriptors = FrameCount,
+        .NumDescriptors = m_pipeline.backBufferCount,
         .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
     };
     Check(m_device->CreateDescriptorHeap(&rtvDescription, IID_PPV_ARGS(&m_rtvHeap)), "Create RTV descriptor heap");
@@ -750,12 +701,12 @@ void Renderer::CreatePipelines()
 
 void Renderer::CreateCommandObjects()
 {
-    for (std::uint32_t frameIndex = 0; frameIndex < FrameCount; ++frameIndex)
+    for (std::uint32_t frameIndex = 0; frameIndex < m_pipeline.maxGpuFramesInFlight; ++frameIndex)
     {
         Check(
             m_device->CreateCommandAllocator(
                 D3D12_COMMAND_LIST_TYPE_DIRECT,
-                IID_PPV_ARGS(&m_commandAllocators[frameIndex])),
+                IID_PPV_ARGS(&m_frames[frameIndex].allocator)),
             "CreateCommandAllocator");
     }
 
@@ -763,7 +714,7 @@ void Renderer::CreateCommandObjects()
         m_device->CreateCommandList(
             0,
             D3D12_COMMAND_LIST_TYPE_DIRECT,
-            m_commandAllocators[0].Get(),
+            m_frames[0].allocator.Get(),
             m_carPipelineState.Get(),
             IID_PPV_ARGS(&m_commandList)),
         "CreateCommandList");
@@ -789,7 +740,7 @@ void Renderer::CreateWindowSizeResources()
     };
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-    for (std::uint32_t frameIndex = 0; frameIndex < FrameCount; ++frameIndex)
+    for (std::uint32_t frameIndex = 0; frameIndex < m_pipeline.backBufferCount; ++frameIndex)
     {
         Check(m_swapChain->GetBuffer(frameIndex, IID_PPV_ARGS(&m_renderTargets[frameIndex])), "Get swap-chain buffer");
         m_device->CreateRenderTargetView(m_renderTargets[frameIndex].Get(), &rtvDescription, rtvHandle);
@@ -907,7 +858,7 @@ void Renderer::CreateStaticResources()
             &defaultHeap,
             D3D12_HEAP_FLAG_NONE,
             &vertexDescription,
-            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_COMMON,
             nullptr,
             IID_PPV_ARGS(&m_sceneMesh.vertexBuffer)),
         "Create scene vertex buffer");
@@ -916,7 +867,7 @@ void Renderer::CreateStaticResources()
             &defaultHeap,
             D3D12_HEAP_FLAG_NONE,
             &indexDescription,
-            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_COMMON,
             nullptr,
             IID_PPV_ARGS(&m_sceneMesh.indexBuffer)),
         "Create scene index buffer");
@@ -1006,8 +957,8 @@ void Renderer::CreateStaticResources()
     }
     textureUpload->Unmap(0, nullptr);
 
-    Check(m_commandAllocators[0]->Reset(), "Reset upload command allocator");
-    Check(m_commandList->Reset(m_commandAllocators[0].Get(), nullptr), "Reset upload command list");
+    Check(m_frames[0].allocator->Reset(), "Reset upload command allocator");
+    Check(m_commandList->Reset(m_frames[0].allocator.Get(), nullptr), "Reset upload command list");
     m_commandList->CopyBufferRegion(m_sceneMesh.vertexBuffer.Get(), 0, vertexUpload.Get(), 0, vertexBytes);
     m_commandList->CopyBufferRegion(m_sceneMesh.indexBuffer.Get(), 0, indexUpload.Get(), 0, indexBytes);
 
@@ -1081,7 +1032,7 @@ void Renderer::CreateStaticResources()
 
 void Renderer::CreateConstantBuffer()
 {
-    const std::uint64_t bufferSize = MaterialConstantOffset + MaterialConstantSize;
+    const std::uint64_t bufferSize = m_materialConstantOffset + MaterialConstantSize;
     const D3D12_HEAP_PROPERTIES uploadHeap = HeapProperties(D3D12_HEAP_TYPE_UPLOAD);
     const D3D12_RESOURCE_DESC description = BufferDescription(bufferSize);
     Check(
@@ -1098,155 +1049,9 @@ void Renderer::CreateConstantBuffer()
     void* mappedData = nullptr;
     Check(m_constantBuffer->Map(0, &noCpuReads, &mappedData), "Map scene constant buffer");
     m_mappedConstants = static_cast<std::byte*>(mappedData);
-    // Settings are immutable after startup; both objects and both frames share them.
-    std::memcpy(m_mappedConstants + MaterialConstantOffset,
+    // Settings are immutable after startup; all objects and frame contexts share them.
+    std::memcpy(m_mappedConstants + m_materialConstantOffset,
         m_paintMaterials.data(), sizeof(m_paintMaterials));
-}
-
-void Renderer::LoadPaintSettings()
-{
-    constexpr std::array<std::string_view, PaintMaterialCount> materialSections = {
-        "SimplePaintShader_Axles",
-        "SimplePaintShader_Body",
-        "SimplePaintShader_Cabin",
-        "SimplePaintShader_Headlights",
-        "SimplePaintShader_Wheels",
-        "SimplePaintShader_Sphere",
-    };
-    std::array<PaintSettings, PaintMaterialCount> materialSettings{};
-    const std::array<std::array<double, 3>, PaintMaterialCount> defaultColors = {{
-        {0.678429127, 0.678431321, 0.678431321},
-        {SimplePaint::Margin, 0.436627067, SimplePaint::InteriorMaximum},
-        {0.506386429, 0.756053146, SimplePaint::InteriorMaximum},
-        {SimplePaint::InteriorMaximum, 0.815686771, SimplePaint::Margin},
-        {0.345097446, 0.345097446, 0.345097446},
-        {0.107, 0.223, 0.578},
-    }};
-
-    for (std::size_t index = 0; index < materialSettings.size(); ++index)
-    {
-        materialSettings[index] = {
-            .baseColorSrgb = defaultColors[index],
-            .brightness = index == CarMaterialCount ? 0.126 : 0.5,
-            .lightPoint = index == CarMaterialCount ? 1.0 : 0.8,
-        };
-    }
-
-    const std::filesystem::path settingsPath = ModuleDirectory() / L"assets" / L"Settings.ini";
-    std::ifstream input(settingsPath);
-    if (!input)
-    {
-        throw std::runtime_error(std::format(
-            "Settings were not found at {}.",
-            settingsPath.string()));
-    }
-
-    std::string section;
-    std::string line;
-    std::size_t lineNumber = 0;
-    while (std::getline(input, line))
-    {
-        ++lineNumber;
-        const std::size_t comment = line.find_first_of(";#");
-        const std::string_view content = Trim(std::string_view(line).substr(0, comment));
-        if (content.empty())
-        {
-            continue;
-        }
-
-        if (content.front() == '[' && content.back() == ']')
-        {
-            section = std::string(Trim(content.substr(1, content.size() - 2)));
-            if (section != "Sphere" &&
-                std::find(materialSections.begin(), materialSections.end(), section) == materialSections.end())
-            {
-                throw std::runtime_error(std::format(
-                    "Unknown Settings.ini section [{}] on line {}.",
-                    section,
-                    lineNumber));
-            }
-            continue;
-        }
-
-        const std::size_t equals = content.find('=');
-        if (equals == std::string_view::npos)
-        {
-            throw std::runtime_error(std::format(
-                "Expected key = value on Settings.ini line {}.",
-                lineNumber));
-        }
-        const std::string key(Trim(content.substr(0, equals)));
-        const std::string_view value = Trim(content.substr(equals + 1));
-        const std::string qualifiedKey = section + "." + key;
-
-        if (qualifiedKey == "Sphere.UResolution" || qualifiedKey == "Sphere.VResolution")
-        {
-            std::uint32_t resolution = 0;
-            const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), resolution);
-            const bool isU = qualifiedKey == "Sphere.UResolution";
-            const std::uint32_t minimum = isU ? 3u : 2u;
-            if (error != std::errc{} || end != value.data() + value.size() ||
-                resolution < minimum || resolution > 512)
-            {
-                throw std::runtime_error(std::format(
-                    "{} must be an integer in [{}, 512] on Settings.ini line {}.",
-                    qualifiedKey, minimum, lineNumber));
-            }
-            (isU ? m_sphereUResolution : m_sphereVResolution) = resolution;
-        }
-        else
-        {
-            const auto materialSection = std::find(materialSections.begin(), materialSections.end(), section);
-            if (materialSection == materialSections.end())
-            {
-                throw std::runtime_error(std::format(
-                    "Unknown Settings.ini key '{}' on line {}.", qualifiedKey, lineNumber));
-            }
-            PaintSettings& settings = materialSettings[
-                static_cast<std::size_t>(materialSection - materialSections.begin())];
-            if (key == "BaseColor")
-            {
-                settings.baseColorSrgb = ParseColor(value, lineNumber);
-            }
-            else if (key == "Brightness")
-            {
-                settings.brightness = ParseFloat(value, lineNumber);
-            }
-            else if (key == "Shift")
-            {
-                settings.shift = ParseFloat(value, lineNumber);
-            }
-            else if (key == "RotationDegrees")
-            {
-                settings.rotationDegrees = ParseFloat(value, lineNumber);
-            }
-            else if (key == "DarkPoint")
-            {
-                settings.darkPoint = ParseFloat(value, lineNumber);
-            }
-            else if (key == "LightPoint")
-            {
-                settings.lightPoint = ParseFloat(value, lineNumber);
-            }
-            else
-            {
-                throw std::runtime_error(std::format(
-                    "Unknown Settings.ini key '{}' on line {}.", qualifiedKey, lineNumber));
-            }
-        }
-    }
-
-    for (std::size_t index = 0; index < m_paintMaterials.size(); ++index)
-    {
-        try
-        {
-            m_paintMaterials[index] = SimplePaint::Material::Compile(materialSettings[index]).Constants();
-        }
-        catch (const std::invalid_argument& error)
-        {
-            throw std::invalid_argument(std::format("[{}]: {}", materialSections[index], error.what()));
-        }
-    }
 }
 
 void Renderer::UpdateCamera()
@@ -1268,7 +1073,7 @@ void Renderer::UpdateCamera()
     const XMMATRIX sphereWorld =
         DirectX::XMMatrixScaling(sphereRadius, sphereRadius, sphereRadius) *
         DirectX::XMMatrixTranslation(1.5f, sphereRadius, -1.5f);
-    for (std::uint32_t frame = 0; frame < FrameCount; ++frame)
+    for (std::uint32_t frame = 0; frame < m_pipeline.maxGpuFramesInFlight; ++frame)
     {
         WriteObjectConstants(frame, 1, sphereWorld);
     }
@@ -1334,7 +1139,7 @@ void Renderer::DrawObjects(const std::uint32_t frameIndex)
         static_cast<std::uint64_t>(frameIndex) * ObjectsPerFrame * ObjectConstantStride;
     m_commandList->SetGraphicsRootConstantBufferView(0, constantsAddress);
     m_commandList->SetGraphicsRootConstantBufferView(
-        1, m_constantBuffer->GetGPUVirtualAddress() + MaterialConstantOffset);
+        1, m_constantBuffer->GetGPUVirtualAddress() + m_materialConstantOffset);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_sceneMesh.vertexView);
     m_commandList->IASetIndexBuffer(&m_sceneMesh.indexView);
@@ -1351,8 +1156,10 @@ void Renderer::Render()
         return;
     }
 
-    const std::uint32_t frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-    WaitForFrame(frameIndex);
+    if (!m_framePrepared) throw std::logic_error("Render requires successful PrepareFrame.");
+    m_framePrepared = false;
+    const std::uint32_t frameIndex = m_frameIndex;
+    const std::uint32_t backBufferIndex = m_backBufferIndex;
 
     const AnimationState animation = CurrentAnimationState();
     constexpr float carScale = 0.25f;
@@ -1362,23 +1169,23 @@ void Renderer::Render()
         DirectX::XMMatrixTranslation(animation.position, 0.0f, 0.0f);
     WriteObjectConstants(frameIndex, 0, carWorld);
 
-    Check(m_commandAllocators[frameIndex]->Reset(), "Reset command allocator");
+    Check(m_frames[frameIndex].allocator->Reset(), "Reset command allocator");
     Check(
         m_commandList->Reset(
-            m_commandAllocators[frameIndex].Get(),
+            m_frames[frameIndex].allocator.Get(),
             m_backgroundPipelineState.Get()),
         "Reset command list");
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
     D3D12_RESOURCE_BARRIER toRenderTarget = TransitionBarrier(
-        m_renderTargets[frameIndex].Get(),
+        m_renderTargets[backBufferIndex].Get(),
         D3D12_RESOURCE_STATE_PRESENT,
         D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_commandList->ResourceBarrier(1, &toRenderTarget);
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-    rtvHandle.ptr += static_cast<SIZE_T>(frameIndex) * m_rtvDescriptorSize;
+    rtvHandle.ptr += static_cast<SIZE_T>(backBufferIndex) * m_rtvDescriptorSize;
     const D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
@@ -1393,7 +1200,7 @@ void Renderer::Render()
     DrawObjects(frameIndex);
 
     D3D12_RESOURCE_BARRIER toPresent = TransitionBarrier(
-        m_renderTargets[frameIndex].Get(),
+        m_renderTargets[backBufferIndex].Get(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PRESENT);
     m_commandList->ResourceBarrier(1, &toPresent);
@@ -1403,7 +1210,7 @@ void Renderer::Render()
     m_commandQueue->ExecuteCommandLists(1, commandLists);
 
     const std::uint32_t presentFlags =
-        !m_vsyncEnabled && m_tearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;
+        !m_vsyncEnabled && m_pipeline.allowTearing && m_tearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;
     const HRESULT presentResult = m_swapChain->Present(m_vsyncEnabled ? 1 : 0, presentFlags);
     if (FAILED(presentResult))
     {
@@ -1414,7 +1221,8 @@ void Renderer::Render()
         ThrowFailure(presentResult, "Present");
     }
 
-    SignalFrame(frameIndex);
+    SignalFrame();
+    m_presentationAdmitted = false;
 }
 
 void Renderer::Resize(const std::uint32_t width, const std::uint32_t height)
@@ -1433,45 +1241,127 @@ void Renderer::Resize(const std::uint32_t width, const std::uint32_t height)
 
     Check(
         m_swapChain->ResizeBuffers(
-            FrameCount,
+            m_pipeline.backBufferCount,
             width,
             height,
             SwapChainFormat,
-            m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0),
+            m_swapChainFlags),
         "ResizeBuffers");
     m_width = width;
     m_height = height;
+    m_framePrepared = false;
+    std::fill(m_backBufferFences.begin(), m_backBufferFences.end(), 0);
+    // Keep an already consumed presentation permit until the next Present, including across resize.
     CreateWindowSizeResources();
     UpdateCamera();
 }
 
-void Renderer::WaitForFrame(const std::uint32_t frameIndex)
+std::uint64_t Renderer::CompletedFence() const
 {
-    const std::uint64_t fenceValue = m_frameFenceValues[frameIndex];
-    if (fenceValue == 0 || m_fence->GetCompletedValue() >= fenceValue)
-    {
-        return;
-    }
+    const auto completed = m_fence->GetCompletedValue();
+    if (completed == UINT64_MAX) ThrowFailure(m_device->GetDeviceRemovedReason(), "GPU fence/device removed");
+    return completed;
+}
 
-    Check(m_fence->SetEventOnCompletion(fenceValue, m_fenceEvent), "SetEventOnCompletion");
-    if (WaitForSingleObject(m_fenceEvent, INFINITE) != WAIT_OBJECT_0)
+std::uint32_t Renderer::PendingGpuFrames() const
+{
+    const auto completed = CompletedFence();
+    return static_cast<std::uint32_t>(std::count_if(m_frames.begin(), m_frames.end(),
+        [completed](const FrameContext& frame) { return frame.fenceValue > completed; }));
+}
+
+bool Renderer::PrepareFrame(const std::function<bool()>& serviceMessages)
+{
+    m_framePrepared = false;
+    m_frameIndex = static_cast<std::uint32_t>(m_frameSequence % m_frames.size());
+    m_backBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+    const auto targetFence = std::max(m_frames[m_frameIndex].fenceValue, m_backBufferFences[m_backBufferIndex]);
+    std::uint32_t polls = 0;
+    for (;;)
     {
-        throw std::runtime_error(std::format("Fence wait failed with Win32 error {}", GetLastError()));
+        if ((polls++ % 64 == 0 || m_pipeline.waitStrategy == WaitStrategy::Event) && !serviceMessages()) return false;
+        const bool gpuReady = CompletedFence() >= targetFence;
+        if (!m_pipeline.waitForPresentation) m_presentationAdmitted = true;
+        if (gpuReady && m_presentationAdmitted)
+        {
+            // Sample/process input again after every potentially blocking wait.
+            if (!serviceMessages()) return false;
+            m_framePrepared = true;
+            return true;
+        }
+        if (m_pipeline.waitStrategy == WaitStrategy::Spin)
+        {
+            if (!m_presentationAdmitted)
+            {
+                const DWORD result = WaitForSingleObject(m_presentationEvent, 0);
+                if (result == WAIT_OBJECT_0) m_presentationAdmitted = true;
+                else if (result != WAIT_TIMEOUT) throw std::runtime_error("Presentation readiness poll failed.");
+            }
+            YieldProcessor();
+            continue;
+        }
+
+        HANDLE handles[2]{};
+        DWORD count = 0;
+        if (!m_presentationAdmitted) handles[count++] = m_presentationEvent;
+        if (!gpuReady)
+        {
+            if (m_waitFenceValue != targetFence)
+            {
+                Check(m_fence->SetEventOnCompletion(targetFence, m_fenceEvent), "Set frame readiness event");
+                m_waitFenceValue = targetFence;
+            }
+            handles[count++] = m_fenceEvent;
+        }
+        const DWORD result = MsgWaitForMultipleObjectsEx(count, handles, INFINITE, QS_ALLINPUT, MWMO_INPUTAVAILABLE);
+        if (result >= WAIT_OBJECT_0 && result < WAIT_OBJECT_0 + count)
+        {
+            if (handles[result - WAIT_OBJECT_0] == m_presentationEvent) m_presentationAdmitted = true;
+        }
+        else if (result != WAIT_OBJECT_0 + count) throw std::runtime_error("Frame readiness wait failed.");
     }
 }
 
-void Renderer::SignalFrame(const std::uint32_t frameIndex)
+void Renderer::SignalFrame()
 {
     const std::uint64_t fenceValue = m_nextFenceValue++;
     Check(m_commandQueue->Signal(m_fence.Get(), fenceValue), "Signal frame fence");
-    m_frameFenceValues[frameIndex] = fenceValue;
+    m_frames[m_frameIndex].fenceValue = fenceValue;
+    m_backBufferFences[m_backBufferIndex] = fenceValue;
+    ++m_frameSequence;
+}
+
+std::wstring Renderer::PipelineDescription() const
+{
+    const auto presentLimit = m_pipeline.waitForPresentation ? std::to_wstring(m_pipeline.maxPresentLatency) : L"inactive";
+    const wchar_t* tearing = !m_pipeline.allowTearing ? L"not requested" :
+        !m_tearingSupported ? L"unsupported" : m_vsyncEnabled ? L"inactive (VSync)" : L"on";
+    return std::format(L"{} | GPU:{} Present:{} Buffers:{} | {} | Tearing:{}",
+        PipelineModeName(m_pipelineMode), m_pipeline.maxGpuFramesInFlight, presentLimit,
+        m_pipeline.backBufferCount, m_pipeline.waitStrategy == WaitStrategy::Event ? L"Event" : L"Spin", tearing);
+}
+
+void Renderer::CheckDebugMessages() const
+{
+    ComPtr<ID3D12InfoQueue> info;
+    if (FAILED(m_device.As(&info))) return;
+    for (UINT64 i = 0; i < info->GetNumStoredMessagesAllowedByRetrievalFilter(); ++i)
+    {
+        SIZE_T length = 0;
+        Check(info->GetMessage(i, nullptr, &length), "Read debug message length");
+        std::vector<std::byte> storage(length);
+        auto* message = reinterpret_cast<D3D12_MESSAGE*>(storage.data());
+        Check(info->GetMessage(i, message, &length), "Read debug message");
+        if (message->Severity <= D3D12_MESSAGE_SEVERITY_WARNING)
+            throw std::runtime_error(std::string(message->pDescription, message->DescriptionByteLength));
+    }
 }
 
 void Renderer::WaitForGpu()
 {
     const std::uint64_t fenceValue = m_nextFenceValue++;
     Check(m_commandQueue->Signal(m_fence.Get(), fenceValue), "Signal GPU flush fence");
-    if (m_fence->GetCompletedValue() < fenceValue)
+    while (CompletedFence() < fenceValue)
     {
         Check(m_fence->SetEventOnCompletion(fenceValue, m_fenceEvent), "Set GPU flush event");
         if (WaitForSingleObject(m_fenceEvent, INFINITE) != WAIT_OBJECT_0)

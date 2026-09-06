@@ -13,7 +13,7 @@ Application::~Application()
     m_window = nullptr;
 }
 
-int Application::Run(HINSTANCE instance, const int showCommand)
+int Application::Run(HINSTANCE instance, const int showCommand, const ApplicationSettings& settings)
 {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     CreateMainWindow(instance, showCommand);
@@ -26,33 +26,52 @@ int Application::Run(HINSTANCE instance, const int showCommand)
 
     m_pendingWidth = static_cast<std::uint32_t>(clientRectangle.right - clientRectangle.left);
     m_pendingHeight = static_cast<std::uint32_t>(clientRectangle.bottom - clientRectangle.top);
-    m_renderer.Initialize(m_window, m_pendingWidth, m_pendingHeight);
+    m_renderer.Initialize(m_window, m_pendingWidth, m_pendingHeight, settings);
     m_resizePending = false;
     UpdateWindowTitle();
 
     ShowWindow(m_window, showCommand);
     UpdateWindow(m_window);
 
-    MSG message{};
-    while (message.message != WM_QUIT)
+    while (!m_quit)
     {
-        if (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE))
+        ServiceMessages();
+        if (m_quit)
         {
-            TranslateMessage(&message);
-            DispatchMessageW(&message);
-            ApplyPendingResize();
+            break;
         }
-        else if (!m_minimized && !m_inSizeMove)
+        ApplyPendingResize();
+        if (m_minimized || m_inSizeMove)
+        {
+            MsgWaitForMultipleObjectsEx(0, nullptr, INFINITE, QS_ALLINPUT, MWMO_INPUTAVAILABLE);
+            continue;
+        }
+        if (m_renderer.PrepareFrame([this] { return ServiceMessages(); }))
         {
             m_renderer.Render();
         }
-        else
-        {
-            WaitMessage();
-        }
     }
 
-    return static_cast<int>(message.wParam);
+    return m_exitCode;
+}
+
+bool Application::ServiceMessages()
+{
+    MSG message{};
+    // A bounded batch prevents high-rate input from starving rendering.
+    for (std::uint32_t count = 0; count < 64 && PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE); ++count)
+    {
+        if (message.message == WM_QUIT)
+        {
+            m_quit = true;
+            m_exitCode = static_cast<int>(message.wParam);
+            break;
+        }
+        TranslateMessage(&message);
+        DispatchMessageW(&message);
+        if (m_window == nullptr) break;
+    }
+    return !m_quit && m_window != nullptr && !m_minimized && !m_inSizeMove && !m_resizePending;
 }
 
 void Application::CreateMainWindow(HINSTANCE instance, const int showCommand)
@@ -275,10 +294,11 @@ void Application::UpdateWindowTitle() const
 {
     const wchar_t* vsyncState = m_renderer.IsVsyncEnabled() ? L"On" : L"Off";
     const wchar_t* displayState = m_fullscreen ? L"Fullscreen" : L"Windowed";
-    wchar_t title[256]{};
+    wchar_t title[512]{};
     swprintf_s(
         title,
-        L"Simple DirectX 12 Car | VSync: %s | %s | V: toggle VSync  F11: fullscreen  Esc: quit",
+        L"Simple DirectX 12 Car | %s | VSync: %s | %s | V: VSync  F11: fullscreen  Esc: quit",
+        m_renderer.PipelineDescription().c_str(),
         vsyncState,
         displayState);
     SetWindowTextW(m_window, title);

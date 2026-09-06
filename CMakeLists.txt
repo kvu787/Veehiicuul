@@ -166,7 +166,7 @@ if(MSVC)
 endif()
 
 target_link_libraries(SimpleDirectX12Game PRIVATE
-    SimplePaint
+    ApplicationSettings
     d3d12
     dxgi
     ole32
@@ -218,8 +218,30 @@ endif()
 if(BUILD_TESTING)
     add_executable(ApplicationSettingsTests tests/ApplicationSettingsTests.cpp)
     target_link_libraries(ApplicationSettingsTests PRIVATE ApplicationSettings)
+    add_test(NAME ApplicationSettingsContract COMMAND ApplicationSettingsTests)
+    add_executable(PipelineGpuTests tests/PipelineGpuTests.cpp Source/Renderer.cpp ${SHADER_HEADERS})
+    add_dependencies(PipelineGpuTests CompiledShaders RuntimeAssets)
+    target_include_directories(PipelineGpuTests PRIVATE "${SHADER_GENERATED_DIRECTORY}")
+    target_compile_definitions(PipelineGpuTests PRIVATE NOMINMAX UNICODE _UNICODE WIN32_LEAN_AND_MEAN SIMPLE_PAINT_MATERIAL_COUNT=${SIMPLE_PAINT_MATERIAL_COUNT})
+    target_link_libraries(PipelineGpuTests PRIVATE ApplicationSettings d3d12 dxgi ole32 windowscodecs)
     if(MSVC)
         target_compile_options(ApplicationSettingsTests PRIVATE /W4 /WX /EHsc /permissive-)
+        target_compile_options(PipelineGpuTests PRIVATE /W4 /WX /EHsc /permissive-)
     endif()
-    add_test(NAME ApplicationSettingsContract COMMAND ApplicationSettingsTests)
+    add_test(NAME PipelineGpuHardware COMMAND PipelineGpuTests)
+    add_test(NAME PipelineGpuWarp COMMAND PipelineGpuTests --warp)
+    set_tests_properties(PipelineGpuHardware PipelineGpuWarp PROPERTIES TIMEOUT 90 RUN_SERIAL TRUE)
+endif()
+
+if(BUILD_TESTING)
+    add_executable(ApplicationSmokeTests tests/ApplicationSmokeTests.cpp Source/Application.cpp Source/Renderer.cpp ${SHADER_HEADERS})
+    add_dependencies(ApplicationSmokeTests CompiledShaders RuntimeAssets)
+    target_include_directories(ApplicationSmokeTests PRIVATE "${SHADER_GENERATED_DIRECTORY}")
+    target_compile_definitions(ApplicationSmokeTests PRIVATE NOMINMAX UNICODE _UNICODE WIN32_LEAN_AND_MEAN SIMPLE_PAINT_MATERIAL_COUNT=${SIMPLE_PAINT_MATERIAL_COUNT})
+    target_link_libraries(ApplicationSmokeTests PRIVATE ApplicationSettings d3d12 dxgi ole32 windowscodecs)
+    if(MSVC)
+        target_compile_options(ApplicationSmokeTests PRIVATE /W4 /WX /EHsc /permissive-)
+    endif()
+    add_test(NAME ApplicationWindowLifecycle COMMAND ApplicationSmokeTests)
+    set_tests_properties(ApplicationWindowLifecycle PROPERTIES TIMEOUT 30 RUN_SERIAL TRUE)
 endif()
