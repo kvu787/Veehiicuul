@@ -145,3 +145,116 @@ DXGI’s explicit queue-depth API is **`IDXGISwapChain2::SetMaximumFrameLatency(
 For a **one-versus-two frames-in-flight experiment**, I would add a separate `MaxFramesInFlight` setting enforced by fences, while keeping at least two swap-chain buffers. Simply changing `FrameCount` to `1` would make this flip-model swap chain invalid. [Microsoft: buffer requirements](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_2/ns-dxgi1_2-dxgi_swap_chain_desc1).
 
 Your Unity result is consistent with a tighter queue reducing CPU/GPU overlap and increasing time spent waiting; Unity documents that lowering MQF can reduce FPS. Whether this app shows a similar jump needs measurement. [Unity documentation](https://docs.unity3d.com/ScriptReference/QualitySettings-maxQueuedFrames.html).
+
+
+## User
+
+what is all the queuing stuff that can be configured by a low-level c++/dx12 app like this one? i would like to have a configuration that does zero or minimum queuing to minimize input latency, and then be able to adjust queuing settings to balance input latency vs other factors.
+
+## Assistant
+
+I’ll map the queueing controls across the app, D3D12, and DXGI, then identify what a minimum-latency configuration would require in this renderer.
+
+## Assistant question
+
+Would you like me to implement configurable queueing controls in this app, or explain the controls and recommend a design first?
+
+- Implement configurable controls
+- Explain and recommend first
+
+## User
+
+<send_user_message_question_reply>
+[{"questionItemId":"[\"request_user_input_async\",\"call_xkOKmJSJhAtUL8efeqegyAfN\",0]","question":"Would you like me to implement configurable queueing controls in this app, or explain the controls and recommend a design first?","answer":"Explain and recommend first"}]
+</send_user_message_question_reply>
+
+## Assistant
+
+The key distinction is between minimizing queued work and minimizing measured input latency. Waiting for every GPU frame to finish gives a clear minimum-queue baseline, but it also removes CPU/GPU overlap. I recommend keeping the GPU-work limit, presentation limit, buffer count, and frame pacing independent, with input sampled after the waits.
+
+## Assistant
+
+I have a proposed minimum-queue baseline and a sequence of settings to vary. The current app would also need to refresh input after its fence wait; otherwise, input arriving during that wait cannot affect the frame about to render. I’m finishing the explanation and recording this follow-up in the same conversation log.
+
+## Assistant final response
+
+**I recommend separate controls for GPU work in flight, DXGI presentation queuing, buffer count, and frame pacing.** Input sampling and CPU scheduling also matter: a small GPU queue cannot compensate for rendering an old input state.
+
+“Zero queuing” should mean **no intentional backlog of old frames from this app**. It cannot eliminate GPU execution time, Windows scheduling, display scanout, or the monitor’s own processing. Also, the configuration with the smallest queue is not necessarily the one with the lowest measured input latency: strict serialization can substantially reduce how often you sample input and produce frames.
+
+The main controls are:
+
+| Layer                         | What the app controls                                        | Latency versus other factors                                       |
+| ----------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| Input processing              | When events are consumed and current input is sampled        | Later sampling gives fresher input; preserve clicks and key edges. |
+| CPU simulation/render queue   | How many prepared frames wait for the render thread          | Zero prepared frames avoids extra CPU-side frame delay.            |
+| GPU frames in flight          | Submitted but unfinished frames, bounded with CPU fences     | One is the strict baseline; two or more allow more overlap.        |
+| DXGI presentation queue       | Maximum frame latency and the swap-chain waitable object     | A shallow queue limits presentation backlog.                       |
+| Swap-chain/resource buffering | Back buffers, command allocators, and dynamic resource slots | More capacity can prevent stalls, but needs explicit queue limits. |
+| Presentation timing           | VSync, tearing permission, and flip-model presentation       | Trades immediate updates against tearing and refresh alignment.    |
+| Frame pacing                  | FPS cap and when the CPU starts preparing the next frame     | Can avoid saturation, improve consistency, and reduce power.       |
+| Submission scheduling         | Command-list batching, other GPU queues, and their priority  | Trades submission overhead and GPU utilization against delay.      |
+
+**The two queue limits need precise definitions.**
+
+For a proposed `MaxGpuFramesInFlight = 1`, I would wait until the previous frame’s GPU fence completes **before sampling input and preparing the next frame**. The count includes the executing frame. This creates no intentional queue of additional frames behind it, but sacrifices inter-frame CPU/GPU overlap.
+
+At `2`, the CPU can prepare the next frame while the previous one executes. There is no D3D12 “queue length” setter for this: the application enforces the policy. Crucially, `ID3D12CommandQueue::Wait` is a **GPU-side** wait that returns immediately; throttling CPU submission requires a CPU-side fence wait. [Microsoft’s synchronization documentation](https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-wait).
+
+Separately, `IDXGISwapChain2::SetMaximumFrameLatency(1)` limits swap-chain queuing. Use it with `DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT` and wait on that object before beginning each frame. This controls a different boundary from GPU resource completion. **A completed GPU fence does not prove that the image has reached the screen**, and the two limits should not be added together to calculate latency. [DXGI queue-limit API](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency).
+
+**Buffer count should be independent of both limits.** Two swap-chain buffers are the minimum for flip-model presentation. Three buffers can provide useful capacity without requiring three queued frames if the other limits remain tight. Command allocators and changing constant-buffer data also need sufficient storage for the permitted GPU work. [Microsoft’s buffer requirements](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_2/ns-dxgi1_2-dxgi_swap_chain_desc1).
+
+For this app, my proposed **strict minimum-queue baseline** would be:
+
+```ini
+MaxGpuFramesInFlight = 1
+MaxPresentLatency = 1
+WaitForPresentation = true
+BackBufferCount = 2
+
+VSync = false
+AllowTearing = true
+FrameRateLimit = 0
+
+WaitStrategy = event
+```
+
+These are proposed settings, not currently implemented options. `FrameRateLimit = 0` means uncapped; tearing must be supported by the system. Keep the current single render thread and normal-priority graphics queue.
+
+The frame loop’s ordering is essential:
+
+```text
+Wait for frame-pacing deadline, presentation permission,
+and GPU/resource availability
+    ↓
+Consume pending input and sample the latest state
+    ↓
+Simulate → record commands → submit → Present
+    ↓
+Record the frame's completion fence
+```
+
+Keep the window responsive during waits and refresh input afterward. Sleeping after sampling input makes that input older before it reaches the GPU. Microsoft explicitly recommends waiting first, then processing input and rendering current data. [DXGI low-latency loop](https://learn.microsoft.com/en-us/windows/uwp/gaming/reduce-latency-with-dxgi-1-3-swap-chains).
+
+I would expose these adjustments for experiments:
+
+1. **GPU limit: 1, 2, 3.** Measure how much overlap improves FPS and frame-time consistency.
+2. **Presentation limit: 1, 2, 3.** Test alongside the GPU limit; the tighter constraint may hide changes to the other.
+3. **Back buffers: 2 or 3.** Check whether extra capacity removes stalls while preserving shallow queues.
+4. **Presentation pacing: waitable versus ordinary uncapped presentation.** Keep the GPU fence limit in both. Treat the strict baseline as a reference, not a guaranteed latency winner on every display path.
+5. **FPS cap and wait strategy.** Compare uncapped with a sustainable cap. Start with event waits, then optionally test a bounded spin or hybrid wait to trade CPU usage for reduced wake-up delay.
+
+For presentation, `Present(0, ALLOW_TEARING)` is the appropriate supported windowed/borderless path for immediate updates. `Present(1, 0)` synchronizes to refresh. With compatible VRR hardware, test a cap with headroom below the display’s refresh ceiling; the app’s tearing permission also enables the DXGI VRR path. [Microsoft’s VSync-off and VRR guidance](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/variable-refresh-rate-displays).
+
+A few additional mechanisms are relevant, but are not interchangeable queue-depth settings:
+
+- **Dropping presentations:** sync interval zero can discard superseded pending presentations. It does not undo already-submitted rendering work. `DXGI_PRESENT_DO_NOT_WAIT` returns a busy error instead of blocking; it does not eliminate queues. [Present behavior](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present), [presentation flags](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dxgi-present).
+- **Command-list batching:** the app decides when recorded work is submitted. Batching across frames can add delay; splitting a tiny frame into many submissions adds overhead. Keep this scene's compact per-frame submission as the baseline.
+- **Multiple GPU queues and priority:** graphics, compute, and copy work can overlap or block on dependencies. Higher priority changes scheduling competition, not your own frame backlog. I would keep one normal-priority graphics queue for this scene. [D3D12 queue scheduling](https://learn.microsoft.com/en-us/windows/win32/direct3d12/executing-and-synchronizing-command-lists).
+- **Composition:** flip-model borderless presentation can reach Independent Flip and bypass desktop composition, but the app cannot guarantee that mode under every desktop condition. Measure the actual presentation path. [Microsoft’s flip-model guidance](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/for-best-performance--use-dxgi-flip-model).
+- **Vendor latency scheduling:** NVIDIA Reflex and AMD Anti-Lag 2 can schedule CPU work closer to when the GPU needs it, reducing backlog without always imposing full serialization. These are optional integrations after establishing the generic baseline. [NVIDIA Reflex](https://developer.nvidia.com/performance-rendering-tools/reflex), [AMD Anti-Lag 2](https://gpuopen.com/anti-lag-2/).
+
+In the current code, [`FrameCount`](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/Renderer.h:33) couples buffers and resource slots. [The message loop](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/Application.cpp:36) processes input before [the renderer’s fence wait](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/Renderer.cpp:1354). I would separate those counts and move the frame-admission waits before the final input sample.
+
+For choosing a default, record **input-to-visible-response latency, frame-time variation, FPS, and CPU/GPU usage**, plus time spent in each wait. PresentMon can help analyze CPU, GPU, and display timing; a camera or latency sensor is needed to validate the full physical input-to-photon path. A higher FPS counter alone cannot select the best configuration. [PresentMon](https://github.com/GameTechDev/PresentMon).
