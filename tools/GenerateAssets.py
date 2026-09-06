@@ -169,9 +169,13 @@ def _generate_car_header(output_path: Path) -> tuple[int, int, str]:
             f"inline constexpr Vertex Vertices[{len(vertices)}] = {{",
         ]
 
+        vertex_fields = ("positionX", "positionY", "positionZ", "normalX", "normalY", "normalZ")
         for vertex in vertices:
-            values = ", ".join(_cpp_float(component) for component in vertex[:6])
-            lines.append(f"    {{{values}, {vertex[6]}u}},")
+            values = ", ".join(
+                f".{field} = {_cpp_float(component)}"
+                for field, component in zip(vertex_fields, vertex[:6])
+            )
+            lines.append(f"    {{{values}, .materialIndex = {vertex[6]}u}},")
 
         lines.extend(
             [
