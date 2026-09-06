@@ -20,6 +20,7 @@ endif()
 set(SHADER_GENERATED_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated/shaders")
 set(BACKGROUND_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/Background.hlsl")
 set(SIMPLE_PAINT_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/SimplePaint.hlsl")
+set(SIMPLE_PAINT_CORE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/SimplePaintCore.hlsli")
 
 function(compile_shader source_file output_name entry_point target_profile variable_name)
     set(object_file "${SHADER_GENERATED_DIRECTORY}/${output_name}.dxil")
@@ -41,7 +42,7 @@ function(compile_shader source_file output_name entry_point target_profile varia
             -Qstrip_debug
             -Qstrip_reflect
             "${source_file}"
-        DEPENDS "${source_file}"
+        DEPENDS "${source_file}" ${ARGN}
         COMMENT "Compiling ${output_name} as ${target_profile} with DXC"
         VERBATIM
     )
@@ -61,10 +62,17 @@ endfunction()
 
 compile_shader("${BACKGROUND_SHADER_SOURCE}" BackgroundVS VSMain vs_6_0 g_backgroundVertexShader)
 compile_shader("${BACKGROUND_SHADER_SOURCE}" BackgroundPS PSMain ps_6_0 g_backgroundPixelShader)
-compile_shader("${SIMPLE_PAINT_SHADER_SOURCE}" SimplePaintVS VSMain vs_6_0 g_simplePaintVertexShader)
-compile_shader("${SIMPLE_PAINT_SHADER_SOURCE}" SimplePaintPS PSMain ps_6_0 g_simplePaintPixelShader)
+compile_shader("${SIMPLE_PAINT_SHADER_SOURCE}" SimplePaintVS VSMain vs_6_0 g_simplePaintVertexShader "${SIMPLE_PAINT_CORE}")
+compile_shader("${SIMPLE_PAINT_SHADER_SOURCE}" SimplePaintPS PSMain ps_6_0 g_simplePaintPixelShader "${SIMPLE_PAINT_CORE}")
 
 add_custom_target(CompiledShaders DEPENDS ${SHADER_OUTPUTS})
+
+add_library(SimplePaint STATIC src/SimplePaint/Material.cpp src/SimplePaint/Material.h src/SimplePaint/Geometry.h)
+target_include_directories(SimplePaint PUBLIC src)
+target_compile_features(SimplePaint PUBLIC cxx_std_20)
+if(MSVC)
+    target_compile_options(SimplePaint PRIVATE /W4 /WX /permissive- /EHsc /fp:precise)
+endif()
 
 set(CAR_MESH_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/generated/CarMesh.generated.h")
 add_executable(SimpleDirectX12Game WIN32
@@ -148,6 +156,7 @@ if(MSVC)
 endif()
 
 target_link_libraries(SimpleDirectX12Game PRIVATE
+    SimplePaint
     d3d12
     dxgi
     ole32

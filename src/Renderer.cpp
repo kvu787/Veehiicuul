@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "UVSphere.h"
+#include "SimplePaint/Geometry.h"
 
 #include "BackgroundPS.h"
 #include "BackgroundVS.h"
@@ -283,10 +284,10 @@ std::string_view Trim(std::string_view value)
     return value;
 }
 
-float ParseFloat(const std::string_view text, const std::size_t lineNumber)
+double ParseFloat(const std::string_view text, const std::size_t lineNumber)
 {
     const std::string_view trimmed = Trim(text);
-    float value = 0.0f;
+    double value = 0.0;
     const auto [end, error] = std::from_chars(
         trimmed.data(),
         trimmed.data() + trimmed.size(),
@@ -300,7 +301,7 @@ float ParseFloat(const std::string_view text, const std::size_t lineNumber)
     return value;
 }
 
-XMFLOAT3 ParseColor(const std::string_view text, const std::size_t lineNumber)
+std::array<double, 3> ParseColor(const std::string_view text, const std::size_t lineNumber)
 {
     const std::size_t firstComma = text.find(',');
     const std::size_t secondComma = firstComma == std::string_view::npos
@@ -322,20 +323,6 @@ XMFLOAT3 ParseColor(const std::string_view text, const std::size_t lineNumber)
     };
 }
 
-void RequireUnitRange(const float value, const std::string_view name)
-{
-    if (value < 0.0f || value > 1.0f)
-    {
-        throw std::runtime_error(std::format("{} must be in the range [0, 1].", name));
-    }
-}
-
-float SrgbToLinear(const float value)
-{
-    return value <= 0.04045f
-        ? value / 12.92f
-        : std::pow((value + 0.055f) / 1.055f, 2.4f);
-}
 }
 
 Renderer::~Renderer()
@@ -841,6 +828,7 @@ void Renderer::CreateStaticResources()
     {
         indices.push_back(sphereVertexOffset + index);
     }
+    SimplePaint::ValidateMesh<GeneratedCarMesh::Vertex>(vertices, indices, PaintMaterialCount);
     const std::uint64_t vertexBytes = vertices.size() * sizeof(vertices[0]);
     const std::uint64_t indexBytes = indices.size() * sizeof(indices[0]);
     const D3D12_HEAP_PROPERTIES defaultHeap = HeapProperties(D3D12_HEAP_TYPE_DEFAULT);
@@ -1051,20 +1039,21 @@ void Renderer::LoadPaintSettings()
         "SimplePaintShader_Sphere",
     };
     std::array<PaintSettings, PaintMaterialCount> materialSettings{};
-    float facingCutoff = 0.01f;
-    const std::array<XMFLOAT3, PaintMaterialCount> defaultColors = {
-        XMFLOAT3{0.678429127f, 0.678431321f, 0.678431321f},
-        XMFLOAT3{0.0f, 0.436627067f, 1.0f},
-        XMFLOAT3{0.506386429f, 0.756053146f, 1.0f},
-        XMFLOAT3{1.0f, 0.815686771f, 0.0f},
-        XMFLOAT3{0.345097446f, 0.345097446f, 0.345097446f},
-        XMFLOAT3{0.345097446f, 0.345097446f, 0.345097446f},
-    };
+    const std::array<std::array<double, 3>, PaintMaterialCount> defaultColors = {{
+        {0.678429127, 0.678431321, 0.678431321},
+        {SimplePaint::Margin, 0.436627067, SimplePaint::InteriorMaximum},
+        {0.506386429, 0.756053146, SimplePaint::InteriorMaximum},
+        {SimplePaint::InteriorMaximum, 0.815686771, SimplePaint::Margin},
+        {0.345097446, 0.345097446, 0.345097446},
+        {0.107, 0.223, 0.578},
+    }};
 
     for (std::size_t index = 0; index < materialSettings.size(); ++index)
     {
         materialSettings[index].baseColorSrgb = defaultColors[index];
+        materialSettings[index].lightPoint = index == CarMaterialCount ? 1.0 : 0.8;
     }
+    materialSettings[CarMaterialCount].brightness = 0.126;
 
     const std::filesystem::path settingsPath = ModuleDirectory() / L"assets" / L"Settings.ini";
     std::ifstream input(settingsPath);
@@ -1091,7 +1080,7 @@ void Renderer::LoadPaintSettings()
         if (content.front() == '[' && content.back() == ']')
         {
             section = std::string(Trim(content.substr(1, content.size() - 2)));
-            if (section != "SimplePaintShader_GlobalParameters" && section != "Sphere" &&
+            if (section != "Sphere" &&
                 std::find(materialSections.begin(), materialSections.end(), section) == materialSections.end())
             {
                 throw std::runtime_error(std::format(
@@ -1113,11 +1102,7 @@ void Renderer::LoadPaintSettings()
         const std::string_view value = Trim(content.substr(equals + 1));
         const std::string qualifiedKey = section + "." + key;
 
-        if (qualifiedKey == "SimplePaintShader_GlobalParameters.FacingCutoff")
-        {
-            facingCutoff = ParseFloat(value, lineNumber);
-        }
-        else if (qualifiedKey == "Sphere.UResolution" || qualifiedKey == "Sphere.VResolution")
+        if (qualifiedKey == "Sphere.UResolution" || qualifiedKey == "Sphere.VResolution")
         {
             std::uint32_t resolution = 0;
             const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), resolution);
@@ -1174,66 +1159,16 @@ void Renderer::LoadPaintSettings()
         }
     }
 
-    RequireUnitRange(facingCutoff, "SimplePaintShader_GlobalParameters.FacingCutoff");
-    constexpr float epsilon = 1.0e-5f;
-
-    for (std::size_t materialIndex = 0; materialIndex < m_paintMaterials.size(); ++materialIndex)
+    for (std::size_t index = 0; index < m_paintMaterials.size(); ++index)
     {
-        const PaintSettings& settings = materialSettings[materialIndex];
-        const auto requireRange = [&](const float value, const std::string_view key)
+        try
         {
-            RequireUnitRange(value, std::format("{}.{}", materialSections[materialIndex], key));
-        };
-        requireRange(settings.brightness, "Brightness");
-        requireRange(settings.shift, "Shift");
-        requireRange(settings.darkPoint, "DarkPoint");
-        requireRange(settings.lightPoint, "LightPoint");
-        const XMFLOAT3 source = settings.baseColorSrgb;
-        requireRange(source.x, "BaseColor red channel");
-        requireRange(source.y, "BaseColor green channel");
-        requireRange(source.z, "BaseColor blue channel");
-
-        const float safeBrightness = std::clamp(settings.brightness, epsilon, 1.0f - epsilon);
-        const float safeShift = std::min(settings.shift, 1.0f - epsilon);
-        const float rotationRadians = -DirectX::XMConvertToRadians(
-            std::fmod(settings.rotationDegrees, 360.0f));
-        const float anchor = 1.0f - safeBrightness;
-        const XMFLOAT3 baseColor{
-            std::clamp(SrgbToLinear(source.x), epsilon, 1.0f - epsilon),
-            std::clamp(SrgbToLinear(source.y), epsilon, 1.0f - epsilon),
-            std::clamp(SrgbToLinear(source.z), epsilon, 1.0f - epsilon),
-        };
-        PaintMaterialConstants& material = m_paintMaterials[materialIndex];
-        material.paintWarp = {
-            std::cos(rotationRadians),
-            std::sin(rotationRadians),
-            safeShift,
-            std::sqrt(std::max(0.0f, 1.0f - safeShift * safeShift)),
-        };
-        material.paintTone = {
-            settings.lightPoint - settings.darkPoint,
-            settings.darkPoint,
-            facingCutoff,
-            epsilon,
-        };
-        material.k1 = {
-            baseColor.x * safeBrightness,
-            baseColor.y * safeBrightness,
-            baseColor.z * safeBrightness,
-            0.0f,
-        };
-        material.k2 = {
-            baseColor.x - anchor,
-            baseColor.y - anchor,
-            baseColor.z - anchor,
-            0.0f,
-        };
-        material.k3 = {
-            anchor * (1.0f - baseColor.x),
-            anchor * (1.0f - baseColor.y),
-            anchor * (1.0f - baseColor.z),
-            0.0f,
-        };
+            m_paintMaterials[index] = SimplePaint::Material::Compile(materialSettings[index]).Constants();
+        }
+        catch (const std::invalid_argument& error)
+        {
+            throw std::invalid_argument(std::format("[{}]: {}", materialSections[index], error.what()));
+        }
     }
 }
 

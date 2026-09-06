@@ -1,6 +1,7 @@
 #pragma once
 
 #include "OrthographicTransforms.h"
+#include "SimplePaint/Material.h"
 #include <Windows.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -38,14 +39,7 @@ private:
     static constexpr DXGI_FORMAT RenderTargetFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     static constexpr DXGI_FORMAT DepthBufferFormat = DXGI_FORMAT_D32_FLOAT;
 
-    struct PaintMaterialConstants
-    {
-        DirectX::XMFLOAT4 paintWarp;
-        DirectX::XMFLOAT4 paintTone;
-        DirectX::XMFLOAT4 k1;
-        DirectX::XMFLOAT4 k2;
-        DirectX::XMFLOAT4 k3;
-    };
+    using PaintMaterialConstants = SimplePaint::GpuMaterial;
 
     static constexpr std::uint32_t ObjectConstantStride =
         D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT;
@@ -57,15 +51,7 @@ private:
         (sizeof(PaintMaterialConstants) * PaintMaterialCount + ObjectConstantStride - 1) /
         ObjectConstantStride * ObjectConstantStride;
 
-    struct PaintSettings
-    {
-        DirectX::XMFLOAT3 baseColorSrgb{};
-        float brightness = 0.5f;
-        float shift = 0.0f;
-        float rotationDegrees = 0.0f;
-        float darkPoint = 0.0f;
-        float lightPoint = 0.8f;
-    };
+    using PaintSettings = SimplePaint::Parameters;
 
     struct GpuMesh
     {
