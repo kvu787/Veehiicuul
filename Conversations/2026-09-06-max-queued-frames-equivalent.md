@@ -283,3 +283,40 @@ Recorded in [AGENTS.md](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game
 - No GPU-vendor-specific code or integrations, including NVIDIA Reflex and AMD Anti-Lag 2.
 
 Also documented the existing Shader Model 6.0 fallback gap. Documentation and conversation are committed separately; working tree is clean.
+
+## User
+
+for this:
+MaxGpuFramesInFlight = 1
+MaxPresentLatency = 1
+WaitForPresentation = true
+BackBufferCount = 2
+
+VSync = false
+AllowTearing = true
+FrameRateLimit = 0
+
+WaitStrategy = event
+
+is the implementation of a FrameRateLimit setting necessary to implement the other settings
+
+## Assistant
+
+The queue controls can work without an FPS limiter. I’ll record that distinction in the conversation log.
+
+## Assistant final response
+
+**No. `FrameRateLimit` is independent and can be omitted entirely.** In the proposed configuration, `FrameRateLimit = 0` means no explicit FPS cap, so it requires no timer or frame-rate-limiting implementation.
+
+The other settings can operate using GPU fences, the DXGI presentation waitable object, and buffer management. Those waits naturally constrain throughput without targeting a particular FPS.
+
+`WaitStrategy = event` refers to waiting for GPU/presentation readiness; it does not require a frame-rate timer.
+
+For the initial implementation, the loop can simply be:
+
+```text
+Wait for GPU/presentation/resource readiness
+→ sample input → simulate → render → present
+```
+
+An FPS limiter can be added independently later.
