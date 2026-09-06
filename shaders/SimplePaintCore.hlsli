@@ -2,10 +2,11 @@
 #define SIMPLE_PAINT_CORE_HLSLI
 
 // Reusable SimplePaint core. The application owns bindings and vertex layout.
-// CPU contract: src/SimplePaint/Material.h and Geometry.h; see Specification.md.
+// CPU contract: src/SimplePaint/Material.h and Geometry.h;
+// see Documentation/Specification.md.
 // All colors are linear RGB. No lighting, gamma encoding, or material repair.
 // Reimplements Kevin Vu's K12 Simple Paint mathematics; derivation and original
-// source attribution are in Specification.md.
+// source attribution are in Documentation/Specification.md.
 struct SimplePaintMaterial
 {
     float4 warp;

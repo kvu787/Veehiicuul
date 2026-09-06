@@ -2,7 +2,7 @@
 
 Date: 2026-09-05. Examined implementation: 2700715.
 
-The [working specification](../../docs/SimplePaintInputSpecification.md) now requires e < R,G,B < 1-e, with e=0.01. Brightness is in [e,1-e], Shift in [0,1-e], Rotation in [0,360], DarkPoint in [0,1-e], and LightPoint in [e,1]. FacingCutoff is fixed at the K12 value 0.01. DarkPoint may exceed LightPoint. All inputs are finite.
+Historical scope: the working proposal examined here was subsequently replaced by the [implemented specification](../../Specification.md). That proposal required e < R,G,B < 1-e, with e=0.01. Brightness was in [e,1-e], Shift in [0,1-e], Rotation in [0,360], DarkPoint in [0,1-e], and LightPoint in [e,1]. FacingCutoff was fixed at the K12 value 0.01. DarkPoint could exceed LightPoint. All inputs were finite.
 
 Conclusion: the new RGB limits remove the exact-color endpoint singularities and make the CPU color clamps inactive. They also give the intended color denominator a positive lower bound. At e=0.01 that bound is still below the shader's floor, and legal inputs can lose approximately 22.6% of their linear intensity. Cancellation and amplified rounding remain, including cases where the floor is inactive.
 

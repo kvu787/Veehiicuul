@@ -38,9 +38,9 @@ There is no positive facing cutoff. Back-facing normals and exact silhouette nor
 
 ## Run and edit this application
 
-Double-click [Run.cmd](Run.cmd). It builds and launches the application using Visual Studio's C++ tools, CMake, Ninja, and the Windows SDK's DXC shader compiler. See [README.md](README.md) for installation requirements and app controls.
+Double-click [Run.cmd](../Run.cmd). It builds and launches the application using Visual Studio's C++ tools, CMake, Ninja, and the Windows SDK's DXC shader compiler. See [README.md](README.md) for installation requirements and app controls.
 
-Edit [assets/Settings.ini](assets/Settings.ini), then launch again. Each of the Axles, Body, Cabin, Headlights, Wheels, and Sphere sections has independent controls. The setting name for Rotation is `RotationDegrees`.
+Edit [assets/Settings.ini](../assets/Settings.ini), then launch again. Each of the Axles, Body, Cabin, Headlights, Wheels, and Sphere sections has independent controls. The setting name for Rotation is `RotationDegrees`.
 
 ```ini
 [SimplePaintShader_Sphere]
@@ -58,10 +58,10 @@ The file is parsed as finite binary64 numbers before range checks. Malformed num
 
 Copy these reusable files:
 
-- [src/SimplePaint/Material.h](src/SimplePaint/Material.h) and [Material.cpp](src/SimplePaint/Material.cpp): validated C++20 parameters and GPU constant compilation, with no DirectX dependencies.
-- [src/SimplePaint/Geometry.h](src/SimplePaint/Geometry.h): validation for indexed triangle meshes.
-- [shaders/SimplePaintCore.hlsli](shaders/SimplePaintCore.hlsli): the binding-independent HLSL functions.
-- [src/OrthographicTransforms.h](src/OrthographicTransforms.h) and [shaders/SimplePaint.hlsl](shaders/SimplePaint.hlsl): optional DirectXMath transform helper and complete application adapter to use as an integration example.
+- [src/SimplePaint/Material.h](../src/SimplePaint/Material.h) and [Material.cpp](../src/SimplePaint/Material.cpp): validated C++20 parameters and GPU constant compilation, with no DirectX dependencies.
+- [src/SimplePaint/Geometry.h](../src/SimplePaint/Geometry.h): validation for indexed triangle meshes.
+- [shaders/SimplePaintCore.hlsli](../shaders/SimplePaintCore.hlsli): the binding-independent HLSL functions.
+- [src/OrthographicTransforms.h](../src/OrthographicTransforms.h) and [shaders/SimplePaint.hlsl](../shaders/SimplePaint.hlsl): optional DirectXMath transform helper and complete application adapter to use as an integration example.
 
 Compile `Material.cpp` as C++20 and include its header. With this repository's CMake build, link the `SimplePaint` target instead. Compile each material once when its settings change:
 

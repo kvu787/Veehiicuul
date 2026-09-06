@@ -3,7 +3,7 @@
 Date: 2026-09-05. Examined HEAD: 2f0659a.
 Scope: interface and mathematical analysis, with proposed implementation directions. Application code and active settings are unchanged.
 
-The [revised specification](../../docs/SimplePaintInputSpecification.md) uses open RGB and Brightness intervals, Shift in [0, 1), Rotation in [0, 360), Dark Point in [0, 1), and Light Point in (0, 1]. No input margins have been selected. K12's fixed facing cutoff remains q = 0.01.
+Historical scope: the working proposal examined here was subsequently replaced by the [implemented specification](../../Specification.md). That proposal used open RGB and Brightness intervals, Shift in [0, 1), Rotation in [0, 360), Dark Point in [0, 1), and Light Point in (0, 1]. At that time, no input margins had been selected, and K12's fixed facing cutoff remained q = 0.01.
 
 ## What the new domain resolves
 
@@ -150,7 +150,7 @@ Branch classification near the cutoff is sensitive to normal rounding. Positive 
 
 ## Accepted non-issue: image sampling
 
-The user has explicitly accepted finite image sampling and undersampling of narrow highlights as a non-issue. Sampling is excluded from the remaining SimplePaint issues and epsilon-selection criteria; it does not create a requirement to change the shader mathematics or add antialiasing/filtering work. Do not revisit this settled topic unless the user explicitly reopens it. See the [specification decision](../../docs/SimplePaintInputSpecification.md#accepted-non-issue-image-sampling).
+The user has explicitly accepted finite image sampling and undersampling of narrow highlights as a non-issue. Sampling is excluded from the remaining SimplePaint issues and epsilon-selection criteria; it does not create a requirement to change the shader mathematics or add antialiasing/filtering work. Do not revisit this settled topic unless the user explicitly reopens it. See the [implemented specification's numerical rationale](../../Specification.md#accepted-machine-inputs).
 
 ## Choosing margins after the numerical design
 

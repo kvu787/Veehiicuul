@@ -1,6 +1,6 @@
 # SimplePaint specification and rationale
 
-Status: implemented. Date: 2026-09-05. This document supersedes `docs/SimplePaintInputSpecification.md` and the earlier numerical proposals under `Reports/ShaderNumerics`.
+Status: implemented. Date: 2026-09-05. This document supersedes the removed working specification and the earlier numerical proposals in [Historical reports](Reports/README.md).
 
 ## Purpose and abstract interface
 
@@ -218,7 +218,7 @@ C++ asserts size 80, alignment 16, trivial copyability, and every field offset. 
 
 The application uses 96-byte object blocks at 256-byte-aligned addresses in `b0`. `b1` points at six tightly packed 80-byte materials in a 512-byte allocation. The array is uploaded once at startup and shared across objects and frame slots. Only the moving car's transform block changes every frame; sphere transforms refresh when the camera viewport changes. Fence synchronization remains owned by the renderer.
 
-Original exact-zero/one base-color settings were explicitly edited to `m`/`M` in the shipped asset. They are not converted by a compatibility path. The old global cutoff section and in-shader denominator epsilon have been removed. The old specification is retained only as a redirect to this document.
+Original exact-zero/one base-color settings were explicitly edited to `m`/`M` in the shipped asset. They are not converted by a compatibility path. The old global cutoff section and in-shader denominator epsilon have been removed. The obsolete working specification was removed; earlier numerical proposals remain as historical reports.
 
 ## Optimization and verification
 

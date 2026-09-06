@@ -2,7 +2,7 @@
 
 Date: 2026-09-05. Production implementation unchanged from the preceding numerical review.
 
-Historical scope: this report analyzes the earlier proposal with RGB in [0,1]. The current [working specification](../../docs/SimplePaintInputSpecification.md) and [RGB-constrained analysis](RgbConstrainedAnalysis.md) supersede it for the strict RGB margins. Its original examples and conclusions remain a record of that earlier domain.
+Historical scope: this report analyzes the earlier proposal with RGB in [0,1]. The later [RGB-constrained analysis](RgbConstrainedAnalysis.md) superseded it for strict RGB margins; the [implemented specification](../../Specification.md) defines the current contract. This report's original examples and conclusions remain a record of that earlier domain.
 
 The previous input specification used e=0.01, RGB in [0,1], Brightness in [e,1-e], Shift in [0,1-e], Rotation in [0,360], DarkPoint in [0,1-e], and LightPoint in [e,1]. All bounds are inclusive. DarkPoint may exceed LightPoint.
 
