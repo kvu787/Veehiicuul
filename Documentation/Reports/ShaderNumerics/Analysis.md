@@ -34,7 +34,7 @@ None of these examples depends on a mathematically undefined color endpoint: the
 
 **1. Color-denominator flooring — large, confirmed arithmetic error**
 
-Location: [SimplePaint.hlsl](../../../shaders/SimplePaint.hlsl), lines 81-84.
+Location at the examined revision: SimplePaint.hlsl, lines 81-84. The current shader is [here](../../../Source/SimplePaint/SimplePaint.hlsl).
 
 Let B be brightness, b a linear base-color component after CPU conversion, and t the remapped tone. In exact arithmetic the existing curve can be written:
 
@@ -50,7 +50,7 @@ Direction: evaluate the nonnegative terms directly, preserve positive denominato
 
 **2. Cancellation in precomputed coefficients and the final denominator — confirmed independently of the floor**
 
-Locations: [Renderer.cpp](../../../src/Renderer.cpp), lines 1157-1183; SimplePaint.hlsl, lines 81-84.
+Locations at the examined revision: Renderer.cpp, lines 1157-1183; SimplePaint.hlsl, lines 81-84. The current renderer is [here](../../../Source/Renderer.cpp).
 
 For dark colors, k2 is negative and k3 is positive. Near the bright endpoint they nearly cancel. Rounding each coefficient to float32 loses information before the pixel shader runs. A fused multiply-add cannot restore already-lost coefficient bits.
 

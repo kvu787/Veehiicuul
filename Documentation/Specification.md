@@ -204,7 +204,7 @@ Combined with the mesh cone condition, these transforms keep interpolated normal
 
 ## Encapsulation, layout, and DX12 integration
 
-`src/SimplePaint/Material.*` owns parameters, validation, sRGB conversion, coefficient construction, and the GPU ABI. It is a C++20 library independent of DirectX types and scene settings. `Geometry.h` owns reusable mesh validation. `SimplePaintCore.hlsli` owns rotation, facing, and color evaluation and declares no bindings or material counts. The renderer's INI parser and `SimplePaint.hlsl` are application adapters.
+`Source/SimplePaint` is the complete copyable module, with its own CMake target and integration README. `Material.*` owns parameters, validation, sRGB conversion, coefficient construction, and the GPU ABI. It is a C++20 library independent of DirectX types and scene settings. `Geometry.h` owns reusable mesh validation. `OrthographicTransforms.h` owns the optional DirectXMath transform adapter. `SimplePaintCore.hlsli` owns rotation, facing, and color evaluation and declares no bindings or material counts. `SimplePaint.hlsl` provides a reusable DX12 adapter whose `SIMPLE_PAINT_MATERIAL_COUNT` defaults to one; the host configures the count for both stages. The INI parser and GPU resource ownership remain in the application's renderer, outside the module.
 
 | Byte offset | C++ / HLSL field | Meaning                                   |
 | ----------- | ---------------- | ----------------------------------------- |
@@ -216,7 +216,7 @@ Combined with the mesh cone condition, these transforms keep interpolated normal
 
 C++ asserts size 80, alignment 16, trivial copyability, and every field offset. The GPU tests exercise all six material indices, so the constant-buffer array stride and bindings are tested with the production shaders. `Material` has no mutating setters; `Compile` returns a complete material only after all validation succeeds. `Constants()` exposes read-only owned data for copying to an upload buffer.
 
-The application uses 96-byte object blocks at 256-byte-aligned addresses in `b0`. `b1` points at six tightly packed 80-byte materials in a 512-byte allocation. The array is uploaded once at startup and shared across objects and frame slots. Only the moving car's transform block changes every frame; sphere transforms refresh when the camera viewport changes. Fence synchronization remains owned by the renderer.
+The application uses 96-byte object blocks at 256-byte-aligned addresses in `b0`. Its CMake build defines a material count of six for both shader stages and C++; a renderer static assertion checks agreement. `b1` points at six tightly packed 80-byte materials in a 512-byte allocation. The array is uploaded once at startup and shared across objects and frame slots. Only the moving car's transform block changes every frame; sphere transforms refresh when the camera viewport changes. Fence synchronization remains owned by the renderer.
 
 Original exact-zero/one base-color settings were explicitly edited to `m`/`M` in the shipped asset. They are not converted by a compatibility path. The old global cutoff section and in-shader denominator epsilon have been removed. The obsolete working specification was removed; earlier numerical proposals remain as historical reports.
 
@@ -226,7 +226,7 @@ The implementation precomputes sRGB conversion, angle trig, shift square root, c
 
 The PS source has one square root on the zero-shift path and two on the shifted path. It has no pow, log, exponent, sine, cosine, or normal rsqrt. DXC `-O3 -Ges -WX` compilation and inspection of the generated PS DXIL confirmed the two square-root call sites and absence of those transcendental operations. The extra shifted slice arithmetic protects near-pole and near-peak behavior. Optimizations are chosen subject to the numerical contract; no claim is made that this is the fastest possible shader on every GPU.
 
-Reproduce checks with `Run.ps1 -Test` and `Run.ps1 -Test -Configuration Debug`. All five CTest entries passed in both configurations on 2026-09-05:
+Reproduce checks with `Run.ps1 -Test` and `Run.ps1 -Test -Configuration Debug`. The suite includes the following numerical and integration checks:
 
 | Check                    | Coverage / result                                             |
 | ------------------------ | ------------------------------------------------------------- |
@@ -241,6 +241,8 @@ Reproduce checks with `Run.ps1 -Test` and `Run.ps1 -Test -Configuration Debug`. 
 | DX12 debug validation    | No warnings or errors in either GPU correctness run           |
 
 The rebuilt Release application also passed a hidden-window smoke check: normal initialization, two seconds in its render loop, and clean exit after `WM_CLOSE`. `Run.cmd` retains its double-click build-and-launch behavior; the same launcher now also exposes build-only and test modes through `Run.ps1`.
+
+The source reorganization adds a sixth CTest entry, `SimplePaintStandalone`. It copies only `Source/SimplePaint` into a fresh consumer project, builds and runs every public C++ interface using a host-owned mesh, compiles the copied VS/PS with material counts one and three, and checks that a zero count is rejected. This tests the module's copy/paste boundary independently of the application's include paths and generated assets. All six tests passed in both Release and Debug after the reorganization; the measured GPU errors below were unchanged.
 
 The independent binary64 GPU reference starts from the requested binary64 material parameters and the stored binary32 interpolated normal. It computes rotation, normalized facing, explicit tone remapping, and the uncomposed color curve. Thus it includes CPU coefficient conversion, VS rotation, GPU interpolation, and shader evaluation error. It does not measure errors from an external mesh exporter or an arbitrary host's world/view calculation; the transform tests cover this application's adapter separately.
 

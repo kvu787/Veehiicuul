@@ -3,6 +3,7 @@
 ## Documentation
 
 - [SimplePaint usage](Usage.md): controls, numerical limits, and C++/DX12 integration.
+- [Copyable SimplePaint module](../Source/SimplePaint/README.md): self-contained C++/HLSL folder and integration instructions.
 - [SimplePaint specification](Specification.md): mathematics, rationale, and verification.
 - [Asset generation](Assets.md): background and mesh regeneration instructions.
 - [Historical reports](Reports/README.md): earlier rendering and numerical analyses with supporting data.
@@ -117,8 +118,9 @@ mapped per-frame constant buffer, and an sRGB render-target view. The background
 image is sampled as sRGB, while SimplePaint works in linear color; hardware
 sRGB conversion keeps both paths correct without a per-pixel gamma function.
 
-Shader sources live in `shaders/Background.hlsl` and
-`shaders/SimplePaint.hlsl`. During the build, DXC compiles their vertex and
+Application source lives under `Source`. The background shader is in
+`Source/Shaders/Background.hlsl`; all reusable SimplePaint code, including
+`SimplePaint.hlsl`, is in `Source/SimplePaint`. During the build, DXC compiles their vertex and
 pixel entry points as optimized Shader Model 6.0 DXIL and emits byte arrays
 embedded directly into the executable. No runtime shader compilation or shader
 compiler DLL is required beside the executable.

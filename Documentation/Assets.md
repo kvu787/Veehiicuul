@@ -12,7 +12,7 @@ parameter ranges; `[Sphere]` controls mesh resolution. The normal build copies b
 files beside the executable. Edit the source INI and relaunch through `Run.cmd`
 to apply changes.
 
-Regenerate the background and `src/generated/CarMesh.generated.h` with Blender
+Regenerate the background and `Source/generated/CarMesh.generated.h` with Blender
 4.5.12 LTS from the repository root:
 
 ```powershell
@@ -22,7 +22,7 @@ Regenerate the background and `src/generated/CarMesh.generated.h` with Blender
     --python-exit-code 1 `
     --python ".\tools\GenerateAssets.py" `
     -- `
-    --car-output ".\src\generated\CarMesh.generated.h" `
+    --car-output ".\Source\generated\CarMesh.generated.h" `
     --background-output ".\assets\SceneBackground.png"
 ```
 
