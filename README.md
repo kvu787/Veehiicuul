@@ -30,7 +30,12 @@ full-screen triangle and never uses the depth buffer. The car and sphere then
 render in separate indexed draws with shared depth and separate transforms.
 Both composite above the flattened environment.
 
-## Platform and GPU policy
+## Constraints
+
+This section is the single source of truth for constraints that apply to both
+human developers and coding agents.
+
+### Platform and GPU policy
 
 The runtime platform preconditions are **Windows 10 or Windows 11** and
 **x86_64 (x64)**. There are **no GPU preconditions**: no particular GPU vendor,
@@ -41,8 +46,7 @@ implement or integrate GPU-vendor-specific APIs, SDKs, extensions,
 optimizations, workarounds, or vendor-ID-based paths. **NVIDIA Reflex and AMD
 Anti-Lag 2 are prohibited**, including optional integrations. Rendering and
 latency/queueing work must use vendor-neutral Windows, Direct3D 12, and DXGI
-capability queries and fallbacks. These rules are also recorded in
-[AGENTS.md](AGENTS.md) for coding agents.
+capability queries and fallbacks.
 
 Current implementation gap: the renderer selects a Direct3D 12 adapter, then
 rejects it if Shader Model 6.0 is unavailable. It tries WARP only when no
@@ -50,7 +54,7 @@ hardware adapter passes the earlier device-creation check; it does not retry
 WARP after a Shader Model check fails. Completing vendor-neutral fallback
 coverage to satisfy the platform policy remains implementation work.
 
-## Frame rate policy
+### Frame rate policy
 
 The app must not implement any frame rate limiting of its own. Do not add
 an FPS cap, target-frame-rate or `FrameRateLimit` setting, or timer, sleep,
@@ -60,6 +64,30 @@ includes optional limiters and background FPS caps.
 GPU fences, resource-availability waits, DXGI presentation waits, and VSync
 remain valid synchronization mechanisms. They must not be supplemented with
 app-owned timing delays to impose an FPS target.
+
+### Compatibility
+
+Do not attempt to maintain any sort of application compatibility between different commits of the repo. This creates unwanted complexity.
+
+### Launchers
+
+Keep a `Run.cmd` file that launches the project when double-clicked from File Explorer.
+
+If you create a Godot project, include a `Run.cmd` file that builds and launches the standalone exe of the Godot project by double-clicking it from File Explorer.
+
+### Git
+
+When implementing stuff, avoid difficult-to-review "mega-commits".
+Split large work into multiple commits to make it easier to review.
+Separate commits that record conversations from other commits.
+
+### Markdown tables
+
+Tables in Markdown must be padded and aligned in a way to make them easy to read in a plaintext editor, not only in a Markdown viewer.
+
+### Mathematical notation in Markdown
+
+Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must display properly in VSCode's Markdown previewer, GitHub.com's Markdown displayer, and the markdown viewer in the Windows 11 ChatGPT app.
 
 ## Run
 
