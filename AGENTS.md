@@ -41,3 +41,17 @@ Do not attempt to maintain any sort of application compatibility between differe
 Implement a Run.cmd file that launches the project when double-clicking the Run.cmd from File Explorer.
 
 Refer to `%UserProfile%\Repository\Godot\SimplePaintShaders` for the original development of SimplePaint shader.
+
+## Platform and GPU policy
+
+- Runtime preconditions are Windows 10 or Windows 11 and x86_64 (x64).
+- There are no GPU preconditions. Do not require a particular GPU vendor,
+  model, generation, or hardware feature set.
+- Do not implement or integrate GPU-vendor-specific code, APIs, SDKs,
+  extensions, optimizations, workarounds, or vendor-ID-based behavior.
+  NVIDIA Reflex and AMD Anti-Lag 2 are explicitly prohibited, including
+  optional integrations.
+- Use vendor-neutral Windows, Direct3D 12, and DXGI APIs for capability
+  detection and fallback paths.
+- Apply this policy to rendering, latency, queueing, and all other repository
+  code. Resolve unsupported capabilities through vendor-neutral fallbacks.

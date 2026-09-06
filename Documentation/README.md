@@ -26,6 +26,26 @@ full-screen triangle and never uses the depth buffer. The car and sphere then
 render in separate indexed draws with shared depth and separate transforms.
 Both composite above the flattened environment.
 
+## Platform and GPU policy
+
+The runtime platform preconditions are **Windows 10 or Windows 11** and
+**x86_64 (x64)**. There are **no GPU preconditions**: no particular GPU vendor,
+model, generation, or hardware feature set may be required.
+
+All repository code must use vendor-neutral interfaces and behavior. Do not
+implement or integrate GPU-vendor-specific APIs, SDKs, extensions,
+optimizations, workarounds, or vendor-ID-based paths. **NVIDIA Reflex and AMD
+Anti-Lag 2 are prohibited**, including optional integrations. Rendering and
+latency/queueing work must use vendor-neutral Windows, Direct3D 12, and DXGI
+capability queries and fallbacks. These rules are also recorded in
+[AGENTS.md](../AGENTS.md) for coding agents.
+
+Current implementation gap: the renderer selects a Direct3D 12 adapter, then
+rejects it if Shader Model 6.0 is unavailable. It tries WARP only when no
+hardware adapter passes the earlier device-creation check; it does not retry
+WARP after a Shader Model check fails. Completing vendor-neutral fallback
+coverage to satisfy the platform policy remains implementation work.
+
 ## Run
 
 Double-click `Run.cmd` in File Explorer. This minimal wrapper starts `Run.ps1`,
@@ -35,12 +55,8 @@ game. Subsequent launches rebuild only changed files. If the repository or its
 build folder has moved, the launcher automatically refreshes the saved CMake
 configuration before building.
 
-Requirements:
+Build prerequisites:
 
-- Windows 10 or newer;
-- a DirectX 12 adapter and driver supporting Shader Model 6.0 (hardware
-  rendering is preferred; WARP software rendering is used as a fallback when
-  it meets that requirement);
 - Visual Studio 2022 or newer with the **Desktop development with C++**
   workload, the **C++ CMake tools for Windows** component (CMake 3.24 or newer),
   and a Windows SDK;
