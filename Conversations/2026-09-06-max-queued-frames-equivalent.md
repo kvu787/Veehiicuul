@@ -258,3 +258,28 @@ A few additional mechanisms are relevant, but are not interchangeable queue-dept
 In the current code, [`FrameCount`](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/Renderer.h:33) couples buffers and resource slots. [The message loop](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/Application.cpp:36) processes input before [the renderer’s fence wait](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/Renderer.cpp:1354). I would separate those counts and move the frame-admission waits before the final input sample.
 
 For choosing a default, record **input-to-visible-response latency, frame-time variation, FPS, and CPU/GPU usage**, plus time spent in each wait. PresentMon can help analyze CPU, GPU, and display timing; a camera or latency sensor is needed to validate the full physical input-to-photon path. A higher FPS counter alone cannot select the best configuration. [PresentMon](https://github.com/GameTechDev/PresentMon).
+
+## User
+
+before continuing, record this somewhere for devs and agents:
+- this repo must not implement vendor specific stuff such as NVIDIA Reflex and AMD Anti-Lag 2
+- preconditions to running this repo are windows 10/11 and x86_64
+- however, there are no preconditions for gpu, and the repo must not write any code that is specific to gpu vendor
+
+## Assistant
+
+I’ll add these rules to `AGENTS.md` and the developer documentation, then commit the documentation and conversation separately.
+
+## Assistant
+
+The policy is now recorded for developers and agents. I also replaced the old GPU requirement in the setup guide with the new policy and documented the renderer’s existing Shader Model 6.0 fallback gap.
+
+## Assistant final response
+
+Recorded in [AGENTS.md](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/AGENTS.md:45) and the [developer documentation](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Documentation/README.md:29):
+
+- Windows 10/11 and x86_64 are required.
+- No GPU preconditions.
+- No GPU-vendor-specific code or integrations, including NVIDIA Reflex and AMD Anti-Lag 2.
+
+Also documented the existing Shader Model 6.0 fallback gap. Documentation and conversation are committed separately; working tree is clean.
