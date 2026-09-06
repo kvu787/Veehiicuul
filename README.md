@@ -101,7 +101,8 @@ With VSync off, presentation permits tearing only when the selected pipeline req
 ## Rendering pipeline
 
 Edit `assets/Settings.ini` and restart the app to select `[Pipeline].Mode`:
-`MinimizeInputLatency`, `Standard` (the shipped default), or `Custom`.
+`MinimizeInputLatency`, `Standard`, `MaximizeFps` (selected in the shipped INI),
+or `Custom`.
 `[Rendering].VSync` is independent of every mode and defaults to `false` in the
 shipped INI. The `V` key changes VSync at runtime without changing the mode or
 rewriting the INI. Custom pipeline values are ignored outside Custom mode.
@@ -110,6 +111,12 @@ See [Pipeline configuration](Documentation/Pipeline.md) for presets, accepted
 custom settings, wait behavior, and validation. The window title reports the
 selected pipeline, queue limits, buffer count, wait strategy, and effective
 tearing state.
+
+MaximizeFps is an experimental throughput preset: three GPU frames in flight,
+four image buffers, no explicit presentation admission wait, tearing permitted,
+and spin waits for resource readiness. It preserves rendering quality and may
+increase input latency and CPU/power use. Use the pipeline guide's Custom
+example to compare queue sizes and wait strategies; higher FPS is not guaranteed.
 
 ## Adjust the paint and sphere
 

@@ -11,7 +11,7 @@ The [repository constraints](../README.md#constraints) apply to all modes.
 VSync = false
 
 [Pipeline]
-Mode = Standard
+Mode = MaximizeFps
 
 [Pipeline.Custom]
 MaxGpuFramesInFlight = 2
@@ -26,7 +26,10 @@ WaitStrategy = Event
 `true`/`false`, and wait-strategy values are case-sensitive. Whitespace around
 keys and values is ignored; `;` and `#` introduce comments.
 
-VSync is independent of the pipeline. Neither preset can override it. The `V`
+The modes are `MinimizeInputLatency`, `Standard`, `MaximizeFps`, and `Custom`.
+The shipped INI selects `MaximizeFps` with VSync off for experimentation.
+
+VSync is independent of the pipeline. No preset can override it. The `V`
 key toggles it in every mode without rewriting the INI. VSync uses sync
 interval one; disabling it uses sync interval zero. Enabling VSync suppresses
 the tearing presentation flag without changing the pipeline's AllowTearing
@@ -34,14 +37,14 @@ preference. That preference applies again after VSync is disabled.
 
 ## Presets
 
-| Setting              | MinimizeInputLatency | Standard |
-| -------------------- | -------------------- | -------- |
-| MaxGpuFramesInFlight | 1                    | 2        |
-| MaxPresentLatency    | 1                    | 2        |
-| WaitForPresentation  | true                 | true     |
-| BackBufferCount      | 2                    | 3        |
-| AllowTearing         | true                 | false    |
-| WaitStrategy         | Spin                 | Event    |
+| Setting              | MinimizeInputLatency | Standard | MaximizeFps |
+| -------------------- | -------------------- | -------- | ----------- |
+| MaxGpuFramesInFlight | 1                    | 2        | 3           |
+| MaxPresentLatency    | 1                    | 2        | inactive    |
+| WaitForPresentation  | true                 | true     | false       |
+| BackBufferCount      | 2                    | 3        | 4           |
+| AllowTearing         | true                 | false    | true        |
+| WaitStrategy         | Spin                 | Event    | Spin        |
 
 MinimizeInputLatency favors minimal deliberate frame backlog, late input
 processing, and active polling of synchronization readiness. It minimizes
@@ -54,7 +57,56 @@ win on some systems; use Custom to compare actual response latency.
 Standard permits two GPU frames and two queued presentation frames, provides
 three image buffers, and uses event waits to balance throughput, queue depth,
 and CPU usage. With its AllowTearing=false preference, turning VSync off does
-not request tearing. Neither mode imposes an application FPS target.
+not request tearing.
+
+MaximizeFps favors rendering throughput with three GPU frames in flight, four
+image buffers, an ordinary non-waitable swap chain, and active polling of GPU
+resource readiness. It requests tearing when VSync is off and DXGI supports it.
+MaxPresentLatency stores 2 but is inactive because WaitForPresentation=false.
+Mandatory GPU resource-reuse waits remain in place, and Present or buffer
+availability may still block. No mode imposes an application FPS target.
+
+This is an experimental starting preset, not a guarantee of maximum FPS.
+Additional overlap can help when the other presets leave the CPU or GPU idle;
+it may do little once a bottleneck is saturated. Potential costs include more
+input latency, tearing, CPU/power use, heat, and buffer memory. Spin waiting can
+also reduce throughput on some systems. Resolution, geometry, and shading are
+unchanged. With VSync enabled, throughput remains subject to that requirement.
+
+## Experimenting with MaximizeFps
+
+Set `[Pipeline].Mode` to `MaximizeFps` and launch `Run.cmd` for a Release build.
+The title should show `MaximizeFps | GPU:3 Present:inactive Buffers:4 | Spin`;
+the effective VSync and tearing states are reported separately. Edit the source
+INI and relaunch to compare against `Standard` or `MinimizeInputLatency`.
+
+To tune the preset, replace the corresponding sections with this equivalent
+Custom configuration, then change one setting per comparison:
+
+```ini
+[Rendering]
+VSync = false
+
+[Pipeline]
+Mode = Custom
+
+[Pipeline.Custom]
+MaxGpuFramesInFlight = 3
+MaxPresentLatency = 2
+WaitForPresentation = false
+BackBufferCount = 4
+AllowTearing = true
+WaitStrategy = Spin
+```
+
+MaxPresentLatency must still be a valid integer in Custom even while inactive.
+Try Event versus Spin, different GPU-frame and buffer counts, and presentation
+waiting enabled versus disabled. Custom entries are ignored in preset modes.
+Keep resolution, window/fullscreen state, VSync, scene settings, and the capture
+method the same; allow warm-up and compare repeated runs. Compare sustained FPS
+and frame-time variation, and distinguish rendered/presented frames from frames
+actually displayed. Prefer the smallest queue that reaches the measured
+throughput plateau. The mode adds no benchmark instrumentation to the render loop.
 
 ## Custom settings and validation
 
@@ -116,7 +168,8 @@ tearing state (`on`, `not requested`, `unsupported`, or `inactive (VSync)`).
 The startup pipeline description is also sent to the Windows debug output.
 
 `Run.ps1 -Test` runs configuration tests, production renderer integration tests
-on the selected adapter and WARP, and an application lifecycle smoke test.
+on the selected adapter and WARP, and application lifecycle smoke tests for
+Standard and MaximizeFps.
 Tests cover inactive custom isolation, invalid active settings, VSync in every
 mode, independently sized rings, limits up to 16, both wait strategies,
 cancellation while GPU work is blocked, resize/restore, VSync hotkeys,
@@ -125,5 +178,5 @@ and require Windows Graphics Tools. Test fixtures do not overwrite user INI
 settings or target windows belonging to other processes.
 
 These checks establish configuration and synchronization behavior. They do
-not measure physical input-to-photon latency or establish that the latency
-preset is optimal for every GPU, CPU, and display combination.
+not measure physical input-to-photon latency or establish that either the
+latency or throughput preset is optimal for every GPU, CPU, and display combination.
