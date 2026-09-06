@@ -158,3 +158,30 @@ The tradeoffs would be **potentially higher input latency**, visible tearing, gr
 **VSync would remain independent**, as you requested. With it enabled, this mode would maximize throughput subject to VSync. All settings would remain vendor-neutral, with no application FPS limiter.
 
 The proposed **3 frames / 4 buffers are experimental starting values**. Setting every queue to 16 would mostly risk adding backlog once the GPU is already busy. Since `Standard` already permits overlap, this scene might gain little. I would select the smallest queue that reaches the measured throughput plateau, and keep `Spin` only if it actually improves sustained FPS.
+
+
+## User
+
+go ahead and implement this so i can experiment and measure perf
+
+## Assistant (commentary)
+
+I’ll add `MaximizeFps` with the proposed settings, make it the active mode for your first run, and update the documentation and tests. VSync will remain independent.
+
+## Assistant (commentary)
+
+The renderer already supports the proposed queue and wait settings, so this can use the existing synchronization code. I’m adding coverage for the new mode’s settings, GPU rendering, and window lifecycle, plus a `Custom` example for comparing individual settings.
+
+## Assistant (commentary)
+
+The Release build and all 11 tests passed, including hardware/WARP rendering and the new `MaximizeFps` window lifecycle test. The staged settings select `MaximizeFps` with VSync off. I’m finishing the documentation and commits; these checks verify behavior, not an FPS improvement.
+
+## Assistant final response
+
+Implemented and selected `MaximizeFps` in [Settings.ini](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/assets/Settings.ini).
+
+Double-click [Run.cmd](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Run.cmd) to try it: **3 GPU frames, 4 buffers, Spin waits, presentation waiting disabled, and tearing permitted**. VSync remains independent.
+
+The [experiment guide](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Documentation/Pipeline.md#experimenting-with-maximizefps) includes an equivalent `Custom` configuration for tuning.
+
+**All 11 Release tests passed**, including hardware/WARP rendering and window lifecycle checks. Performance gains still need measurement. Implementation, documentation, and conversation are committed separately.
