@@ -79,3 +79,31 @@ To check again, launch the standalone game with VSync off, run this in PowerShel
 For each frame, **`(PresentFlags & 0x200) != 0` means Unity requested tearing**. Check the bit rather than equality to `512`, because other flags can be combined. True DXGI exclusive fullscreen uses different rules: this flag is prohibited there, so its absence does not establish tear-free presentation. [Microsoft's flag documentation](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dxgi-present).
 
 The Unity **Use DXGI Flip Model Swapchain** checkbox alone cannot answer this: it selects the D3D11 swap-chain model, and D3D12 always uses flip model. [Unity documentation](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/PlayerSettings-useFlipModelSwapchain.html).
+
+## User
+
+ignoring the presentmon captures, is there any thing in the unity engine spec or documentation that discusses allowtearing behavior
+
+## Assistant
+
+I’ll check Unity’s documentation and official issue tracker for an explicit description of its tearing policy.
+
+## Assistant
+
+**Yes. Unity explicitly discusses allowing tearing with VSync off, although I did not find a complete public specification of its DXGI flag-selection rules.**
+
+The most relevant sources are:
+
+1. **Unity's DX12 issue UUM-30237** states:
+
+   > DX12: Fixed case where vsync is off to allow tearing like on DX11.
+
+   This directly documents the intended connection between VSync off and allowing tearing. The reported bug concerns the **Editor**, so it is not a complete specification for standalone players. [Unity issue and resolution](https://issuetracker.unity.com/issues/9367/different-behaviour-to-dx11-when-vsync-is-disabled-in-editor).
+
+2. **Unity's release notes explicitly name the DXGI flag.** Unity 5.4.1p1 records a D3D12 crash fix involving `DXGI_PRESENT_ALLOW_TEARING` being used with exclusive-fullscreen swap chains. This confirms Unity uses that mechanism, but the historical note does not specify today's complete policy. [Unity release notes](https://unity.com/releases/editor/whats-new/5.4.1p1).
+
+3. **The current Unity 6.3 API documentation** says `QualitySettings.vSyncCount = 0` disables synchronization to vertical sync. It describes the public setting's behavior without specifying `DXGI_PRESENT_ALLOW_TEARING` or its capability checks. [vSyncCount documentation](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/QualitySettings-vSyncCount.html).
+
+There is also a directly relevant explanation from Tautvydas Zilys on Unity Discussions: disabling VSync with the D3D11 flip-model swap chain permits tearing; disabling flip model falls back to a borderless presentation path that still waits for display synchronization even when rendering is uncapped. [Screen Tearing and DXGI flip model](https://discussions.unity.com/t/screen-tearing-and-dxgi-flip-model/929035).
+
+**These sources support expecting Unity's Windows flip-model renderer to permit tearing with VSync off.** I would treat that as documented intent, rather than a guarantee that Unity 6000.3.23f1 sets the flag under every configuration. I did not find a separately documented Unity `AllowTearing` toggle equivalent to the one in your C++ project.
