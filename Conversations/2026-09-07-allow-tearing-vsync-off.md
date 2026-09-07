@@ -18,3 +18,22 @@ With **VSync off**, this project uses a sync interval of zero in both cases:
 Microsoft documents the [tearing flag](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dxgi-present) and [variable refresh rate requirements](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/variable-refresh-rate-displays).
 
 **For your current settings:** `Mode = MaximizeFps` uses `AllowTearing = true`. The `AllowTearing = false` under `[Pipeline.Custom]` is ignored unless you select `Mode = Custom`.
+
+## User
+
+if vsync is off, does either setting of allowtearing have any effect on input latency
+
+## Assistant
+
+I’ll check how the two presentation paths affect input latency.
+
+## Assistant
+
+**Yes—`AllowTearing = true` can reduce input-to-screen latency even with VSync off.**
+
+- **`true`:** permits a newer frame to become visible during the current refresh, so part of the screen can reflect your input sooner.
+- **`false`:** in this project’s windowed/borderless mode, presentation remains tear-free and can wait for a refresh/composition opportunity, delaying when you see the response.
+
+The difference is **not a fixed number of milliseconds or a guaranteed improvement**. It depends on the Windows presentation path, monitor/VRR, FPS, and queued frames. Microsoft explicitly notes that allowing tearing can enable [lower presentation latency](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/for-best-performance--use-dxgi-flip-model).
+
+For your project, **use `AllowTearing = true` when prioritizing latency**. It affects when input becomes visible; it does not directly make input polling faster. Your current `MaximizeFps` preset already enables it.
