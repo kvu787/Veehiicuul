@@ -1,6 +1,6 @@
 # Rendering pipeline configuration
 
-## 1. Pipeline mode presets
+## Pipeline mode presets
 
 Select a preset with `[Pipeline].Mode` in [assets/Settings.ini](../assets/Settings.ini).
 Each preset supplies a fixed combination of the six pipeline settings below.
@@ -74,7 +74,7 @@ All modes follow the [repository constraints](../README.md#constraints):
 synchronization uses vendor-neutral Windows, Direct3D 12, and DXGI interfaces,
 and the application implements no FPS cap or timed frame-rate limiter.
 
-## 2. How `Mode = Custom` works
+## How `Mode = Custom` works
 
 `Custom` lets you supply all six pipeline settings explicitly. To start with the
 same pipeline behavior as `MaximizeFps`, replace the corresponding sections in
@@ -127,7 +127,7 @@ Section names, keys, mode names, booleans, and wait-strategy values are
 case-sensitive. Whitespace around keys and values is ignored; `;` and `#` start
 comments. Use `true` and `false`, not `1`, `0`, `yes`, or `no`.
 
-## 3. Individual settings
+## Individual settings
 
 `VSync` is read from `[Rendering]` in every mode. The other six settings are read
 from `[Pipeline.Custom]` only in Custom mode; presets supply their fixed values.
