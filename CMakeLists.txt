@@ -108,7 +108,7 @@ set_source_files_properties(
 target_include_directories(SimpleDirectX12Game PRIVATE "${SHADER_GENERATED_DIRECTORY}")
 
 set(BACKGROUND_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/assets/SceneBackground.png")
-set(GAME_SETTINGS "${CMAKE_CURRENT_SOURCE_DIR}/assets/Settings.ini")
+set(GAME_SETTINGS "${CMAKE_CURRENT_SOURCE_DIR}/assets/Settings.json")
 add_custom_target(RuntimeAssets ALL
     COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
@@ -116,7 +116,7 @@ add_custom_target(RuntimeAssets ALL
         "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets/SceneBackground.png"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
         "${GAME_SETTINGS}"
-        "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets/Settings.ini"
+        "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets/Settings.json"
     DEPENDS "${BACKGROUND_IMAGE}" "${GAME_SETTINGS}"
     COMMENT "Staging runtime image and paint settings"
     VERBATIM
@@ -218,7 +218,7 @@ endif()
 
 if(BUILD_TESTING)
     add_executable(ApplicationSettingsTests tests/ApplicationSettingsTests.cpp)
-    target_link_libraries(ApplicationSettingsTests PRIVATE ApplicationSettings)
+    target_link_libraries(ApplicationSettingsTests PRIVATE ApplicationSettings nlohmann_json::nlohmann_json)
     add_dependencies(ApplicationSettingsTests RuntimeAssets)
     add_test(NAME ApplicationSettingsContract COMMAND ApplicationSettingsTests)
     add_executable(RenderPipelineGpuTests tests/RenderPipelineGpuTests.cpp Source/Renderer.cpp ${SHADER_HEADERS})

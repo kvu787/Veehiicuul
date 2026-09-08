@@ -42,8 +42,8 @@ int main(int argc, char** argv)
                     return FALSE;
                 }, reinterpret_cast<LPARAM>(&window));
                 return window && titleContains(expectedRenderPipeline); }))
-                throw std::runtime_error("Application did not initialize the INI render pipeline");
-            if (!titleContains(L"VSync: Off")) throw std::runtime_error("Initial VSync was not read from INI");
+                throw std::runtime_error("Application did not initialize the JSON render pipeline");
+            if (!titleContains(L"VSync: Off")) throw std::runtime_error("Initial VSync was not read from JSON");
             PostMessageW(window, WM_KEYDOWN, 'V', 0);
             if (!wait([&] { return titleContains(L"VSync: On"); })) throw std::runtime_error("VSync hotkey failed");
             PostMessageW(window, WM_KEYDOWN, VK_F11, 0);
@@ -68,15 +68,15 @@ int main(int argc, char** argv)
     try
     {
         Application application;
-        std::istringstream ini(std::string("[RenderPipeline]\nVSync=false\nPreset=") +
-            (maximizeFps ? "MaximizeFps\n" : "Standard\n"));
-        const auto settings = ParseApplicationSettings(ini);
+        std::istringstream json(std::string(R"({"RenderPipeline":{"VSync":false,"Preset":")") +
+            (maximizeFps ? "MaximizeFps" : "Standard") + R"("}})");
+        const auto settings = ParseApplicationSettings(json);
         const int result = application.Run(GetModuleHandleW(nullptr), SW_SHOWNOACTIVATE, settings);
         done = true;
         driver.join();
         if (!failure.empty()) throw std::runtime_error(failure);
         if (result != 0) throw std::runtime_error("Application returned failure");
-        std::cout << "Application INI load, VSync hotkeys, fullscreen, minimize/restore, and close passed.\n";
+        std::cout << "Application JSON load, VSync hotkeys, fullscreen, minimize/restore, and close passed.\n";
         return 0;
     }
     catch (const std::exception& e)

@@ -57,8 +57,8 @@ int main(int argc, char** argv)
             30, 30, 360, 220, nullptr, nullptr, wc.hInstance, nullptr)};
         Require(window.handle != nullptr, "Cannot create test window");
         ShowWindow(window.handle, SW_SHOWNOACTIVATE);
-        std::istringstream ini("[RenderPipeline]\nVSync=false\nPreset=Standard\n");
-        auto settings = ParseApplicationSettings(ini);
+        std::istringstream json(R"({"RenderPipeline":{"VSync":false,"Preset":"Standard"}})");
+        auto settings = ParseApplicationSettings(json);
         const RenderPipelineSettings configurations[] = {
             MinimizeInputLatencyRenderPipeline, StandardRenderPipeline, MaximizeFpsRenderPipeline,
             {.maxGpuFramesInFlight=3, .maxPresentLatency=1, .waitForPresentation=false, .backBufferCount=2, .allowTearing=true, .waitStrategy=WaitStrategy::Spin},
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
             settings.vsync = renderPipeline.waitStrategy == WaitStrategy::Event;
             Renderer renderer;
             renderer.Initialize(window.handle, 320, 180, settings, warp);
-            Require(renderer.IsVsyncEnabled() == settings.vsync, "INI VSync ignored during initialization");
+            Require(renderer.IsVsyncEnabled() == settings.vsync, "JSON VSync ignored during initialization");
             Require(RendererTestAccess::HasPresentationWait(renderer) == renderPipeline.waitForPresentation,
                 "Swap-chain presentation wait does not match the selected render pipeline");
             for (int frame = 0; frame < 24; ++frame)
