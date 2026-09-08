@@ -118,7 +118,7 @@ The Debug executable is:
 out/build/vs-debug/SimpleDirectX12Game.exe
 ```
 
-Its adjacent `assets` folder should contain `Settings.ini` and `SceneBackground.png`. The game locates these relative to its executable, so its working directory normally needs no adjustment.
+Its adjacent `assets` folder should contain `Settings.json` and `SceneBackground.png`. The game locates these relative to its executable, so its working directory normally needs no adjustment.
 
 Expected result: a window displaying the car, sphere, and backdrop. In the game, **V** toggles VSync, **F11** toggles borderless fullscreen, and **Esc** exits. F11 is also a debugger shortcut; which action occurs depends on which window has focus.
 
@@ -130,7 +130,7 @@ Read these files in this order:
 | --------------------------------------------- | ------------------------------------------------------------- |
 | `Source/Main.cpp`                             | Entry point, settings loading, top-level exception handling.  |
 | `Source/Application.h` and `.cpp`             | Window creation, input, message processing, application loop. |
-| `Source/ApplicationSettings.h` / `.cpp`       | Configuration structures, INI parsing, validation.            |
+| `Source/ApplicationSettings.h` / `.cpp`       | Configuration structures, JSON parsing, validation.           |
 | `Source/Renderer.h`                           | Renderer interface and ownership of graphics resources.       |
 | `Source/Renderer.cpp`                         | Device, swap chain, resources, drawing, synchronization.      |
 | `Source/SimplePaint/Material.h` / `.cpp`      | Paint parameters and their numerical contract.                |
@@ -175,7 +175,7 @@ The renderer sends its pipeline description through `OutputDebugStringW`; look i
 
 ## 7. Edit settings, C++, and shaders
 
-**Settings:** edit the repository's `assets/Settings.ini`, save, build the game target, and restart. The `RuntimeAssets` dependency copies updated settings next to the selected executable. Settings load at startup; there is no live reload. Editing only the output copy is temporary because a subsequent build can replace it.
+**Settings:** edit the repository's `assets/Settings.json`, save, build the game target, and restart. The `RuntimeAssets` dependency copies updated settings next to the selected executable. Settings load at startup; there is no live reload. Editing only the output copy is temporary because a subsequent build can replace it.
 
 **C++:** stop debugging, edit, save, build, and restart. Add new `.cpp` files to the relevant CMake target. Merely creating a file in Folder View does not ensure it is compiled. The main application target is in the root CMake file; the reusable paint library has its own `Source/SimplePaint/CMakeLists.txt`.
 
@@ -285,7 +285,7 @@ Check that the active configuration is Debug and the startup executable comes fr
 
 **Settings changes appear to do nothing**
 
-Edit the source INI, rebuild the selected game target, and restart the correct executable. The launcher and IDE each have their own staged settings copy.
+Edit the source JSON, rebuild the selected game target, and restart the correct executable. The launcher and IDE each have their own staged settings copy.
 
 **The game cannot load its image or settings**
 

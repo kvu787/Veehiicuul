@@ -120,7 +120,33 @@ The smallest linear base color is approximately `7.56e-5`; the smallest `A` is a
 
 `Parameters` uses C++ `double`. `Material::Compile` checks every field, including finite status, **before conversion or coefficient computation**, and throws `std::invalid_argument` naming the offending parameter. Values just outside a limit must not round into the accepted interval. Negative zero is accepted where zero is allowed. Equal and reversed tone endpoints are accepted.
 
-The INI parser uses `std::from_chars` directly into binary64 and checks complete consumption and finite status. Decimal text is interpreted as its parsed binary64 value; the contract is not exact arbitrary-precision decimal arithmetic. Overflow, underflow reported by `from_chars`, trailing junk, malformed triples, and unknown settings fail. Missing keys keep defaults; later duplicate keys replace earlier ones.
+The application's loader uses the vendored [nlohmann/json 3.12.0](../ThirdParty/nlohmann_json/README.md).
+JSON decimal numbers are rounded to binary64 before conversion to `Parameters`;
+the contract is not exact arbitrary-precision decimal arithmetic. Paint controls
+accept JSON integer or floating-point numbers, and `BaseColor` must contain
+exactly three numeric array elements. Material validation still runs before
+narrowing to binary32.
+
+Malformed JSON, trailing content, comments, trailing commas, NaN/infinity
+literals, overflow beyond finite binary64, wrong types, unknown properties, and
+duplicate property names fail. Duplicate names are detected during parsing,
+before an object could overwrite an earlier value, including inside inactive
+custom controls. Overflow anywhere in the document fails parsing.
+
+Underflow follows nlohmann/json's binary64 conversion: sufficiently tiny decimals
+round to signed zero. The parsed binary64 value is then validated, so
+`1e-999` is accepted as zero for Shift or Dark Point but rejected for
+Brightness or an RGB channel. Representable subnormal values remain subject to
+the same domain checks. Negative zero is accepted wherever zero is valid;
+fractional notation (such as `-0.0`) retains its sign. This policy is covered
+by settings tests and does not add shader clamps or coefficient floors.
+
+Omitted paint and sphere properties retain defaults. `RenderPipeline.Preset`
+and `RenderPipeline.VSync` are required; all six custom controls are required
+and checked only when the preset is `Custom`. Integer controls require JSON
+integer storage and an explicit range check before narrowing; `64.0` and
+`6.4e1` are rejected for a sphere resolution. See
+[Usage.md](Usage.md) and [RenderPipeline.md](RenderPipeline.md) for the file format.
 
 Coefficients, trig, square roots, and sRGB conversion are calculated in binary64 and then stored in binary32. This ordinary rounding is part of the implementation. Extremely small positive Shift or Dark Point can have a coefficient contribution below binary32 resolution, which does not imply a material-validation failure. Abstractly excluded endpoints are never admitted, and no requested input is clamped or angle wrapped.
 
@@ -204,7 +230,7 @@ Combined with the mesh cone condition, these transforms keep interpolated normal
 
 ## Encapsulation, layout, and DX12 integration
 
-`Source/SimplePaint` is the complete copyable module, with its own CMake target and integration README. `Material.*` owns parameters, validation, sRGB conversion, coefficient construction, and the GPU ABI. It is a C++20 library independent of DirectX types and scene settings. `Geometry.h` owns reusable mesh validation. `OrthographicTransforms.h` owns the optional DirectXMath transform adapter. `SimplePaintCore.hlsli` owns rotation, facing, and color evaluation and declares no bindings or material counts. `SimplePaint.hlsl` provides a reusable DX12 adapter whose `SIMPLE_PAINT_MATERIAL_COUNT` defaults to one; the host configures the count for both stages. The INI parser and GPU resource ownership remain in the application's renderer, outside the module.
+`Source/SimplePaint` is the complete copyable module, with its own CMake target and integration README. `Material.*` owns parameters, validation, sRGB conversion, coefficient construction, and the GPU ABI. It is a C++20 library independent of DirectX types and scene settings. `Geometry.h` owns reusable mesh validation. `OrthographicTransforms.h` owns the optional DirectXMath transform adapter. `SimplePaintCore.hlsli` owns rotation, facing, and color evaluation and declares no bindings or material counts. `SimplePaint.hlsl` provides a reusable DX12 adapter whose `SIMPLE_PAINT_MATERIAL_COUNT` defaults to one; the host configures the count for both stages. JSON parsing belongs to the application's ApplicationSettings module, and GPU resource ownership belongs to its renderer; both remain outside SimplePaint.
 
 | Byte offset | C++ / HLSL field | Meaning                                   |
 | ----------- | ---------------- | ----------------------------------------- |

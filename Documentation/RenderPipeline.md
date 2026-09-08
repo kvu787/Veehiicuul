@@ -2,10 +2,10 @@
 
 ## Presets
 
-Select a preset with `[RenderPipeline].Preset` in [assets/Settings.ini](../assets/Settings.ini).
+Select a preset with `RenderPipeline.Preset` in [assets/Settings.json](../assets/Settings.json).
 Each preset supplies a fixed combination of the six pipeline settings below.
-`[RenderPipeline].VSync` is chosen separately and remains independent of every preset.
-The shipped INI selects `MinimizeInputLatency` with `VSync = false`.
+`RenderPipeline.VSync` is chosen separately and remains independent of every preset.
+The shipped JSON selects `MinimizeInputLatency` with `"VSync": false`.
 
 | Setting                | MinimizeInputLatency | Standard | MaximizeFps  |
 | ---------------------- | -------------------- | -------- | ------------ |
@@ -26,7 +26,7 @@ frame to finish and for DXGI to admit another presentation. It services window
 messages again after these waits, before computing the frame's animation state.
 
 `Spin` actively polls readiness, trading CPU time and power for the possibility
-of reacting sooner than an event wait. `AllowTearing = true` permits tearing
+of reacting sooner than an event wait. `"AllowTearing": true` permits tearing
 when VSync is off and DXGI supports it. With VSync on, presentation still obeys
 VSync and the tearing flag is suppressed.
 
@@ -44,7 +44,7 @@ swap-chain image buffers. The CPU can prepare another frame while earlier GPU
 work is still executing, subject to presentation and resource availability.
 
 `Event` waits let the thread block while it has no frame to prepare, waking for
-readiness or window messages. `AllowTearing = false` means the renderer does not
+readiness or window messages. `"AllowTearing": false` means the renderer does not
 request tearing, including when VSync is off. VSync off still uses a zero sync
 interval; it does not become equivalent to VSync on.
 
@@ -57,8 +57,8 @@ GPU limit, while allowing more older work to remain ahead of newly sampled state
 This experimental preset favors throughput. It permits three GPU frames in
 flight, allocates four swap-chain image buffers, and disables the explicit DXGI
 presentation admission wait. The swap chain is non-waitable, so the stored
-`MaxPresentLatency = 2` is inactive. `Spin` polls GPU resource readiness, and
-`AllowTearing = true` permits tearing with VSync off when supported.
+`"MaxPresentLatency": 2` is inactive. `Spin` polls GPU resource readiness, and
+`"AllowTearing": true` permits tearing with VSync off when supported.
 
 Use this preset to test whether additional overlap keeps the CPU and GPU busier.
 Mandatory resource-reuse waits remain, and `Present` or buffer availability can
@@ -74,33 +74,36 @@ All presets follow the [repository constraints](../README.md#constraints):
 synchronization uses vendor-neutral Windows, Direct3D 12, and DXGI interfaces,
 and the application implements no FPS cap or timed frame-rate limiter.
 
-## How `Preset = Custom` works
+## Custom settings
 
 `Custom` lets you supply all six pipeline settings explicitly. To start with the
-same pipeline behavior as `MaximizeFps`, replace the `[RenderPipeline]` section in
-`assets/Settings.ini` with:
+same pipeline behavior as `MaximizeFps`, set the `RenderPipeline` object in
+`assets/Settings.json` as shown below:
 
-```ini
-[RenderPipeline]
-VSync = false
-Preset = Custom
-
-MaxGpuFramesInFlight = 3
-MaxPresentLatency = 2
-WaitForPresentation = false
-BackBufferCount = 4
-AllowTearing = true
-WaitStrategy = Spin
+```json
+{
+  "RenderPipeline": {
+    "VSync": false,
+    "Preset": "Custom",
+    "MaxGpuFramesInFlight": 3,
+    "MaxPresentLatency": 2,
+    "WaitForPresentation": false,
+    "BackBufferCount": 4,
+    "AllowTearing": true,
+    "WaitStrategy": "Spin"
+  }
+}
 ```
 
-Leave the material and sphere sections in place. Relaunch through `Run.cmd` to
-stage the edited source INI beside the executable and apply the settings.
+Keep the material and sphere objects alongside `RenderPipeline` in the root
+object. Relaunch through `Run.cmd` to stage the edited source JSON beside the
+executable and apply the settings.
 
-All six custom controls in `[RenderPipeline]` are required when `Preset = Custom`.
+All six custom controls in `RenderPipeline` are required when `"Preset": "Custom"`.
 Custom does not inherit omitted values from a preset; a missing key is an error.
 `MaxPresentLatency` must be present and valid even when
-`WaitForPresentation = false` makes it inactive.
-`VSync` and `Preset` also belong in `[RenderPipeline]` and are required for every
+`"WaitForPresentation": false` makes it inactive.
+`VSync` and `Preset` also belong in `RenderPipeline` and are required for every
 preset. VSync remains independent of the six custom controls.
 
 The three numeric controls are independently configurable within their accepted
@@ -109,35 +112,39 @@ ranges. There is no requirement that they match, or that `BackBufferCount` equal
 unused because another limit or resource becomes the bottleneck.
 
 When `Preset` is `MinimizeInputLatency`, `Standard`, or `MaximizeFps`, the six
-custom controls in `[RenderPipeline]` are ignored completely: they do not
-override, merge with, or alter that preset. Their position relative to `Preset`
-does not matter; duplicate entries and invalid values for those six controls
-are ignored too. `Preset` and `VSync` are always validated, and unknown keys are
-always errors. The file must have valid INI syntax and recognized section names.
+custom controls in `RenderPipeline` are inactive: their values and types are not
+validated or applied, and they may be omitted. Their position relative to
+`Preset` does not matter. `Preset` and `VSync` are always validated.
+Unknown section/setting names and duplicate properties are always errors,
+including duplicate properties inside inactive controls. The entire document must be valid JSON;
+numeric overflow fails even in an inactive control.
 
-For example, the shipped INI's custom values match `Standard`, but its selected
+For example, the shipped JSON's custom values match `Standard`, but its selected
 preset is `MinimizeInputLatency`. Changing only `Preset` to `Custom` therefore
 activates those Standard-like values. To modify a particular preset, first copy all six of its
 values from the preset table, then change the desired setting.
 
-With `Preset = Custom`, all eight keys are required and validated. Unknown or
-duplicate keys, missing settings, and invalid values cause startup errors.
-Diagnostics identify the section, key, and line where available.
-Section names, keys, preset names, booleans, and wait-strategy values are
-case-sensitive. Whitespace around keys and values is ignored; `;` and `#` start
-comments. Use `true` and `false`, not `1`, `0`, `yes`, or `no`.
+With `"Preset": "Custom"`, all eight properties are required and validated.
+Missing required properties, unknown or duplicate names, and invalid active
+values cause startup errors. Diagnostics include the file path and property,
+such as `RenderPipeline.BackBufferCount`; malformed JSON also reports a line
+and column. Names and enum strings are case-sensitive. Use JSON booleans
+`true` and `false`, quoted enum strings such as `"Spin"`, and integer
+literals for counts. A count written as `2.0`, `2e0`, or `"2"` is rejected.
+Comments and trailing commas are rejected. See [Usage.md](Usage.md) for shared
+format rules and paint/sphere defaults.
 
 ## Individual settings
 
-All seven settings below belong in `[RenderPipeline]`. `VSync` is read for every
-preset. The other six settings are read only with `Preset = Custom`; the three
+All seven settings below belong in the `RenderPipeline` object.
+`VSync` is read for every preset. The other six settings are read only with `"Preset": "Custom"`; the three
 fixed presets supply their own values.
-INI changes take effect at startup. The `V` key is the runtime exception: it
-toggles VSync without changing the selected preset or rewriting the INI.
+JSON changes take effect at startup. The `V` key is the runtime exception: it
+toggles VSync without changing the selected preset or rewriting the JSON.
 
 ### VSync
 
-- **Location:** `[RenderPipeline]`
+- **Location:** `RenderPipeline`
 - **Accepted values:** `true` or `false`
 - **Shipped value:** `false`, independent of the selected preset.
 
@@ -165,7 +172,7 @@ VSync also leaves `WaitForPresentation`, queue limits, buffer count, and
 
 ### MaxGpuFramesInFlight
 
-- **Location:** `[RenderPipeline]`
+- **Location:** `RenderPipeline`
 - **Accepted values:** integer `1` through `16`, inclusive
 - **Preset values:** MinimizeInputLatency `1`; Standard `2`; MaximizeFps `3`.
 
@@ -185,7 +192,7 @@ preparation to overlap unfinished GPU work, which can improve throughput. They
 also allocate more per-frame resources and can let older frames accumulate,
 increasing the delay before newly processed state becomes visible.
 
-This limit remains active when `WaitForPresentation = false`. It does not set
+This limit remains active when `"WaitForPresentation": false`. It does not set
 the number of image buffers or bound the entire input-to-display path: GPU
 completion and display presentation are separate milestones. Raising it may do
 nothing if presentation, buffer availability, or another bottleneck already
@@ -193,12 +200,12 @@ restricts progress. The limit is capacity, not a target queue occupancy.
 
 ### MaxPresentLatency
 
-- **Location:** `[RenderPipeline]`
+- **Location:** `RenderPipeline`
 - **Accepted values:** integer `1` through `16`, inclusive
 - **Preset values:** MinimizeInputLatency `1`; Standard `2`; MaximizeFps `2` (inactive).
 
 This is the maximum frame queue allowance passed to DXGI for the swap chain
-when `WaitForPresentation = true`. It counts frames, not milliseconds. The
+when `"WaitForPresentation": true`. It counts frames, not milliseconds. The
 renderer applies it through
 [`IDXGISwapChain2::SetMaximumFrameLatency`](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency),
 which requires a swap chain created with the frame-latency waitable-object flag.
@@ -209,7 +216,7 @@ which may improve overlap or tolerate uneven frame times, but can increase
 latency. Neither value guarantees a particular measured queue occupancy or
 input-to-photon delay.
 
-When `WaitForPresentation = false`, the renderer creates a non-waitable swap
+When `"WaitForPresentation": false`, the renderer creates a non-waitable swap
 chain and does not call `SetMaximumFrameLatency`. This setting is then inactive,
 and the title shows `Present:inactive`. It is still required and range-checked
 in Custom; `0` is invalid and is not how presentation waiting is disabled.
@@ -221,7 +228,7 @@ Windows display path also affect how far work can advance.
 
 ### WaitForPresentation
 
-- **Location:** `[RenderPipeline]`
+- **Location:** `RenderPipeline`
 - **Accepted values:** `true` or `false`
 - **Preset values:** MinimizeInputLatency `true`; Standard `true`; MaximizeFps `false`.
 
@@ -253,7 +260,7 @@ waiting disabled, that strategy still applies to GPU readiness.
 
 ### BackBufferCount
 
-- **Location:** `[RenderPipeline]`
+- **Location:** `RenderPipeline`
 - **Accepted values:** integer `2` through `16`, inclusive
 - **Preset values:** MinimizeInputLatency `2`; Standard `3`; MaximizeFps `4`.
 
@@ -273,7 +280,7 @@ restricting CPU/GPU overlap. They do not force the renderer to queue that many
 frames or guarantee more FPS. Fewer buffers reduce allocated image storage but
 may constrain throughput even when other queue limits are larger.
 
-For example, `MaxGpuFramesInFlight = 3` with `BackBufferCount = 2` is valid.
+For example, `"MaxGpuFramesInFlight": 3` with `"BackBufferCount": 2` is valid.
 There are three frame contexts but only two swap-chain images, so image reuse
 can constrain progress before all frame contexts are usefully occupied. Likewise,
 four image buffers with a GPU limit of one still allow only one unfinished GPU
@@ -281,7 +288,7 @@ frame. Additional image capacity does not change either configured queue limit.
 
 ### AllowTearing
 
-- **Location:** `[RenderPipeline]`
+- **Location:** `RenderPipeline`
 - **Accepted values:** `true` or `false`
 - **Preset values:** MinimizeInputLatency `true`; Standard `false`; MaximizeFps `true`.
 
@@ -327,7 +334,7 @@ the configured queue limits.
 
 ### WaitStrategy
 
-- **Location:** `[RenderPipeline]`
+- **Location:** `RenderPipeline`
 - **Accepted values:** `Event` or `Spin`
 - **Preset values:** MinimizeInputLatency `Spin`; Standard `Event`; MaximizeFps `Spin`.
 
@@ -347,7 +354,7 @@ same readiness conditions and check completion before admitting a frame.
 Changing this setting does not change queue sizes, VSync, tearing permission,
 or whether presentation admission is required. `Spin` does not bypass waits,
 and `Event` does not impose a deliberate frame delay. With
-`WaitForPresentation = false`, both still wait for safe GPU resource reuse.
+`"WaitForPresentation": false`, both still wait for safe GPU resource reuse.
 
 This choice applies to frame admission. The renderer's separate full-GPU flush
 used for operations such as resize still uses a fence event. Neither strategy
@@ -376,8 +383,8 @@ including across a cancelled attempt or buffer resize.
 
 ## Applying changes and reading diagnostics
 
-The application reads `assets/Settings.ini` beside the executable at startup.
-Edit the repository's [source INI](../assets/Settings.ini) and launch through
+The application reads `assets/Settings.json` beside the executable at startup.
+Edit the repository's [source JSON](../assets/Settings.json) and launch through
 [Run.cmd](../Run.cmd) to build and stage it. Restart after configuration changes;
 the `V` key toggles only the current run's VSync state.
 
@@ -394,7 +401,7 @@ Tearing diagnostics use these labels:
 | Label              | Meaning                                                    |
 | ------------------ | ---------------------------------------------------------- |
 | `on`               | Requested, supported, and VSync is off.                    |
-| `not requested`    | The selected pipeline has `AllowTearing = false`.          |
+| `not requested`    | The selected pipeline has `"AllowTearing": false`.         |
 | `unsupported`      | Requested, but DXGI tearing support is unavailable.        |
 | `inactive (VSync)` | Requested and supported, but VSync suppresses the flag.    |
 
@@ -423,7 +430,7 @@ active settings, VSync in every preset, independently sized resource rings, limi
 up to 16, both wait strategies, cancellation during blocked GPU work,
 resize/restore, VSync hotkeys, fullscreen transitions, and shutdown. GPU tests
 inspect the D3D12 debug layer and require Windows Graphics Tools. Test fixtures
-do not overwrite user INI settings or target other processes' windows.
+do not overwrite user JSON settings or target other processes' windows.
 
 These tests verify configuration and synchronization behavior. They do not
 establish which preset has the lowest physical latency or highest throughput

@@ -85,7 +85,7 @@ Build prerequisites:
 - a current Windows SDK containing the DirectX Shader Compiler (`dxc.exe`).
 
 The generated executable is `build\release\SimpleDirectX12Game.exe`. CMake
-places `SceneBackground.png` and `Settings.ini` in its adjacent `assets`
+places `SceneBackground.png` and `Settings.json` in its adjacent `assets`
 directory.
 
 ## Controls
@@ -102,13 +102,13 @@ With VSync off, presentation permits tearing only when the selected pipeline req
 
 ## Render pipeline
 
-Edit `assets/Settings.ini` and restart the app to select `[RenderPipeline].Preset`:
-`MinimizeInputLatency` (selected in the shipped INI), `Standard`, `MaximizeFps`,
+Edit `assets/Settings.json` and restart the app to select `RenderPipeline.Preset`:
+`MinimizeInputLatency` (selected in the shipped JSON), `Standard`, `MaximizeFps`,
 or `Custom`.
-`[RenderPipeline].VSync` is independent of every preset and defaults to `false` in the
-shipped INI. The `V` key changes VSync at runtime without changing the preset or
-rewriting the INI. The six custom render pipeline controls are ignored unless
-`Preset = Custom`.
+`RenderPipeline.VSync` is independent of every preset and defaults to `false` in the
+shipped JSON. The `V` key changes VSync at runtime without changing the preset or
+rewriting the JSON. The six custom render pipeline controls are ignored unless
+`"Preset": "Custom"`.
 
 See [Render pipeline configuration](Documentation/RenderPipeline.md) for presets, accepted
 custom settings, wait behavior, and validation. The window title reports the
@@ -123,12 +123,19 @@ example to compare queue sizes and wait strategies; higher FPS is not guaranteed
 
 ## Adjust the paint and sphere
 
-Edit `assets/Settings.ini`, then relaunch through `Run.cmd`. Each of the Axles,
-Body, Cabin, Headlights, Wheels, and Sphere sections has independent paint
-controls. See [Usage.md](Documentation/Usage.md) for accepted numerical ranges, examples,
+Edit `assets/Settings.json`, then relaunch through `Run.cmd`. The six `SimplePaintShader_*`
+objects provide independent paint controls for Axles, Body, Cabin, Headlights,
+Wheels, and Sphere. See [Usage.md](Documentation/Usage.md) for accepted numerical ranges, examples,
 and instructions for embedding the shader in another C++/DX12 project.
 [Specification.md](Documentation/Specification.md) defines the mathematics, numerical
 contract, cutoff decision, GPU layout, optimizations, and test results.
+
+The settings file uses strict JSON. Comments, trailing commas, unknown section/setting names,
+and duplicate names are rejected. Colors use three-number arrays; booleans and
+numbers use JSON types. The loader uses a pinned, vendored
+[nlohmann/json](ThirdParty/nlohmann_json/README.md) dependency, so building needs
+no network access. Settings are loaded once at startup; invalid or missing files
+report an error. See [Usage.md](Documentation/Usage.md) for format rules and defaults.
 
 The rewritten SimplePaint validates materials in C++ before uploading them.
 It preserves the K12 Schlick curve, facing lobe warp, and dark/light tone
@@ -137,8 +144,8 @@ It removes the positive facing cutoff and all input clamps and denominator
 floors. The base colors in the shipped settings now obey the explicit
 numerical domain.
 
-In the same INI file, `[Sphere]` sets `UResolution = 64` (longitude segments,
-3 to 512) and `VResolution = 32` (pole-to-pole latitude segments, 2 to 512).
+In the same JSON file, the `Sphere` object sets `"UResolution": 64` (longitude segments,
+3 to 512) and `"VResolution": 32` (pole-to-pole latitude segments, 2 to 512).
 Both must be integers. The sphere is generated at startup with smooth radial
 normals, radius 0.4, and a center at `(1.5, 0.4, -1.5)`.
 

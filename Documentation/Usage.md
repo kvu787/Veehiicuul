@@ -38,21 +38,58 @@ There is no positive facing cutoff. Back-facing normals and exact silhouette nor
 
 ## Run and edit this application
 
-Double-click [Run.cmd](../Run.cmd). It builds and launches the application using Visual Studio's C++ tools, CMake, Ninja, and the Windows SDK's DXC shader compiler. See [README.md](README.md) for installation requirements and app controls.
+Double-click [Run.cmd](../Run.cmd). It builds and launches the application using Visual Studio's C++ tools, CMake, Ninja, and the Windows SDK's DXC shader compiler. See [README.md](../README.md) for installation requirements and app controls.
 
-Edit [assets/Settings.ini](../assets/Settings.ini), then launch again. Each of the Axles, Body, Cabin, Headlights, Wheels, and Sphere sections has independent controls. The setting name for Rotation is `RotationDegrees`.
+Edit [assets/Settings.json](../assets/Settings.json), then launch again. The six `SimplePaintShader_*` objects provide independent controls for Axles, Body, Cabin, Headlights, Wheels, and Sphere. The setting name for Rotation is `RotationDegrees`.
 
-```ini
-[SimplePaintShader_Sphere]
-BaseColor = 0.107, 0.223, 0.578
-Brightness = 0.5
-Shift = 0.6
-RotationDegrees = 45
-DarkPoint = 0.05
-LightPoint = 0.95
+For example, this complete document sets the sphere's paint and uses the
+default car materials and sphere resolution:
+
+```json
+{
+  "RenderPipeline": {
+    "Preset": "MinimizeInputLatency",
+    "VSync": false
+  },
+  "SimplePaintShader_Sphere": {
+    "BaseColor": [0.107, 0.223, 0.578],
+    "Brightness": 0.5,
+    "Shift": 0.6,
+    "RotationDegrees": 45,
+    "DarkPoint": 0.05,
+    "LightPoint": 0.95
+  }
+}
 ```
 
-The file is parsed as finite binary64 numbers before range checks. Malformed numbers, unknown sections, and unknown keys fail at startup. Omitted controls retain the application defaults; a later duplicate key replaces an earlier one. The removed `FacingCutoff` setting and its global section are no longer accepted. Settings are loaded from the executable's adjacent `assets` directory; `Run.cmd` copies the repository settings there during the build.
+The file uses strict JSON: property names and enum values are quoted strings,
+booleans are `true` or `false`, and colors are arrays of exactly three
+numbers. Comments and trailing commas are rejected. Unknown section/setting names and
+duplicate names (including escaped spellings of the same name) fail at startup.
+Diagnostics include the file and the offending property or material parameter;
+syntax errors include the parser's line and column.
+
+Omitted paint controls and material objects retain application defaults.
+An omitted `Sphere` object, or omitted resolution properties, retains
+`"UResolution": 64` and `"VResolution": 32`. U must be an integer from 3
+through 512; V must be an integer from 2 through 512. Fractional/exponent notation,
+strings, and booleans are rejected for integer controls.
+
+`RenderPipeline.Preset` and `RenderPipeline.VSync` are required.
+All six custom controls are required when the preset is `Custom`; see
+[render pipeline configuration](RenderPipeline.md). The supplied
+[settings file](../assets/Settings.json) explicitly lists all current controls.
+
+Paint numbers are rounded to binary64 before material validation. Overflow fails;
+underflow may round to zero, which is accepted only for parameters whose domain
+includes zero. For example, `"Shift": 1e-999` becomes zero, while
+`"Brightness": 1e-999` fails its lower bound. See the
+[numerical contract](Specification.md) for boundary details.
+
+The removed `FacingCutoff` property and its global section are rejected.
+Settings load from the executable's adjacent `assets` directory;
+`Run.cmd` copies the repository settings there during the build.
+A missing or invalid file fails startup. There is no INI fallback.
 
 ## Embed in a C++/DX12 project
 

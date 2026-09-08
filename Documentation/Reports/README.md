@@ -9,3 +9,7 @@ These reports describe the commits and parameter proposals named in each report.
 - [Abstract-contract analysis](ShaderNumerics/AbstractContractAnalysis.md).
 
 Command examples and source paths in these reports are relative to the repository root. The reports and their attachments now live under `Documentation/Reports`.
+
+The INI presets in these reports preserve historical inputs. Current runtime
+settings use [assets/Settings.json](../../assets/Settings.json); see the
+[usage guide](../Usage.md) for the supported JSON format.
