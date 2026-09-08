@@ -49,15 +49,15 @@ int main()
             resolved.allowTearing && resolved.waitStrategy == WaitStrategy::Spin);
         Reject([](auto& s) { s.RenderPipeline.Preset = "Typo"; });
         Reject([](auto& s) { s.RenderPipeline.WaitStrategy = "Typo"; });
-        for (double value : {-1.0, 0.0, 1.5, 17.0, 1e100,
-            std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()})
+        for (std::int32_t value : {-1, 0, 17, std::numeric_limits<std::int32_t>::min(),
+            std::numeric_limits<std::int32_t>::max()})
         {
             Reject([&](auto& s) { s.RenderPipeline.MaxGpuFramesInFlight = value; });
             Reject([&](auto& s) { s.RenderPipeline.MaxPresentLatency = value; });
         }
-        for (double value : {1.0, 2.5, 17.0}) Reject([&](auto& s) { s.RenderPipeline.BackBufferCount = value; });
-        for (double value : {2.0, 3.5, 513.0, 1e100}) Reject([&](auto& s) { s.Sphere.UResolution = value; });
-        for (double value : {1.0, 2.5, 513.0}) Reject([&](auto& s) { s.Sphere.VResolution = value; });
+        for (std::int32_t value : {-1, 1, 17}) Reject([&](auto& s) { s.RenderPipeline.BackBufferCount = value; });
+        for (std::int32_t value : {-1, 2, 513, std::numeric_limits<std::int32_t>::max()}) Reject([&](auto& s) { s.Sphere.UResolution = value; });
+        for (std::int32_t value : {-1, 1, 513}) Reject([&](auto& s) { s.Sphere.VResolution = value; });
         settings = MakeTestSettings();
         settings.Sphere = {.UResolution=512, .VResolution=2};
         ValidateSettings(settings);

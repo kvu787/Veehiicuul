@@ -4,6 +4,8 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <limits>
+#include <utility>
 #include <sstream>
 #include <stdexcept>
 
@@ -21,6 +23,77 @@ template<class Action> void Reject(Action action)
     catch (const std::exception&) { return; }
     throw std::runtime_error("Invalid input accepted");
 }
+
+template<class T> T ParseValue(const char* text)
+{
+    std::istringstream input(text);
+    return Deserialize<T>(input);
+}
+
+// Replace a placeholder with raw JSON text so token spelling is preserved.
+std::string WithIntegerToken(const nlohmann::json& document, const char* section,
+    const char* field, const char* token)
+{
+    auto modified = document;
+    modified[section][field] = "__INTEGER_TOKEN__";
+    auto text = modified.dump();
+    const std::string placeholder = "\"__INTEGER_TOKEN__\"";
+    text.replace(text.find(placeholder), placeholder.size(), token);
+    return text;
+}
+
+void CheckIntegerConversion(const nlohmann::json& document)
+{
+    // This exercises nested macro mappings for every count, including controls
+    // whose application ranges are inactive for the shipped fixed preset.
+    for (const auto& preset : {"Custom", "MinimizeInputLatency"})
+    {
+        auto configured = document;
+        configured["RenderPipeline"]["Preset"] = preset;
+        for (const auto& [section, field] : {
+            std::pair{"RenderPipeline", "MaxGpuFramesInFlight"},
+            std::pair{"RenderPipeline", "MaxPresentLatency"},
+            std::pair{"RenderPipeline", "BackBufferCount"},
+            std::pair{"Sphere", "UResolution"}, std::pair{"Sphere", "VResolution"}})
+        {
+            for (const auto* token : {"8.0", "64.0", "64.", "64.5", "8e0", "8E+0", "-0.0",
+                "1e-999", "\"64\"", "\"64.0\"", "\"64.\"", "true", "false", "null",
+                "[]", "{}", "+8", "08", "0x8", "2147483648", "-2147483649",
+                "4294967304", "18446744073709551615", "18446744073709551616",
+                "-9223372036854775809", "1e999"})
+                Reject([&] { Parse(WithIntegerToken(configured, section, field, token)); });
+            ValidateSettings(Parse(WithIntegerToken(configured, section, field, "8")));
+            // Values that fit int32_t must reach the independent domain validator unchanged.
+            for (const auto* token : {"-2147483648", "2147483647", "-1", "-0"})
+            {
+                const auto parsed = Parse(WithIntegerToken(configured, section, field, token));
+                const nlohmann::json roundTrip = parsed;
+                Require(roundTrip[section][field] == nlohmann::json::parse(token));
+                if (std::string_view(section) == "Sphere" || std::string_view(preset) == "Custom")
+                    Reject([&] { ValidateSettings(parsed); });
+                else
+                    ValidateSettings(parsed);
+            }
+        }
+    }
+
+    // The policy is reusable for ordinary signed/unsigned integer types.
+    Require(ParseValue<std::int32_t>("2147483647") == std::numeric_limits<std::int32_t>::max());
+    Require(ParseValue<std::int64_t>("-9223372036854775808") == std::numeric_limits<std::int64_t>::min());
+    Require(ParseValue<std::int64_t>("9223372036854775807") == std::numeric_limits<std::int64_t>::max());
+    Require(ParseValue<std::uint64_t>("18446744073709551615") == std::numeric_limits<std::uint64_t>::max());
+    Require(ParseValue<std::int8_t>("-128") == -128);
+    Require(ParseValue<std::uint8_t>("255") == 255);
+    Reject([] { ParseValue<std::int8_t>("128"); });
+    Reject([] { ParseValue<std::uint8_t>("256"); });
+    Reject([] { ParseValue<std::uint32_t>("-1"); });
+    Reject([] { ParseValue<std::int64_t>("9223372036854775808"); });
+    Reject([] { ParseValue<std::uint64_t>("18446744073709551616"); });
+    Require(ParseValue<bool>("true"));
+    Require(ParseValue<double>("64.0") == 64.0);
+    Require(ParseValue<double>("64e0") == 64.0);
+    Require(ParseValue<std::string>("\"64.0\"") == "64.0");
+}
 }
 int main()
 {
@@ -28,6 +101,7 @@ int main()
     {
         std::ifstream input("assets/Settings.json");
         const auto document = nlohmann::json::parse(input);
+        CheckIntegerConversion(document);
         const auto shipped = LoadApplicationSettings("assets/Settings.json");
         Require(nlohmann::json(shipped) == document);
         Require(Parse(document.dump()) == shipped);
@@ -81,6 +155,7 @@ int main()
         std::ostringstream output;
         Serialize(output, custom);
         Require(Parse(output.str()) == custom);
+        Require(nlohmann::json::parse(output.str())["Sphere"]["UResolution"].is_number_integer());
         ValidateSettings(custom);
         auto extra = document;
         extra["Unknown"] = true;
@@ -89,16 +164,9 @@ int main()
         auto duplicate = document.dump();
         duplicate.insert(1, "\"Sphere\":{\"UResolution\":1,\"VResolution\":1},");
         Require(Parse(duplicate) == shipped); // nlohmann keeps the last duplicate.
-        auto fractional = document;
-        fractional["Sphere"]["UResolution"] = 64.5;
-        auto parsed = Parse(fractional.dump());
-        Require(parsed.Sphere.UResolution == 64.5);
-        Reject([&] { ValidateSettings(parsed); });
-        fractional["Sphere"]["UResolution"] = 64.0;
-        ValidateSettings(Parse(fractional.dump()));
         extra = document;
         extra["SimplePaintShader_Body"]["BaseColor"].push_back(.5);
-        parsed = Parse(extra.dump());
+        auto parsed = Parse(extra.dump());
         Require(parsed.SimplePaintShader_Body.BaseColor.size() == 4);
         Reject([&] { ValidateSettings(parsed); });
         extra = document;
@@ -113,8 +181,8 @@ int main()
         Reject([&] { (void)LoadApplicationSettings(path); });
         { std::ofstream file(path); Serialize(file, custom); }
         Require(LoadApplicationSettings(path) == custom);
-        { std::ofstream file(path); file << fractional.dump(); }
-        Require(LoadApplicationSettings(path).Sphere.UResolution == 64);
+        { std::ofstream file(path); file << WithIntegerToken(document, "Sphere", "UResolution", "64.0"); }
+        Reject([&] { (void)LoadApplicationSettings(path); });
         { std::ofstream file(path); file << extra.dump(); }
         try { (void)LoadApplicationSettings(path); throw std::logic_error("Invalid file accepted"); }
         catch (const std::runtime_error& error) { Require(std::string(error.what()).find(path.string()) != std::string::npos); }

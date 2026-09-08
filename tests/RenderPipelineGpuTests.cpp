@@ -72,10 +72,10 @@ int main(int argc, char** argv)
                     renderPipeline.preset == RenderPipelinePreset::Standard ? "Standard" :
                     renderPipeline.preset == RenderPipelinePreset::MaximizeFps ? "MaximizeFps" : "Custom",
                 .VSync = renderPipeline.waitStrategy == WaitStrategy::Event,
-                .MaxGpuFramesInFlight = static_cast<double>(renderPipeline.maxGpuFramesInFlight),
-                .MaxPresentLatency = static_cast<double>(renderPipeline.maxPresentLatency),
+                .MaxGpuFramesInFlight = static_cast<std::int32_t>(renderPipeline.maxGpuFramesInFlight),
+                .MaxPresentLatency = static_cast<std::int32_t>(renderPipeline.maxPresentLatency),
                 .WaitForPresentation = renderPipeline.waitForPresentation,
-                .BackBufferCount = static_cast<double>(renderPipeline.backBufferCount),
+                .BackBufferCount = static_cast<std::int32_t>(renderPipeline.backBufferCount),
                 .AllowTearing = renderPipeline.allowTearing,
                 .WaitStrategy = renderPipeline.waitStrategy == WaitStrategy::Event ? "Event" : "Spin"
             };

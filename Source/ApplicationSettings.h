@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -14,11 +15,10 @@ struct ApplicationSettings
         std::string Preset; // MinimizeInputLatency, Standard, MaximizeFps, Custom.
         bool VSync;
         // These six controls affect the renderer only with Preset == "Custom".
-        // Counts remain double until validation, so fractions cannot be truncated on input.
-        double MaxGpuFramesInFlight; // Whole number in [1, 16].
-        double MaxPresentLatency;   // Whole number in [1, 16].
+        std::int32_t MaxGpuFramesInFlight; // Whole number in [1, 16].
+        std::int32_t MaxPresentLatency;   // Whole number in [1, 16].
         bool WaitForPresentation;
-        double BackBufferCount;     // Whole number in [2, 16].
+        std::int32_t BackBufferCount;     // Whole number in [2, 16].
         bool AllowTearing;
         std::string WaitStrategy; // Event or Spin.
         bool operator==(const RenderPipeline&) const = default;
@@ -26,8 +26,8 @@ struct ApplicationSettings
 
     struct SphereMesh
     {
-        double UResolution; // Whole number in [3, 512].
-        double VResolution; // Whole number in [2, 512].
+        std::int32_t UResolution; // Whole number in [3, 512].
+        std::int32_t VResolution; // Whole number in [2, 512].
         bool operator==(const SphereMesh&) const = default;
     };
 
