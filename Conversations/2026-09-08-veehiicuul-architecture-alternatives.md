@@ -206,3 +206,43 @@ Use Release builds without debug layers, repeat runs, and measure physical laten
 
 **Starting from scratch, I would lean toward DX11 for implementation simplicity. Given your existing compact DX12 renderer and your emphasis on optimal performance and latency, I would keep DX12 until a controlled comparison gives a concrete reason to switch.** Your game’s scope makes that comparison relatively affordable.
 
+
+## User
+
+i'm not sure if i understand this:
+There are two useful cases to distinguish:
+- GPU work dominates: drawing the same pixels with equivalent shaders leaves less opportunity for CPU API savings to change the result.
+- CPU/submission work dominates: small differences in driver and application overhead can substantially affect maximum FPS.
+
+## Assistant
+
+I’ll use a hypothetical timing example to show what “dominates” means here.
+
+## Assistant
+
+Each frame involves two kinds of work:
+
+- **CPU work:** run the game logic and prepare/send drawing commands.
+- **GPU work:** execute those commands to draw the image.
+
+DX11 versus DX12 can change the CPU cost of preparing and sending commands. My point was that **reducing that cost helps more when it is what’s holding up the next frame.**
+
+Imagine these hypothetical timings:
+
+| Situation     | CPU time per frame | GPU time per frame |
+| ------------- | ------------------ | ------------------ |
+| GPU does more | 1 ms               | 5 ms               |
+| CPU does more | 5 ms               | 1 ms               |
+
+The CPU and GPU can overlap: the CPU prepares one frame while the GPU draws an earlier frame. With sufficient overlap, throughput is roughly limited by whichever takes longer.
+
+**In the first situation**, the GPU needs 5 ms per frame. Reducing CPU time from 1 ms to 0.5 ms does not let the GPU finish sooner. Maximum throughput stays around **200 FPS**: 1,000 ms divided by 5 ms.
+
+**In the second situation**, the GPU could finish in 1 ms, but the CPU takes 5 ms to supply each frame. The GPU spends time waiting for work. Reducing CPU time from 5 ms to 2 ms could raise throughput from roughly **200 to 500 FPS**.
+
+Those are illustrative numbers, not predictions about DX11 or DX12.
+
+For VeeHiiCuuL, the backdrop and small vehicle may give the GPU so little work that **preparing and submitting each frame becomes the limiting factor**. In that case, API overhead can matter even though you have very few draw calls. At a sufficiently high resolution or on a slower GPU, drawing the pixels could instead become the limiting factor.
+
+One qualification: **this explains maximum FPS, not input latency.** Your one-GPU-frame setting restricts overlap, so the “whichever takes longer” approximation may not describe it well. And even when a CPU saving does not increase FPS, it can still help latency by shortening the path from fresh input to the finished image.
+
