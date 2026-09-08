@@ -359,3 +359,40 @@ To keep validation entirely afterward, the file model can retain such numbers as
 Similarly, duplicate properties and unknown properties cannot generally be detected from an ordinary typed object after they have been overwritten or discarded. With the straightforward approach you described, we should use the library’s normal handling for those cases and document the change, rather than rebuild the current JSON-aware checker.
 
 **The core rule is exactly yours: nlohmann/json handles the file-to-object mapping; application-specific validation operates on the resulting C++ object.** My earlier suggestion to reorganize the existing manual reader did not go far enough toward that architecture.
+
+
+## User
+
+that mostly sounds good, but i have one key concern: there seems to be two distinct "settings" types in your formulation.
+
+there should only be one obvious c++ settings type. this should represent the settings.ini. any other values that need to be computed from the settings should not be inside another "settings" type or named in a way to imply that they come straight from settings.json
+
+## Assistant (commentary)
+
+I’ll update the architecture description so there is one canonical settings type, and derived renderer data has clearly different names.
+
+## Assistant
+
+Agreed. **There should be one canonical `ApplicationSettings` type that represents the contents of `Settings.json`.**
+
+That type is the configuration contract developers read, deserialize, validate, and serialize. Its members contain configured values and their defaults. Preset expansion and GPU calculations do not overwrite those members or add derived values to that type.
+
+The flow would be:
+
+```cpp
+auto settings = Deserialize<ApplicationSettings>(input);
+ValidateSettings(settings);
+
+// Renderer preparation, using the validated configuration:
+auto pipeline = ResolveRenderPipeline(settings.RenderPipeline);
+auto materials = CompilePaintMaterials(settings);
+```
+
+The resulting data would have names that describe what it actually is:
+
+- `ResolvedRenderPipeline` — effective pipeline values after applying the selected preset.
+- `GpuMaterial` — computed shader constants, as already named in the project.
+
+These belong to renderer preparation and renderer-owned state. There would be no second `RuntimeSettings`, `ResolvedSettings`, or similarly named aggregate.
+
+Concretely, I would repurpose the existing `ApplicationSettings` name for the declarative JSON model and move its currently stored derived values into appropriately named renderer data. Nested structs can organize the JSON sections, but there is only one top-level settings model.
