@@ -12,36 +12,32 @@ struct ApplicationSettings
 {
     struct RenderPipeline
     {
-        std::string Preset; // MinimizeInputLatency, Standard, MaximizeFps, Custom.
+        std::string Preset;
         bool VSync;
-        // These six controls affect the renderer only with Preset == "Custom".
-        std::int32_t MaxGpuFramesInFlight; // Whole number in [1, 16].
-        std::int32_t MaxPresentLatency;   // Whole number in [1, 16].
+        std::int32_t MaxGpuFramesInFlight;
+        std::int32_t MaxPresentLatency;
         bool WaitForPresentation;
-        std::int32_t BackBufferCount;     // Whole number in [2, 16].
+        std::int32_t BackBufferCount;
         bool AllowTearing;
-        std::string WaitStrategy; // Event or Spin.
+        std::string WaitStrategy;
         bool operator==(const RenderPipeline&) const = default;
     };
 
     struct SphereMesh
     {
-        std::int32_t UResolution; // Whole number in [3, 512].
-        std::int32_t VResolution; // Whole number in [2, 512].
+        std::int32_t UResolution;
+        std::int32_t VResolution;
         bool operator==(const SphereMesh&) const = default;
     };
 
     struct Paint
     {
-        // Keep the complete input array until validation checks its length.
-        std::vector<double> BaseColor; // Exactly three sRGB channels.
+        std::vector<double> BaseColor; // This should be exactly three sRGB channels. Validation will check the length.
         double Brightness;
         double Shift;
         double RotationDegrees;
         double DarkPoint;
         double LightPoint;
-        // RGB and Brightness: [1/1024, 1-1/1024]; Shift and DarkPoint: [0, 1-1/1024].
-        // RotationDegrees: [0, 360); LightPoint: [1/1024, 1]. All numbers must be finite.
         bool operator==(const Paint&) const = default;
     };
 
