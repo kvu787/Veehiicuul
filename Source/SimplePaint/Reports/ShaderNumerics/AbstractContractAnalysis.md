@@ -21,17 +21,17 @@ An open interval alone does not disable the current CPU clamps: sufficiently sma
 
 ## Changes that preserve the real-number function
 
-| Current representation or behavior | Proposed direction | What it fixes |
-|---|---|---|
-| Signed coefficients k2 and k3 nearly cancel | Evaluate A*t and B*(1-t) as nonnegative contributions | Coefficient and denominator cancellation |
-| Fixed 1e-5 color-denominator floor | Divide by the actual positive sum within a validated numerical domain | Artificial dimming and hue changes |
-| Only Light Point minus Dark Point is retained | Store both endpoints; use d*(1-f) + l*f | Loss of a small endpoint in a reversed range |
-| A single rounded tone is later subtracted from one | Preserve t and its complement through equivalent expressions when needed | Premature loss of distances from a tone endpoint |
-| Shift root sqrt(1-s*s) | Compute sqrt((1-s)*(1+s)), preferably during double-precision material preparation | Subtraction of a rounded square near s = 1 |
-| Shift denominator r-s*x | Use z*z/(r+x) + (1-s)*x for x >= 0; use r-s*x for x < 0 | Avoidable cancellation in the warp |
-| Every Shift <= 1e-5 is treated as zero | Use an exact s = 0 shortcut; evaluate all supported positive shifts | Unspecified dead band and its boundary |
-| Input values are silently pushed inward | Explicit supported ranges and validation before GPU upload | Unspecified material changes |
-| Float32 parsing and coefficient preparation | Consider double-precision preparation followed by deliberate GPU representation | Avoidable loss before shader evaluation |
+| Current representation or behavior                 | Proposed direction                                                                 | What it fixes                                    |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Signed coefficients k2 and k3 nearly cancel        | Evaluate A*t and B*(1-t) as nonnegative contributions                              | Coefficient and denominator cancellation         |
+| Fixed 1e-5 color-denominator floor                 | Divide by the actual positive sum within a validated numerical domain              | Artificial dimming and hue changes               |
+| Only Light Point minus Dark Point is retained      | Store both endpoints; use d*(1-f) + l*f                                            | Loss of a small endpoint in a reversed range     |
+| A single rounded tone is later subtracted from one | Preserve t and its complement through equivalent expressions when needed           | Premature loss of distances from a tone endpoint |
+| Shift root sqrt(1-s*s)                             | Compute sqrt((1-s)*(1+s)), preferably during double-precision material preparation | Subtraction of a rounded square near s = 1       |
+| Shift denominator r-s*x                            | Use z*z/(r+x) + (1-s)*x for x >= 0; use r-s*x for x < 0                            | Avoidable cancellation in the warp               |
+| Every Shift <= 1e-5 is treated as zero             | Use an exact s = 0 shortcut; evaluate all supported positive shifts                | Unspecified dead band and its boundary           |
+| Input values are silently pushed inward            | Explicit supported ranges and validation before GPU upload                         | Unspecified material changes                     |
+| Float32 parsing and coefficient preparation        | Consider double-precision preparation followed by deliberate GPU representation    | Avoidable loss before shader evaluation          |
 
 These are design directions, not an instruction to remove protections from the current code in isolation. Positive mathematical quantities can still round or underflow to zero; choose a supported domain and representation together.
 

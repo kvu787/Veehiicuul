@@ -18,16 +18,16 @@ K12 compares the corrected normal's camera-facing component against 0.01. A smal
 
 All examples use Rotation=0. Unless a different Shift is specified, Shift=0. C is applied to each Body sRGB channel. N is the view-space surface normal supplied to the pixel shader, before normalization.
 
-| Example | Brightness | C | DarkPoint | LightPoint | N or behavior | Current linear output | Reference |
-|---|---:|---:|---:|---:|---|---:|---:|
-| Original dark-channel failure, adapted to the contract | 0.01 | 0.001 | 0 | 1 | N=(0,0,1) | 0.07739938 | 1 |
-| Stronger dark-channel case | 0.01 | 0.0002 | 0 | 1 | N=(0,0,1) | 0.01547988 | 1 |
-| Counterexample valid for every feasible e | 0.5 | 0.0002 | 0 | 1 | N=(0,0,1) | 0.77399379 | 1 |
-| Denominator cancellation with floor inactive | 0.5 | 0.000259 | 0 | 1 | N=(0,0,1) | 0.99799234 | 1 |
-| Black input altered by CPU clamp | 0.99 | 0 | 0.99 | 0.99 | Any orientation | 0.08926324 | 0 |
-| White input altered by CPU clamp | 0.5 | 1 | 0.0001 | 0.01 | N=(0,0,-1), selects DarkPoint | 0.90898609 | 1 |
-| Near-white denominator-floor case | 0.99 | 0.99999 | 0.000001 | 0.01 | N=(0,0,-1), selects DarkPoint | 0.09899775 | 0.81301181 |
-| Front-facing near-white floor case | 0.99 | 0.99999 | 0 | 0.01 | Shift=0.99; N approximately (-0.9999499887,0,0.010001) | 0.70186341 | 0.96857884 |
+| Example                                                | Brightness | C        | DarkPoint | LightPoint | N or behavior                                          | Current linear output | Reference  |
+| ------------------------------------------------------ | ---:       | ---:     | ---:      | ---:       | ------------------------------------------------------ | ---:                  | ---:       |
+| Original dark-channel failure, adapted to the contract | 0.01       | 0.001    | 0         | 1          | N=(0,0,1)                                              | 0.07739938            | 1          |
+| Stronger dark-channel case                             | 0.01       | 0.0002   | 0         | 1          | N=(0,0,1)                                              | 0.01547988            | 1          |
+| Counterexample valid for every feasible e              | 0.5        | 0.0002   | 0         | 1          | N=(0,0,1)                                              | 0.77399379            | 1          |
+| Denominator cancellation with floor inactive           | 0.5        | 0.000259 | 0         | 1          | N=(0,0,1)                                              | 0.99799234            | 1          |
+| Black input altered by CPU clamp                       | 0.99       | 0        | 0.99      | 0.99       | Any orientation                                        | 0.08926324            | 0          |
+| White input altered by CPU clamp                       | 0.5        | 1        | 0.0001    | 0.01       | N=(0,0,-1), selects DarkPoint                          | 0.90898609            | 1          |
+| Near-white denominator-floor case                      | 0.99       | 0.99999  | 0.000001  | 0.01       | N=(0,0,-1), selects DarkPoint                          | 0.09899775            | 0.81301181 |
+| Front-facing near-white floor case                     | 0.99       | 0.99999  | 0         | 0.01       | Shift=0.99; N approximately (-0.9999499887,0,0.010001) | 0.70186341            | 0.96857884 |
 
 References for denominator/cancellation cases preserve the stored float32 parameters and existing CPU color conversion while evaluating the curve stably. References for black/white input-clamping cases preserve the requested exact channel endpoint. Those black/white examples have well-defined formulas: their tones are strictly between zero and one.
 
@@ -78,23 +78,23 @@ For any positive brightness, the unconstrained distance of RGB from black also p
 
 **What the constraints eliminate or improve**
 
-| Previous issue | Effect of the new contract |
-|---|---|
-| Brightness clamped up from zero or tiny values | Excluded at e=0.01; every allowed brightness is well inside the implementation's 1e-5 protections. |
-| Brightness clamped down from one | Excluded. |
-| Shift clamped down from one or 0.999999 | Excluded; maximum Shift is 0.99. |
-| Mathematical Shift=1 pole | Excluded. |
-| Large rotation losing whole degrees before reduction | The former huge-angle cases are excluded by Rotation<=360. Ordinary float rounding still exists. |
-| Tiny LightPoint lost in a reversed tone range | The earlier LightPoint=1e-8 case is excluded. |
-| Shift-denominator floor at grazing normals | Inactive under the fixed cutoff and e=0.01, with a large mathematical margin shown below. |
-| Strong cancellation in the shift denominator and root near Shift=1 | Greatly reduced by Shift<=0.99; not a claim of bit-exact arithmetic. |
-| Color-denominator floor | Remains; counterexamples above. |
-| Cancellation in the color denominator | Remains, including cases where the floor is inactive. |
-| Black/white CPU color clamps | Remain; RGB still includes endpoints and nearby colors. |
-| Small nonzero shifts treated as zero | Remains, since arbitrarily small positive Shift is still allowed. |
-| Tiny values flushing to zero | Tiny DarkPoint is still allowed; only the tiny-LightPoint reproduction was excluded. |
-| Undefined color endpoints | Two intersections remain: b=0 with t=1, and b=1 with t=0. |
-| Near-endpoint sensitivity to ordinary rounding | Remains because b and 1-t, or 1-b and t, may still approach zero. |
+| Previous issue                                                     | Effect of the new contract                                                                         |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Brightness clamped up from zero or tiny values                     | Excluded at e=0.01; every allowed brightness is well inside the implementation's 1e-5 protections. |
+| Brightness clamped down from one                                   | Excluded.                                                                                          |
+| Shift clamped down from one or 0.999999                            | Excluded; maximum Shift is 0.99.                                                                   |
+| Mathematical Shift=1 pole                                          | Excluded.                                                                                          |
+| Large rotation losing whole degrees before reduction               | The former huge-angle cases are excluded by Rotation<=360. Ordinary float rounding still exists.   |
+| Tiny LightPoint lost in a reversed tone range                      | The earlier LightPoint=1e-8 case is excluded.                                                      |
+| Shift-denominator floor at grazing normals                         | Inactive under the fixed cutoff and e=0.01, with a large mathematical margin shown below.          |
+| Strong cancellation in the shift denominator and root near Shift=1 | Greatly reduced by Shift<=0.99; not a claim of bit-exact arithmetic.                               |
+| Color-denominator floor                                            | Remains; counterexamples above.                                                                    |
+| Cancellation in the color denominator                              | Remains, including cases where the floor is inactive.                                              |
+| Black/white CPU color clamps                                       | Remain; RGB still includes endpoints and nearby colors.                                            |
+| Small nonzero shifts treated as zero                               | Remains, since arbitrarily small positive Shift is still allowed.                                  |
+| Tiny values flushing to zero                                       | Tiny DarkPoint is still allowed; only the tiny-LightPoint reproduction was excluded.               |
+| Undefined color endpoints                                          | Two intersections remain: b=0 with t=1, and b=1 with t=0.                                          |
+| Near-endpoint sensitivity to ordinary rounding                     | Remains because b and 1-t, or 1-b and t, may still approach zero.                                  |
 
 **A provable improvement for the shifted-highlight denominator**
 
@@ -125,13 +125,13 @@ This is an exact-arithmetic bound for the normalized input model. It is not a fo
 The lower bound remains useful for smaller e:
 
 | Input margin e | Shift upper bound | Shift-denominator lower bound | Multiple of current 1e-5 floor |
-|---|---:|---:|---:|
-| 0.01 | 0.99 | 0.001410674 | 141.1 |
-| 0.005 | 0.995 | 0.000998749 | 99.9 |
-| 0.001 | 0.999 | 0.000447102 | 44.7 |
-| 0.0001 | 0.9999 | 0.000141418 | 14.1 |
-| 0.00001 | 0.99999 | 0.000044721 | 4.47 |
-| 0.000001 | 0.999999 | 0.000014142 | 1.41 |
+| -------------- | ---:              | ---:                          | ---:                           |
+| 0.01           | 0.99              | 0.001410674                   | 141.1                          |
+| 0.005          | 0.995             | 0.000998749                   | 99.9                           |
+| 0.001          | 0.999             | 0.000447102                   | 44.7                           |
+| 0.0001         | 0.9999            | 0.000141418                   | 14.1                           |
+| 0.00001        | 0.99999           | 0.000044721                   | 4.47                           |
+| 0.000001       | 0.999999          | 0.000014142                   | 1.41                           |
 
 The final row is a bound on the requested mathematical warp. With the current implementation, values above its own maximum shift are clamped, so an e below 1e-5 also reintroduces a separate input-policy mismatch.
 

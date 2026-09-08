@@ -86,14 +86,14 @@ Consequently the former near-white shadow-floor cases are excluded. The survivin
 
 All examples in this table use Brightness=0.01, DarkPoint=0, LightPoint=1, Shift=0, Rotation=0, and N=(0,0,1). C is the same sRGB value in all three channels. Every RGB value satisfies the strict bounds. Every expected linear channel is 1.
 
-| C | Current linear output | Main mechanism |
-|---:|---:|---|
-| 0.010001 | 0.77407122 | Denominator floor |
-| 0.0101 | 0.78173369 | Denominator floor |
-| 0.011 | 0.85139316 | Denominator floor |
-| 0.012 | 0.92879254 | Denominator floor |
-| 0.013 | 0.99888158 | Coefficient cancellation; floor inactive |
-| 0.020 | 0.99888152 | Coefficient cancellation; floor inactive |
+| C        | Current linear output | Main mechanism                           |
+| ---:     | ---:                  | ---------------------------------------- |
+| 0.010001 | 0.77407122            | Denominator floor                        |
+| 0.0101   | 0.78173369            | Denominator floor                        |
+| 0.011    | 0.85139316            | Denominator floor                        |
+| 0.012    | 0.92879254            | Denominator floor                        |
+| 0.013    | 0.99888158            | Coefficient cancellation; floor inactive |
+| 0.020    | 0.99888152            | Coefficient cancellation; floor inactive |
 
 For C=0.010001 the true stored-input denominator is about 7.740712e-6. The current output is about 0.225929 below the intended result. As C approaches the lower bound, the floor-only mathematical error approaches 0.2260062. This is a bound on that mechanism, not a global bound on all shader errors.
 
@@ -141,22 +141,22 @@ At q=e=0.01, W is at least approximately 0.001410674, about 141 times the 1e-5 f
 
 **Issue status compared with the previous proposal**
 
-| Issue | Strict RGB proposal at e=0.01 |
-|---|---|
-| CPU black/white color perturbations | Excluded for compliant channels |
-| Undefined rational color endpoints | Excluded |
+| Issue                                                              | Strict RGB proposal at e=0.01                              |
+| ------------------------------------------------------------------ | ---------------------------------------------------------- |
+| CPU black/white color perturbations                                | Excluded for compliant channels                            |
+| Undefined rational color endpoints                                 | Excluded                                                   |
 | Former extreme dark and near-white examples outside the RGB margin | Excluded; they must not be reused as legal counterexamples |
-| Positive lower bound for intended color denominator | Now available, but only about 7.74e-6 |
-| Color denominator floor | Still active for legal dark highlight cases |
-| Coefficient cancellation | Still present even with floor inactive |
-| Amplification of tone/normal rounding | Bounded but still measurable |
-| Tiny-shift shortcut | Still present; can be amplified by the color curve |
-| Brightness endpoint clamps | Excluded at e=0.01 |
-| Shift=1 pole and high-shift clamp | Excluded at e=0.01 |
-| Shift denominator floor with fixed cutoff | Strong margin; no floor failure found |
-| Huge-angle input loss | Excluded by Rotation<=360; ordinary rounding remains |
-| Tiny DarkPoint underflow | Still allowed; negligible absolute effect |
-| Invalid normals / inherited cutoff discontinuity | Not governed by these scalar bounds |
+| Positive lower bound for intended color denominator                | Now available, but only about 7.74e-6                      |
+| Color denominator floor                                            | Still active for legal dark highlight cases                |
+| Coefficient cancellation                                           | Still present even with floor inactive                     |
+| Amplification of tone/normal rounding                              | Bounded but still measurable                               |
+| Tiny-shift shortcut                                                | Still present; can be amplified by the color curve         |
+| Brightness endpoint clamps                                         | Excluded at e=0.01                                         |
+| Shift=1 pole and high-shift clamp                                  | Excluded at e=0.01                                         |
+| Shift denominator floor with fixed cutoff                          | Strong margin; no floor failure found                      |
+| Huge-angle input loss                                              | Excluded by Rotation<=360; ordinary rounding remains       |
+| Tiny DarkPoint underflow                                           | Still allowed; negligible absolute effect                  |
+| Invalid normals / inherited cutoff discontinuity                   | Not governed by these scalar bounds                        |
 
 **What changing epsilon would accomplish now**
 
@@ -169,13 +169,13 @@ e > approximately 0.01136661779
 
 At the exact threshold the strict RGB inequality also makes each exact denominator greater than the floor, but leaves no uniform positive safety margin beyond it. Rounding can invalidate that reasoning for the implemented coefficients. A rounded suggestion such as 0.01137 is therefore not an accuracy certification.
 
-| e | Mathematical color-denominator lower bound | Relation to 1e-5 floor |
-|---:|---:|---|
-| 0.005 | 0.000001934985 | Below |
-| 0.010 | 0.000007739938 | Below |
-| 0.011 | 0.000009365325 | Below |
-| 0.012 | 0.000011145511 | Above, modest margin |
-| 0.020 | 0.000030959752 | Above, larger margin |
+| e     | Mathematical color-denominator lower bound | Relation to 1e-5 floor |
+| ---:  | ---:                                       | ---------------------- |
+| 0.005 | 0.000001934985                             | Below                  |
+| 0.010 | 0.000007739938                             | Below                  |
+| 0.011 | 0.000009365325                             | Below                  |
+| 0.012 | 0.000011145511                             | Above, modest margin   |
+| 0.020 | 0.000030959752                             | Above, larger margin   |
 
 Smaller e worsens this bound. Increasing e can remove this floor mechanism in the ideal model, but does not eliminate cancellation. For example, inputs also satisfying e=0.012 with C=0.012034265555555555, Brightness=0.012, DarkPoint=0, LightPoint=1, Shift=0, Rotation=0, and N=(0,0,1) produce 0.99747115 instead of 1, with the floor inactive.
 

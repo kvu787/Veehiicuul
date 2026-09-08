@@ -7,7 +7,7 @@ use a centered 32:9 scene viewport with matching side mattes. At 16:9, the
 center half of the image maps one-to-one to 2560x1440.
 
 `Settings.json` exposes independent SimplePaint controls and a base color
-for each car material and the sphere. See [Usage.md](Usage.md) for the validated
+for each car material and the sphere. See [Usage.md](../Source/SimplePaint/Usage.md) for the validated
 parameter ranges; `Sphere` controls mesh resolution. The normal build copies both
 files beside the executable. Edit the source JSON and relaunch through `Run.cmd`
 to apply changes.

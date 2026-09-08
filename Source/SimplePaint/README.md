@@ -1,4 +1,4 @@
-# Simple Paint shader
+# SimplePaint shader
 
 This folder contains the complete reusable C++20/HLSL implementation. Copy the **entire `SimplePaint` folder** into another project's source or vendor directory. It has no dependency on this application's renderer, generated meshes, settings loader, background shader, tests, or build scripts.
 
@@ -66,7 +66,7 @@ The provided transform helper accepts finite orthographic dimensions in [1e-4,1e
 | SimplePaint.hlsl          | Configurable DX12 VS/PS adapter                    |
 | CMakeLists.txt            | C++ library target, usable after copying           |
 
-The paint mathematics reimplement Kevin Vu's [K12 Simple Paint shader](https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader). This repository's `Documentation/Usage.md` and `Documentation/Specification.md` provide the full derivation and numerical test results; they are not required to compile the copied folder.
+The paint mathematics reimplement Kevin Vu's [K12 Simple Paint shader](https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader). The included [usage guide](Usage.md), [specification](Specification.md), and [historical numerical reports](Reports/README.md) travel with the code. [Build and verification instructions](Usage.md#build-and-verify) run the included tests without application sources or build scripts.
 
 `ValidateParameters(parameters)` checks the material domain without computing GPU
 constants. `Material::Compile` also calls it before computing constants. Both APIs

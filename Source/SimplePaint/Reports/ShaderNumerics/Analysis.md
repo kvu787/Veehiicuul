@@ -19,22 +19,22 @@ The [Presets](Presets) directory contains ten complete INI files. They were gene
 
 The reference column below uses the same stored float32 parameters and CPU color conversion/clamps as the application, with stable arithmetic. This isolates the shader arithmetic from input quantization. References to the original requested parameters are separately recorded in the CSV.
 
-| Example | Brightness | C, sRGB | T | Current GPU | Stable reference |
-|---|---:|---:|---:|---:|---:|
-| Previously reported | 0.01 | 0.001 | 1 | 0.07739938 | 1 |
-| Dark A | 0.1 | 0.0002 | 1 | 0.15479876 | 1 |
-| Dark B | 0.5 | 0.0002 | 1 | 0.77399379 | 1 |
-| Dark C | 0.01 | 0.01 | 1 | 0.77399373 | 1 |
-| Near-white A | 0.999 | 0.9999 | 0.000001 | 0.09987726 | 0.81443371 |
-| Near-white B | 0.9999 | 0.9999 | 0.000001 | 0.09996725 | 0.97773859 |
-| Near-white C | 0.99 | 0.99999 | 0.000001 | 0.09899775 | 0.81301181 |
-| Interior tone | 0.0001 | 0.001 | 0.999999 | 0.000773993 | 0.007581929 |
+| Example             | Brightness | C, sRGB | T        | Current GPU | Stable reference |
+| ------------------- | ---:       | ---:    | ---:     | ---:        | ---:             |
+| Previously reported | 0.01       | 0.001   | 1        | 0.07739938  | 1                |
+| Dark A              | 0.1        | 0.0002  | 1        | 0.15479876  | 1                |
+| Dark B              | 0.5        | 0.0002  | 1        | 0.77399379  | 1                |
+| Dark C              | 0.01       | 0.01    | 1        | 0.77399373  | 1                |
+| Near-white A        | 0.999      | 0.9999  | 0.000001 | 0.09987726  | 0.81443371       |
+| Near-white B        | 0.9999     | 0.9999  | 0.000001 | 0.09996725  | 0.97773859       |
+| Near-white C        | 0.99       | 0.99999 | 0.000001 | 0.09899775  | 0.81301181       |
+| Interior tone       | 0.0001     | 0.001   | 0.999999 | 0.000773993 | 0.007581929      |
 
 None of these examples depends on a mathematically undefined color endpoint: their brightness and base color are strictly between zero and one. The final row also uses an interior tone.
 
-**1. Color-denominator flooring — large, confirmed arithmetic error**
+**1. Color-denominator flooring - large, confirmed arithmetic error**
 
-Location at the examined revision: SimplePaint.hlsl, lines 81-84. The current shader is [here](../../../Source/SimplePaint/SimplePaint.hlsl).
+Location at the examined revision: SimplePaint.hlsl, lines 81-84. The current shader is [here](../../SimplePaint.hlsl).
 
 Let B be brightness, b a linear base-color component after CPU conversion, and t the remapped tone. In exact arithmetic the existing curve can be written:
 
@@ -48,19 +48,19 @@ The existing denominator k2*t+k3 is algebraically U+V. Replacing it with max(den
 
 Direction: evaluate the nonnegative terms directly, preserve positive denominators, and define true zero-denominator cases explicitly. Do not merely substitute a smaller arbitrary floor.
 
-**2. Cancellation in precomputed coefficients and the final denominator — confirmed independently of the floor**
+**2. Cancellation in precomputed coefficients and the final denominator - confirmed independently of the floor**
 
-Locations at the examined revision: Renderer.cpp, lines 1157-1183; SimplePaint.hlsl, lines 81-84. The current renderer is [here](../../../Source/Renderer.cpp).
+Locations at the examined revision: Renderer.cpp, lines 1157-1183; SimplePaint.hlsl, lines 81-84. Renderer.cpp belongs to the original host application, outside this module.
 
 For dark colors, k2 is negative and k3 is positive. Near the bright endpoint they nearly cancel. Rounding each coefficient to float32 loses information before the pixel shader runs. A fused multiply-add cannot restore already-lost coefficient bits.
 
 Examples, with C used in all Body channels and DarkPoint=LightPoint=1:
 
-| Brightness | C | Current | Experimental floor removed | Nonnegative formula |
-|---|---:|---:|---:|---:|
-| 0.5 | 0.000259 | 0.99799234 | 0.99799234 | 1 |
-| 0.00001 | 0.04 | 0.003095975 | 0.51941842 | 1 |
-| 0.00001 | 0.0001292 | 0.000010000 | 1 after saturation | 1 |
+| Brightness | C         | Current     | Experimental floor removed | Nonnegative formula |
+| ---------- | ---:      | ---:        | ---:                       | ---:                |
+| 0.5        | 0.000259  | 0.99799234  | 0.99799234                 | 1                   |
+| 0.00001    | 0.04      | 0.003095975 | 0.51941842                 | 1                   |
+| 0.00001    | 0.0001292 | 0.000010000 | 1 after saturation         | 1                   |
 
 In the first row both the computed and stable denominators exceed 0.00001, so the denominator floor is inactive. It is a direct cancellation reproduction.
 
@@ -68,42 +68,42 @@ In the last row the stored k2+k3 is exactly zero even though the stable denomina
 
 Direction: reuse the existing positive k1 and k3 coefficients as numerator=k1*t and denominator=numerator+k3*(1-t). With the existing CPU clamps and valid tones, this experimental change reduced the maximum absolute color-grid error to 1.239e-7. Broader removal of CPU clamps requires separate endpoint and underflow handling.
 
-**3. Base-color clamping changes black, white, and nearby colors — confirmed parameter distortion**
+**3. Base-color clamping changes black, white, and nearby colors - confirmed parameter distortion**
 
-Location: Renderer.cpp, lines 1161–1164.
+Location: Renderer.cpp, lines 1161-1164.
 
 The CPU clamps each linear channel into [0.00001, 0.99999]. This does not preserve exact black or white. It also collapses a band of near-black/near-white inputs onto the same value. The changed endpoints can be strongly amplified by the paint curve.
 
-| Brightness | C | T | Current GPU | Requested-parameter reference |
-|---|---:|---:|---:|---:|
-| 0.9999 | 0 | 0.8 | 0.28566208 | 0 |
-| 0.9999 | 0.00001 | 0.8 | 0.28566208 | 0.03002714 |
-| 0.5 | 1 | 0.0001 | 0.90898609 | 1 |
+| Brightness | C       | T      | Current GPU | Requested-parameter reference |
+| ---------- | ---:    | ---:   | ---:        | ---:                          |
+| 0.9999     | 0       | 0.8    | 0.28566208  | 0                             |
+| 0.9999     | 0.00001 | 0.8    | 0.28566208  | 0.03002714                    |
+| 0.5        | 1       | 0.0001 | 0.90898609  | 1                             |
 
 These cases have nonsingular reference formulas. Their color denominators exceed the shader floor. They isolate input-clamp behavior, rather than attributing every error to the pixel denominator.
 
 Direction: preserve black/white where the equation is well-defined; specify the remaining endpoint intersections rather than perturbing every endpoint.
 
-**4. Brightness clamping changes valid curves — confirmed parameter distortion**
+**4. Brightness clamping changes valid curves - confirmed parameter distortion**
 
 Location: Renderer.cpp, line 1140.
 
 Brightness is silently constrained to [0.00001, 0.99999]. Use C=0.7353569830524495, which is approximately linear 0.5.
 
-| Requested Brightness | T | Current GPU | Requested-parameter reference |
-|---|---:|---:|---:|
-| 0.0000001 | 0.999 | 0.009891283 | 0.000099890 |
-| 0.9999999 | 0.001 | 0.99009538 | 0.99990011 |
-| 0 | 0.99999 | 0.49932212 | 0 |
-| 1 | 0.00001 | 0.49966082 | 1 |
+| Requested Brightness | T       | Current GPU | Requested-parameter reference |
+| -------------------- | ---:    | ---:        | ---:                          |
+| 0.0000001            | 0.999   | 0.009891283 | 0.000099890                   |
+| 0.9999999            | 0.001   | 0.99009538  | 0.99990011                    |
+| 0                    | 0.99999 | 0.49932212  | 0                             |
+| 1                    | 0.00001 | 0.49966082  | 1                             |
 
 The final two formulas are well-defined because the tone is not at the problematic opposing endpoint. Small rounding errors contribute to the exact measured values, but changing brightness explains the large discrepancy.
 
 Direction: implement the well-defined endpoint limits and explicitly decide the undefined corner cases.
 
-**5. The shifted-highlight calculation has its own denominator floor — large arithmetic error at grazing normals**
+**5. The shifted-highlight calculation has its own denominator floor - large arithmetic error at grazing normals**
 
-Location: SimplePaint.hlsl, lines 69–75.
+Location: SimplePaint.hlsl, lines 69-75.
 
 The warp denominator is sliceExtent - shift*rotatedX. It is also floored at 0.00001.
 
@@ -119,9 +119,9 @@ This is a surface-dependent example, not a promise that the shipped car contains
 
 Direction: use the non-subtractive warp denominator described below and give its true pole a deliberate result.
 
-**6. Shifted-highlight cancellation and square-root precision — smaller arithmetic errors**
+**6. Shifted-highlight cancellation and square-root precision - smaller arithmetic errors**
 
-Locations: SimplePaint.hlsl, lines 69–75; Renderer.cpp, line 1148.
+Locations: SimplePaint.hlsl, lines 69-75; Renderer.cpp, line 1148.
 
 Two subtractions lose precision near Shift=1:
 - sliceExtent - shift*rotatedX on the GPU;
@@ -142,22 +142,22 @@ sqrt(1-s*s) = sqrt((1-s)*(1+s))
 
 The first identity avoids cancellation when x>=0 and m+x>0. For negative x, m-s*x already adds positive magnitudes. The zero-length slice still needs an explicit branch. Using these identities with positive color terms reduced the worst error across the 1,500 random warp cases from 0.13527 to 3.173e-7. The old small-shift tolerance branch remained in the experiment.
 
-**7. Shift clamping changes the requested warp near one — parameter distortion**
+**7. Shift clamping changes the requested warp near one - parameter distortion**
 
 Location: Renderer.cpp, line 1141.
 
 With the neutral material, DarkPoint=0, LightPoint=1, FacingCutoff=0, and normal=(0,0,1):
 
 | Requested Shift | Current GPU | Requested-parameter reference |
-|---|---:|---:|
-| 0.999999 | 0.00447517 | 0.00141421 |
-| 1 | 0.00447517 | 0 |
+| --------------- | ---:        | ---:                          |
+| 0.999999        | 0.00447517  | 0.00141421                    |
+| 1               | 0.00447517  | 0                             |
 
 Both requested values are replaced by the same stored shift. The reference at Shift=1 for this particular normal is well-defined; it is not the warp's 0/0 pole.
 
 Direction: preserve well-defined values/limits, and define the pole separately.
 
-**8. Tone interpolation can erase a small light endpoint — arithmetic/coefficient loss**
+**8. Tone interpolation can erase a small light endpoint - arithmetic/coefficient loss**
 
 Locations: Renderer.cpp, line 1151; SimplePaint.hlsl, line 79.
 
@@ -167,9 +167,9 @@ This is generally small in absolute output, but demonstrates that the stored rep
 
 Direction: store both endpoints and compute dark*(1-facing)+light*facing. Bound facing to [0,1] for both shader paths. The current symmetric, zero-shift path does not explicitly saturate facing.
 
-**9. Large rotation values lose degrees before range reduction — input precision issue**
+**9. Large rotation values lose degrees before range reduction - input precision issue**
 
-Locations: Renderer.cpp, ParseFloat at lines 285–299 and rotation reduction at lines 1142–1143.
+Locations: Renderer.cpp, ParseFloat at lines 285-299 and rotation reduction at lines 1142-1143.
 
 RotationDegrees=1000000000000 should reduce to 280 degrees. Parsing it into float32 first produces 999999995904, which reduces to 144 degrees. Reducing an already-rounded number cannot recover the missing degrees.
 
@@ -180,23 +180,23 @@ With the neutral material, Shift=0.8, normal=(0.6,0,0.8), and the usual zero-to-
 
 Direction: parse/reduce rotation using double precision, then convert the bounded angle to float. This extends the useful range; arbitrary-magnitude decimal angles would still require an explicit range/precision policy.
 
-**10. The small-shift fast path introduces a dead band — deliberate approximation**
+**10. The small-shift fast path introduces a dead band - deliberate approximation**
 
 Location: SimplePaint.hlsl, line 61.
 
 All stored shifts up to 0.00001 are treated as zero. With neutral material, Shift=0.00001, and normal=(0.6,0,0.8), the GPU returns 0.80000007 versus a stable stored-parameter reference of 0.80000487.
 
-This is a small approximation rather than a large instability. It means the comment calling the path “exact” only applies to Shift=0.
+This is a small approximation rather than a large instability. It means the comment calling the path "exact" only applies to Shift=0.
 
 Direction: test exactly for zero if all nonzero shift values should retain their effect, or document/justify the tolerance.
 
-**11. Very small tones underflow or flush to zero — extreme, visually negligible case**
+**11. Very small tones underflow or flush to zero - extreme, visually negligible case**
 
 Use the neutral material and DarkPoint=LightPoint=1e-40. The parser accepts a finite subnormal float, but the GPU produces 0 rather than approximately 1e-40. This has no meaningful visible effect at the current output precision.
 
 Direction: set realistic input precision/ranges if needed. Do not promise preservation of arbitrary positive real numbers in float32 shader arithmetic. Removing the CPU clamps would also require analyzing underflow in very small coefficient products.
 
-**12. Some exact endpoints have no unique mathematical answer — design decision required**
+**12. Some exact endpoints have no unique mathematical answer - design decision required**
 
 In the positive formulation, the curve is undefined whenever both U and V are zero. Examples include:
 - Brightness=0, tone=1, with an interior base color;
@@ -211,7 +211,7 @@ Likewise, Shift=1 at normal=(1,0,0) is a warp pole. Approaching it along the mov
 
 Direction: choose an explicit endpoint policy before removing input clamps. The nonsingular examples above do not depend on that policy.
 
-**13. Normalization and other guarded cases — limits of the findings**
+**13. Normalization and other guarded cases - limits of the findings**
 
 The HLSL normalize function has an indefinite result for a zero-length vector. The diagnostic zero-normal test produced black on this GPU, not a NaN output; that result is not a portable input contract. [Microsoft normalize documentation](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-normalize).
 

@@ -8,9 +8,9 @@ Double-click [Run.cmd](Run.cmd) to build and launch the app.
 
 - [Visual Studio guide](Documentation/VisualStudio.md): setup, code navigation, builds, debugging, tests, and troubleshooting.
 
-- [SimplePaint usage](Documentation/Usage.md): controls, numerical limits, and C++/DX12 integration.
+- [SimplePaint usage](Source/SimplePaint/Usage.md): controls, numerical limits, and C++/DX12 integration.
 - [Copyable SimplePaint module](Source/SimplePaint/README.md): self-contained C++/HLSL folder and integration instructions.
-- [SimplePaint specification](Documentation/Specification.md): mathematics, rationale, and verification.
+- [SimplePaint specification](Source/SimplePaint/Specification.md): mathematics, rationale, and verification.
 - [Asset generation](Documentation/Assets.md): background and mesh regeneration instructions.
 - [Historical reports](Documentation/Reports/README.md): earlier rendering and numerical analyses with supporting data.
 
@@ -125,16 +125,16 @@ example to compare queue sizes and wait strategies; higher FPS is not guaranteed
 
 Edit `assets/Settings.json`, then relaunch through `Run.cmd`. The six `SimplePaintShader_*`
 objects provide independent paint controls for Axles, Body, Cabin, Headlights,
-Wheels, and Sphere. See [Usage.md](Documentation/Usage.md) for accepted numerical ranges, examples,
+Wheels, and Sphere. See [Usage.md](Source/SimplePaint/Usage.md) for accepted numerical ranges, examples,
 and instructions for embedding the shader in another C++/DX12 project.
-[Specification.md](Documentation/Specification.md) defines the mathematics, numerical
+[Specification.md](Source/SimplePaint/Specification.md) defines the mathematics, numerical
 contract, cutoff decision, GPU layout, optimizations, and test results.
 
 Every declared field is required in the settings file. JSON syntax and type
 conversion are handled by pinned, vendored [nlohmann/json](ThirdParty/nlohmann_json/README.md);
 unknown properties are ignored and the last duplicate property wins.
 Application validation runs afterward using plain C++. Settings load once at
-startup; invalid or missing files report an error. See [Usage.md](Documentation/Usage.md)
+startup; invalid or missing files report an error. See [application settings](Documentation/Settings.md#run-and-edit-this-application)
 for format rules and [Settings architecture](Documentation/Settings.md) for the code.
 
 The rewritten SimplePaint validates materials in C++ before uploading them.

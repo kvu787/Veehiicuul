@@ -36,69 +36,14 @@ Dark Point and Light Point choose **tones**, not RGB intensities. Their resultin
 
 There is no positive facing cutoff. Back-facing normals and exact silhouette normals select Dark Point. A front-facing surface approaches that tone continuously as its facing approaches zero. The shader does not flip back-face normals; an application may choose to cull back faces.
 
-## Run and edit this application
-
-Double-click [Run.cmd](../Run.cmd). It builds and launches the application using Visual Studio's C++ tools, CMake, Ninja, and the Windows SDK's DXC shader compiler. See [README.md](../README.md) for installation requirements and app controls.
-
-Edit [assets/Settings.json](../assets/Settings.json), then launch again. The six `SimplePaintShader_*` objects provide independent controls for Axles, Body, Cabin, Headlights, Wheels, and Sphere. The setting name for Rotation is `RotationDegrees`.
-
-For example, edit these fields within the complete file to change the sphere's
-paint and select the minimum-latency pipeline:
-
-```json
-{
-  "RenderPipeline": {
-    "Preset": "MinimizeInputLatency",
-    "VSync": false
-  },
-  "SimplePaintShader_Sphere": {
-    "BaseColor": [0.107, 0.223, 0.578],
-    "Brightness": 0.5,
-    "Shift": 0.6,
-    "RotationDegrees": 45,
-    "DarkPoint": 0.05,
-    "LightPoint": 0.95
-  }
-}
-```
-
-The example above shows sections to edit within the complete
-[settings file](../assets/Settings.json); retain every other field, including
-the six custom controls in `RenderPipeline`.
-
-Every declared section and field is required, even when a fixed pipeline
-preset makes a control inactive. Names and enum strings are case-sensitive.
-JSON uses quoted names and strings, `true`/`false` booleans, and numeric arrays
-for colors. Comments, trailing commas, malformed JSON, and wrong field types
-fail. Unknown properties are ignored; the last duplicate property wins.
-Errors include the file path; syntax errors include the parser's location,
-and application validation identifies the offending setting or material.
-
-Sphere U resolution must be an integer from 3 through 512, and V from 2
-through 512. Count fields require JSON integer tokens within the signed 32-bit
-range. Decimal points, exponent notation, quoted strings, and booleans are
-rejected: use `64`, not `64.0`, `64.`, `6.4e1`, or `"64"`. See [render pipeline configuration](RenderPipeline.md)
-for custom ranges and [Settings architecture](Settings.md) for the code.
-
-Paint numbers are rounded to binary64 before material validation. Overflow fails;
-underflow may round to zero, which is accepted only for parameters whose domain
-includes zero. For example, `"Shift": 1e-999` becomes zero, while
-`"Brightness": 1e-999` fails its lower bound. See the
-[numerical contract](Specification.md) for boundary details.
-
-The removed `FacingCutoff` property has no effect, like any unknown property.
-Settings load from the executable's adjacent `assets` directory;
-`Run.cmd` copies the repository settings there during the build.
-A missing or invalid file fails startup. There is no INI fallback.
-
 ## Embed in a C++/DX12 project
 
-Copy the entire [Source/SimplePaint](../Source/SimplePaint/README.md) folder into your project's source or vendor directory. It includes every C++ and HLSL dependency, its own CMake target, and a short README that travels with the code:
+Copy the entire [Source/SimplePaint](README.md) folder into your project's source or vendor directory. It includes every C++ and HLSL dependency, its own CMake target, and a short README that travels with the code:
 
-- [Material.h](../Source/SimplePaint/Material.h) and [Material.cpp](../Source/SimplePaint/Material.cpp): validated C++20 parameters and GPU constant compilation, with no DirectX dependencies.
-- [Geometry.h](../Source/SimplePaint/Geometry.h): validation for indexed triangle meshes.
-- [SimplePaintCore.hlsli](../Source/SimplePaint/SimplePaintCore.hlsli): the binding-independent HLSL functions.
-- [OrthographicTransforms.h](../Source/SimplePaint/OrthographicTransforms.h) and [SimplePaint.hlsl](../Source/SimplePaint/SimplePaint.hlsl): DirectXMath transform helper and configurable DX12 vertex/pixel shader adapter.
+- [Material.h](Material.h) and [Material.cpp](Material.cpp): validated C++20 parameters and GPU constant compilation, with no DirectX dependencies.
+- [Geometry.h](Geometry.h): validation for indexed triangle meshes.
+- [SimplePaintCore.hlsli](SimplePaintCore.hlsli): the binding-independent HLSL functions.
+- [OrthographicTransforms.h](OrthographicTransforms.h) and [SimplePaint.hlsl](SimplePaint.hlsl): DirectXMath transform helper and configurable DX12 vertex/pixel shader adapter.
 
 Keep the copied folder named `SimplePaint` and use its CMake target:
 
@@ -154,14 +99,23 @@ The shader returns **linear RGB**, with alpha 1 supplied by the adapter. Encode 
 
 ## Build and verify
 
-From PowerShell in this repository:
+From a Visual Studio x64 developer shell with Windows SDK DXC available, run
+these commands from the copied SimplePaint folder (CMake 3.24 or newer):
 
-```powershell
-.\Run.ps1 -BuildOnly
-.\Run.ps1 -Test
-.\Run.ps1 -Test -Configuration Debug
+```text
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+cmake --build build
+ctest --test-dir build --output-on-failure
 ```
+
+Use a separate build directory with `-DCMAKE_BUILD_TYPE=Debug` for Debug checks.
+Tests require Windows, DirectXMath, DXC, and a Shader Model 6.0 runtime.
+Library-only builds can set `-DBUILD_TESTING=OFF`. When embedded with
+`add_subdirectory`, tests default off; enable them with
+`-DSIMPLE_PAINT_BUILD_TESTING=ON`.
 
 The tests include 81,940 curve comparisons, 20,000 comparisons with the original K12 construction, invalid-input checks, mesh/transform checks, and 30,208 actual production VS/PS samples on each of the preferred adapter and WARP. The GPU tests include 4,096 interpolated-normal cases and check both linear and sRGB error against a binary64 reference. They also check DX12 debug-layer warnings/errors when the debug layer is installed. The suite's detailed scope and measured results are in [Specification.md](Specification.md).
 
 The `SimplePaintStandalone` test additionally copies just the module into a fresh consumer project, compiles and runs all its C++ interfaces, and compiles both shader stages with the default count of one and an explicit count of three. No application sources are included in that copied project. A zero material count must fail shader compilation.
+
+The copy check also builds and runs the copied module's CPU, transform, and GPU tests. Game-specific car/sphere validation remains in the original host's integration suite.

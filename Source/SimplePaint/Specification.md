@@ -120,36 +120,7 @@ The smallest linear base color is approximately `7.56e-5`; the smallest `A` is a
 
 `Parameters` uses C++ `double`. `Material::Compile` checks every field, including finite status, **before conversion or coefficient computation**, and throws `std::invalid_argument` naming the offending parameter. Values just outside a limit must not round into the accepted interval. Negative zero is accepted where zero is allowed. Equal and reversed tone endpoints are accepted.
 
-The application's loader uses the vendored [nlohmann/json 3.12.0](../ThirdParty/nlohmann_json/README.md).
-JSON decimal numbers are rounded to binary64 before conversion to `Parameters`;
-the contract is not exact arbitrary-precision decimal arithmetic. Paint controls
-accept JSON integer or floating-point numbers, and `BaseColor` must contain
-exactly three numeric array elements. Material validation still runs before
-narrowing to binary32.
-
-Malformed JSON, trailing content, comments, trailing commas, NaN/infinity
-literals, overflow beyond finite binary64, and wrong field types fail.
-nlohmann/json ignores unknown properties during typed conversion and retains
-the last duplicate property. Overflow anywhere in the document fails parsing.
-
-Underflow follows nlohmann/json's binary64 conversion: sufficiently tiny decimals
-round to signed zero. The parsed binary64 value is then validated, so
-`1e-999` is accepted as zero for Shift or Dark Point but rejected for
-Brightness or an RGB channel. Representable subnormal values remain subject to
-the same domain checks. Negative zero is accepted wherever zero is valid;
-fractional notation (such as `-0.0`) retains its sign. This policy is covered
-by settings tests and does not add shader clamps or coefficient floors.
-
-All declared sections and properties are required. Deserialization uses
-input-only declarative mappings to populate one `Settings` object.
-`ValidateSettings` then checks that object using plain C++. The six custom
-pipeline controls are always present and typed, but their domain limits are
-checked only for `Custom`. Count fields use `std::int32_t`. The JSON adapter
-requires integer tokens representable in that type before conversion; decimal
-points, exponents, quoted strings, and overflow are rejected, even for inactive
-controls. Thus `64` is accepted, while `64.0`, `64.`, and `6.4e1` are rejected.
-Application ranges are checked afterward. See [Settings.md](Settings.md),
-[Usage.md](Usage.md), and [RenderPipeline.md](RenderPipeline.md).
+Serialization and user-interface parsing belong to the host. Validate parsed binary64 parameters before conversion to GPU constants; SimplePaint has no JSON dependency.
 
 Coefficients, trig, square roots, and sRGB conversion are calculated in binary64 and then stored in binary32. This ordinary rounding is part of the implementation. Extremely small positive Shift or Dark Point can have a coefficient contribution below binary32 resolution, which does not imply a material-validation failure. Abstractly excluded endpoints are never admitted, and no requested input is clamped or angle wrapped.
 
@@ -255,7 +226,7 @@ The implementation precomputes sRGB conversion, angle trig, shift square root, c
 
 The PS source has one square root on the zero-shift path and two on the shifted path. It has no pow, log, exponent, sine, cosine, or normal rsqrt. DXC `-O3 -Ges -WX` compilation and inspection of the generated PS DXIL confirmed the two square-root call sites and absence of those transcendental operations. The extra shifted slice arithmetic protects near-pole and near-peak behavior. Optimizations are chosen subject to the numerical contract; no claim is made that this is the fastest possible shader on every GPU.
 
-Reproduce checks with `Run.ps1 -Test` and `Run.ps1 -Test -Configuration Debug`. The suite includes the following numerical and integration checks:
+Reproduce module checks using [the standalone build commands](Usage.md#build-and-verify). The application checks below record historical verification in the original host repository. The suite includes the following numerical and integration checks:
 
 | Check                    | Coverage / result                                             |
 | ------------------------ | ------------------------------------------------------------- |
@@ -271,7 +242,14 @@ Reproduce checks with `Run.ps1 -Test` and `Run.ps1 -Test -Configuration Debug`. 
 
 The rebuilt Release application also passed a hidden-window smoke check: normal initialization, two seconds in its render loop, and clean exit after `WM_CLOSE`. `Run.cmd` retains its double-click build-and-launch behavior; the same launcher now also exposes build-only and test modes through `Run.ps1`.
 
-The source reorganization adds a sixth CTest entry, `SimplePaintStandalone`. It copies only `Source/SimplePaint` into a fresh consumer project, builds and runs every public C++ interface using a host-owned mesh, compiles the copied VS/PS with material counts one and three, and checks that a zero count is rejected. This tests the module's copy/paste boundary independently of the application's include paths and generated assets. All six tests passed in both Release and Debug after the reorganization; the measured GPU errors below were unchanged.
+The module owns five CTest entries: SimplePaintContract, OrthographicTransforms,
+SimplePaintGpuHardware, SimplePaintGpuWarp, and SimplePaintStandalone.
+SimplePaintStandalone copies the module's source, documentation, reports, and tests
+into a fresh consumer project. It builds and runs every public C++ interface
+using host-owned geometry, compiles VS/PS with counts one and three, and checks
+that zero is rejected. It also builds and runs the copied module's full CPU/GPU
+suite, excluding the recursive copy check. The original game's car/sphere mesh
+checks remain host integration tests; they are not dependencies of the module.
 
 The independent binary64 GPU reference starts from the requested binary64 material parameters and the stored binary32 interpolated normal. It computes rotation, normalized facing, explicit tone remapping, and the uncomposed color curve. Thus it includes CPU coefficient conversion, VS rotation, GPU interpolation, and shader evaluation error. It does not measure errors from an external mesh exporter or an arbitrary host's world/view calculation; the transform tests cover this application's adapter separately.
 
@@ -284,4 +262,4 @@ The regression acceptance criterion is finite output in [0,1], alpha exactly one
 
 These are measured regression bounds on deterministic boundary, peak, pole, inverted-range, constant-range, scaled-normal, interpolation, and random cases. They are not an exhaustive proof over all binary64 parameter combinations or a promise of bitwise identity across GPU drivers. The abstract equivalence and positive-denominator arguments are analytic; the stated finite-precision error criterion is tested. Re-run the GPU tests when changing the compiler, arithmetic, accepted limits, or target hardware.
 
-An optional GPU-timestamp microbenchmark is available as `build\release\SimplePaintGpuTests.exe --benchmark`. On the same NVIDIA GPU, 128 warmed 1024x1024 production draws measured **0.0204 ms/draw for Shift=0** and **0.0216 ms/draw for Shift=0.6**. This uses constant normals and a float4 render target, excludes CPU submission/setup/readback, and is not a whole-scene FPS prediction or a speedup comparison against the old shader.
+An optional GPU-timestamp microbenchmark is available as `build\tests\SimplePaintGpuTests.exe --benchmark`. On the same NVIDIA GPU, 128 warmed 1024x1024 production draws measured **0.0204 ms/draw for Shift=0** and **0.0216 ms/draw for Shift=0.6**. This uses constant normals and a float4 render target, excludes CPU submission/setup/readback, and is not a whole-scene FPS prediction or a speedup comparison against the old shader.
