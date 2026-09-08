@@ -74,10 +74,10 @@ fail. Unknown properties are ignored; the last duplicate property wins.
 Errors include the file path; syntax errors include the parser's location,
 and application validation identifies the offending setting or material.
 
-Sphere U resolution must be a whole number from 3 through 512, and V from 2
-through 512. Whole-valued floating-point or exponent notation is accepted
-(`64`, `64.0`, and `6.4e1` are equivalent). Strings and booleans are rejected
-for numeric controls. See [render pipeline configuration](RenderPipeline.md)
+Sphere U resolution must be an integer from 3 through 512, and V from 2
+through 512. Count fields require JSON integer tokens within the signed 32-bit
+range. Decimal points, exponent notation, quoted strings, and booleans are
+rejected: use `64`, not `64.0`, `64.`, `6.4e1`, or `"64"`. See [render pipeline configuration](RenderPipeline.md)
 for custom ranges and [Settings architecture](Settings.md) for the code.
 
 Paint numbers are rounded to binary64 before material validation. Overflow fails;

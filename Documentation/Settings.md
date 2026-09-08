@@ -21,20 +21,31 @@ ValidateSettings(settings);
 using `NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE`. The generic
 [JsonSerialization.h](../Source/JsonSerialization.h) delegates parsing and typed
 conversion to nlohmann/json. `Serialize(output, settings)` performs the reverse
-operation. There are no handwritten JSON walkers, parser callbacks, or custom
-field converters. nlohmann reports syntax, missing-field, and type errors;
-unknown properties are ignored and the last duplicate wins.
+operation. A local nlohmann serializer policy in
+[JsonIntegerConversion.h](../Source/JsonIntegerConversion.h) checks integer
+conversion; other types retain the library's normal conversions. There are no
+handwritten JSON walkers, parser callbacks, or per-field converters. nlohmann
+reports syntax and missing-field errors; the adapter also rejects integer type
+mismatches and overflow.
+Unknown properties are ignored and the last duplicate wins.
 
 [SettingsValidation.cpp](../Source/SettingsValidation.cpp) contains nonmutating
-application checks using ordinary C++ values: allowed preset names, whole-number
+application checks using ordinary C++ values: allowed preset names, integer
 count ranges, RGB length, and paint domains. It calls SimplePaint's pure C++
 `ValidateParameters` for material rules. Neither this validator nor its test
 target includes or links nlohmann/json.
 
-Counts use `double` to retain fractional values until validation, avoiding
-silent integer truncation during deserialization. RGB uses `std::vector<double>`
-so its length can be checked afterward. Numeric values follow the library's
-binary64 conversion; this is not arbitrary-precision decimal validation.
+Counts use `std::int32_t`. The JSON adapter accepts only integer tokens within
+the destination type's representable range. For example, `64` is accepted;
+`64.0`, `64.`, exponent notation, and quoted strings are rejected. The parser
+already distinguishes integer tokens from floating-point tokens, so the adapter
+does not examine or reparse token text. It checks signed and unsigned integer
+storage before casting, preventing truncation and wraparound. These conversion
+rules apply even when a fixed preset makes a count inactive. Application limits
+such as sphere U resolution in [3, 512] remain in the separate validator.
+
+RGB uses `std::vector<double>` so its length can be checked afterward. Paint
+numbers continue to follow the library's binary64 conversion and domain checks.
 
 [RenderPreparation.cpp](../Source/RenderPreparation.cpp) resolves a pipeline
 preset into `ResolvedRenderPipeline` and compiles paint values into

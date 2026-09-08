@@ -10,6 +10,9 @@ Builds use this checked-in dependency and require no network access or package m
 
 The local CMake interface target is `nlohmann_json::nlohmann_json`. It disables
 implicit conversions; declarative macros perform typed field conversion.
+The application I/O adapter supplies a local serializer policy that requires
+integer tokens and checks representability before integer conversion. The
+vendored library remains unchanged.
 Only the settings I/O library and serialization tests need this dependency.
 The settings model, validation, renderer preparation, and reusable SimplePaint
 module are independent of JSON.

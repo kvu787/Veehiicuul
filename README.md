@@ -146,7 +146,8 @@ numerical domain.
 
 In the same JSON file, the `Sphere` object sets `"UResolution": 64` (longitude segments,
 3 to 512) and `"VResolution": 32` (pole-to-pole latitude segments, 2 to 512).
-Both must have whole numeric values (`64` and `64.0` are equivalent). The sphere is generated at startup with smooth radial
+Both require JSON integer tokens (`64` is valid; `64.0`, `64.`, and `6.4e1`
+are rejected). The sphere is generated at startup with smooth radial
 normals, radius 0.4, and a center at `(1.5, 0.4, -1.5)`.
 
 Orthographic projection is a permanent renderer invariant. Object and view

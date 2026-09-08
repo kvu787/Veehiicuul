@@ -144,9 +144,11 @@ All declared sections and properties are required. Deserialization uses
 nlohmann's declarative macros to populate one `ApplicationSettings` object.
 `ValidateSettings` then checks that object using plain C++. The six custom
 pipeline controls are always present and typed, but their domain limits are
-checked only for `Custom`. Count fields retain binary64 values until validation
-checks finiteness, whole value, and range before narrowing. Thus `64.0` and
-`6.4e1` are accepted for sphere resolution. See [Settings.md](Settings.md),
+checked only for `Custom`. Count fields use `std::int32_t`. The JSON adapter
+requires integer tokens representable in that type before conversion; decimal
+points, exponents, quoted strings, and overflow are rejected, even for inactive
+controls. Thus `64` is accepted, while `64.0`, `64.`, and `6.4e1` are rejected.
+Application ranges are checked afterward. See [Settings.md](Settings.md),
 [Usage.md](Usage.md), and [RenderPipeline.md](RenderPipeline.md).
 
 Coefficients, trig, square roots, and sRGB conversion are calculated in binary64 and then stored in binary32. This ordinary rounding is part of the implementation. Extremely small positive Shift or Dark Point can have a coefficient contribution below binary32 resolution, which does not imply a material-validation failure. Abstractly excluded endpoints are never admitted, and no requested input is clamped or angle wrapped.

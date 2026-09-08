@@ -129,8 +129,9 @@ Missing fields, wrong types, and invalid active values cause startup errors.
 Diagnostics include the file path; application validation names the invalid
 setting, and malformed JSON reports a parser location. Names and enum strings
 are case-sensitive. Use JSON booleans `true` and `false`, quoted enum strings
-such as `"Spin"`, and whole numeric values for counts. `2.0` and `2e0` are
-accepted; `"2"` and `2.5` are rejected. Comments and trailing commas are
+such as `"Spin"`, and JSON integer tokens within the signed 32-bit range for
+counts. `2` is accepted; `2.0`, `2.`, `2e0`, `"2"`, and `2.5` are rejected,
+even for inactive custom controls. Comments and trailing commas are
 rejected. See [Usage.md](Usage.md) for shared format rules.
 
 ## Individual settings
