@@ -130,12 +130,12 @@ and instructions for embedding the shader in another C++/DX12 project.
 [Specification.md](Documentation/Specification.md) defines the mathematics, numerical
 contract, cutoff decision, GPU layout, optimizations, and test results.
 
-The settings file uses strict JSON. Comments, trailing commas, unknown section/setting names,
-and duplicate names are rejected. Colors use three-number arrays; booleans and
-numbers use JSON types. The loader uses a pinned, vendored
-[nlohmann/json](ThirdParty/nlohmann_json/README.md) dependency, so building needs
-no network access. Settings are loaded once at startup; invalid or missing files
-report an error. See [Usage.md](Documentation/Usage.md) for format rules and defaults.
+Every declared field is required in the settings file. JSON syntax and type
+conversion are handled by pinned, vendored [nlohmann/json](ThirdParty/nlohmann_json/README.md);
+unknown properties are ignored and the last duplicate property wins.
+Application validation runs afterward using plain C++. Settings load once at
+startup; invalid or missing files report an error. See [Usage.md](Documentation/Usage.md)
+for format rules and [Settings architecture](Documentation/Settings.md) for the code.
 
 The rewritten SimplePaint validates materials in C++ before uploading them.
 It preserves the K12 Schlick curve, facing lobe warp, and dark/light tone
@@ -146,7 +146,7 @@ numerical domain.
 
 In the same JSON file, the `Sphere` object sets `"UResolution": 64` (longitude segments,
 3 to 512) and `"VResolution": 32` (pole-to-pole latitude segments, 2 to 512).
-Both must be integers. The sphere is generated at startup with smooth radial
+Both must have whole numeric values (`64` and `64.0` are equivalent). The sphere is generated at startup with smooth radial
 normals, radius 0.4, and a center at `(1.5, 0.4, -1.5)`.
 
 Orthographic projection is a permanent renderer invariant. Object and view

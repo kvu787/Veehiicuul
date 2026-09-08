@@ -130,7 +130,7 @@ Read these files in this order:
 | --------------------------------------------- | ------------------------------------------------------------- |
 | `Source/Main.cpp`                             | Entry point, settings loading, top-level exception handling.  |
 | `Source/Application.h` and `.cpp`             | Window creation, input, message processing, application loop. |
-| `Source/ApplicationSettings.h` / `.cpp`       | Configuration structures, JSON parsing, validation.           |
+| `Source/ApplicationSettings.h` / `.cpp`       | File model and typed JSON loading.                            |
 | `Source/Renderer.h`                           | Renderer interface and ownership of graphics resources.       |
 | `Source/Renderer.cpp`                         | Device, swap chain, resources, drawing, synchronization.      |
 | `Source/SimplePaint/Material.h` / `.cpp`      | Paint parameters and their numerical contract.                |
@@ -143,7 +143,7 @@ Read these files in this order:
 
 Useful editor commands are **Go To Definition**, **Peek Definition**, **Find All References**, **Go To All**, and **Find in Files**. Use the symbol's context menu or Visual Studio command search if your keyboard mapping differs. Navigation becomes most useful after CMake configuration and indexing succeed.
 
-Start with `wWinMain`, follow `Application::Run`, then inspect `Renderer::Initialize`, `PrepareFrame`, and `Render`. For configuration changes, trace `LoadApplicationSettings` through `ParseApplicationSettings`.
+Start with `wWinMain`, follow `Application::Run`, then inspect `Renderer::Initialize`, `PrepareFrame`, and `Render`. For configuration changes, trace `LoadApplicationSettings`: `Deserialize<ApplicationSettings>(input)`, then `ValidateSettings(settings)`. See [Settings architecture](Settings.md) for the model, JSON mappings, plain C++ validator, and renderer preparation.
 
 ## 6. Debug C++ behavior
 

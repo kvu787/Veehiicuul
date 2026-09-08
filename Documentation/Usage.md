@@ -42,8 +42,8 @@ Double-click [Run.cmd](../Run.cmd). It builds and launches the application using
 
 Edit [assets/Settings.json](../assets/Settings.json), then launch again. The six `SimplePaintShader_*` objects provide independent controls for Axles, Body, Cabin, Headlights, Wheels, and Sphere. The setting name for Rotation is `RotationDegrees`.
 
-For example, this complete document sets the sphere's paint and uses the
-default car materials and sphere resolution:
+For example, edit these fields within the complete file to change the sphere's
+paint and select the minimum-latency pipeline:
 
 ```json
 {
@@ -62,23 +62,23 @@ default car materials and sphere resolution:
 }
 ```
 
-The file uses strict JSON: property names and enum values are quoted strings,
-booleans are `true` or `false`, and colors are arrays of exactly three
-numbers. Comments and trailing commas are rejected. Unknown section/setting names and
-duplicate names (including escaped spellings of the same name) fail at startup.
-Diagnostics include the file and the offending property or material parameter;
-syntax errors include the parser's line and column.
+The example above shows sections to edit within the complete
+[settings file](../assets/Settings.json); retain every other field, including
+the six custom controls in `RenderPipeline`.
 
-Omitted paint controls and material objects retain application defaults.
-An omitted `Sphere` object, or omitted resolution properties, retains
-`"UResolution": 64` and `"VResolution": 32`. U must be an integer from 3
-through 512; V must be an integer from 2 through 512. Fractional/exponent notation,
-strings, and booleans are rejected for integer controls.
+Every declared section and field is required, even when a fixed pipeline
+preset makes a control inactive. Names and enum strings are case-sensitive.
+JSON uses quoted names and strings, `true`/`false` booleans, and numeric arrays
+for colors. Comments, trailing commas, malformed JSON, and wrong field types
+fail. Unknown properties are ignored; the last duplicate property wins.
+Errors include the file path; syntax errors include the parser's location,
+and application validation identifies the offending setting or material.
 
-`RenderPipeline.Preset` and `RenderPipeline.VSync` are required.
-All six custom controls are required when the preset is `Custom`; see
-[render pipeline configuration](RenderPipeline.md). The supplied
-[settings file](../assets/Settings.json) explicitly lists all current controls.
+Sphere U resolution must be a whole number from 3 through 512, and V from 2
+through 512. Whole-valued floating-point or exponent notation is accepted
+(`64`, `64.0`, and `6.4e1` are equivalent). Strings and booleans are rejected
+for numeric controls. See [render pipeline configuration](RenderPipeline.md)
+for custom ranges and [Settings architecture](Settings.md) for the code.
 
 Paint numbers are rounded to binary64 before material validation. Overflow fails;
 underflow may round to zero, which is accepted only for parameters whose domain
@@ -86,7 +86,7 @@ includes zero. For example, `"Shift": 1e-999` becomes zero, while
 `"Brightness": 1e-999` fails its lower bound. See the
 [numerical contract](Specification.md) for boundary details.
 
-The removed `FacingCutoff` property and its global section are rejected.
+The removed `FacingCutoff` property has no effect, like any unknown property.
 Settings load from the executable's adjacent `assets` directory;
 `Run.cmd` copies the repository settings there during the build.
 A missing or invalid file fails startup. There is no INI fallback.

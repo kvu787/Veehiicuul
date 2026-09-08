@@ -99,7 +99,7 @@ Keep the material and sphere objects alongside `RenderPipeline` in the root
 object. Relaunch through `Run.cmd` to stage the edited source JSON beside the
 executable and apply the settings.
 
-All six custom controls in `RenderPipeline` are required when `"Preset": "Custom"`.
+All eight fields in `RenderPipeline` are required for every preset.
 Custom does not inherit omitted values from a preset; a missing key is an error.
 `MaxPresentLatency` must be present and valid even when
 `"WaitForPresentation": false` makes it inactive.
@@ -112,12 +112,12 @@ ranges. There is no requirement that they match, or that `BackBufferCount` equal
 unused because another limit or resource becomes the bottleneck.
 
 When `Preset` is `MinimizeInputLatency`, `Standard`, or `MaximizeFps`, the six
-custom controls in `RenderPipeline` are inactive: their values and types are not
-validated or applied, and they may be omitted. Their position relative to
-`Preset` does not matter. `Preset` and `VSync` are always validated.
-Unknown section/setting names and duplicate properties are always errors,
-including duplicate properties inside inactive controls. The entire document must be valid JSON;
-numeric overflow fails even in an inactive control.
+custom controls in `RenderPipeline` are inactive: they must be present with the
+declared JSON types, but their domain limits are not checked and their values
+are not applied. Their position relative to `Preset` does not matter.
+Unknown properties are ignored; the last duplicate property wins.
+The entire document must be valid JSON; numeric overflow fails even in an
+inactive control.
 
 For example, the shipped JSON's custom values match `Standard`, but its selected
 preset is `MinimizeInputLatency`. Changing only `Preset` to `Custom` therefore
@@ -125,19 +125,18 @@ activates those Standard-like values. To modify a particular preset, first copy 
 values from the preset table, then change the desired setting.
 
 With `"Preset": "Custom"`, all eight properties are required and validated.
-Missing required properties, unknown or duplicate names, and invalid active
-values cause startup errors. Diagnostics include the file path and property,
-such as `RenderPipeline.BackBufferCount`; malformed JSON also reports a line
-and column. Names and enum strings are case-sensitive. Use JSON booleans
-`true` and `false`, quoted enum strings such as `"Spin"`, and integer
-literals for counts. A count written as `2.0`, `2e0`, or `"2"` is rejected.
-Comments and trailing commas are rejected. See [Usage.md](Usage.md) for shared
-format rules and paint/sphere defaults.
+Missing fields, wrong types, and invalid active values cause startup errors.
+Diagnostics include the file path; application validation names the invalid
+setting, and malformed JSON reports a parser location. Names and enum strings
+are case-sensitive. Use JSON booleans `true` and `false`, quoted enum strings
+such as `"Spin"`, and whole numeric values for counts. `2.0` and `2e0` are
+accepted; `"2"` and `2.5` are rejected. Comments and trailing commas are
+rejected. See [Usage.md](Usage.md) for shared format rules.
 
 ## Individual settings
 
 All seven settings below belong in the `RenderPipeline` object.
-`VSync` is read for every preset. The other six settings are read only with `"Preset": "Custom"`; the three
+`VSync` is read for every preset. The other six settings are applied only with `"Preset": "Custom"`; the three
 fixed presets supply their own values.
 JSON changes take effect at startup. The `V` key is the runtime exception: it
 toggles VSync without changing the selected preset or rewriting the JSON.
@@ -436,7 +435,8 @@ These tests verify configuration and synchronization behavior. They do not
 establish which preset has the lowest physical latency or highest throughput
 for every system.
 
-Preset definitions are in [ApplicationSettings.h](../Source/ApplicationSettings.h),
-parsing and validation in [ApplicationSettings.cpp](../Source/ApplicationSettings.cpp),
+The file model is in [ApplicationSettings.h](../Source/ApplicationSettings.h),
+preset definitions are in [RenderPreparation.h](../Source/RenderPreparation.h),
+and loading and validation are separated as described in [Settings.md](Settings.md),
 frame admission and presentation in [Renderer.cpp](../Source/Renderer.cpp), and
 message processing in [Application.cpp](../Source/Application.cpp).

@@ -128,10 +128,9 @@ exactly three numeric array elements. Material validation still runs before
 narrowing to binary32.
 
 Malformed JSON, trailing content, comments, trailing commas, NaN/infinity
-literals, overflow beyond finite binary64, wrong types, unknown properties, and
-duplicate property names fail. Duplicate names are detected during parsing,
-before an object could overwrite an earlier value, including inside inactive
-custom controls. Overflow anywhere in the document fails parsing.
+literals, overflow beyond finite binary64, and wrong field types fail.
+nlohmann/json ignores unknown properties during typed conversion and retains
+the last duplicate property. Overflow anywhere in the document fails parsing.
 
 Underflow follows nlohmann/json's binary64 conversion: sufficiently tiny decimals
 round to signed zero. The parsed binary64 value is then validated, so
@@ -141,12 +140,14 @@ the same domain checks. Negative zero is accepted wherever zero is valid;
 fractional notation (such as `-0.0`) retains its sign. This policy is covered
 by settings tests and does not add shader clamps or coefficient floors.
 
-Omitted paint and sphere properties retain defaults. `RenderPipeline.Preset`
-and `RenderPipeline.VSync` are required; all six custom controls are required
-and checked only when the preset is `Custom`. Integer controls require JSON
-integer storage and an explicit range check before narrowing; `64.0` and
-`6.4e1` are rejected for a sphere resolution. See
-[Usage.md](Usage.md) and [RenderPipeline.md](RenderPipeline.md) for the file format.
+All declared sections and properties are required. Deserialization uses
+nlohmann's declarative macros to populate one `ApplicationSettings` object.
+`ValidateSettings` then checks that object using plain C++. The six custom
+pipeline controls are always present and typed, but their domain limits are
+checked only for `Custom`. Count fields retain binary64 values until validation
+checks finiteness, whole value, and range before narrowing. Thus `64.0` and
+`6.4e1` are accepted for sphere resolution. See [Settings.md](Settings.md),
+[Usage.md](Usage.md), and [RenderPipeline.md](RenderPipeline.md).
 
 Coefficients, trig, square roots, and sRGB conversion are calculated in binary64 and then stored in binary32. This ordinary rounding is part of the implementation. Extremely small positive Shift or Dark Point can have a coefficient contribution below binary32 resolution, which does not imply a material-validation failure. Abstractly excluded endpoints are never admitted, and no requested input is clamped or angle wrapped.
 

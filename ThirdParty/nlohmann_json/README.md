@@ -9,9 +9,10 @@ Builds use this checked-in dependency and require no network access or package m
 - Header SHA-256: `aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63`
 
 The local CMake interface target is `nlohmann_json::nlohmann_json`. It disables
-implicit conversions; callers still check numeric types and ranges explicitly.
-Only the application settings loader and its contract tests need this dependency.
-The reusable SimplePaint module is independent of JSON.
+implicit conversions; declarative macros perform typed field conversion.
+Only the settings I/O library and serialization tests need this dependency.
+The settings model, validation, renderer preparation, and reusable SimplePaint
+module are independent of JSON.
 
 To update, replace the header and license from a pinned upstream release, verify
 its published header checksum, update this file, and run both Release and Debug
