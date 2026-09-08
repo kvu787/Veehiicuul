@@ -396,3 +396,74 @@ The resulting data would have names that describe what it actually is:
 These belong to renderer preparation and renderer-owned state. There would be no second `RuntimeSettings`, `ResolvedSettings`, or similarly named aggregate.
 
 Concretely, I would repurpose the existing `ApplicationSettings` name for the declarative JSON model and move its currently stored derived values into appropriately named renderer data. Nested structs can organize the JSON sections, but there is only one top-level settings model.
+
+
+## User
+
+okay, do the change
+
+
+## Assistant (commentary)
+
+I値l make `ApplicationSettings` the declarative JSON model, separate deserialization from plain C++ validation, and move derived values into renderer-owned data. Then I値l update the tests and documentation and verify both build configurations.
+
+
+## Assistant (question)
+
+For the simpler model, should Settings.json explicitly contain every declared field, or should missing fields use C++ defaults? Requiring all fields avoids the current per-material fallback rules; the shipped JSON already contains every field.
+
+Options:
+- Require every field (recommended for clarity)
+- Allow missing fields with defaults
+
+
+## Assistant (commentary)
+
+I知 proceeding with complete settings files: every declared field will be required, and the shipped JSON already contains them all. The field declarations will still provide values for constructing settings in C++.
+
+Numeric counts will stay as `double` until validation checks them, so fractions cannot be silently truncated. The JSON library will handle duplicate and unknown properties normally; the custom parsing callback will be removed.
+
+
+## User (question reply)
+
+Require every field (recommended for clarity)
+
+
+## Assistant (commentary)
+
+Every JSON field will be required, as you chose. The loader now has a direct typed deserialization call followed by validation. I知 updating the tests to verify that validation and renderer preparation work without including or linking nlohmann/json.
+
+
+## Assistant (commentary)
+
+The new code builds, and the pure C++ validation and JSON serialization tests pass. The GPU tests are running now. Deserialization preserves fractional counts, unknown preset strings, and RGB array lengths so the separate validator can reject them without inspecting JSON.
+
+
+## Assistant (commentary)
+
+All 12 Release tests passed. The shipped configuration also produces exactly the same effective pipeline, sphere dimensions, and GPU material bits as before the refactor. Debug verification is running, and the documentation now explains the required-field behavior and where each part of the settings code lives.
+
+
+## Assistant (commentary)
+
+Debug also passed all 12 tests. I verified `Run.cmd` from outside the repository: it loaded the settings, launched with the expected pipeline, and closed cleanly. I知 finishing the review and recording the implementation, documentation, and conversation in separate commits.
+
+
+## Assistant
+
+Implemented and committed.
+
+- [ApplicationSettings.h](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/ApplicationSettings.h) is the single settings model.
+- [ApplicationSettingsJson.h](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/ApplicationSettingsJson.h) contains the declarative nlohmann mappings.
+- [SettingsValidation.cpp](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SettingsValidation.cpp) validates ordinary C++ values independently of JSON.
+
+The [loader](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/ApplicationSettings.cpp) now does exactly:
+
+```cpp
+auto settings = Deserialize<ApplicationSettings>(input);
+ValidateSettings(settings);
+```
+
+Every field is required. Derived pipeline values and GPU constants belong to renderer preparation.
+
+All 12 tests passed in Release and Debug. The shipped configuration痴 runtime values are unchanged, and `Run.cmd` launches and closes successfully.
