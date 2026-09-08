@@ -1,7 +1,6 @@
 #include "Renderer.h"
 #include <chrono>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <thread>
 
@@ -57,9 +56,8 @@ int main(int argc, char** argv)
             30, 30, 360, 220, nullptr, nullptr, wc.hInstance, nullptr)};
         Require(window.handle != nullptr, "Cannot create test window");
         ShowWindow(window.handle, SW_SHOWNOACTIVATE);
-        std::istringstream json(R"({"RenderPipeline":{"VSync":false,"Preset":"Standard"}})");
-        auto settings = ParseApplicationSettings(json);
-        const RenderPipelineSettings configurations[] = {
+        ApplicationSettings settings;
+        const ResolvedRenderPipeline configurations[] = {
             MinimizeInputLatencyRenderPipeline, StandardRenderPipeline, MaximizeFpsRenderPipeline,
             {.maxGpuFramesInFlight=3, .maxPresentLatency=1, .waitForPresentation=false, .backBufferCount=2, .allowTearing=true, .waitStrategy=WaitStrategy::Spin},
             {.maxGpuFramesInFlight=1, .maxPresentLatency=2, .waitForPresentation=true, .backBufferCount=3, .allowTearing=true, .waitStrategy=WaitStrategy::Event},
@@ -68,14 +66,21 @@ int main(int argc, char** argv)
         };
         for (const auto& renderPipeline : configurations)
         {
-            settings.renderPipeline = renderPipeline;
-            settings.renderPipelinePreset = renderPipeline == MinimizeInputLatencyRenderPipeline ? RenderPipelinePreset::MinimizeInputLatency :
-                renderPipeline == StandardRenderPipeline ? RenderPipelinePreset::Standard :
-                renderPipeline == MaximizeFpsRenderPipeline ? RenderPipelinePreset::MaximizeFps : RenderPipelinePreset::Custom;
-            settings.vsync = renderPipeline.waitStrategy == WaitStrategy::Event;
+            settings.RenderPipeline = {
+                .Preset = renderPipeline.preset == RenderPipelinePreset::MinimizeInputLatency ? "MinimizeInputLatency" :
+                    renderPipeline.preset == RenderPipelinePreset::Standard ? "Standard" :
+                    renderPipeline.preset == RenderPipelinePreset::MaximizeFps ? "MaximizeFps" : "Custom",
+                .VSync = renderPipeline.waitStrategy == WaitStrategy::Event,
+                .MaxGpuFramesInFlight = static_cast<double>(renderPipeline.maxGpuFramesInFlight),
+                .MaxPresentLatency = static_cast<double>(renderPipeline.maxPresentLatency),
+                .WaitForPresentation = renderPipeline.waitForPresentation,
+                .BackBufferCount = static_cast<double>(renderPipeline.backBufferCount),
+                .AllowTearing = renderPipeline.allowTearing,
+                .WaitStrategy = renderPipeline.waitStrategy == WaitStrategy::Event ? "Event" : "Spin"
+            };
             Renderer renderer;
             renderer.Initialize(window.handle, 320, 180, settings, warp);
-            Require(renderer.IsVsyncEnabled() == settings.vsync, "JSON VSync ignored during initialization");
+            Require(renderer.IsVsyncEnabled() == settings.RenderPipeline.VSync, "Configured VSync ignored during initialization");
             Require(RendererTestAccess::HasPresentationWait(renderer) == renderPipeline.waitForPresentation,
                 "Swap-chain presentation wait does not match the selected render pipeline");
             for (int frame = 0; frame < 24; ++frame)
@@ -108,8 +113,9 @@ int main(int argc, char** argv)
         }
         for (const auto strategy : {WaitStrategy::Event, WaitStrategy::Spin})
         {
-            settings.renderPipeline = MinimizeInputLatencyRenderPipeline;
-            settings.renderPipeline.waitStrategy = strategy;
+            settings.RenderPipeline = {.Preset = "Custom", .MaxGpuFramesInFlight = 1,
+                .MaxPresentLatency = 1, .BackBufferCount = 2, .AllowTearing = true,
+                .WaitStrategy = strategy == WaitStrategy::Event ? "Event" : "Spin"};
             Renderer renderer;
             renderer.Initialize(window.handle, 320, 180, settings, warp);
             Require(renderer.PrepareFrame(Pump), "Initial admission failed");

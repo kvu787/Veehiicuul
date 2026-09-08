@@ -1,4 +1,6 @@
 #include "Application.h"
+#include "ApplicationSettingsIO.h"
+#include "PlatformPaths.h"
 
 #include <Windows.h>
 

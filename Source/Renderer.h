@@ -2,6 +2,7 @@
 
 #include "SimplePaint/OrthographicTransforms.h"
 #include "ApplicationSettings.h"
+#include "RenderPreparation.h"
 #include <Windows.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -100,8 +101,7 @@ private:
     bool m_vsyncEnabled = false;
     bool m_tearingSupported = false;
     bool m_useSoftwareAdapter = false;
-    RenderPipelinePreset m_renderPipelinePreset = RenderPipelinePreset::Standard;
-    RenderPipelineSettings m_renderPipeline{};
+    ResolvedRenderPipeline m_renderPipeline = StandardRenderPipeline;
     UINT m_swapChainFlags = 0;
     HANDLE m_presentationEvent = nullptr;
     bool m_presentationAdmitted = false;

@@ -1,56 +1,57 @@
 #pragma once
 
-#include "SimplePaint/Material.h"
-#include <array>
-#include <cstdint>
-#include <filesystem>
-#include <istream>
-#include <string_view>
+#include <string>
+#include <vector>
 
-enum class RenderPipelinePreset { MinimizeInputLatency, Standard, MaximizeFps, Custom };
-enum class WaitStrategy { Event, Spin };
-
-struct RenderPipelineSettings
-{
-    std::uint32_t maxGpuFramesInFlight = 2;
-    std::uint32_t maxPresentLatency = 2;
-    bool waitForPresentation = true;
-    std::uint32_t backBufferCount = 3;
-    bool allowTearing = false;
-    WaitStrategy waitStrategy = WaitStrategy::Event;
-    bool operator==(const RenderPipelineSettings&) const = default;
-};
-
-inline constexpr RenderPipelineSettings StandardRenderPipeline{};
-inline constexpr RenderPipelineSettings MinimizeInputLatencyRenderPipeline{
-    .maxGpuFramesInFlight = 1,
-    .maxPresentLatency = 1,
-    .waitForPresentation = true,
-    .backBufferCount = 2,
-    .allowTearing = true,
-    .waitStrategy = WaitStrategy::Spin,
-};
-inline constexpr RenderPipelineSettings MaximizeFpsRenderPipeline{
-    .maxGpuFramesInFlight = 3,
-    .maxPresentLatency = 2, // Inactive without presentation admission waiting.
-    .waitForPresentation = false,
-    .backBufferCount = 4,
-    .allowTearing = true,
-    .waitStrategy = WaitStrategy::Spin,
-};
-
+// The complete Settings.json contract. Members use the JSON property names.
+// Every property is required when loading a file. Initializers are convenient
+// starting values for C++ callers and match the shipped configuration.
+// No derived renderer data or JSON-library types belong in this model.
 struct ApplicationSettings
 {
-    RenderPipelinePreset renderPipelinePreset = RenderPipelinePreset::Standard;
-    RenderPipelineSettings renderPipeline = StandardRenderPipeline;
-    bool vsync = false;
-    std::uint32_t sphereUResolution = 64;
-    std::uint32_t sphereVResolution = 32;
-    std::array<SimplePaint::GpuMaterial, 6> paintMaterials{};
-};
+    struct Pipeline
+    {
+        std::string Preset = "MinimizeInputLatency"; // MinimizeInputLatency, Standard, MaximizeFps, Custom.
+        bool VSync = false;
+        // These six controls affect the renderer only with Preset == "Custom".
+        // Counts remain double until validation, so fractions cannot be truncated on input.
+        double MaxGpuFramesInFlight = 2; // Whole number in [1, 16].
+        double MaxPresentLatency = 2;   // Whole number in [1, 16].
+        bool WaitForPresentation = true;
+        double BackBufferCount = 3;     // Whole number in [2, 16].
+        bool AllowTearing = false;
+        std::string WaitStrategy = "Event"; // Event or Spin.
+        bool operator==(const Pipeline&) const = default;
+    };
 
-[[nodiscard]] ApplicationSettings ParseApplicationSettings(std::istream& input);
-[[nodiscard]] ApplicationSettings LoadApplicationSettings(const std::filesystem::path& path);
-[[nodiscard]] std::filesystem::path ModuleDirectory();
-[[nodiscard]] std::wstring_view RenderPipelinePresetName(RenderPipelinePreset preset);
-void ValidateRenderPipelineSettings(const RenderPipelineSettings& settings);
+    struct SphereMesh
+    {
+        double UResolution = 64; // Whole number in [3, 512].
+        double VResolution = 32; // Whole number in [2, 512].
+        bool operator==(const SphereMesh&) const = default;
+    };
+
+    struct Paint
+    {
+        // Keep the complete input array until validation checks its length.
+        std::vector<double> BaseColor{0.107, 0.223, 0.578}; // Exactly three sRGB channels.
+        double Brightness = 0.5;
+        double Shift = 0.0;
+        double RotationDegrees = 0.0;
+        double DarkPoint = 0.0;
+        double LightPoint = 0.8;
+        // RGB and Brightness: [1/1024, 1-1/1024]; Shift and DarkPoint: [0, 1-1/1024].
+        // RotationDegrees: [0, 360); LightPoint: [1/1024, 1]. All numbers must be finite.
+        bool operator==(const Paint&) const = default;
+    };
+
+    Pipeline RenderPipeline;
+    Paint SimplePaintShader_Axles{.BaseColor = {0.678429127, 0.678431321, 0.678431321}};
+    Paint SimplePaintShader_Body{.BaseColor = {0.0009765625, 0.436627067, 0.9990234375}};
+    Paint SimplePaintShader_Cabin{.BaseColor = {0.506386429, 0.756053146, 0.9990234375}};
+    Paint SimplePaintShader_Headlights{.BaseColor = {0.9990234375, 0.815686771, 0.0009765625}};
+    Paint SimplePaintShader_Wheels{.BaseColor = {0.345097446, 0.345097446, 0.345097446}};
+    Paint SimplePaintShader_Sphere{.BaseColor = {0.107, 0.223, 0.578}, .Brightness = 0.126, .LightPoint = 1.0};
+    SphereMesh Sphere;
+    bool operator==(const ApplicationSettings&) const = default;
+};

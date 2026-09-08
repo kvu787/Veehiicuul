@@ -1,3 +1,5 @@
+#include "PlatformPaths.h"
+#include "SettingsValidation.h"
 #include "Renderer.h"
 #include "UVSphere.h"
 #include "SimplePaint/Geometry.h"
@@ -296,14 +298,13 @@ void Renderer::Initialize(HWND window, const std::uint32_t width, const std::uin
     m_width = width;
     m_height = height;
 
-    ValidateRenderPipelineSettings(settings.renderPipeline);
-    m_renderPipelinePreset = settings.renderPipelinePreset;
-    m_renderPipeline = settings.renderPipeline;
-    m_vsyncEnabled = settings.vsync;
+    ValidateSettings(settings);
+    m_renderPipeline = ResolveRenderPipeline(settings.RenderPipeline);
+    m_vsyncEnabled = settings.RenderPipeline.VSync;
     m_useSoftwareAdapter = useSoftwareAdapter;
-    m_sphereUResolution = settings.sphereUResolution;
-    m_sphereVResolution = settings.sphereVResolution;
-    m_paintMaterials = settings.paintMaterials;
+    m_sphereUResolution = static_cast<std::uint32_t>(settings.Sphere.UResolution);
+    m_sphereVResolution = static_cast<std::uint32_t>(settings.Sphere.VResolution);
+    m_paintMaterials = CompilePaintMaterials(settings);
     m_frames.resize(m_renderPipeline.maxGpuFramesInFlight);
     m_renderTargets.resize(m_renderPipeline.backBufferCount);
     m_backBufferFences.resize(m_renderPipeline.backBufferCount);
@@ -1337,7 +1338,7 @@ std::wstring Renderer::RenderPipelineDescription() const
     const wchar_t* tearing = !m_renderPipeline.allowTearing ? L"not requested" :
         !m_tearingSupported ? L"unsupported" : m_vsyncEnabled ? L"inactive (VSync)" : L"on";
     return std::format(L"{} | GPU:{} Present:{} Buffers:{} | {} | Tearing:{}",
-        RenderPipelinePresetName(m_renderPipelinePreset), m_renderPipeline.maxGpuFramesInFlight, presentLimit,
+        RenderPipelinePresetName(m_renderPipeline.preset), m_renderPipeline.maxGpuFramesInFlight, presentLimit,
         m_renderPipeline.backBufferCount, m_renderPipeline.waitStrategy == WaitStrategy::Event ? L"Event" : L"Spin", tearing);
 }
 
