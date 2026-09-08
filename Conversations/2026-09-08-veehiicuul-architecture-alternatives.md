@@ -302,3 +302,26 @@ There is also a useful correction to my previous recommendation: **you do not ne
 
 **My decision would be: continue developing VeeHiiCuuL on DX12. Build a small DX11 benchmark only if you want to establish which implementation actually wins, rather than because the game is too simple to benefit from DX12.**
 
+
+## User
+
+does godot use dx11 at all?
+
+## Assistant
+
+I’ll check Godot’s documentation for its supported rendering backends.
+
+## Assistant
+
+**Yes—indirectly through ANGLE, but Godot does not have a native DX11 renderer.**
+
+On Windows, Godot 4 has these paths:
+
+| Rendering method | Graphics API path                          |
+| ---------------- | ------------------------------------------ |
+| Forward+ / Mobile | Vulkan or native Direct3D 12               |
+| Compatibility    | OpenGL, or OpenGL ES → ANGLE → Direct3D 11 |
+
+ANGLE translates the Compatibility renderer’s OpenGL ES commands into DX11 calls. Godot documents this as a way to improve compatibility on systems with problematic OpenGL drivers. [Renderer overview](https://docs.godotengine.org/en/stable/tutorials/rendering/renderers.html), [ANGLE support](https://docs.godotengine.org/en/stable/engine_details/development/compiling/compiling_for_windows.html#compiling-with-angle-support).
+
+For our comparison, **Godot using ANGLE would not be a clean test of native DX11 versus your native DX12 renderer**: it also changes the engine, rendering implementation, and adds a translation layer. That does not automatically make it slow, but it prevents attributing the result solely to DX11.
