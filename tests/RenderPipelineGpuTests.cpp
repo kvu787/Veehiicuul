@@ -1,3 +1,4 @@
+#include "SettingsTestData.h"
 #include "Renderer.h"
 #include <chrono>
 #include <iostream>
@@ -56,7 +57,7 @@ int main(int argc, char** argv)
             30, 30, 360, 220, nullptr, nullptr, wc.hInstance, nullptr)};
         Require(window.handle != nullptr, "Cannot create test window");
         ShowWindow(window.handle, SW_SHOWNOACTIVATE);
-        ApplicationSettings settings;
+        auto settings = MakeTestSettings();
         const ResolvedRenderPipeline configurations[] = {
             MinimizeInputLatencyRenderPipeline, StandardRenderPipeline, MaximizeFpsRenderPipeline,
             {.maxGpuFramesInFlight=3, .maxPresentLatency=1, .waitForPresentation=false, .backBufferCount=2, .allowTearing=true, .waitStrategy=WaitStrategy::Spin},
@@ -113,8 +114,8 @@ int main(int argc, char** argv)
         }
         for (const auto strategy : {WaitStrategy::Event, WaitStrategy::Spin})
         {
-            settings.RenderPipeline = {.Preset = "Custom", .MaxGpuFramesInFlight = 1,
-                .MaxPresentLatency = 1, .BackBufferCount = 2, .AllowTearing = true,
+            settings.RenderPipeline = {.Preset = "Custom", .VSync = false, .MaxGpuFramesInFlight = 1,
+                .MaxPresentLatency = 1, .WaitForPresentation = true, .BackBufferCount = 2, .AllowTearing = true,
                 .WaitStrategy = strategy == WaitStrategy::Event ? "Event" : "Spin"};
             Renderer renderer;
             renderer.Initialize(window.handle, 320, 180, settings, warp);

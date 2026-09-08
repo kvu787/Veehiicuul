@@ -3,8 +3,11 @@
 [ApplicationSettings.h](../Source/ApplicationSettings.h) is the single C++ model
 of [Settings.json](../assets/Settings.json). Its nested types group the fields
 found in the file. Read this header to see all available settings and their
-domains. Initializers match the shipped file and support direct C++ construction;
-missing JSON fields are errors, not requests for defaults.
+domains. The model declares no configuration defaults: configured values come
+from the JSON file, and every field is required. nlohmann value-initializes the
+object before filling it; zero initialization never substitutes for a missing
+JSON field. Direct C++ callers must supply a complete object before validation.
+Tests use explicit test inputs, while JSON tests read the shipped file.
 
 [ApplicationSettings.cpp](../Source/ApplicationSettings.cpp) reads the file in
 two explicit steps:

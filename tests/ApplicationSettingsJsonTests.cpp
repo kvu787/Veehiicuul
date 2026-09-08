@@ -26,10 +26,11 @@ int main()
 {
     try
     {
-        const ApplicationSettings defaults;
-        const nlohmann::json document = defaults;
-        Require(Parse(document.dump()) == defaults);
-        Require(LoadApplicationSettings("assets/Settings.json") == defaults);
+        std::ifstream input("assets/Settings.json");
+        const auto document = nlohmann::json::parse(input);
+        const auto shipped = LoadApplicationSettings("assets/Settings.json");
+        Require(nlohmann::json(shipped) == document);
+        Require(Parse(document.dump()) == shipped);
         // Every root section and every nested field is required, including inactive controls.
         for (auto section = document.begin(); section != document.end(); ++section)
         {
@@ -53,19 +54,21 @@ int main()
         Reject([&] { Deserialize<ApplicationSettings>(failedInput); });
         std::ostringstream failedOutput;
         failedOutput.setstate(std::ios::badbit);
-        Reject([&] { Serialize(failedOutput, defaults); });
+        Reject([&] { Serialize(failedOutput, shipped); });
         for (const auto& wrong : {nlohmann::json(true), nlohmann::json("64"), nlohmann::json::object()})
         {
             auto invalid = document;
             invalid["Sphere"]["UResolution"] = wrong;
             Reject([&] { Parse(invalid.dump()); });
         }
-        auto tiny = document.dump();
+        auto tinyDocument = document;
+        tinyDocument["SimplePaintShader_Sphere"]["Shift"] = 0.0;
+        auto tiny = tinyDocument.dump();
         const auto shift = tiny.find("\"Shift\":0.0");
         Require(shift != std::string::npos);
         tiny.replace(shift, 11, "\"Shift\":1e-999");
         ValidateSettings(Parse(tiny));
-        auto custom = defaults;
+        auto custom = shipped;
         custom.RenderPipeline = {.Preset="Custom", .VSync=true, .MaxGpuFramesInFlight=7,
             .MaxPresentLatency=4, .WaitForPresentation=false, .BackBufferCount=8,
             .AllowTearing=true, .WaitStrategy="Spin"};
@@ -82,10 +85,10 @@ int main()
         auto extra = document;
         extra["Unknown"] = true;
         extra["Sphere"]["Unknown"] = false;
-        Require(Parse(extra.dump()) == defaults);
+        Require(Parse(extra.dump()) == shipped);
         auto duplicate = document.dump();
         duplicate.insert(1, "\"Sphere\":{\"UResolution\":1,\"VResolution\":1},");
-        Require(Parse(duplicate) == defaults); // nlohmann keeps the last duplicate.
+        Require(Parse(duplicate) == shipped); // nlohmann keeps the last duplicate.
         auto fractional = document;
         fractional["Sphere"]["UResolution"] = 64.5;
         auto parsed = Parse(fractional.dump());

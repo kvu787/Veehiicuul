@@ -1,3 +1,4 @@
+#include "SettingsTestData.h"
 #include "SettingsValidation.h"
 #include "RenderPreparation.h"
 #include <cmath>
@@ -10,7 +11,7 @@ namespace
 void Require(bool value) { if (!value) throw std::runtime_error("Settings contract failed"); }
 template<class Edit> void Reject(Edit edit)
 {
-    ApplicationSettings settings;
+    auto settings = MakeTestSettings();
     settings.RenderPipeline.Preset = "Custom";
     edit(settings);
     try { ValidateSettings(settings); }
@@ -22,7 +23,7 @@ int main()
 {
     try
     {
-        ApplicationSettings settings;
+        auto settings = MakeTestSettings();
         const auto original = settings;
         ValidateSettings(settings);
         Require(settings == original);
@@ -38,7 +39,7 @@ int main()
             Require(resolved == (std::string_view(name) == "Standard" ? StandardRenderPipeline :
                 std::string_view(name) == "MaximizeFps" ? MaximizeFpsRenderPipeline : MinimizeInputLatencyRenderPipeline));
         }
-        settings = {};
+        settings = MakeTestSettings();
         settings.RenderPipeline = {.Preset="Custom", .VSync=true, .MaxGpuFramesInFlight=16,
             .MaxPresentLatency=1, .WaitForPresentation=false, .BackBufferCount=2,
             .AllowTearing=true, .WaitStrategy="Spin"};
@@ -57,7 +58,7 @@ int main()
         for (double value : {1.0, 2.5, 17.0}) Reject([&](auto& s) { s.RenderPipeline.BackBufferCount = value; });
         for (double value : {2.0, 3.5, 513.0, 1e100}) Reject([&](auto& s) { s.Sphere.UResolution = value; });
         for (double value : {1.0, 2.5, 513.0}) Reject([&](auto& s) { s.Sphere.VResolution = value; });
-        settings = {};
+        settings = MakeTestSettings();
         settings.Sphere = {.UResolution=512, .VResolution=2};
         ValidateSettings(settings);
         const auto paints = {
@@ -85,7 +86,7 @@ int main()
         }
         Reject([](auto& s) { s.SimplePaintShader_Sphere.Brightness = std::nextafter(SimplePaint::Margin, 0.0); });
         Reject([](auto& s) { s.SimplePaintShader_Sphere.Shift = std::nextafter(SimplePaint::InteriorMaximum, 1.0); });
-        settings = {};
+        settings = MakeTestSettings();
         const auto baseline = CompilePaintMaterials(settings);
         settings.SimplePaintShader_Sphere.RotationDegrees = 90;
         const auto changed = CompilePaintMaterials(settings);

@@ -1,3 +1,4 @@
+#include "SettingsTestData.h"
 #include "Application.h"
 #include <atomic>
 #include <chrono>
@@ -67,7 +68,7 @@ int main(int argc, char** argv)
     try
     {
         Application application;
-        ApplicationSettings settings;
+        auto settings = MakeTestSettings();
         settings.RenderPipeline.Preset = maximizeFps ? "MaximizeFps" : "Standard";
         const int result = application.Run(GetModuleHandleW(nullptr), SW_SHOWNOACTIVATE, settings);
         done = true;
