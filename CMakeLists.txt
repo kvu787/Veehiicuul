@@ -74,9 +74,10 @@ compile_shader("${SIMPLE_PAINT_SHADER_SOURCE}" SimplePaintPS PSMain ps_6_0 g_sim
 add_custom_target(CompiledShaders DEPENDS ${SHADER_OUTPUTS})
 
 add_subdirectory(Source/SimplePaint)
+add_subdirectory(ThirdParty/nlohmann_json)
 
 add_library(ApplicationSettings Source/ApplicationSettings.cpp Source/ApplicationSettings.h)
-target_link_libraries(ApplicationSettings PUBLIC SimplePaint)
+target_link_libraries(ApplicationSettings PUBLIC SimplePaint PRIVATE nlohmann_json::nlohmann_json)
 target_include_directories(ApplicationSettings PUBLIC Source)
 target_compile_features(ApplicationSettings PUBLIC cxx_std_20)
 target_compile_definitions(ApplicationSettings PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN UNICODE _UNICODE)

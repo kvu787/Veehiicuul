@@ -1,0 +1,3 @@
+# Preserve upstream bytes and the published checksum on Windows checkouts.
+include/nlohmann/json.hpp -text
+LICENSE.MIT -text
