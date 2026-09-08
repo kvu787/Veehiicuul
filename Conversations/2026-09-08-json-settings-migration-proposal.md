@@ -563,3 +563,30 @@ I would make these changes:
 This requires one adjustment to the earlier separation: **checks needed to convert a value faithfully into its C++ type happen during deserialization; application rules happen afterward.** Unmodified nlohmann macros alone do not provide checked integer conversion.
 
 That is the approach I recommend: actual integer members, one settings model, and no application-specific rules in the JSON adapter.
+
+
+## User
+
+do this change, except also reject any string that doesn't match the syntax of an integer. this means that "64.0" and "64." should be rejected.
+
+## Assistant (commentary)
+
+I’ll make the count fields actual integers and require JSON integer tokens. Values such as `64.0`, `64.`, exponent notation, and quoted strings will be rejected. Application-specific range checks will still happen after deserialization.
+
+## Assistant (commentary)
+
+The integer model and conversion policy build successfully. The JSON adapter checks token type and integer representability before conversion; the settings validator now only checks application ranges. I’m adding tests for decimal and exponent notation, quoted values, overflow, and inactive pipeline controls.
+
+## Assistant (commentary)
+
+All 12 Release tests passed. The new tests confirm that every count field rejects decimal and exponent notation, quoted values, and overflow—even when its pipeline control is inactive. Representable integers still reach the separate validator for application-range checks.
+
+## Assistant
+
+Implemented and committed.
+
+- The five count fields now use `std::int32_t` in [ApplicationSettings.h](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/ApplicationSettings.h).
+- Integer fields accept `64`, but reject `64.0`, `64.`, exponent notation, quoted strings, and integer overflow.
+- Application-specific range validation remains separate from deserialization.
+
+All 12 tests passed in Release and Debug. The shipped configuration produces unchanged pipeline values, sphere dimensions, and GPU material constants.
