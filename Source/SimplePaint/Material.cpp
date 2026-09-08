@@ -29,7 +29,7 @@ double DecodeSrgb(double value)
 }
 }
 
-Material Material::Compile(const Parameters& p)
+void ValidateParameters(const Parameters& p)
 {
     RequireRange(p.baseColorSrgb[0], Margin, InteriorMaximum, "R");
     RequireRange(p.baseColorSrgb[1], Margin, InteriorMaximum, "G");
@@ -40,7 +40,11 @@ Material Material::Compile(const Parameters& p)
     RequireRange(p.lightPoint, Margin, 1.0, "Light Point");
     if (!std::isfinite(p.rotationDegrees) || p.rotationDegrees < 0.0 || p.rotationDegrees >= 360.0)
         throw std::invalid_argument("SimplePaint Rotation must be finite and in [0, 360) degrees.");
+}
 
+Material Material::Compile(const Parameters& p)
+{
+    ValidateParameters(p);
     const double radians = -p.rotationDegrees * std::numbers::pi / 180.0;
     GpuMaterial gpu{
         .warp = {static_cast<float>(std::cos(radians)), static_cast<float>(std::sin(radians)),

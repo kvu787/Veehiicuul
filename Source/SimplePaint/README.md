@@ -67,3 +67,7 @@ The provided transform helper accepts finite orthographic dimensions in [1e-4,1e
 | CMakeLists.txt            | C++ library target, usable after copying           |
 
 The paint mathematics reimplement Kevin Vu's [K12 Simple Paint shader](https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader). This repository's `Documentation/Usage.md` and `Documentation/Specification.md` provide the full derivation and numerical test results; they are not required to compile the copied folder.
+
+`ValidateParameters(parameters)` checks the material domain without computing GPU
+constants. `Material::Compile` also calls it before computing constants. Both APIs
+are plain C++ and independent of JSON or application settings.

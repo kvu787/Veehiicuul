@@ -30,6 +30,9 @@ struct Parameters
     double lightPoint = 1.0;
 };
 
+// Validate the portable input without computing GPU constants.
+void ValidateParameters(const Parameters& parameters);
+
 // Five HLSL float4 registers. The fourth color lanes are reserved and zero.
 // Copy verbatim into a CBV (whose start address must be 256-byte aligned).
 // Instances come only from Material::Compile; consumers must not edit them.
