@@ -141,7 +141,7 @@ fractional notation (such as `-0.0`) retains its sign. This policy is covered
 by settings tests and does not add shader clamps or coefficient floors.
 
 All declared sections and properties are required. Deserialization uses
-nlohmann's declarative macros to populate one `Settings` object.
+input-only declarative mappings to populate one `Settings` object.
 `ValidateSettings` then checks that object using plain C++. The six custom
 pipeline controls are always present and typed, but their domain limits are
 checked only for `Custom`. Count fields use `std::int32_t`. The JSON adapter

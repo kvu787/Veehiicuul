@@ -25,10 +25,10 @@ ValidateSettings(settings);
 ```
 
 [SettingsJson.h](../Source/SettingsJson.h) lists fields
-using `NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE`. The generic
-[JsonSerialization.h](../Source/JsonSerialization.h) delegates parsing and typed
-conversion to nlohmann/json. `Serialize(output, settings)` performs the reverse
-operation. A local nlohmann serializer policy in
+using a local input-only macro built from nlohmann field expansion helpers. It
+produces only `from_json` overloads. The generic
+[JsonDeserialization.h](../Source/JsonDeserialization.h) delegates parsing and typed
+conversion to nlohmann/json. A local nlohmann serializer policy in
 [JsonIntegerConversion.h](../Source/JsonIntegerConversion.h) checks integer
 conversion; other types retain the library's normal conversions. There are no
 handwritten JSON walkers, parser callbacks, or per-field converters. nlohmann

@@ -6,8 +6,15 @@
 #include <iostream>
 #include <limits>
 #include <utility>
+#include <type_traits>
 #include <sstream>
 #include <stdexcept>
+
+// Settings and every nested model expose input conversion only.
+static_assert(!std::is_constructible_v<JsonIO::Json, Settings>);
+static_assert(!std::is_constructible_v<JsonIO::Json, struct Settings::RenderPipeline>);
+static_assert(!std::is_constructible_v<JsonIO::Json, Settings::SphereMesh>);
+static_assert(!std::is_constructible_v<JsonIO::Json, Settings::Paint>);
 
 namespace
 {
@@ -67,8 +74,12 @@ void CheckIntegerConversion(const nlohmann::json& document)
             for (const auto* token : {"-2147483648", "2147483647", "-1", "-0"})
             {
                 const auto parsed = Parse(WithIntegerToken(configured, section, field, token));
-                const nlohmann::json roundTrip = parsed;
-                Require(roundTrip[section][field] == nlohmann::json::parse(token));
+                const auto actual = std::string_view(section) == "Sphere"
+                    ? (std::string_view(field) == "UResolution" ? parsed.Sphere.UResolution : parsed.Sphere.VResolution)
+                    : (std::string_view(field) == "MaxGpuFramesInFlight" ? parsed.RenderPipeline.MaxGpuFramesInFlight
+                        : std::string_view(field) == "MaxPresentLatency" ? parsed.RenderPipeline.MaxPresentLatency
+                        : parsed.RenderPipeline.BackBufferCount);
+                Require(actual == std::stoll(token));
                 if (std::string_view(section) == "Sphere" || std::string_view(preset) == "Custom")
                     Reject([&] { ValidateSettings(parsed); });
                 else
@@ -103,7 +114,6 @@ int main()
         const auto document = nlohmann::json::parse(input);
         CheckIntegerConversion(document);
         const auto shipped = LoadSettings("assets/Settings.json");
-        Require(nlohmann::json(shipped) == document);
         Require(Parse(document.dump()) == shipped);
         // Every root section and every nested field is required, including inactive controls.
         for (auto section = document.begin(); section != document.end(); ++section)
@@ -126,9 +136,6 @@ int main()
         std::istringstream failedInput(document.dump());
         failedInput.setstate(std::ios::badbit);
         Reject([&] { Deserialize<Settings>(failedInput); });
-        std::ostringstream failedOutput;
-        failedOutput.setstate(std::ios::badbit);
-        Reject([&] { Serialize(failedOutput, shipped); });
         for (const auto& wrong : {nlohmann::json(true), nlohmann::json("64"), nlohmann::json::object()})
         {
             auto invalid = document;
@@ -152,10 +159,17 @@ int main()
             &Settings::SimplePaintShader_Wheels, &Settings::SimplePaintShader_Sphere})
             custom.*member = {.BaseColor={.2,.4,.6}, .Brightness=.7, .Shift=.3,
                 .RotationDegrees=123, .DarkPoint=.8, .LightPoint=.2};
-        std::ostringstream output;
-        Serialize(output, custom);
-        Require(Parse(output.str()) == custom);
-        Require(nlohmann::json::parse(output.str())["Sphere"]["UResolution"].is_number_integer());
+        auto customDocument = document;
+        customDocument["RenderPipeline"] = {{"Preset", "Custom"}, {"VSync", true},
+            {"MaxGpuFramesInFlight", 7}, {"MaxPresentLatency", 4}, {"WaitForPresentation", false},
+            {"BackBufferCount", 8}, {"AllowTearing", true}, {"WaitStrategy", "Spin"}};
+        customDocument["Sphere"] = {{"UResolution", 80}, {"VResolution", 40}};
+        for (const auto* section : {"SimplePaintShader_Axles", "SimplePaintShader_Body",
+            "SimplePaintShader_Cabin", "SimplePaintShader_Headlights", "SimplePaintShader_Wheels",
+            "SimplePaintShader_Sphere"})
+            customDocument[section] = {{"BaseColor", {.2, .4, .6}}, {"Brightness", .7},
+                {"Shift", .3}, {"RotationDegrees", 123}, {"DarkPoint", .8}, {"LightPoint", .2}};
+        Require(Parse(customDocument.dump()) == custom);
         ValidateSettings(custom);
         auto extra = document;
         extra["Unknown"] = true;
@@ -179,14 +193,14 @@ int main()
             ("settings-contract-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + ".json");
         struct Cleanup { std::filesystem::path path; ~Cleanup() { std::error_code error; std::filesystem::remove(path, error); } } cleanup{path};
         Reject([&] { (void)LoadSettings(path); });
-        { std::ofstream file(path); Serialize(file, custom); }
+        { std::ofstream file(path); file << customDocument.dump(); }
         Require(LoadSettings(path) == custom);
         { std::ofstream file(path); file << WithIntegerToken(document, "Sphere", "UResolution", "64.0"); }
         Reject([&] { (void)LoadSettings(path); });
         { std::ofstream file(path); file << extra.dump(); }
         try { (void)LoadSettings(path); throw std::logic_error("Invalid file accepted"); }
         catch (const std::runtime_error& error) { Require(std::string(error.what()).find(path.string()) != std::string::npos); }
-        std::cout << "Typed JSON, required fields, round trips, and validated file loading passed.\n";
+        std::cout << "Typed JSON, required fields, and validated file loading passed.\n";
         return 0;
     }
     catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }

@@ -1,20 +1,27 @@
 #pragma once
 
 #include "Settings.h"
-#include "JsonSerialization.h"
+#include "JsonDeserialization.h"
 
-// Serialization declarations only: no validation, preset expansion, or callbacks.
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(struct Settings::RenderPipeline,
+// Required-field input mappings only: no validation, preset expansion, or callbacks.
+// nlohmann 3.12 has no input-only mapping macro. Reuse its field expansion
+// without generating to_json overloads, and keep this helper local to this header.
+#define DEFINE_SETTINGS_FROM_JSON(Type, ...) \
+    inline void from_json(const JsonIO::Json& nlohmann_json_j, Type& nlohmann_json_t) \
+    { NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_FROM, __VA_ARGS__)) }
+DEFINE_SETTINGS_FROM_JSON(struct Settings::RenderPipeline,
     Preset, VSync, MaxGpuFramesInFlight, MaxPresentLatency, WaitForPresentation,
     BackBufferCount, AllowTearing, WaitStrategy)
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Settings::SphereMesh,
+DEFINE_SETTINGS_FROM_JSON(Settings::SphereMesh,
     UResolution, VResolution)
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Settings::Paint,
+DEFINE_SETTINGS_FROM_JSON(Settings::Paint,
     BaseColor, Brightness, Shift, RotationDegrees, DarkPoint, LightPoint)
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Settings,
+DEFINE_SETTINGS_FROM_JSON(Settings,
     RenderPipeline, SimplePaintShader_Axles, SimplePaintShader_Body,
     SimplePaintShader_Cabin, SimplePaintShader_Headlights, SimplePaintShader_Wheels,
     SimplePaintShader_Sphere, Sphere)
+
+#undef DEFINE_SETTINGS_FROM_JSON

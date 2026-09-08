@@ -13,7 +13,7 @@ implicit conversions; declarative macros perform typed field conversion.
 The application I/O adapter supplies a local serializer policy that requires
 integer tokens and checks representability before integer conversion. The
 vendored library remains unchanged.
-Only the settings I/O library and serialization tests need this dependency.
+Only the settings I/O library and deserialization tests need this dependency.
 The settings model, validation, renderer preparation, and reusable SimplePaint
 module are independent of JSON.
 
