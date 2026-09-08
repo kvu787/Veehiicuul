@@ -1,4 +1,4 @@
-# SimplePaint: copy this folder
+# Simple Paint shader
 
 This folder contains the complete reusable C++20/HLSL implementation. Copy the **entire `SimplePaint` folder** into another project's source or vendor directory. It has no dependency on this application's renderer, generated meshes, settings loader, background shader, tests, or build scripts.
 
