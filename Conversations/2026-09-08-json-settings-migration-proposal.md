@@ -467,3 +467,18 @@ ValidateSettings(settings);
 Every field is required. Derived pipeline values and GPU constants belong to renderer preparation.
 
 All 12 tests passed in Release and Debug. The shipped configuration’s runtime values are unchanged, and `Run.cmd` launches and closes successfully.
+
+
+## User
+
+ApplicationSettings::Pipeline should be renamed to ApplicationSettings::RenderPipeline
+
+## Assistant (commentary)
+
+I’ll rename the nested type and update its references, then build and run the settings tests.
+
+## Assistant
+
+Renamed to `ApplicationSettings::RenderPipeline` and updated all references and JSON mappings.
+
+Release build and both settings tests passed.
