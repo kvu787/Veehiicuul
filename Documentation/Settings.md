@@ -2,8 +2,15 @@
 
 [ApplicationSettings.h](../Source/ApplicationSettings.h) is the single C++ model
 of [Settings.json](../assets/Settings.json). Its nested types group the fields
-found in the file. Read this header to see all available settings and their
-domains. The model declares no configuration defaults: configured values come
+found in the file. Read this header to see the field names and C++ types.
+For accepted values and when settings apply, see
+[render pipeline configuration](RenderPipeline.md) for presets and custom controls,
+and [SimplePaint usage](Usage.md#controls) for finite paint limits and
+[application settings](Usage.md#run-and-edit-this-application) for sphere resolutions
+and JSON format rules. The [specification](Specification.md#accepted-machine-inputs)
+explains the paint limits in detail.
+
+The model declares no configuration defaults: configured values come
 from the JSON file, and every field is required. nlohmann value-initializes the
 object before filling it; zero initialization never substitutes for a missing
 JSON field. Direct C++ callers must supply a complete object before validation.
@@ -44,8 +51,10 @@ storage before casting, preventing truncation and wraparound. These conversion
 rules apply even when a fixed preset makes a count inactive. Application limits
 such as sphere U resolution in [3, 512] remain in the separate validator.
 
-RGB uses `std::vector<double>` so its length can be checked afterward. Paint
-numbers continue to follow the library's binary64 conversion and domain checks.
+`BaseColor` uses `std::vector<double>` to preserve the complete input array
+until application validation requires exactly three sRGB channels in R, G, B
+order. Paint numbers continue to follow the library's binary64 conversion and
+domain checks.
 
 [RenderPreparation.cpp](../Source/RenderPreparation.cpp) resolves a pipeline
 preset into `ResolvedRenderPipeline` and compiles paint values into
