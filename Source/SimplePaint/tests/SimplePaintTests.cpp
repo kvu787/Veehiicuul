@@ -1,7 +1,6 @@
 #include "SimplePaintReference.h"
 #include "SimplePaint/Geometry.h"
 #include "SimplePaint/OrthographicTransforms.h"
-#include "UVSphere.h"
 #include <iostream>
 #include <limits>
 
@@ -68,22 +67,6 @@ int main()
             Require(std::abs(PaintTest::Curve(c,b,1-b)-PaintTest::Linear(c)) < 1.0e-13,"Base-color anchor failed");
             Require(PaintTest::Curve(c,b,0)==0 && PaintTest::Curve(c,b,1)==1,"Endpoints failed");
         }
-        // Validate actual assets and minimum sphere resolution, then corrupt each
-        // independently to prove invalid geometry is rejected before upload.
-        const std::vector<std::uint32_t> carIndices(std::begin(GeneratedCarMesh::Indices),std::end(GeneratedCarMesh::Indices));
-        ValidateMesh<GeneratedCarMesh::Vertex>(GeneratedCarMesh::Vertices,carIndices,5);
-        auto mesh = UVSphere::Generate(3,2,0);
-        ValidateMesh<GeneratedCarMesh::Vertex>(mesh.vertices,mesh.indices,1);
-        auto bad = mesh;
-        bad.vertices[0].normalY=0; Throws([&]{ValidateMesh<GeneratedCarMesh::Vertex>(bad.vertices,bad.indices,1);});
-        bad=mesh; bad.indices[0]=9999; Throws([&]{ValidateMesh<GeneratedCarMesh::Vertex>(bad.vertices,bad.indices,1);});
-        bad=mesh; bad.vertices[0].materialIndex=1; Throws([&]{ValidateMesh<GeneratedCarMesh::Vertex>(bad.vertices,bad.indices,2);});
-        bad=mesh; bad.vertices[0].positionX=INFINITY; Throws([&]{ValidateMesh<GeneratedCarMesh::Vertex>(bad.vertices,bad.indices,1);});
-        bad=mesh;
-        bad.vertices[0].normalX=-bad.vertices[bad.indices[1]].normalX;
-        bad.vertices[0].normalY=-bad.vertices[bad.indices[1]].normalY;
-        bad.vertices[0].normalZ=-bad.vertices[bad.indices[1]].normalZ;
-        Throws([&]{ValidateMesh<GeneratedCarMesh::Vertex>(bad.vertices,bad.indices,1);});
         using namespace DirectX;
         const auto projection = Orthographic::MakeProjection(5,5,1,20);
         Throws([&]{(void)Orthographic::MakeProjection(0,5,1,20);});
@@ -108,7 +91,7 @@ int main()
             const double reduced=r*z*std::sqrt((1-s)*(1+s))/(r-s*x);
             Require(std::abs(original-reduced)<1.0e-11,"Original K12 lobe and rational reduction differ");
         }
-        std::cout << checks << " curve comparisons; parameter boundaries, anchors, mesh and transform validation passed.\n";
+        std::cout << checks << " curve comparisons; parameter boundaries, anchors and transform validation passed.\n";
         std::cout << "20,000 independent original K12 slice/Schlick/remap comparisons passed.\n";
     }
     catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }

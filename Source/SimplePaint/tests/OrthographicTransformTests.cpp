@@ -1,5 +1,4 @@
 #include "SimplePaint/OrthographicTransforms.h"
-#include "generated/CarMesh.generated.h"
 
 #include <algorithm>
 #include <cmath>
@@ -20,15 +19,6 @@ int main()
 {
     try
     {
-        // Paint rotation is constant across each primitive, including car seams.
-        for (size_t i = 0; i < std::size(GeneratedCarMesh::Indices); i += 3)
-        {
-            const auto a = GeneratedCarMesh::Vertices[GeneratedCarMesh::Indices[i]].materialIndex;
-            const auto b = GeneratedCarMesh::Vertices[GeneratedCarMesh::Indices[i + 1]].materialIndex;
-            const auto c = GeneratedCarMesh::Vertices[GeneratedCarMesh::Indices[i + 2]].materialIndex;
-            if (a != b || a != c) throw std::runtime_error("A car triangle mixes paint materials");
-        }
-
         std::mt19937 random(0x4f525448);
         std::uniform_real_distribution<float> position(-10.0f, 10.0f), angle(-3.14f, 3.14f);
         for (float aspect : {0.5625f, 1.0f, 16.0f / 9.0f, 32.0f / 9.0f})
@@ -63,7 +53,7 @@ int main()
                 RequireNear(XMVectorGetW(expectedPosition), 1.0f);
             }
         }
-        std::cout << "4,000 packed transforms, depth endpoints, and per-triangle materials passed.\n";
+        std::cout << "4,000 packed transforms, depth endpoints passed.\n";
     }
     catch (const std::exception& error)
     {
@@ -71,4 +61,3 @@ int main()
         return 1;
     }
 }
-

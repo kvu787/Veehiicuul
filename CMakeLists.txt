@@ -73,6 +73,8 @@ compile_shader("${SIMPLE_PAINT_SHADER_SOURCE}" SimplePaintPS PSMain ps_6_0 g_sim
 
 add_custom_target(CompiledShaders DEPENDS ${SHADER_OUTPUTS})
 
+include(CTest)
+option(SIMPLE_PAINT_BUILD_TESTING "Build SimplePaint verification" ${BUILD_TESTING})
 add_subdirectory(Source/SimplePaint)
 add_subdirectory(ThirdParty/nlohmann_json)
 
@@ -183,44 +185,14 @@ target_link_libraries(SimpleDirectX12Game PRIVATE
 
 set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT SimpleDirectX12Game)
 
-include(CTest)
 if(BUILD_TESTING)
-    add_test(NAME SimplePaintStandalone
-        COMMAND "${CMAKE_COMMAND}"
-            "-DMODULE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/Source/SimplePaint"
-            "-DCONSUMER_DIR=${CMAKE_CURRENT_SOURCE_DIR}/tests/SimplePaintStandalone"
-            "-DSMOKE_ROOT=${CMAKE_CURRENT_BINARY_DIR}/SimplePaintCopyCheck"
-            "-DGENERATOR=${CMAKE_GENERATOR}"
-            "-DCXX_COMPILER=${CMAKE_CXX_COMPILER}"
-            "-DMAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
-            "-DCONFIGURATION=$<CONFIG>"
-            "-DDXC_EXECUTABLE=${DXC_EXECUTABLE}"
-            "-DCTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
-            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/VerifySimplePaintStandalone.cmake")
-    set_tests_properties(SimplePaintStandalone PROPERTIES TIMEOUT 120)
-    add_executable(SimplePaintTests tests/SimplePaintTests.cpp)
-    target_link_libraries(SimplePaintTests PRIVATE SimplePaint)
-    add_test(NAME SimplePaintContract COMMAND SimplePaintTests)
-    add_executable(SimplePaintGpuTests tests/SimplePaintGpuTests.cpp ${SHADER_HEADERS})
-    add_dependencies(SimplePaintGpuTests CompiledShaders)
-    target_include_directories(SimplePaintGpuTests PRIVATE "${SHADER_GENERATED_DIRECTORY}")
-    target_compile_definitions(SimplePaintGpuTests PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
-    target_link_libraries(SimplePaintGpuTests PRIVATE SimplePaint d3d12 dxgi)
-    if(MSVC)
-        target_compile_options(SimplePaintTests PRIVATE /W4 /WX /EHsc /fp:precise)
-        target_compile_options(SimplePaintGpuTests PRIVATE /W4 /WX /EHsc /fp:precise)
-    endif()
-    add_test(NAME SimplePaintGpuHardware COMMAND SimplePaintGpuTests)
-    add_test(NAME SimplePaintGpuWarp COMMAND SimplePaintGpuTests --warp)
-    set_tests_properties(SimplePaintGpuHardware SimplePaintGpuWarp PROPERTIES TIMEOUT 120 RUN_SERIAL TRUE)
     add_executable(UVSphereTests tests/UVSphereTests.cpp)
     target_include_directories(UVSphereTests PRIVATE Source)
     target_compile_features(UVSphereTests PRIVATE cxx_std_20)
     add_test(NAME UVSphereGeometry COMMAND UVSphereTests)
-    add_executable(OrthographicTransformTests tests/OrthographicTransformTests.cpp)
-    target_include_directories(OrthographicTransformTests PRIVATE Source)
-    target_compile_features(OrthographicTransformTests PRIVATE cxx_std_20)
-    add_test(NAME OrthographicTransforms COMMAND OrthographicTransformTests)
+    add_executable(PaintGeometryIntegrationTests tests/PaintGeometryIntegrationTests.cpp)
+    target_link_libraries(PaintGeometryIntegrationTests PRIVATE SimplePaint)
+    add_test(NAME PaintGeometryIntegration COMMAND PaintGeometryIntegrationTests)
 endif()
 
 if(BUILD_TESTING)
