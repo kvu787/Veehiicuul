@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ApplicationSettings.h"
+#include "Settings.h"
 #include "SimplePaint/Material.h"
 
 // Translate configured paint controls into the portable shader module's input.
 // Callers check the RGB length before this conversion; at() also bounds-checks.
-inline SimplePaint::Parameters ToPaintParameters(const ApplicationSettings::Paint& paint)
+inline SimplePaint::Parameters ToPaintParameters(const Settings::Paint& paint)
 {
     return {
         .baseColorSrgb = {paint.BaseColor.at(0), paint.BaseColor.at(1), paint.BaseColor.at(2)},

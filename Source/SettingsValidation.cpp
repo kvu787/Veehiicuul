@@ -13,7 +13,7 @@ void RequireRange(std::int32_t value, std::int32_t minimum, std::int32_t maximum
         throw std::invalid_argument(std::format("{}: expected an integer in [{}, {}].", name, minimum, maximum));
 }
 
-void ValidatePaint(const ApplicationSettings::Paint& paint, std::string_view name)
+void ValidatePaint(const Settings::Paint& paint, std::string_view name)
 {
     if (paint.BaseColor.size() != 3)
         throw std::invalid_argument(std::format("{}.BaseColor: expected exactly three RGB channels.", name));
@@ -25,7 +25,7 @@ void ValidatePaint(const ApplicationSettings::Paint& paint, std::string_view nam
 }
 }
 
-void ValidatePipeline(const struct ApplicationSettings::RenderPipeline& pipeline)
+void ValidatePipeline(const struct Settings::RenderPipeline& pipeline)
 {
     if (pipeline.Preset != "MinimizeInputLatency" && pipeline.Preset != "Standard" &&
         pipeline.Preset != "MaximizeFps" && pipeline.Preset != "Custom")
@@ -41,7 +41,7 @@ void ValidatePipeline(const struct ApplicationSettings::RenderPipeline& pipeline
     }
 }
 
-void ValidateSettings(const ApplicationSettings& settings)
+void ValidateSettings(const Settings& settings)
 {
     ValidatePipeline(settings.RenderPipeline);
     RequireRange(settings.Sphere.UResolution, 3, 512, "Sphere.UResolution");

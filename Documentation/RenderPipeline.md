@@ -436,7 +436,7 @@ These tests verify configuration and synchronization behavior. They do not
 establish which preset has the lowest physical latency or highest throughput
 for every system.
 
-The file model is in [ApplicationSettings.h](../Source/ApplicationSettings.h),
+The file model is in [Settings.h](../Source/Settings.h),
 preset definitions are in [RenderPreparation.h](../Source/RenderPreparation.h),
 and loading and validation are separated as described in [Settings.md](Settings.md),
 frame admission and presentation in [Renderer.cpp](../Source/Renderer.cpp), and

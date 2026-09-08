@@ -1,19 +1,19 @@
-#include "ApplicationSettingsIO.h"
-#include "ApplicationSettingsJson.h"
+#include "SettingsIO.h"
+#include "SettingsJson.h"
 #include "SettingsValidation.h"
 
 #include <fstream>
 #include <format>
 #include <stdexcept>
 
-ApplicationSettings LoadApplicationSettings(const std::filesystem::path& path)
+Settings LoadSettings(const std::filesystem::path& path)
 {
     try
     {
         std::ifstream input(path, std::ios::binary);
         if (!input) throw std::runtime_error("Could not open settings file.");
 
-        auto settings = Deserialize<ApplicationSettings>(input);
+        auto settings = Deserialize<Settings>(input);
         ValidateSettings(settings);
         return settings;
     }

@@ -8,7 +8,7 @@
 // Every property is required when loading a file. Configured values come only
 // from Settings.json; this type declares no configuration defaults.
 // No derived renderer data or JSON-library types belong in this model.
-struct ApplicationSettings
+struct Settings
 {
     struct RenderPipeline
     {
@@ -49,5 +49,5 @@ struct ApplicationSettings
     Paint SimplePaintShader_Wheels;
     Paint SimplePaintShader_Sphere;
     SphereMesh Sphere;
-    bool operator==(const ApplicationSettings&) const = default;
+    bool operator==(const Settings&) const = default;
 };

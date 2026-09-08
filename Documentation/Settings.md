@@ -1,6 +1,6 @@
 # Settings architecture
 
-[ApplicationSettings.h](../Source/ApplicationSettings.h) is the single C++ model
+[Settings.h](../Source/Settings.h) is the single C++ model
 of [Settings.json](../assets/Settings.json). Its nested types group the fields
 found in the file. Read this header to see the field names and C++ types.
 For accepted values and when settings apply, see
@@ -16,15 +16,15 @@ object before filling it; zero initialization never substitutes for a missing
 JSON field. Direct C++ callers must supply a complete object before validation.
 Tests use explicit test inputs, while JSON tests read the shipped file.
 
-[ApplicationSettings.cpp](../Source/ApplicationSettings.cpp) reads the file in
+[Settings.cpp](../Source/Settings.cpp) reads the file in
 two explicit steps:
 
 ```cpp
-auto settings = Deserialize<ApplicationSettings>(input);
+auto settings = Deserialize<Settings>(input);
 ValidateSettings(settings);
 ```
 
-[ApplicationSettingsJson.h](../Source/ApplicationSettingsJson.h) lists fields
+[SettingsJson.h](../Source/SettingsJson.h) lists fields
 using `NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE`. The generic
 [JsonSerialization.h](../Source/JsonSerialization.h) delegates parsing and typed
 conversion to nlohmann/json. `Serialize(output, settings)` performs the reverse
@@ -62,6 +62,6 @@ preset into `ResolvedRenderPipeline` and compiles paint values into
 validated sphere counts to mesh dimensions. They are not another settings model.
 Preparation also validates direct C++ inputs before conversion.
 
-When adding a field, declare it in `ApplicationSettings.h`, list it in the
+When adding a field, declare it in `Settings.h`, list it in the
 corresponding JSON macro, add it to the shipped JSON, and add any domain rule to
 the plain C++ validator. Update the consuming renderer code and relevant tests.

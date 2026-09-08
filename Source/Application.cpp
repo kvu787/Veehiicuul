@@ -13,7 +13,7 @@ Application::~Application()
     m_window = nullptr;
 }
 
-int Application::Run(HINSTANCE instance, const int showCommand, const ApplicationSettings& settings)
+int Application::Run(HINSTANCE instance, const int showCommand, const Settings& settings)
 {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     CreateMainWindow(instance, showCommand);

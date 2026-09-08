@@ -287,7 +287,7 @@ Renderer::~Renderer()
 }
 
 void Renderer::Initialize(HWND window, const std::uint32_t width, const std::uint32_t height,
-    const ApplicationSettings& settings, const bool useSoftwareAdapter)
+    const Settings& settings, const bool useSoftwareAdapter)
 {
     if (window == nullptr || width == 0 || height == 0)
     {

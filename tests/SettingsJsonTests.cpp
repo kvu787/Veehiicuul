@@ -1,5 +1,5 @@
-#include "ApplicationSettingsJson.h"
-#include "ApplicationSettingsIO.h"
+#include "SettingsJson.h"
+#include "SettingsIO.h"
 #include "SettingsValidation.h"
 #include <chrono>
 #include <fstream>
@@ -12,10 +12,10 @@
 namespace
 {
 void Require(bool value) { if (!value) throw std::runtime_error("JSON settings contract failed"); }
-ApplicationSettings Parse(const std::string& text)
+Settings Parse(const std::string& text)
 {
     std::istringstream input(text);
-    return Deserialize<ApplicationSettings>(input);
+    return Deserialize<Settings>(input);
 }
 template<class Action> void Reject(Action action)
 {
@@ -102,7 +102,7 @@ int main()
         std::ifstream input("assets/Settings.json");
         const auto document = nlohmann::json::parse(input);
         CheckIntegerConversion(document);
-        const auto shipped = LoadApplicationSettings("assets/Settings.json");
+        const auto shipped = LoadSettings("assets/Settings.json");
         Require(nlohmann::json(shipped) == document);
         Require(Parse(document.dump()) == shipped);
         // Every root section and every nested field is required, including inactive controls.
@@ -125,7 +125,7 @@ int main()
             Reject([&] { Parse(bad); });
         std::istringstream failedInput(document.dump());
         failedInput.setstate(std::ios::badbit);
-        Reject([&] { Deserialize<ApplicationSettings>(failedInput); });
+        Reject([&] { Deserialize<Settings>(failedInput); });
         std::ostringstream failedOutput;
         failedOutput.setstate(std::ios::badbit);
         Reject([&] { Serialize(failedOutput, shipped); });
@@ -147,9 +147,9 @@ int main()
             .MaxPresentLatency=4, .WaitForPresentation=false, .BackBufferCount=8,
             .AllowTearing=true, .WaitStrategy="Spin"};
         custom.Sphere = {.UResolution=80, .VResolution=40};
-        for (auto member : {&ApplicationSettings::SimplePaintShader_Axles, &ApplicationSettings::SimplePaintShader_Body,
-            &ApplicationSettings::SimplePaintShader_Cabin, &ApplicationSettings::SimplePaintShader_Headlights,
-            &ApplicationSettings::SimplePaintShader_Wheels, &ApplicationSettings::SimplePaintShader_Sphere})
+        for (auto member : {&Settings::SimplePaintShader_Axles, &Settings::SimplePaintShader_Body,
+            &Settings::SimplePaintShader_Cabin, &Settings::SimplePaintShader_Headlights,
+            &Settings::SimplePaintShader_Wheels, &Settings::SimplePaintShader_Sphere})
             custom.*member = {.BaseColor={.2,.4,.6}, .Brightness=.7, .Shift=.3,
                 .RotationDegrees=123, .DarkPoint=.8, .LightPoint=.2};
         std::ostringstream output;
@@ -178,13 +178,13 @@ int main()
         const auto path = std::filesystem::temp_directory_path() /
             ("settings-contract-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + ".json");
         struct Cleanup { std::filesystem::path path; ~Cleanup() { std::error_code error; std::filesystem::remove(path, error); } } cleanup{path};
-        Reject([&] { (void)LoadApplicationSettings(path); });
+        Reject([&] { (void)LoadSettings(path); });
         { std::ofstream file(path); Serialize(file, custom); }
-        Require(LoadApplicationSettings(path) == custom);
+        Require(LoadSettings(path) == custom);
         { std::ofstream file(path); file << WithIntegerToken(document, "Sphere", "UResolution", "64.0"); }
-        Reject([&] { (void)LoadApplicationSettings(path); });
+        Reject([&] { (void)LoadSettings(path); });
         { std::ofstream file(path); file << extra.dump(); }
-        try { (void)LoadApplicationSettings(path); throw std::logic_error("Invalid file accepted"); }
+        try { (void)LoadSettings(path); throw std::logic_error("Invalid file accepted"); }
         catch (const std::runtime_error& error) { Require(std::string(error.what()).find(path.string()) != std::string::npos); }
         std::cout << "Typed JSON, required fields, round trips, and validated file loading passed.\n";
         return 0;

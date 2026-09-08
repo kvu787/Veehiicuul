@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SimplePaint/OrthographicTransforms.h"
-#include "ApplicationSettings.h"
+#include "Settings.h"
 #include "RenderPreparation.h"
 #include <Windows.h>
 #include <d3d12.h>
@@ -26,7 +26,7 @@ public:
     Renderer& operator=(const Renderer&) = delete;
 
     void Initialize(HWND window, std::uint32_t width, std::uint32_t height,
-        const ApplicationSettings& settings, bool useSoftwareAdapter = false);
+        const Settings& settings, bool useSoftwareAdapter = false);
     // Service messages without mutating renderer resources; return false to cancel the attempt.
     [[nodiscard]] bool PrepareFrame(const std::function<bool()>& serviceMessages);
     [[nodiscard]] std::wstring RenderPipelineDescription() const;

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ApplicationSettings.h"
+#include "Settings.h"
 
 // Explicit inputs for tests, independent of the shipped configuration.
-inline ApplicationSettings MakeTestSettings()
+inline Settings MakeTestSettings()
 {
-    const ApplicationSettings::Paint paint{
+    const Settings::Paint paint{
         .BaseColor = {.2, .4, .6}, .Brightness = .5, .Shift = 0,
         .RotationDegrees = 0, .DarkPoint = .1, .LightPoint = .9};
     return {

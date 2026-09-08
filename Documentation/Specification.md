@@ -141,7 +141,7 @@ fractional notation (such as `-0.0`) retains its sign. This policy is covered
 by settings tests and does not add shader clamps or coefficient floors.
 
 All declared sections and properties are required. Deserialization uses
-nlohmann's declarative macros to populate one `ApplicationSettings` object.
+nlohmann's declarative macros to populate one `Settings` object.
 `ValidateSettings` then checks that object using plain C++. The six custom
 pipeline controls are always present and typed, but their domain limits are
 checked only for `Custom`. Count fields use `std::int32_t`. The JSON adapter
@@ -233,7 +233,7 @@ Combined with the mesh cone condition, these transforms keep interpolated normal
 
 ## Encapsulation, layout, and DX12 integration
 
-`Source/SimplePaint` is the complete copyable module, with its own CMake target and integration README. `Material.*` owns parameters, validation, sRGB conversion, coefficient construction, and the GPU ABI. It is a C++20 library independent of DirectX types and scene settings. `Geometry.h` owns reusable mesh validation. `OrthographicTransforms.h` owns the optional DirectXMath transform adapter. `SimplePaintCore.hlsli` owns rotation, facing, and color evaluation and declares no bindings or material counts. `SimplePaint.hlsl` provides a reusable DX12 adapter whose `SIMPLE_PAINT_MATERIAL_COUNT` defaults to one; the host configures the count for both stages. JSON parsing belongs to the application's ApplicationSettings module, and GPU resource ownership belongs to its renderer; both remain outside SimplePaint.
+`Source/SimplePaint` is the complete copyable module, with its own CMake target and integration README. `Material.*` owns parameters, validation, sRGB conversion, coefficient construction, and the GPU ABI. It is a C++20 library independent of DirectX types and scene settings. `Geometry.h` owns reusable mesh validation. `OrthographicTransforms.h` owns the optional DirectXMath transform adapter. `SimplePaintCore.hlsli` owns rotation, facing, and color evaluation and declares no bindings or material counts. `SimplePaint.hlsl` provides a reusable DX12 adapter whose `SIMPLE_PAINT_MATERIAL_COUNT` defaults to one; the host configures the count for both stages. JSON parsing belongs to the application's Settings module, and GPU resource ownership belongs to its renderer; both remain outside SimplePaint.
 
 | Byte offset | C++ / HLSL field | Meaning                                   |
 | ----------- | ---------------- | ----------------------------------------- |

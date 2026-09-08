@@ -11,7 +11,7 @@ class Application final
 public:
     ~Application();
 
-    int Run(HINSTANCE instance, int showCommand, const ApplicationSettings& settings);
+    int Run(HINSTANCE instance, int showCommand, const Settings& settings);
 
 private:
     static LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam);

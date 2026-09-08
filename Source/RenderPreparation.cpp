@@ -3,7 +3,7 @@
 #include "PaintParameters.h"
 #include <stdexcept>
 
-ResolvedRenderPipeline ResolveRenderPipeline(const struct ApplicationSettings::RenderPipeline& pipeline)
+ResolvedRenderPipeline ResolveRenderPipeline(const struct Settings::RenderPipeline& pipeline)
 {
     ValidatePipeline(pipeline);
     if (pipeline.Preset == "MinimizeInputLatency") return MinimizeInputLatencyRenderPipeline;
@@ -20,11 +20,11 @@ ResolvedRenderPipeline ResolveRenderPipeline(const struct ApplicationSettings::R
     };
 }
 
-std::array<SimplePaint::GpuMaterial, 6> CompilePaintMaterials(const ApplicationSettings& settings)
+std::array<SimplePaint::GpuMaterial, 6> CompilePaintMaterials(const Settings& settings)
 {
     // Also protects direct C++ callers, independently of how settings were loaded.
     ValidateSettings(settings);
-    const auto compile = [](const ApplicationSettings::Paint& paint) {
+    const auto compile = [](const Settings::Paint& paint) {
         return SimplePaint::Material::Compile(ToPaintParameters(paint)).Constants();
     };
     return {
