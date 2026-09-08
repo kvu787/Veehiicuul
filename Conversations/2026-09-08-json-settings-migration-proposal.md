@@ -243,3 +243,71 @@ auto sphere = document.at("Sphere").get<SphereSettings>();
 The macro generates the member-mapping code. It does not supply our range checks, strict integer policy, or unknown-property rejection. [nlohmann/json type conversions](https://json.nlohmann.me/features/arbitrary_types/)
 
 **I would simplify the implementation while retaining the current behavior:** split `ParseSettings` into focused pipeline, sphere, and material readers; combine property lookup, conversion, and error-path construction; and isolate the duplicate checker so it does not dominate the main file. That would make the loading flow easier to follow and remove repeated strings. The current verbosity is partly C++ mapping overhead and partly the way I organized the validation.
+
+
+## User
+
+does nlohmann/json support a declarative way of doing json serialization/deserialization in which you define a type in the source language and simply call serialize/deserialize with that type and and a text stream? this is what i was expecting when migrating to json
+
+## Assistant (commentary)
+
+I’ll check the typed mapping APIs in the version we vendored and show how they fit the approach you expected.
+
+## Assistant
+
+Yes. **nlohmann/json supports that style**, including in the 3.12.0 version we vendored. You define a C++ type and list its members once in a macro; the library generates the serialization and deserialization mappings. [Official documentation](https://json.nlohmann.me/api/macros/nlohmann_define_type_non_intrusive/)
+
+For example:
+
+```cpp
+#include <nlohmann/json.hpp>
+#include <cstdint>
+#include <istream>
+#include <ostream>
+
+struct SphereSettings
+{
+    std::uint32_t UResolution = 64;
+    std::uint32_t VResolution = 32;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
+    SphereSettings, UResolution, VResolution)
+```
+
+You can then deserialize from an input stream and serialize to an output stream:
+
+```cpp
+SphereSettings sphere =
+    nlohmann::json::parse(input).get<SphereSettings>();
+
+output << nlohmann::json(sphere).dump(2);
+```
+
+For exactly the `Serialize` / `Deserialize<T>` interface you described, two reusable wrappers suffice:
+
+```cpp
+template<class T>
+T Deserialize(std::istream& input)
+{
+    return nlohmann::json::parse(input).get<T>();
+}
+
+template<class T>
+void Serialize(std::ostream& output, const T& value)
+{
+    output << nlohmann::json(value).dump(2);
+}
+
+// Usage:
+auto sphere = Deserialize<SphereSettings>(input);
+Serialize(output, sphere);
+```
+
+Nested mapped structs and standard containers can be composed into a complete configuration type. The `_WITH_DEFAULT` macro uses the type’s defaults for missing members; the ordinary macro requires its listed members. Member names become JSON property names. [Type conversions](https://json.nlohmann.me/features/arbitrary_types/)
+
+The qualification is that **C++20 requires the member-registration macro**; defining the struct alone does not give the library enough information to discover its members automatically.
+
+**That is a reasonable expectation for this migration, and I should have centered the implementation on it.** The manual document-walking approach was my implementation choice.
+
+For this repo, the design should be: deserialize into typed configuration structs, validate the settings, then resolve presets and compile paint materials into runtime `ApplicationSettings`. The existing strict integer and duplicate-property policies need explicit handling beyond the macros, but they do not require manually mapping every ordinary setting.
