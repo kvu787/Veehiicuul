@@ -1,11 +1,11 @@
-# Rendering pipeline configuration
+# Render pipeline configuration
 
-## Pipeline mode presets
+## Presets
 
-Select a preset with `[Pipeline].Mode` in [assets/Settings.ini](../assets/Settings.ini).
+Select a preset with `[RenderPipeline].Preset` in [assets/Settings.ini](../assets/Settings.ini).
 Each preset supplies a fixed combination of the six pipeline settings below.
-`[Rendering].VSync` is chosen separately and remains independent of every mode.
-The shipped INI selects `MaximizeFps` with `VSync = false`.
+`[RenderPipeline].VSync` is chosen separately and remains independent of every preset.
+The shipped INI selects `MinimizeInputLatency` with `VSync = false`.
 
 | Setting                | MinimizeInputLatency | Standard | MaximizeFps  |
 | ---------------------- | -------------------- | -------- | ------------ |
@@ -70,24 +70,21 @@ Possible costs include increased input latency, CPU/power use, heat, tearing,
 and buffer memory. Resolution, geometry, and shading are unchanged. With VSync
 enabled, presentation remains subject to VSync.
 
-All modes follow the [repository constraints](../README.md#constraints):
+All presets follow the [repository constraints](../README.md#constraints):
 synchronization uses vendor-neutral Windows, Direct3D 12, and DXGI interfaces,
 and the application implements no FPS cap or timed frame-rate limiter.
 
-## How `Mode = Custom` works
+## How `Preset = Custom` works
 
 `Custom` lets you supply all six pipeline settings explicitly. To start with the
-same pipeline behavior as `MaximizeFps`, replace the corresponding sections in
+same pipeline behavior as `MaximizeFps`, replace the `[RenderPipeline]` section in
 `assets/Settings.ini` with:
 
 ```ini
-[Rendering]
+[RenderPipeline]
 VSync = false
+Preset = Custom
 
-[Pipeline]
-Mode = Custom
-
-[Pipeline.Custom]
 MaxGpuFramesInFlight = 3
 MaxPresentLatency = 2
 WaitForPresentation = false
@@ -99,46 +96,50 @@ WaitStrategy = Spin
 Leave the material and sphere sections in place. Relaunch through `Run.cmd` to
 stage the edited source INI beside the executable and apply the settings.
 
-All six `[Pipeline.Custom]` keys are required. Custom does not inherit omitted
-values from a preset; a missing key is an error. `MaxPresentLatency` must be
-present and valid even when `WaitForPresentation = false` makes it inactive.
-`VSync` belongs in `[Rendering]` and is required in every mode. Placing it in an
-active `[Pipeline.Custom]` section is an unknown-setting error.
+All six custom controls in `[RenderPipeline]` are required when `Preset = Custom`.
+Custom does not inherit omitted values from a preset; a missing key is an error.
+`MaxPresentLatency` must be present and valid even when
+`WaitForPresentation = false` makes it inactive.
+`VSync` and `Preset` also belong in `[RenderPipeline]` and are required for every
+preset. VSync remains independent of the six custom controls.
 
 The three numeric controls are independently configurable within their accepted
 ranges. There is no requirement that they match, or that `BackBufferCount` equal
 `MaxGpuFramesInFlight + 1`. A valid combination may nevertheless leave capacity
 unused because another limit or resource becomes the bottleneck.
 
-When a preset is selected, `[Pipeline.Custom]` entries are ignored completely:
-they do not override, merge with, or alter that preset. This is true regardless
-of where the custom section appears in the file. Even unknown keys, duplicate
-keys, and invalid values inside the inactive custom section are ignored. The
-file must still have valid INI syntax and recognized section names.
+When `Preset` is `MinimizeInputLatency`, `Standard`, or `MaximizeFps`, the six
+custom controls in `[RenderPipeline]` are ignored completely: they do not
+override, merge with, or alter that preset. Their position relative to `Preset`
+does not matter; duplicate entries and invalid values for those six controls
+are ignored too. `Preset` and `VSync` are always validated, and unknown keys are
+always errors. The file must have valid INI syntax and recognized section names.
 
 For example, the shipped INI's custom values match `Standard`, but its selected
-mode is `MaximizeFps`. Changing only `Mode` to `Custom` therefore activates those
-Standard-like values. To modify a particular preset, first copy all six of its
+preset is `MinimizeInputLatency`. Changing only `Preset` to `Custom` therefore
+activates those Standard-like values. To modify a particular preset, first copy all six of its
 values from the preset table, then change the desired setting.
 
-In Custom, unknown or duplicate keys, missing settings, and invalid values cause
-startup errors. Diagnostics identify the section, key, and line where available.
-Section names, keys, mode names, booleans, and wait-strategy values are
+With `Preset = Custom`, all eight keys are required and validated. Unknown or
+duplicate keys, missing settings, and invalid values cause startup errors.
+Diagnostics identify the section, key, and line where available.
+Section names, keys, preset names, booleans, and wait-strategy values are
 case-sensitive. Whitespace around keys and values is ignored; `;` and `#` start
 comments. Use `true` and `false`, not `1`, `0`, `yes`, or `no`.
 
 ## Individual settings
 
-`VSync` is read from `[Rendering]` in every mode. The other six settings are read
-from `[Pipeline.Custom]` only in Custom mode; presets supply their fixed values.
+All seven settings below belong in `[RenderPipeline]`. `VSync` is read for every
+preset. The other six settings are read only with `Preset = Custom`; the three
+fixed presets supply their own values.
 INI changes take effect at startup. The `V` key is the runtime exception: it
-toggles VSync without changing the selected mode or rewriting the INI.
+toggles VSync without changing the selected preset or rewriting the INI.
 
 ### VSync
 
-- **Location:** `[Rendering]`
+- **Location:** `[RenderPipeline]`
 - **Accepted values:** `true` or `false`
-- **Shipped value:** `false`, independent of the selected mode.
+- **Shipped value:** `false`, independent of the selected preset.
 
 VSync controls the sync interval supplied to `Present`:
 
@@ -164,7 +165,7 @@ VSync also leaves `WaitForPresentation`, queue limits, buffer count, and
 
 ### MaxGpuFramesInFlight
 
-- **Location:** `[Pipeline.Custom]`
+- **Location:** `[RenderPipeline]`
 - **Accepted values:** integer `1` through `16`, inclusive
 - **Preset values:** MinimizeInputLatency `1`; Standard `2`; MaximizeFps `3`.
 
@@ -192,7 +193,7 @@ restricts progress. The limit is capacity, not a target queue occupancy.
 
 ### MaxPresentLatency
 
-- **Location:** `[Pipeline.Custom]`
+- **Location:** `[RenderPipeline]`
 - **Accepted values:** integer `1` through `16`, inclusive
 - **Preset values:** MinimizeInputLatency `1`; Standard `2`; MaximizeFps `2` (inactive).
 
@@ -220,7 +221,7 @@ Windows display path also affect how far work can advance.
 
 ### WaitForPresentation
 
-- **Location:** `[Pipeline.Custom]`
+- **Location:** `[RenderPipeline]`
 - **Accepted values:** `true` or `false`
 - **Preset values:** MinimizeInputLatency `true`; Standard `true`; MaximizeFps `false`.
 
@@ -252,7 +253,7 @@ waiting disabled, that strategy still applies to GPU readiness.
 
 ### BackBufferCount
 
-- **Location:** `[Pipeline.Custom]`
+- **Location:** `[RenderPipeline]`
 - **Accepted values:** integer `2` through `16`, inclusive
 - **Preset values:** MinimizeInputLatency `2`; Standard `3`; MaximizeFps `4`.
 
@@ -280,7 +281,7 @@ frame. Additional image capacity does not change either configured queue limit.
 
 ### AllowTearing
 
-- **Location:** `[Pipeline.Custom]`
+- **Location:** `[RenderPipeline]`
 - **Accepted values:** `true` or `false`
 - **Preset values:** MinimizeInputLatency `true`; Standard `false`; MaximizeFps `true`.
 
@@ -326,7 +327,7 @@ the configured queue limits.
 
 ### WaitStrategy
 
-- **Location:** `[Pipeline.Custom]`
+- **Location:** `[RenderPipeline]`
 - **Accepted values:** `Event` or `Spin`
 - **Preset values:** MinimizeInputLatency `Spin`; Standard `Event`; MaximizeFps `Spin`.
 
@@ -380,12 +381,12 @@ Edit the repository's [source INI](../assets/Settings.ini) and launch through
 [Run.cmd](../Run.cmd) to build and stage it. Restart after configuration changes;
 the `V` key toggles only the current run's VSync state.
 
-The window title reports the selected mode, GPU frame limit, active presentation
+The window title reports the selected preset, GPU frame limit, active presentation
 limit or `inactive`, image-buffer count, wait strategy, VSync state, and tearing
 state. For the shipped preset, its pipeline portion begins:
 
 ```text
-MaximizeFps | GPU:3 Present:inactive Buffers:4 | Spin
+MinimizeInputLatency | GPU:1 Present:1 Buffers:2 | Spin
 ```
 
 Tearing diagnostics use these labels:
@@ -418,7 +419,7 @@ instrumentation to the render loop.
 `Run.ps1 -Test` runs configuration tests, production renderer integration tests
 on the selected adapter and WARP, and application lifecycle smoke tests for
 Standard and MaximizeFps. Coverage includes inactive Custom isolation, invalid
-active settings, VSync in every mode, independently sized resource rings, limits
+active settings, VSync in every preset, independently sized resource rings, limits
 up to 16, both wait strategies, cancellation during blocked GPU work,
 resize/restore, VSync hotkeys, fullscreen transitions, and shutdown. GPU tests
 inspect the D3D12 debug layer and require Windows Graphics Tools. Test fixtures

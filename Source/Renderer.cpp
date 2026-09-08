@@ -296,18 +296,18 @@ void Renderer::Initialize(HWND window, const std::uint32_t width, const std::uin
     m_width = width;
     m_height = height;
 
-    ValidatePipelineSettings(settings.pipeline);
-    m_pipelineMode = settings.pipelineMode;
-    m_pipeline = settings.pipeline;
+    ValidateRenderPipelineSettings(settings.renderPipeline);
+    m_renderPipelinePreset = settings.renderPipelinePreset;
+    m_renderPipeline = settings.renderPipeline;
     m_vsyncEnabled = settings.vsync;
     m_useSoftwareAdapter = useSoftwareAdapter;
     m_sphereUResolution = settings.sphereUResolution;
     m_sphereVResolution = settings.sphereVResolution;
     m_paintMaterials = settings.paintMaterials;
-    m_frames.resize(m_pipeline.maxGpuFramesInFlight);
-    m_renderTargets.resize(m_pipeline.backBufferCount);
-    m_backBufferFences.resize(m_pipeline.backBufferCount);
-    m_materialConstantOffset = ObjectConstantStride * ObjectsPerFrame * m_pipeline.maxGpuFramesInFlight;
+    m_frames.resize(m_renderPipeline.maxGpuFramesInFlight);
+    m_renderTargets.resize(m_renderPipeline.backBufferCount);
+    m_backBufferFences.resize(m_renderPipeline.backBufferCount);
+    m_materialConstantOffset = ObjectConstantStride * ObjectsPerFrame * m_renderPipeline.maxGpuFramesInFlight;
     CreateDevice();
     CreateSwapChain();
     CreateDescriptorHeaps();
@@ -320,7 +320,7 @@ void Renderer::Initialize(HWND window, const std::uint32_t width, const std::uin
 
     m_animationStart = std::chrono::steady_clock::now();
     m_initialized = true;
-    OutputDebugStringW((PipelineDescription() + L"\n").c_str());
+    OutputDebugStringW((RenderPipelineDescription() + L"\n").c_str());
 }
 
 void Renderer::CreateDevice()
@@ -425,8 +425,8 @@ void Renderer::CreateDevice()
 
 void Renderer::CreateSwapChain()
 {
-    m_swapChainFlags = m_pipeline.allowTearing && m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
-    if (m_pipeline.waitForPresentation) m_swapChainFlags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+    m_swapChainFlags = m_renderPipeline.allowTearing && m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
+    if (m_renderPipeline.waitForPresentation) m_swapChainFlags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
     DXGI_SWAP_CHAIN_DESC1 description{
         .Width = m_width,
         .Height = m_height,
@@ -434,7 +434,7 @@ void Renderer::CreateSwapChain()
         .Stereo = FALSE,
         .SampleDesc = {.Count = 1, .Quality = 0},
         .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
-        .BufferCount = m_pipeline.backBufferCount,
+        .BufferCount = m_renderPipeline.backBufferCount,
         .Scaling = DXGI_SCALING_STRETCH,
         .SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD,
         .AlphaMode = DXGI_ALPHA_MODE_IGNORE,
@@ -452,9 +452,9 @@ void Renderer::CreateSwapChain()
             &swapChain),
         "CreateSwapChainForHwnd");
     Check(swapChain.As(&m_swapChain), "Query IDXGISwapChain3");
-    if (m_pipeline.waitForPresentation)
+    if (m_renderPipeline.waitForPresentation)
     {
-        Check(m_swapChain->SetMaximumFrameLatency(m_pipeline.maxPresentLatency), "SetMaximumFrameLatency");
+        Check(m_swapChain->SetMaximumFrameLatency(m_renderPipeline.maxPresentLatency), "SetMaximumFrameLatency");
         m_presentationEvent = m_swapChain->GetFrameLatencyWaitableObject();
         if (m_presentationEvent == nullptr) throw std::runtime_error("DXGI did not provide a presentation wait handle.");
     }
@@ -465,7 +465,7 @@ void Renderer::CreateDescriptorHeaps()
 {
     D3D12_DESCRIPTOR_HEAP_DESC rtvDescription{
         .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
-        .NumDescriptors = m_pipeline.backBufferCount,
+        .NumDescriptors = m_renderPipeline.backBufferCount,
         .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
     };
     Check(m_device->CreateDescriptorHeap(&rtvDescription, IID_PPV_ARGS(&m_rtvHeap)), "Create RTV descriptor heap");
@@ -701,7 +701,7 @@ void Renderer::CreatePipelines()
 
 void Renderer::CreateCommandObjects()
 {
-    for (std::uint32_t frameIndex = 0; frameIndex < m_pipeline.maxGpuFramesInFlight; ++frameIndex)
+    for (std::uint32_t frameIndex = 0; frameIndex < m_renderPipeline.maxGpuFramesInFlight; ++frameIndex)
     {
         Check(
             m_device->CreateCommandAllocator(
@@ -740,7 +740,7 @@ void Renderer::CreateWindowSizeResources()
     };
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-    for (std::uint32_t frameIndex = 0; frameIndex < m_pipeline.backBufferCount; ++frameIndex)
+    for (std::uint32_t frameIndex = 0; frameIndex < m_renderPipeline.backBufferCount; ++frameIndex)
     {
         Check(m_swapChain->GetBuffer(frameIndex, IID_PPV_ARGS(&m_renderTargets[frameIndex])), "Get swap-chain buffer");
         m_device->CreateRenderTargetView(m_renderTargets[frameIndex].Get(), &rtvDescription, rtvHandle);
@@ -1073,7 +1073,7 @@ void Renderer::UpdateCamera()
     const XMMATRIX sphereWorld =
         DirectX::XMMatrixScaling(sphereRadius, sphereRadius, sphereRadius) *
         DirectX::XMMatrixTranslation(1.5f, sphereRadius, -1.5f);
-    for (std::uint32_t frame = 0; frame < m_pipeline.maxGpuFramesInFlight; ++frame)
+    for (std::uint32_t frame = 0; frame < m_renderPipeline.maxGpuFramesInFlight; ++frame)
     {
         WriteObjectConstants(frame, 1, sphereWorld);
     }
@@ -1210,7 +1210,7 @@ void Renderer::Render()
     m_commandQueue->ExecuteCommandLists(1, commandLists);
 
     const std::uint32_t presentFlags =
-        !m_vsyncEnabled && m_pipeline.allowTearing && m_tearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;
+        !m_vsyncEnabled && m_renderPipeline.allowTearing && m_tearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;
     const HRESULT presentResult = m_swapChain->Present(m_vsyncEnabled ? 1 : 0, presentFlags);
     if (FAILED(presentResult))
     {
@@ -1241,7 +1241,7 @@ void Renderer::Resize(const std::uint32_t width, const std::uint32_t height)
 
     Check(
         m_swapChain->ResizeBuffers(
-            m_pipeline.backBufferCount,
+            m_renderPipeline.backBufferCount,
             width,
             height,
             SwapChainFormat,
@@ -1279,9 +1279,9 @@ bool Renderer::PrepareFrame(const std::function<bool()>& serviceMessages)
     std::uint32_t polls = 0;
     for (;;)
     {
-        if ((polls++ % 64 == 0 || m_pipeline.waitStrategy == WaitStrategy::Event) && !serviceMessages()) return false;
+        if ((polls++ % 64 == 0 || m_renderPipeline.waitStrategy == WaitStrategy::Event) && !serviceMessages()) return false;
         const bool gpuReady = CompletedFence() >= targetFence;
-        if (!m_pipeline.waitForPresentation) m_presentationAdmitted = true;
+        if (!m_renderPipeline.waitForPresentation) m_presentationAdmitted = true;
         if (gpuReady && m_presentationAdmitted)
         {
             // Sample/process input again after every potentially blocking wait.
@@ -1289,7 +1289,7 @@ bool Renderer::PrepareFrame(const std::function<bool()>& serviceMessages)
             m_framePrepared = true;
             return true;
         }
-        if (m_pipeline.waitStrategy == WaitStrategy::Spin)
+        if (m_renderPipeline.waitStrategy == WaitStrategy::Spin)
         {
             if (!m_presentationAdmitted)
             {
@@ -1331,14 +1331,14 @@ void Renderer::SignalFrame()
     ++m_frameSequence;
 }
 
-std::wstring Renderer::PipelineDescription() const
+std::wstring Renderer::RenderPipelineDescription() const
 {
-    const auto presentLimit = m_pipeline.waitForPresentation ? std::to_wstring(m_pipeline.maxPresentLatency) : L"inactive";
-    const wchar_t* tearing = !m_pipeline.allowTearing ? L"not requested" :
+    const auto presentLimit = m_renderPipeline.waitForPresentation ? std::to_wstring(m_renderPipeline.maxPresentLatency) : L"inactive";
+    const wchar_t* tearing = !m_renderPipeline.allowTearing ? L"not requested" :
         !m_tearingSupported ? L"unsupported" : m_vsyncEnabled ? L"inactive (VSync)" : L"on";
     return std::format(L"{} | GPU:{} Present:{} Buffers:{} | {} | Tearing:{}",
-        PipelineModeName(m_pipelineMode), m_pipeline.maxGpuFramesInFlight, presentLimit,
-        m_pipeline.backBufferCount, m_pipeline.waitStrategy == WaitStrategy::Event ? L"Event" : L"Spin", tearing);
+        RenderPipelinePresetName(m_renderPipelinePreset), m_renderPipeline.maxGpuFramesInFlight, presentLimit,
+        m_renderPipeline.backBufferCount, m_renderPipeline.waitStrategy == WaitStrategy::Event ? L"Event" : L"Spin", tearing);
 }
 
 void Renderer::CheckDebugMessages() const

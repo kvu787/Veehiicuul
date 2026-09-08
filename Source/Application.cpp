@@ -298,7 +298,7 @@ void Application::UpdateWindowTitle() const
     swprintf_s(
         title,
         L"Simple DirectX 12 Car | %s | VSync: %s | %s | V: VSync  F11: fullscreen  Esc: quit",
-        m_renderer.PipelineDescription().c_str(),
+        m_renderer.RenderPipelineDescription().c_str(),
         vsyncState,
         displayState);
     SetWindowTextW(m_window, title);

@@ -94,22 +94,23 @@ directory.
 | ------------------ | ---------------------------- |
 | `V`                | Toggle VSync                 |
 | `F11`              | Toggle borderless fullscreen |
-| `Esc` or `Alt+F4`   | Quit                         |
+| `Esc` or `Alt+F4`  | Quit                         |
 
 The app starts windowed at 1280x720 with VSync off. Press F11 to toggle borderless fullscreen.
 
 With VSync off, presentation permits tearing only when the selected pipeline requests it and DXGI supports it.
 
-## Rendering pipeline
+## Render pipeline
 
-Edit `assets/Settings.ini` and restart the app to select `[Pipeline].Mode`:
-`MinimizeInputLatency`, `Standard`, `MaximizeFps` (selected in the shipped INI),
+Edit `assets/Settings.ini` and restart the app to select `[RenderPipeline].Preset`:
+`MinimizeInputLatency` (selected in the shipped INI), `Standard`, `MaximizeFps`,
 or `Custom`.
-`[Rendering].VSync` is independent of every mode and defaults to `false` in the
-shipped INI. The `V` key changes VSync at runtime without changing the mode or
-rewriting the INI. Custom pipeline values are ignored outside Custom mode.
+`[RenderPipeline].VSync` is independent of every preset and defaults to `false` in the
+shipped INI. The `V` key changes VSync at runtime without changing the preset or
+rewriting the INI. The six custom render pipeline controls are ignored unless
+`Preset = Custom`.
 
-See [Pipeline configuration](Documentation/Pipeline.md) for presets, accepted
+See [Render pipeline configuration](Documentation/RenderPipeline.md) for presets, accepted
 custom settings, wait behavior, and validation. The window title reports the
 selected pipeline, queue limits, buffer count, wait strategy, and effective
 tearing state.

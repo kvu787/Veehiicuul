@@ -28,7 +28,7 @@ public:
         const ApplicationSettings& settings, bool useSoftwareAdapter = false);
     // Service messages without mutating renderer resources; return false to cancel the attempt.
     [[nodiscard]] bool PrepareFrame(const std::function<bool()>& serviceMessages);
-    [[nodiscard]] std::wstring PipelineDescription() const;
+    [[nodiscard]] std::wstring RenderPipelineDescription() const;
     [[nodiscard]] std::uint32_t PendingGpuFrames() const;
     void CheckDebugMessages() const;
     void Resize(std::uint32_t width, std::uint32_t height);
@@ -100,8 +100,8 @@ private:
     bool m_vsyncEnabled = false;
     bool m_tearingSupported = false;
     bool m_useSoftwareAdapter = false;
-    PipelineMode m_pipelineMode = PipelineMode::Standard;
-    PipelineSettings m_pipeline{};
+    RenderPipelinePreset m_renderPipelinePreset = RenderPipelinePreset::Standard;
+    RenderPipelineSettings m_renderPipeline{};
     UINT m_swapChainFlags = 0;
     HANDLE m_presentationEvent = nullptr;
     bool m_presentationAdmitted = false;

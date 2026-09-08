@@ -10,7 +10,7 @@
 int main(int argc, char** argv)
 {
     const bool maximizeFps = argc > 1 && std::string_view(argv[1]) == "--maximize-fps";
-    const auto expectedPipeline = maximizeFps ? L"MaximizeFps | GPU:3 Present:inactive Buffers:4 | Spin" :
+    const auto expectedRenderPipeline = maximizeFps ? L"MaximizeFps | GPU:3 Present:inactive Buffers:4 | Spin" :
         L"Standard | GPU:2 Present:2 Buffers:3 | Event";
     const DWORD uiThread = GetCurrentThreadId();
     std::atomic<bool> done = false;
@@ -41,8 +41,8 @@ int main(int argc, char** argv)
                     *reinterpret_cast<HWND*>(target) = candidate;
                     return FALSE;
                 }, reinterpret_cast<LPARAM>(&window));
-                return window && titleContains(expectedPipeline); }))
-                throw std::runtime_error("Application did not initialize the INI pipeline");
+                return window && titleContains(expectedRenderPipeline); }))
+                throw std::runtime_error("Application did not initialize the INI render pipeline");
             if (!titleContains(L"VSync: Off")) throw std::runtime_error("Initial VSync was not read from INI");
             PostMessageW(window, WM_KEYDOWN, 'V', 0);
             if (!wait([&] { return titleContains(L"VSync: On"); })) throw std::runtime_error("VSync hotkey failed");
@@ -55,8 +55,8 @@ int main(int argc, char** argv)
             PostMessageW(window, WM_KEYDOWN, VK_F11, 0);
             if (!wait([&] { return titleContains(L"Windowed"); })) throw std::runtime_error("Windowed restore failed");
             PostMessageW(window, WM_KEYDOWN, 'V', 0);
-            if (!wait([&] { return titleContains(L"VSync: Off") && titleContains(expectedPipeline); }))
-                throw std::runtime_error("VSync toggle changed the pipeline mode");
+            if (!wait([&] { return titleContains(L"VSync: Off") && titleContains(expectedRenderPipeline); }))
+                throw std::runtime_error("VSync toggle changed the render pipeline preset");
             PostMessageW(window, WM_CLOSE, 0, 0);
         }
         catch (const std::exception& e)
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
     try
     {
         Application application;
-        std::istringstream ini(std::string("[Rendering]\nVSync=false\n[Pipeline]\nMode=") +
+        std::istringstream ini(std::string("[RenderPipeline]\nVSync=false\nPreset=") +
             (maximizeFps ? "MaximizeFps\n" : "Standard\n"));
         const auto settings = ParseApplicationSettings(ini);
         const int result = application.Run(GetModuleHandleW(nullptr), SW_SHOWNOACTIVATE, settings);

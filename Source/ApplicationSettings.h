@@ -7,10 +7,10 @@
 #include <istream>
 #include <string_view>
 
-enum class PipelineMode { MinimizeInputLatency, Standard, MaximizeFps, Custom };
+enum class RenderPipelinePreset { MinimizeInputLatency, Standard, MaximizeFps, Custom };
 enum class WaitStrategy { Event, Spin };
 
-struct PipelineSettings
+struct RenderPipelineSettings
 {
     std::uint32_t maxGpuFramesInFlight = 2;
     std::uint32_t maxPresentLatency = 2;
@@ -18,11 +18,11 @@ struct PipelineSettings
     std::uint32_t backBufferCount = 3;
     bool allowTearing = false;
     WaitStrategy waitStrategy = WaitStrategy::Event;
-    bool operator==(const PipelineSettings&) const = default;
+    bool operator==(const RenderPipelineSettings&) const = default;
 };
 
-inline constexpr PipelineSettings StandardPipeline{};
-inline constexpr PipelineSettings MinimumLatencyPipeline{
+inline constexpr RenderPipelineSettings StandardRenderPipeline{};
+inline constexpr RenderPipelineSettings MinimizeInputLatencyRenderPipeline{
     .maxGpuFramesInFlight = 1,
     .maxPresentLatency = 1,
     .waitForPresentation = true,
@@ -30,7 +30,7 @@ inline constexpr PipelineSettings MinimumLatencyPipeline{
     .allowTearing = true,
     .waitStrategy = WaitStrategy::Spin,
 };
-inline constexpr PipelineSettings MaximizeFpsPipeline{
+inline constexpr RenderPipelineSettings MaximizeFpsRenderPipeline{
     .maxGpuFramesInFlight = 3,
     .maxPresentLatency = 2, // Inactive without presentation admission waiting.
     .waitForPresentation = false,
@@ -41,8 +41,8 @@ inline constexpr PipelineSettings MaximizeFpsPipeline{
 
 struct ApplicationSettings
 {
-    PipelineMode pipelineMode = PipelineMode::Standard;
-    PipelineSettings pipeline = StandardPipeline;
+    RenderPipelinePreset renderPipelinePreset = RenderPipelinePreset::Standard;
+    RenderPipelineSettings renderPipeline = StandardRenderPipeline;
     bool vsync = false;
     std::uint32_t sphereUResolution = 64;
     std::uint32_t sphereVResolution = 32;
@@ -52,5 +52,5 @@ struct ApplicationSettings
 [[nodiscard]] ApplicationSettings ParseApplicationSettings(std::istream& input);
 [[nodiscard]] ApplicationSettings LoadApplicationSettings(const std::filesystem::path& path);
 [[nodiscard]] std::filesystem::path ModuleDirectory();
-[[nodiscard]] std::wstring_view PipelineModeName(PipelineMode mode);
-void ValidatePipelineSettings(const PipelineSettings& settings);
+[[nodiscard]] std::wstring_view RenderPipelinePresetName(RenderPipelinePreset preset);
+void ValidateRenderPipelineSettings(const RenderPipelineSettings& settings);

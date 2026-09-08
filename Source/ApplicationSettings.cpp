@@ -95,6 +95,11 @@ bool ReadBool(const Entry& entry)
     Invalid(entry, "expected true or false");
 }
 
+constexpr std::array<std::string_view, 6> CustomRenderPipelineKeys = {
+    "MaxGpuFramesInFlight", "MaxPresentLatency", "WaitForPresentation",
+    "BackBufferCount", "AllowTearing", "WaitStrategy",
+};
+
 constexpr std::array<std::string_view, 6> MaterialSections = {
     "SimplePaintShader_Axles", "SimplePaintShader_Body", "SimplePaintShader_Cabin",
     "SimplePaintShader_Headlights", "SimplePaintShader_Wheels", "SimplePaintShader_Sphere",
@@ -118,30 +123,30 @@ std::filesystem::path ModuleDirectory()
     return std::filesystem::path(modulePath).parent_path();
 }
 
-std::wstring_view PipelineModeName(const PipelineMode mode)
+std::wstring_view RenderPipelinePresetName(const RenderPipelinePreset preset)
 {
-    switch (mode)
+    switch (preset)
     {
-    case PipelineMode::MinimizeInputLatency: return L"MinimizeInputLatency";
-    case PipelineMode::Standard: return L"Standard";
-    case PipelineMode::MaximizeFps: return L"MaximizeFps";
-    case PipelineMode::Custom: return L"Custom";
+    case RenderPipelinePreset::MinimizeInputLatency: return L"MinimizeInputLatency";
+    case RenderPipelinePreset::Standard: return L"Standard";
+    case RenderPipelinePreset::MaximizeFps: return L"MaximizeFps";
+    case RenderPipelinePreset::Custom: return L"Custom";
     }
-    throw std::invalid_argument("Invalid pipeline mode.");
+    throw std::invalid_argument("Invalid render pipeline preset.");
 }
 
-void ValidatePipelineSettings(const PipelineSettings& settings)
+void ValidateRenderPipelineSettings(const RenderPipelineSettings& settings)
 {
     if (settings.maxGpuFramesInFlight < 1 || settings.maxGpuFramesInFlight > 16 ||
         settings.maxPresentLatency < 1 || settings.maxPresentLatency > 16 ||
         settings.backBufferCount < 2 || settings.backBufferCount > 16 ||
         (settings.waitStrategy != WaitStrategy::Event && settings.waitStrategy != WaitStrategy::Spin))
-        throw std::invalid_argument("Invalid pipeline limits or wait strategy.");
+        throw std::invalid_argument("Invalid render pipeline limits or wait strategy.");
 }
 
 ApplicationSettings ParseApplicationSettings(std::istream& input)
 {
-    // Collect raw values first: custom entries are not interpreted until the mode is known.
+    // Collect raw values first: custom entries are not interpreted until the preset is known.
     std::vector<Entry> entries;
     std::string section;
     std::string line;
@@ -156,7 +161,7 @@ ApplicationSettings ParseApplicationSettings(std::istream& input)
             if (content.back() != ']')
                 throw std::runtime_error(std::format("Malformed Settings.ini section on line {}.", lineNumber));
             section = Trim(content.substr(1, content.size() - 2));
-            if (section != "Rendering" && section != "Pipeline" && section != "Pipeline.Custom" &&
+            if (section != "RenderPipeline" &&
                 section != "Sphere" && std::find(MaterialSections.begin(), MaterialSections.end(), section) == MaterialSections.end())
                 throw std::runtime_error(std::format("Unknown Settings.ini section [{}] on line {}.", section, lineNumber));
             continue;
@@ -170,25 +175,25 @@ ApplicationSettings ParseApplicationSettings(std::istream& input)
     if (input.bad()) throw std::runtime_error("Could not read Settings.ini.");
 
     ApplicationSettings result;
-    bool haveMode = false;
+    bool havePreset = false;
     for (const auto& entry : entries)
     {
-        if (entry.section != "Pipeline" || entry.key != "Mode") continue;
-        if (haveMode) Invalid(entry, "duplicate setting");
-        haveMode = true;
-        if (entry.value == "MinimizeInputLatency") result.pipelineMode = PipelineMode::MinimizeInputLatency;
-        else if (entry.value == "Standard") result.pipelineMode = PipelineMode::Standard;
-        else if (entry.value == "MaximizeFps") result.pipelineMode = PipelineMode::MaximizeFps;
-        else if (entry.value == "Custom") result.pipelineMode = PipelineMode::Custom;
+        if (entry.section != "RenderPipeline" || entry.key != "Preset") continue;
+        if (havePreset) Invalid(entry, "duplicate setting");
+        havePreset = true;
+        if (entry.value == "MinimizeInputLatency") result.renderPipelinePreset = RenderPipelinePreset::MinimizeInputLatency;
+        else if (entry.value == "Standard") result.renderPipelinePreset = RenderPipelinePreset::Standard;
+        else if (entry.value == "MaximizeFps") result.renderPipelinePreset = RenderPipelinePreset::MaximizeFps;
+        else if (entry.value == "Custom") result.renderPipelinePreset = RenderPipelinePreset::Custom;
         else Invalid(entry, "expected MinimizeInputLatency, Standard, MaximizeFps, or Custom");
     }
-    if (!haveMode) throw std::runtime_error("Missing [Pipeline].Mode in Settings.ini.");
-    switch (result.pipelineMode)
+    if (!havePreset) throw std::runtime_error("Missing [RenderPipeline].Preset in Settings.ini.");
+    switch (result.renderPipelinePreset)
     {
-    case PipelineMode::MinimizeInputLatency: result.pipeline = MinimumLatencyPipeline; break;
-    case PipelineMode::MaximizeFps: result.pipeline = MaximizeFpsPipeline; break;
-    case PipelineMode::Standard:
-    case PipelineMode::Custom: result.pipeline = StandardPipeline; break;
+    case RenderPipelinePreset::MinimizeInputLatency: result.renderPipeline = MinimizeInputLatencyRenderPipeline; break;
+    case RenderPipelinePreset::MaximizeFps: result.renderPipeline = MaximizeFpsRenderPipeline; break;
+    case RenderPipelinePreset::Standard:
+    case RenderPipelinePreset::Custom: result.renderPipeline = StandardRenderPipeline; break;
     }
 
     std::array<SimplePaint::Parameters, 6> materials{};
@@ -205,27 +210,26 @@ ApplicationSettings ParseApplicationSettings(std::istream& input)
     std::set<std::string> seen;
     for (const auto& entry : entries)
     {
-        if (entry.section == "Pipeline.Custom" && result.pipelineMode != PipelineMode::Custom) continue;
+        // Only the six custom controls are inactive under fixed presets. VSync and Preset always apply.
+        if (entry.section == "RenderPipeline" && result.renderPipelinePreset != RenderPipelinePreset::Custom &&
+            std::find(CustomRenderPipelineKeys.begin(), CustomRenderPipelineKeys.end(), entry.key) != CustomRenderPipelineKeys.end())
+            continue;
         const auto qualified = entry.section + "." + entry.key;
         if (!seen.insert(qualified).second) Invalid(entry, "duplicate setting");
-        if (qualified == "Pipeline.Mode") continue;
-        if (entry.section == "Rendering")
+        if (qualified == "RenderPipeline.Preset") continue;
+        if (entry.section == "RenderPipeline")
         {
-            if (entry.key != "VSync") Invalid(entry, "unknown setting");
-            result.vsync = ReadBool(entry);
-        }
-        else if (entry.section == "Pipeline.Custom")
-        {
-            auto& pipeline = result.pipeline;
-            if (entry.key == "MaxGpuFramesInFlight") pipeline.maxGpuFramesInFlight = ReadInteger(entry, 1, 16);
-            else if (entry.key == "MaxPresentLatency") pipeline.maxPresentLatency = ReadInteger(entry, 1, 16);
-            else if (entry.key == "WaitForPresentation") pipeline.waitForPresentation = ReadBool(entry);
-            else if (entry.key == "BackBufferCount") pipeline.backBufferCount = ReadInteger(entry, 2, 16);
-            else if (entry.key == "AllowTearing") pipeline.allowTearing = ReadBool(entry);
+            auto& renderPipeline = result.renderPipeline;
+            if (entry.key == "VSync") result.vsync = ReadBool(entry);
+            else if (entry.key == "MaxGpuFramesInFlight") renderPipeline.maxGpuFramesInFlight = ReadInteger(entry, 1, 16);
+            else if (entry.key == "MaxPresentLatency") renderPipeline.maxPresentLatency = ReadInteger(entry, 1, 16);
+            else if (entry.key == "WaitForPresentation") renderPipeline.waitForPresentation = ReadBool(entry);
+            else if (entry.key == "BackBufferCount") renderPipeline.backBufferCount = ReadInteger(entry, 2, 16);
+            else if (entry.key == "AllowTearing") renderPipeline.allowTearing = ReadBool(entry);
             else if (entry.key == "WaitStrategy")
             {
-                if (entry.value == "Event") pipeline.waitStrategy = WaitStrategy::Event;
-                else if (entry.value == "Spin") pipeline.waitStrategy = WaitStrategy::Spin;
+                if (entry.value == "Event") renderPipeline.waitStrategy = WaitStrategy::Event;
+                else if (entry.value == "Spin") renderPipeline.waitStrategy = WaitStrategy::Spin;
                 else Invalid(entry, "expected Event or Spin");
             }
             else Invalid(entry, "unknown setting");
@@ -250,14 +254,14 @@ ApplicationSettings ParseApplicationSettings(std::istream& input)
             else Invalid(entry, "unknown setting");
         }
     }
-    if (!seen.contains("Rendering.VSync")) throw std::runtime_error("Missing [Rendering].VSync in Settings.ini.");
-    if (result.pipelineMode == PipelineMode::Custom)
+    if (!seen.contains("RenderPipeline.VSync")) throw std::runtime_error("Missing [RenderPipeline].VSync in Settings.ini.");
+    if (result.renderPipelinePreset == RenderPipelinePreset::Custom)
     {
-        for (const auto key : {"MaxGpuFramesInFlight", "MaxPresentLatency", "WaitForPresentation", "BackBufferCount", "AllowTearing", "WaitStrategy"})
-            if (!seen.contains(std::string("Pipeline.Custom.") + key))
-                throw std::runtime_error(std::format("Missing [Pipeline.Custom].{} in Settings.ini.", key));
+        for (const auto key : CustomRenderPipelineKeys)
+            if (!seen.contains(std::format("RenderPipeline.{}", key)))
+                throw std::runtime_error(std::format("Missing [RenderPipeline].{} in Settings.ini.", key));
     }
-    ValidatePipelineSettings(result.pipeline);
+    ValidateRenderPipelineSettings(result.renderPipeline);
     for (std::size_t i = 0; i < materials.size(); ++i)
     {
         try { result.paintMaterials[i] = SimplePaint::Material::Compile(materials[i]).Constants(); }
