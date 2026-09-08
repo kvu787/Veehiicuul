@@ -9,7 +9,7 @@
 // No derived renderer data or JSON-library types belong in this model.
 struct ApplicationSettings
 {
-    struct Pipeline
+    struct RenderPipeline
     {
         std::string Preset = "MinimizeInputLatency"; // MinimizeInputLatency, Standard, MaximizeFps, Custom.
         bool VSync = false;
@@ -21,7 +21,7 @@ struct ApplicationSettings
         double BackBufferCount = 3;     // Whole number in [2, 16].
         bool AllowTearing = false;
         std::string WaitStrategy = "Event"; // Event or Spin.
-        bool operator==(const Pipeline&) const = default;
+        bool operator==(const RenderPipeline&) const = default;
     };
 
     struct SphereMesh
@@ -45,7 +45,7 @@ struct ApplicationSettings
         bool operator==(const Paint&) const = default;
     };
 
-    Pipeline RenderPipeline;
+    RenderPipeline RenderPipeline;
     Paint SimplePaintShader_Axles{.BaseColor = {0.678429127, 0.678431321, 0.678431321}};
     Paint SimplePaintShader_Body{.BaseColor = {0.0009765625, 0.436627067, 0.9990234375}};
     Paint SimplePaintShader_Cabin{.BaseColor = {0.506386429, 0.756053146, 0.9990234375}};

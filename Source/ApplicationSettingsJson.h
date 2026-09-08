@@ -4,7 +4,7 @@
 #include "JsonSerialization.h"
 
 // Serialization declarations only: no validation, preset expansion, or callbacks.
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ApplicationSettings::Pipeline,
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(struct ApplicationSettings::RenderPipeline,
     Preset, VSync, MaxGpuFramesInFlight, MaxPresentLatency, WaitForPresentation,
     BackBufferCount, AllowTearing, WaitStrategy)
 

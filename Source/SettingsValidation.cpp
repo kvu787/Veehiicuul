@@ -26,7 +26,7 @@ void ValidatePaint(const ApplicationSettings::Paint& paint, std::string_view nam
 }
 }
 
-void ValidatePipeline(const ApplicationSettings::Pipeline& pipeline)
+void ValidatePipeline(const struct ApplicationSettings::RenderPipeline& pipeline)
 {
     if (pipeline.Preset != "MinimizeInputLatency" && pipeline.Preset != "Standard" &&
         pipeline.Preset != "MaximizeFps" && pipeline.Preset != "Custom")

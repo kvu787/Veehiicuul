@@ -35,7 +35,7 @@ inline constexpr ResolvedRenderPipeline MaximizeFpsRenderPipeline{
 };
 
 // Resolution validates before narrowing numeric counts. It never changes the input.
-[[nodiscard]] ResolvedRenderPipeline ResolveRenderPipeline(const ApplicationSettings::Pipeline& pipeline);
+[[nodiscard]] ResolvedRenderPipeline ResolveRenderPipeline(const struct ApplicationSettings::RenderPipeline& pipeline);
 // Produces GPU constants in Axles, Body, Cabin, Headlights, Wheels, Sphere order.
 [[nodiscard]] std::array<SimplePaint::GpuMaterial, 6> CompilePaintMaterials(const ApplicationSettings& settings);
 [[nodiscard]] std::wstring_view RenderPipelinePresetName(RenderPipelinePreset preset);

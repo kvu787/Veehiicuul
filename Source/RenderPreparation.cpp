@@ -3,7 +3,7 @@
 #include "PaintParameters.h"
 #include <stdexcept>
 
-ResolvedRenderPipeline ResolveRenderPipeline(const ApplicationSettings::Pipeline& pipeline)
+ResolvedRenderPipeline ResolveRenderPipeline(const struct ApplicationSettings::RenderPipeline& pipeline)
 {
     ValidatePipeline(pipeline);
     if (pipeline.Preset == "MinimizeInputLatency") return MinimizeInputLatencyRenderPipeline;
