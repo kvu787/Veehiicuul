@@ -535,3 +535,31 @@ The model now contains no configured default values. Tests supply complete input
 Removed all configuration default values from [ApplicationSettings.h](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/ApplicationSettings.h). Configured values now come from `Settings.json`, and every field remains required.
 
 Tests use explicit inputs, and the documentation is updated. All 12 tests passed in both Release and Debug. Changes are committed.
+
+
+## User
+
+overall, this is better.
+
+however, ideally the integer members of ApplicationSettings should have actual integer types. to do this change, what else would need to change?
+
+## Assistant (commentary)
+
+I’ll check nlohmann’s integer conversion behavior and the current count validation so I can explain what would need to change.
+
+## Assistant
+
+Yes. The model and renderer changes are small; the important change is **making integer deserialization reject lossy conversions**.
+
+The bundled nlohmann/json converts numbers using C++ casts. Simply changing a member to `int` would let `64.5` become `64` before validation. Out-of-range conversions are also unsafe to leave unchecked. The later validator cannot recover the original value.
+
+I would make these changes:
+
+1. **Use `std::int32_t` for the five count fields:** GPU frames in flight, presentation latency, back-buffer count, and the two sphere resolutions. Signed integers let the application validator report negative values as outside the allowed range.
+2. **Add a reusable checked-integer conversion policy in the JSON adapter.** Before conversion, it checks that the input is numeric, whole-valued, and representable by the destination integer type. It would preserve the current acceptance of `64.0` and reject `64.5`. The declarative field mappings and `Deserialize<ApplicationSettings>(input)` call can remain.
+3. **Simplify the separate settings validator.** Count validation becomes ordinary integer range checks. Limits such as “sphere U resolution must be between 3 and 512” stay here, entirely independent of JSON.
+4. **Update renderer conversions, tests, and documentation.** Fractional and unrepresentable inputs would now fail during deserialization; application-range errors would still fail afterward. This also applies to integer fields belonging to inactive preset controls.
+
+This requires one adjustment to the earlier separation: **checks needed to convert a value faithfully into its C++ type happen during deserialization; application rules happen afterward.** Unmodified nlohmann macros alone do not provide checked integer conversion.
+
+That is the approach I recommend: actual integer members, one settings model, and no application-specific rules in the JSON adapter.
