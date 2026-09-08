@@ -72,3 +72,45 @@ The work is concentrated in [Settings.ini](C:/Users/k/Repository/CPlusPlus/Simpl
 6. **Verify and commit in reviewable pieces.** Extend the settings tests for JSON syntax, types, duplicates, missing fields, presets, and numeric boundaries. Check that the converted shipped settings produce the same effective pipeline and material constants. Run the Release and Debug suites, including hardware/WARP and application smoke tests, and verify launching through `Run.cmd`. Separate dependency integration from the migration commit.
 
 Application code has not been changed; this is the migration proposal.
+
+## User
+
+this sounds fine. perform the migration to JSON end-to-end.
+
+## Assistant (commentary)
+
+I’ll implement the migration, update the fixtures and documentation, then run the Release and Debug suites and verify the launcher. I’ll commit the dependency, migration, and conversation log separately.
+
+## Assistant (commentary)
+
+nlohmann/json 3.12.0 is vendored, its header matches the published checksum, and the dependency commit builds successfully. I’ve captured the current pipeline settings and all six materials’ GPU constants so I can compare them exactly after conversion.
+
+## Assistant (commentary)
+
+The JSON loader and expanded settings tests are passing; the Release GPU and application checks are still running. The tests cover duplicate properties, strict types, numeric ranges, material mapping, defaults, and file diagnostics.
+
+One numeric detail is now tested: decimals too small for binary64 round to zero under nlohmann/json. Material validation then accepts or rejects that parsed value. I’ll document this behavior explicitly.
+
+## Assistant (commentary)
+
+All 11 Release tests passed. The migrated settings also match the pre-migration baseline exactly: pipeline controls, sphere resolution, and all 120 GPU float bit patterns.
+
+The Debug suite is running now. I’m reviewing the documentation and checking that `Run.cmd` stages and launches the JSON configuration from outside the repository directory.
+
+## Assistant (commentary)
+
+All 11 Debug tests passed too. `Run.cmd` successfully loaded the JSON configuration and initialized the expected low-latency pipeline. I’m finishing the launcher check and final diff review before committing the migration and documentation.
+
+## Assistant (commentary)
+
+Verification is complete: both suites passed, the shipped settings match the baseline exactly, and `Run.cmd` launched and exited successfully from outside the repo. Both documentation examples also load through the production parser. I’m committing the migration, documentation, and conversation record now.
+
+## Assistant
+
+Migrated all active settings to [Settings.json](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/assets/Settings.json) using vendored nlohmann/json 3.12.0. The INI loader is removed; validation, fixtures, and documentation are updated.
+
+- All 11 tests pass in both Release and Debug.
+- Shipped settings and GPU constants match the original exactly.
+- `Run.cmd` launch and shutdown verified.
+
+Migration committed as `60909bc`, with separate dependency, documentation, and conversation commits. Working tree is clean.
