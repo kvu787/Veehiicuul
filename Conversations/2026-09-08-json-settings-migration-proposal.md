@@ -482,3 +482,37 @@ I’ll rename the nested type and update its references, then build and run the se
 Renamed to `ApplicationSettings::RenderPipeline` and updated all references and JSON mappings.
 
 Release build and both settings tests passed.
+
+
+## User
+
+i see that default values are defined in C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\ApplicationSettings.h. ideally, none of the source code should define default values for the settings.json. is that possible?
+
+## Assistant (commentary)
+
+I’ll check how the generated deserializer constructs the object so I can distinguish required C++ initialization from configuration defaults.
+
+## Assistant
+
+Yes. **`Settings.json` can be the sole source of configured values.** The C++ model only needs field names and types; nlohmann’s macros do not require application defaults.
+
+For example:
+
+```cpp
+struct SphereMesh
+{
+    double UResolution;
+    double VResolution;
+};
+```
+
+The existing deserializer value-initializes the object, then reads every required field. If a field is missing, it throws. Temporary zero initialization is just C++ object initialization; it never substitutes for missing JSON values.
+
+I would remove the configuration initializers from `ApplicationSettings.h` and update tests to supply explicit test inputs instead of relying on default construction. The loading sequence stays unchanged:
+
+```cpp
+auto settings = Deserialize<ApplicationSettings>(input);
+ValidateSettings(settings);
+```
+
+Named pipeline preset definitions would remain in renderer preparation: those define what a preset means, while JSON chooses which preset to use.
