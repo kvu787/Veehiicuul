@@ -516,3 +516,22 @@ ValidateSettings(settings);
 ```
 
 Named pipeline preset definitions would remain in renderer preparation: those define what a preset means, while JSON chooses which preset to use.
+
+
+## User
+
+okay, do the change
+
+## Assistant (commentary)
+
+I’ll remove the configuration defaults from the settings model and update the tests to provide explicit inputs. Then I’ll verify that loading the shipped JSON behaves the same.
+
+## Assistant (commentary)
+
+The model now contains no configured default values. Tests supply complete inputs, and all 12 Release tests passed, including the checks that every JSON field is required. I’m checking Debug next.
+
+## Assistant
+
+Removed all configuration default values from [ApplicationSettings.h](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/ApplicationSettings.h). Configured values now come from `Settings.json`, and every field remains required.
+
+Tests use explicit inputs, and the documentation is updated. All 12 tests passed in both Release and Debug. Changes are committed.
