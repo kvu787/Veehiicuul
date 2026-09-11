@@ -94,14 +94,6 @@ and errors to `Application.log` in that folder. Direct executable and Visual
 Studio launches create a session folder under the repository's `MyLogOutput`
 directory, whose location is set at build time. This directory is ignored by Git.
 
-Double-click `Run_WithPresentMon.cmd` to build and launch with PresentMon
-capture, or run `.\Run.ps1 -WithPresentMon`. It requires
-`%UserProfile%\Program\PresentMon-2.5.1-x64.exe`; a missing executable fails
-before the build. Approve the Windows elevation prompt to start capture.
-`PresentMon.csv` is saved in the same session folder. Capture ends when the
-game exits; cleanup targets only this launch's uniquely named trace session.
-PresentMon mode cannot be combined with `-BuildOnly` or `-Test`.
-
 ## Controls
 
 | Key                | Action                       |
