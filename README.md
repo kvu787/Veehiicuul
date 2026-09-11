@@ -201,3 +201,34 @@ compiler DLL is required beside the executable.
 The renderer handles resizing, DPI changes, minimizing/restoring, and GPU/CPU
 frame synchronization. Only the two staged image/settings files are required
 at runtime.
+
+# [temp] PresentMon
+
+```powershell
+$gameProcesses = @(Get-Process -Name SimpleDirectX12Game -ErrorAction Stop)
+if ($gameProcesses.Count -ne 1) { throw 'Run exactly one game instance.' }
+$gameProcessId = $gameProcesses[0].Id
+$captureTimestamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
+$captureDirectory = "$env:UserProfile\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyLogOutput\$captureTimestamp"
+New-Item -ItemType Directory -Path $captureDirectory | Out-Null
+
+& "C:\Program Files\Git\usr\bin\winpty.exe" -Xallow-non-tty -Xplain `
+    "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
+    --process_id $gameProcessId `
+    --session_name "SimpleDirectX12Game-$captureTimestamp" `
+    --set_circular_buffer_size 65536 `
+    --no_console_stats `
+    --track_etw_status `
+    --delay 5 --timed 30 --terminate_after_timed `
+    --output_file "$captureDirectory\PresentMon.csv" `
+    2>&1 | Tee-Object -FilePath "$captureDirectory\PresentMon.log"
+
+& "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
+    --process_id $gameProcessId `
+    --session_name "SimpleDirectX12Game-$captureTimestamp" `
+    --set_circular_buffer_size 65536 `
+    --no_console_stats `
+    --track_etw_status `
+    --delay 5 --timed 30 --terminate_after_timed `
+    --output_file "$captureDirectory\PresentMon.csv"
+```
