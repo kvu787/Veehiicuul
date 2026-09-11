@@ -1,7 +1,7 @@
 # Tests own their shader outputs and use only the copied module and Windows SDK.
 find_program(DXC_EXECUTABLE NAMES dxc.exe dxc REQUIRED)
 set(SHADER_HEADERS)
-set(SHADER_GENERATED_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(SHADER_GENERATED_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Generated")
 foreach(stage IN ITEMS VS PS)
     string(TOLOWER "${stage}" profile)
     if(stage STREQUAL "VS")

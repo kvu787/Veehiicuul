@@ -17,7 +17,7 @@ if(NOT DXC_EXECUTABLE)
     )
 endif()
 
-set(SHADER_GENERATED_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Generated/shaders")
+set(SHADER_GENERATED_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Generated/Shaders")
 set(BACKGROUND_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Source/Shaders/Background.hlsl")
 set(SIMPLE_PAINT_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Source/SimplePaint/SimplePaint.hlsl")
 set(SIMPLE_PAINT_CORE "${CMAKE_CURRENT_SOURCE_DIR}/Source/SimplePaint/SimplePaintCore.hlsli")
@@ -159,6 +159,7 @@ endif()
 
 target_compile_features(SimpleDirectX12Game PRIVATE cxx_std_20)
 target_compile_definitions(SimpleDirectX12Game PRIVATE
+    APPLICATION_LOG_ROOT=L"${CMAKE_SOURCE_DIR}/MyLogOutput"
     NOMINMAX
     UNICODE
     _UNICODE

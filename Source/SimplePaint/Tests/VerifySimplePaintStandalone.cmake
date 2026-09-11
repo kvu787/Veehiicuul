@@ -9,7 +9,7 @@ file(GLOB module_files "${MODULE_DIR}/*.h" "${MODULE_DIR}/*.cpp"
     "${MODULE_DIR}/*.hlsl" "${MODULE_DIR}/*.hlsli" "${MODULE_DIR}/*.md")
 file(MAKE_DIRECTORY "${project}/SimplePaint")
 file(COPY ${module_files} "${MODULE_DIR}/CMakeLists.txt"
-    "${MODULE_DIR}/tests" "${MODULE_DIR}/Reports"
+    "${MODULE_DIR}/Tests" "${MODULE_DIR}/Reports"
     DESTINATION "${project}/SimplePaint")
 file(COPY "${CONSUMER_DIR}/CMakeLists.txt" "${CONSUMER_DIR}/Main.cpp" DESTINATION "${project}")
 

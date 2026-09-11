@@ -1,6 +1,7 @@
 param(
     [switch] $BuildOnly,
     [switch] $Test,
+    [switch] $WithPresentMon,
     [ValidateSet('Release', 'Debug')]
     [string] $Configuration = 'Release'
 )
@@ -26,7 +27,22 @@ function Invoke-Checked {
     }
 }
 
+$transcriptStarted = $false
+$presentMonProcess = $null
+$presentMonSession = 'SimpleDirectX12Game-' + [Guid]::NewGuid().ToString('N')
 try {
+    $presentMonPath = Join-Path $env:UserProfile 'Program\PresentMon-2.5.1-x64.exe'
+    if ($WithPresentMon -and ($BuildOnly -or $Test)) {
+        throw '-WithPresentMon requires a game launch, without -BuildOnly or -Test.'
+    }
+    if ($WithPresentMon -and -not (Test-Path -LiteralPath $presentMonPath -PathType Leaf)) {
+        throw "PresentMon executable was not found: $presentMonPath"
+    }
+    $logFolderPath = Join-Path $PSScriptRoot ('MyLogOutput\' + (Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'))
+    New-Item -ItemType Directory -Path $logFolderPath -ErrorAction Stop | Out-Null
+    Start-Transcript -LiteralPath (Join-Path $logFolderPath 'Launcher.log') | Out-Null
+    $transcriptStarted = $true
+    Write-Host "Session logs: $logFolderPath"
     $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
     if (-not (Test-Path -LiteralPath $vswhere -PathType Leaf)) {
         throw 'Visual Studio Installer''s vswhere.exe was not found. Install Visual Studio with the Desktop development with C++ workload.'
@@ -101,13 +117,51 @@ try {
         Invoke-Checked (Join-Path (Split-Path $cmake) 'ctest.exe') --test-dir $buildDirectory --output-on-failure
     }
     elseif (-not $BuildOnly) {
-        Invoke-Checked (Join-Path $buildDirectory 'SimpleDirectX12Game.exe')
+        if ($WithPresentMon) {
+            $presentMonArguments = @(
+                '--process_name', 'SimpleDirectX12Game.exe',
+                '--output_file', ('"{0}"' -f (Join-Path $logFolderPath 'PresentMon.csv')),
+                '--session_name', $presentMonSession,
+                '--no_console_stats', '--terminate_on_proc_exit'
+            )
+            $presentMonProcess = Start-Process -FilePath $presentMonPath -ArgumentList $presentMonArguments -Verb RunAs -WindowStyle Hidden -PassThru
+            if ($presentMonProcess.WaitForExit(1000)) {
+                throw "PresentMon stopped before launch with code $($presentMonProcess.ExitCode)."
+            }
+        }
+        $previousLogDirectory = $env:SIMPLE_DIRECTX12_LOG_DIRECTORY
+        try {
+            $env:SIMPLE_DIRECTX12_LOG_DIRECTORY = $logFolderPath
+            $applicationProcess = Start-Process -FilePath (Join-Path $buildDirectory 'SimpleDirectX12Game.exe') -PassThru
+        }
+        finally {
+            $env:SIMPLE_DIRECTX12_LOG_DIRECTORY = $previousLogDirectory
+        }
+        $applicationProcess.WaitForExit()
+        if ($applicationProcess.ExitCode -ne 0) {
+            throw "Application exited with code $($applicationProcess.ExitCode)."
+        }
     }
 }
 catch {
     Write-Host
     Write-Host $_.Exception.Message -ForegroundColor Red
     Write-Host 'Build or launch failed. Review the messages above.' -ForegroundColor Red
-    if (-not ($BuildOnly -or $Test)) { Read-Host 'Press Enter to continue' }
+    if (-not ($BuildOnly -or $Test -or $WithPresentMon)) { Read-Host 'Press Enter to continue' }
     exit 1
+}
+finally {
+    try {
+        if ($null -ne $presentMonProcess -and -not $presentMonProcess.HasExited) {
+            # Stop only this launch's trace session, allowing PresentMon to flush its CSV.
+            $stopArguments = @('--session_name', $presentMonSession, '--terminate_existing_session')
+            Start-Process -FilePath $presentMonPath -ArgumentList $stopArguments -Verb RunAs -WindowStyle Hidden -Wait
+            if (-not $presentMonProcess.WaitForExit(10000)) {
+                throw "PresentMon did not stop. Trace session: $presentMonSession"
+            }
+        }
+    }
+    finally {
+        if ($transcriptStarted) { Stop-Transcript | Out-Null }
+    }
 }

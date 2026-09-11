@@ -97,8 +97,8 @@ Use the generated output paths below after following this setup:
 | ------------------------ | ---------------------------- |
 | Visual Studio Debug      | `out/build/vs-debug`         |
 | Visual Studio Release    | `out/build/vs-release`       |
-| Run.cmd default Release  | `MyBuildOutput/Release`              |
-| Run.ps1 explicit Debug   | `MyBuildOutput/Debug`                |
+| Run.cmd default Release  | `MyBuildOutput/Release`      |
+| Run.ps1 explicit Debug   | `MyBuildOutput/Debug`        |
 
 The first CMake configure checks the compiler and locates DXC. Configuration generates the build system; building then compiles the C++ and shaders and stages the assets.
 
@@ -179,7 +179,7 @@ The renderer sends its pipeline description through `OutputDebugStringW`; look i
 
 **C++:** stop debugging, edit, save, build, and restart. Add new `.cpp` files to the relevant CMake target. Merely creating a file in Folder View does not ensure it is compiled. The main application target is in the root CMake file; the reusable paint library has its own `Source/SimplePaint/CMakeLists.txt`.
 
-**Shaders:** edit the original `.hlsl` or `.hlsli` files, then build and restart. CMake invokes DXC and embeds generated shader byte arrays in the executable. Do not edit the generated headers under the build directory's `Generated/shaders`.
+**Shaders:** edit the original `.hlsl` or `.hlsli` files, then build and restart. CMake invokes DXC and embeds generated shader byte arrays in the executable. Do not edit the generated headers under the build directory's `Generated/Shaders`.
 
 The current shader command always uses optimization and strips debug information, including when C++ is built in Debug. A C++ Debug build therefore does not provide shader source stepping. Adding shader-debug compilation would require a separate build change.
 
