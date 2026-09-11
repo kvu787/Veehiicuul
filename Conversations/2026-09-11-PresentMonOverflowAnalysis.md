@@ -303,3 +303,26 @@ That work runs on the **same thread that drains the completed-present queue**. S
 **However, in your exact command, the flag is effectively redundant.** Because output is piped into `Tee-Object`, PresentMon detects that stdout is not a console and automatically disables console statistics anyway. Specifying the flag explicitly makes that intention clear and avoids its automatic “no_console_stats added” warning. [Detection code](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentMon/CommandLine.cpp:603).
 
 So I would keep it for clarity, but **I have not demonstrated a performance improvement from this flag alone**. The successful capture validated the combined configuration. The larger circular buffer was the change directly aimed at the overflow.
+
+## User
+
+what is the purpose of Tee-Object
+
+## Assistant
+
+`Tee-Object` lets you see PresentMon’s messages on screen while also saving them to a log file.
+
+## Assistant
+
+`Tee-Object` copies its input to **both a file and the console**.
+
+In your command:
+
+```powershell
+2>&1 | Tee-Object -FilePath "$captureDirectory\PresentMon.log"
+```
+
+- `2>&1` combines PresentMon’s normal output and error output, including its warnings.
+- `Tee-Object` saves those messages to `PresentMon.log` while also displaying them.
+
+This preserves the recording status and loss counters for later inspection. **The performance CSV is written separately by `--output_file`**; `Tee-Object` only handles the console messages.
