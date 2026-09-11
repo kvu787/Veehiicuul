@@ -61,3 +61,27 @@ Production code and archived captures were left unchanged.
 - :codex-followup[Fix capture recording]{prompt="Fix the capture workflow and add durable recording of the active experiment configuration, following the repository review."}
 - :codex-followup[Create a reusable analyzer]{prompt="Create a reusable PresentMon analyzer with explicit inputs, capture-health validation, and reports derived from verified data. Preserve the historical captures and report."}
 - :codex-followup[Plan preset comparisons]{prompt="Design a controlled, repeated comparison of MinimizeInputLatency, Standard, MaximizeFps, and selected Custom configurations using the review findings."}
+
+## User
+
+did you review the application itself? i.e. source code, build process, etc
+
+## Assistant
+
+Yes—the application source and build process were part of the review. I’ll summarize that scope and its limits, and record this follow-up in the conversation log.
+
+## Assistant
+
+**Yes. I reviewed the application itself and its build process**, including:
+
+- **Renderer:** frame submission, GPU fences, allocator and buffer reuse, presentation admission, Event/Spin waits, VSync/tearing, adapter selection and WARP fallback.
+- **Application lifecycle:** message processing, animation timing, resizing, fullscreen, minimizing/restoring and shutdown.
+- **Rendering workload:** geometry, shaders, material calculations, constant-buffer layouts, resource uploads and render dimensions.
+- **Configuration:** JSON loading, validation, preset resolution and Custom settings.
+- **Build and launch:** `Run.cmd`, `Run.ps1`, CMake targets, shader compilation, asset staging and test configuration.
+
+I also built and ran **all 13 tests in both Release and Debug**, including hardware and WARP GPU tests.
+
+I found **no production rendering or synchronization defect that undermines the saved FPS measurements**. One application-side weakness is the missing durable record of its active configuration, adapter and dimensions. The other actionable findings concerned capture and analysis tooling, which is why my earlier answer emphasized those.
+
+The [application review and coverage limits](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Documentation/Reports/RepositoryReview20260911/Review.md:145) are documented. I did not regenerate the Blender assets, audit every third-party implementation, or test every possible Custom configuration.
