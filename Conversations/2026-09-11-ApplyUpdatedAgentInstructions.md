@@ -33,3 +33,22 @@ Updated and committed:
 - Folder names, references, and Windows 11 x64 documentation.
 
 All 13 tests passed in both Release and Debug. Conversation recorded in a separate `[cnv]` commit. Working tree is clean.
+
+## User
+
+why do i get two UAC prompts when running "C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Run_WithPresentMon.cmd"? i get one prompt before the app runs and when after i close the app
+
+## Assistant
+
+I’ll check how the launcher starts and stops PresentMon to identify why it asks for elevation twice.
+
+## Assistant
+
+The launcher I wrote requests administrator privileges twice:
+
+- **Before launch:** to start PresentMon.
+- **After closing:** to run a second PresentMon command that stops the capture session.
+
+Both commands use `-Verb RunAs`, which triggers UAC. Although PresentMon is configured to exit automatically when the game closes, my cleanup checks immediately and can launch the second command before that automatic shutdown finishes.
+
+That second prompt is a flaw in my cleanup logic. It should first give PresentMon time to exit normally.
