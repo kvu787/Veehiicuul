@@ -374,3 +374,67 @@ Keep the other arguments. You should then see status updates during the run; the
 To retain `Tee-Object` **and get live logging**, a source-level fix is to flush stdout after the status and recording-start/stop messages, then rebuild PresentMon. [`fflush(stdout)`](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fflush?view=msvc-170) sends the buffered text immediately.
 
 The delay concerns the diagnostic text; it does **not** mean PresentMon waited until the end to collect the measurements.
+
+## User
+
+i ran this and i got the etw status printed out every second as expected:
+$gameProcesses = @(Get-Process -Name SimpleDirectX12Game -ErrorAction Stop)
+if ($gameProcesses.Count -ne 1) { throw 'Run exactly one game instance.' }
+$gameProcessId = $gameProcesses[0].Id
+$captureTimestamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
+$captureDirectory = "$env:UserProfile\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyLogOutput\$captureTimestamp"
+New-Item -ItemType Directory -Path $captureDirectory | Out-Null
+
+& "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
+    --process_id $gameProcessId `
+    --session_name "SimpleDirectX12Game-$captureTimestamp" `
+    --set_circular_buffer_size 65536 `
+    --no_console_stats `
+    --track_etw_status `
+    --delay 5 --timed 30 --terminate_after_timed `
+    --output_file "$captureDirectory\PresentMon.csv"
+
+is there a way to get the proper live console output as well as PresentMon.log without modifying the presentmon source
+
+## Assistant
+
+I’ll check whether PowerShell transcription can save the messages while preserving the live console output.
+
+## Assistant
+
+PowerShell can transcribe a native program by reading its console buffer after it exits, leaving the live output intact. I’m testing that path because transcript behavior depends on the terminal, and I don’t want to recommend another command that delays the messages.
+
+## Assistant
+
+The test exposed a limitation: transcription kept the output live, but saved only 21 of 40 lines after the terminal scrolled. I’m checking a console wrapper that can stream every line to both the screen and the log.
+
+## Assistant
+
+The installed `winpty.exe` works with `Tee-Object`: the probe’s messages arrived during execution, and all 40 lines reached the log despite scrolling. PresentMon’s help also rendered correctly through it. This uses the existing executable without changing its source.
+
+## Assistant
+
+**Yes. Use `winpty.exe`, which is already installed with Git on your computer.**
+
+[Winpty](https://github.com/rprichard/winpty#winpty) gives PresentMon a console and streams that console’s output into `Tee-Object`. This preserves live output while saving the messages, without changing PresentMon.
+
+Keep your setup code through `New-Item`, then replace the PresentMon invocation with:
+
+```powershell
+& "C:\Program Files\Git\usr\bin\winpty.exe" -Xallow-non-tty -Xplain `
+    "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
+    --process_id $gameProcessId `
+    --session_name "SimpleDirectX12Game-$captureTimestamp" `
+    --set_circular_buffer_size 65536 `
+    --no_console_stats `
+    --track_etw_status `
+    --delay 5 --timed 30 --terminate_after_timed `
+    --output_file "$captureDirectory\PresentMon.csv" `
+    2>&1 | Tee-Object -FilePath "$captureDirectory\PresentMon.log"
+```
+
+The two wrapper options allow piped output (`-Xallow-non-tty`) and produce plain text without terminal control sequences (`-Xplain`). Keep `--no_console_stats` so PresentMon prints status lines instead of its updating dashboard. [Wrapper option implementation](https://github.com/rprichard/winpty/blob/master/src/unix-adapter/main.cc#L475).
+
+I verified that this wrapper delivered native C-runtime output during execution and saved **all 40 test lines**, including lines that scrolled off screen. PresentMon’s `--help` also rendered correctly. I have not rerun your game capture through the wrapper.
+
+`Start-Transcript` is less reliable here: my console test saved only **21 of 40 lines** because PowerShell copied the remaining console buffer after the program exited. Also, keep the terminal wide enough for the ETW status lines; console wrapping can appear in the log.
