@@ -316,12 +316,15 @@ metrics = [
     ("MsGPUTime","Reported total GPU frame span"),
     ("MsUntilDisplayed","Present-to-display event delay"),
 ]
-table(["Metric (milliseconds)", "A mean", "A P99", "B mean", "B P99"], [
-    [label+" ("+key+")", number(a["Metrics"][key]["Mean"],4),
-     number(a["Metrics"][key]["Percentiles"]["99"],4), number(b["Metrics"][key]["Mean"],4),
-     number(b["Metrics"][key]["Percentiles"]["99"],4)] for key,label in metrics
+table(["Metric (microseconds, µs)", "A mean", "A P99", "B mean", "B P99"], [
+    [label+" ("+key+")", number(a["Metrics"][key]["Mean"] * 1000,1),
+     number(a["Metrics"][key]["Percentiles"]["99"] * 1000,1), number(b["Metrics"][key]["Mean"] * 1000,1),
+     number(b["Metrics"][key]["Percentiles"]["99"] * 1000,1)] for key,label in metrics
 ])
 add("""
+All values in this table are converted to microseconds (µs). Parenthesized
+names retain the original PresentMon CSV column names.
+
 These are per-frame times, not utilization percentages. CPU and GPU activity
 can overlap, and CPU-side elapsed time can include scheduling and synchronization.
 Adding these rows would double-count time. Application-frame and present
@@ -329,7 +332,7 @@ intervals closely agree, but the FPS conclusion does not depend on GPU timing.
 
 **Hardware-accelerated GPU scheduling is enabled in the later DxDiag snapshot.**
 PresentMon documents reduced GPU execution timing accuracy in that mode.
-At these sub-millisecond scales, GPU busy/latency values should not be treated
+At these timing scales, GPU busy/latency values should not be treated
 as precise shader costs or used alone to identify a bottleneck. Primary FPS
 is independently derived from application present timestamps.
 See [PresentMon's scheduling limitation](https://github.com/GameTechDev/PresentMon/blob/v2.5.1/README.md#tracking-gpu-work-with-hardware-accelerated-gpu-scheduling-enabled).
@@ -340,7 +343,8 @@ so this does not establish 5,600 complete screen refreshes per second. The
 later inventory reports 120 Hz external outputs.
 
 `MsUntilDisplayed` starts at `Present()`, after earlier application work.
-Its approximately 0.127 ms mean is **not physical input-to-photon latency**.
+Its mean is 127.6 µs in Capture A and 127.4 µs in Capture B. These values are
+**not physical input-to-photon latency**.
 Both input-to-photon columns are unavailable for every row.
 `MsBetweenSimulationStart` and `MsFlipDelay` are also entirely unavailable.
 Physical latency comparison needs appropriate input instrumentation or

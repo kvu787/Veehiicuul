@@ -288,16 +288,19 @@ does not establish a general performance improvement over time.
 
 **CPU, GPU, and display timing**
 
-| Metric (milliseconds)                                | A mean | A P99  | B mean | B P99  |
-| ---------------------------------------------------- | ------ | ------ | ------ | ------ |
-| Application frame interval (MsBetweenAppStart)       | 0.1773 | 0.3166 | 0.1765 | 0.3116 |
-| CPU-side elapsed time before presenting (MsCPUBusy)  | 0.1254 | 0.2192 | 0.1269 | 0.2180 |
-| Time within Present() (MsInPresentAPI)               | 0.0519 | 0.1630 | 0.0496 | 0.1608 |
-| Reported CPU-start to GPU-start delay (MsGPULatency) | 0.0767 | 0.1529 | 0.0786 | 0.1542 |
-| Reported active GPU time (MsGPUBusy)                 | 0.1491 | 0.2315 | 0.1491 | 0.2309 |
-| Reported GPU idle time within the frame (MsGPUWait)  | 0.0282 | 0.0554 | 0.0274 | 0.0481 |
-| Reported total GPU frame span (MsGPUTime)            | 0.1773 | 0.2988 | 0.1765 | 0.2884 |
-| Present-to-display event delay (MsUntilDisplayed)    | 0.1276 | 0.2083 | 0.1274 | 0.2073 |
+| Metric (microseconds, µs)                            | A mean | A P99 | B mean | B P99 |
+| ---------------------------------------------------- | ------ | ----- | ------ | ----- |
+| Application frame interval (MsBetweenAppStart)       | 177.3  | 316.6 | 176.5  | 311.6 |
+| CPU-side elapsed time before presenting (MsCPUBusy)  | 125.4  | 219.2 | 126.9  | 218.0 |
+| Time within Present() (MsInPresentAPI)               | 51.9   | 163.0 | 49.6   | 160.8 |
+| Reported CPU-start to GPU-start delay (MsGPULatency) | 76.7   | 152.9 | 78.6   | 154.2 |
+| Reported active GPU time (MsGPUBusy)                 | 149.1  | 231.5 | 149.1  | 230.9 |
+| Reported GPU idle time within the frame (MsGPUWait)  | 28.2   | 55.4  | 27.4   | 48.1  |
+| Reported total GPU frame span (MsGPUTime)            | 177.3  | 298.8 | 176.5  | 288.4 |
+| Present-to-display event delay (MsUntilDisplayed)    | 127.6  | 208.3 | 127.4  | 207.3 |
+
+All values in this table are converted to microseconds (µs). Parenthesized
+names retain the original PresentMon CSV column names.
 
 These are per-frame times, not utilization percentages. CPU and GPU activity
 can overlap, and CPU-side elapsed time can include scheduling and synchronization.
@@ -306,7 +309,7 @@ intervals closely agree, but the FPS conclusion does not depend on GPU timing.
 
 **Hardware-accelerated GPU scheduling is enabled in the later DxDiag snapshot.**
 PresentMon documents reduced GPU execution timing accuracy in that mode.
-At these sub-millisecond scales, GPU busy/latency values should not be treated
+At these timing scales, GPU busy/latency values should not be treated
 as precise shader costs or used alone to identify a bottleneck. Primary FPS
 is independently derived from application present timestamps.
 See [PresentMon's scheduling limitation](https://github.com/GameTechDev/PresentMon/blob/v2.5.1/README.md#tracking-gpu-work-with-hardware-accelerated-gpu-scheduling-enabled).
@@ -317,7 +320,8 @@ so this does not establish 5,600 complete screen refreshes per second. The
 later inventory reports 120 Hz external outputs.
 
 `MsUntilDisplayed` starts at `Present()`, after earlier application work.
-Its approximately 0.127 ms mean is **not physical input-to-photon latency**.
+Its mean is 127.6 µs in Capture A and 127.4 µs in Capture B. These values are
+**not physical input-to-photon latency**.
 Both input-to-photon columns are unavailable for every row.
 `MsBetweenSimulationStart` and `MsFlipDelay` are also entirely unavailable.
 Physical latency comparison needs appropriate input instrumentation or
