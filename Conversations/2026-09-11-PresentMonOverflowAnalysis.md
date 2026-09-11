@@ -71,3 +71,15 @@ Check `PresentMon.log` after completion. If overflow remains, repeat with `13107
 Keep frames that were not displayed: `--exclude_dropped` would remove useful evidence. For a separate measurement of presentation rate alone, adding `--no_track_gpu --no_track_display --no_track_input` reduces tracking work, but removes GPU/display/latency information.
 
 I verified the command’s syntax and options; I did not run a new live capture.
+
+## User
+
+in your analysis, did you also read "C:\Users\k\Downloads\2026-09-11_12-35-07 SimpleDirectX12Game.csv"
+
+## Assistant
+
+No. I did not read that CSV; my recommendation was based on the screenshot and source code, not its captured frame data.
+
+## Assistant
+
+No. I did not read that CSV. The **65,536 buffer recommendation was based on the source code**, and I had not validated it against the captured frame data.
