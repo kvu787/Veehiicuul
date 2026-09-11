@@ -49,29 +49,6 @@ New-Item -ItemType "Directory" -Path $logFolderPath
 Any logs for that application session must be put in that log folder.
 `MyLogOutput/` must be gitignored.
 
-If the application has a framerate, also create a file called `Run_WithPresentMon.cmd`.
-Run_WithPresentMon.cmd does the same thing as Run.cmd, but also uses `%UserProfile%\Program\PresentMon-2.5.1-x64.exe` to record a PresentMon session that is saved to the log folder.
-Run_WithPresentMon.cmd must throw an exception and exit if the PresentMon executable isn't found.
-
-Use this PowerShell as an example for how this should work:
-
-```powershell
-$presentMonPath = "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe"
-if (Test-Path $presentMonPath) {
-    $presentMonLogFilePath  = "$($logFolderPath)\PresentMon.csv"
-    Start-Process `
-        -FilePath $presentMonPath `
-        -ArgumentList "--process_name `"VsyncStutterTest.exe`" --output_file `"$($presentMonLogFilePath)`"" `
-        -Verb "RunAs"
-}
-
-$godotLogFilePath = "$logFolderPath\Godot.log"
-$process = Start-Process `
-    -FilePath "$env:UserProfile\Repository\Godot\VsyncStutterTest\MyBuildOutput\VsyncStutterTest.exe" `
-    -ArgumentList "--log-file `"$godotLogFilePath`"" `
-    -PassThru
-```
-
 # Base template additions
 
 ## Conversations
