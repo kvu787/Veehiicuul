@@ -1,0 +1,2771 @@
+{
+  "Method": "FPS=(N-1)*1000/(last TimeInMs-first TimeInMs); no trimming or outlier removal.",
+  "PythonVersion": "3.12.14",
+  "NumpyVersion": "2.3.5",
+  "PandasVersion": "3.0.1",
+  "Captures": [
+    {
+      "Capture": "2026-09-11_13-59-13",
+      "Rows": 1692056,
+      "Intervals": 1692055,
+      "FirstTimeInMs": 5008.5291,
+      "LastTimeInMs": 305017.4406,
+      "DurationSeconds": 300.0089115,
+      "AverageFPS": 5640.015796664094,
+      "AverageFPSFromIntervals": 5640.015796664094,
+      "FirstIntervalExcludedMs": 0.237,
+      "FrameIntervalsMs": {
+        "Count": 1692055,
+        "Available": 1692055,
+        "Missing": 0,
+        "Mean": 0.17730446793987192,
+        "StandardDeviation": 0.02743966714602325,
+        "Sum": 300008.9115,
+        "Percentiles": {
+          "0": 0.135,
+          "1": 0.1453,
+          "5": 0.1483,
+          "50": 0.1776,
+          "90": 0.1998,
+          "95": 0.2063,
+          "99": 0.2996,
+          "99.9": 0.3772946000000229,
+          "99.99": 0.535838379999972,
+          "100": 7.4818
+        }
+      },
+      "LowFPS": {
+        "1": 2914.6852456879337,
+        "0.1": 2209.2338930146193
+      },
+      "Thresholds": {
+        "0.2": {
+          "IntervalsAbove": 163447,
+          "PercentAbove": 9.659674183167805
+        },
+        "0.25": {
+          "IntervalsAbove": 33141,
+          "PercentAbove": 1.9586242763976347
+        },
+        "0.5": {
+          "IntervalsAbove": 232,
+          "PercentAbove": 0.013711138231322268
+        },
+        "1": {
+          "IntervalsAbove": 42,
+          "PercentAbove": 0.0024821888177393764
+        },
+        "2": {
+          "IntervalsAbove": 5,
+          "PercentAbove": 0.00029549866877849715
+        },
+        "5": {
+          "IntervalsAbove": 1,
+          "PercentAbove": 5.909973375569943e-05
+        },
+        "10": {
+          "IntervalsAbove": 0,
+          "PercentAbove": 0.0
+        },
+        "16.6667": {
+          "IntervalsAbove": 0,
+          "PercentAbove": 0.0
+        }
+      },
+      "IntervalsAtOrBelow0Point2MsPercent": 90.34032581683219,
+      "ElapsedTimeInIntervalsAtOrBelow0Point2MsPercent": 87.5560756467729,
+      "CompleteOneSecondWindows": {
+        "Count": 300,
+        "Available": 300,
+        "Missing": 0,
+        "Mean": 5640.02,
+        "StandardDeviation": 203.91797272432856,
+        "Sum": 1692006.0,
+        "Percentiles": {
+          "0": 5100.0,
+          "1": 5120.97,
+          "5": 5228.75,
+          "50": 5711.5,
+          "90": 5850.0,
+          "95": 5877.1,
+          "99": 5951.2699999999995,
+          "99.9": 6008.844000000001,
+          "99.99": 6020.684399999997,
+          "100": 6022.0
+        }
+      },
+      "SecondsAtLeast5000FPS": 300,
+      "SecondsBelow5000FPS": [],
+      "ThirtySecondBlocks": [
+        {
+          "StartSecond": 0,
+          "EndSecond": 30,
+          "Presents": 167759,
+          "FPS": 5591.966666666666
+        },
+        {
+          "StartSecond": 30,
+          "EndSecond": 60,
+          "Presents": 170653,
+          "FPS": 5688.433333333333
+        },
+        {
+          "StartSecond": 60,
+          "EndSecond": 90,
+          "Presents": 168371,
+          "FPS": 5612.366666666667
+        },
+        {
+          "StartSecond": 90,
+          "EndSecond": 120,
+          "Presents": 171680,
+          "FPS": 5722.666666666667
+        },
+        {
+          "StartSecond": 120,
+          "EndSecond": 150,
+          "Presents": 168653,
+          "FPS": 5621.766666666666
+        },
+        {
+          "StartSecond": 150,
+          "EndSecond": 180,
+          "Presents": 170647,
+          "FPS": 5688.233333333334
+        },
+        {
+          "StartSecond": 180,
+          "EndSecond": 210,
+          "Presents": 168198,
+          "FPS": 5606.6
+        },
+        {
+          "StartSecond": 210,
+          "EndSecond": 240,
+          "Presents": 167850,
+          "FPS": 5595.0
+        },
+        {
+          "StartSecond": 240,
+          "EndSecond": 270,
+          "Presents": 168500,
+          "FPS": 5616.666666666667
+        },
+        {
+          "StartSecond": 270,
+          "EndSecond": 300,
+          "Presents": 169695,
+          "FPS": 5656.5
+        }
+      ],
+      "Categories": {
+        "Application": {
+          "SimpleDirectX12Game.exe": 1692056
+        },
+        "ProcessID": {
+          "2132": 1692056
+        },
+        "SwapChainAddress": {
+          "0x2011A689F50": 1692056
+        },
+        "PresentRuntime": {
+          "DXGI": 1692056
+        },
+        "SyncInterval": {
+          "0": 1692056
+        },
+        "PresentFlags": {
+          "512": 1692056
+        },
+        "AllowsTearing": {
+          "1": 1692056
+        },
+        "PresentMode": {
+          "Hardware: Independent Flip": 1692056
+        }
+      },
+      "CategoryTransitions": {
+        "Application": 0,
+        "ProcessID": 0,
+        "SwapChainAddress": 0,
+        "PresentRuntime": 0,
+        "SyncInterval": 0,
+        "PresentFlags": 0,
+        "AllowsTearing": 0,
+        "PresentMode": 0
+      },
+      "Metrics": {
+        "TimeInMs": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 154971.6720171232,
+          "StandardDeviation": 86510.00191753682,
+          "Sum": 262220747466.6054,
+          "Percentiles": {
+            "0": 5008.5291,
+            "1": 8037.352095,
+            "5": 20455.4235,
+            "50": 154821.51825,
+            "90": 275099.48295,
+            "95": 290150.896275,
+            "99": 302093.377455,
+            "99.9": 304727.13155100006,
+            "99.99": 304987.26377775,
+            "100": 305017.4406
+          }
+        },
+        "MsBetweenSimulationStart": {
+          "Count": 1692056,
+          "Available": 0,
+          "Missing": 1692056
+        },
+        "MsBetweenPresents": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.1773045032197516,
+          "StandardDeviation": 0.02743969741363735,
+          "Sum": 300009.1485,
+          "Percentiles": {
+            "0": 0.135,
+            "1": 0.1453,
+            "5": 0.1483,
+            "50": 0.1776,
+            "90": 0.1998,
+            "95": 0.2063,
+            "99": 0.2996,
+            "99.9": 0.37729450000002984,
+            "99.99": 0.5358383499999531,
+            "100": 7.4818
+          }
+        },
+        "MsBetweenDisplayChange": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.17730448862212597,
+          "StandardDeviation": 0.027394569950277347,
+          "Sum": 300009.1238,
+          "Percentiles": {
+            "0": 0.1373,
+            "1": 0.1455,
+            "5": 0.1483,
+            "50": 0.1776,
+            "90": 0.1998,
+            "95": 0.2055,
+            "99": 0.2988,
+            "99.9": 0.3839,
+            "99.99": 0.5480794499999844,
+            "100": 7.4728
+          }
+        },
+        "MsInPresentAPI": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.05192592756977311,
+          "StandardDeviation": 0.026861362464847802,
+          "Sum": 87861.5773,
+          "Percentiles": {
+            "0": 0.0344,
+            "1": 0.0389,
+            "5": 0.0393,
+            "50": 0.0426,
+            "90": 0.0589,
+            "95": 0.1327,
+            "99": 0.163,
+            "99.9": 0.2715,
+            "99.99": 0.3164,
+            "100": 0.5827
+          }
+        },
+        "MsRenderPresentLatency": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.12761614857900686,
+          "StandardDeviation": 0.02160501756391432,
+          "Sum": 215933.6699,
+          "Percentiles": {
+            "0": 0.0896,
+            "1": 0.1044,
+            "5": 0.107,
+            "50": 0.1286,
+            "90": 0.1414,
+            "95": 0.1456,
+            "99": 0.2083,
+            "99.9": 0.306,
+            "99.99": 0.47335614999989045,
+            "100": 7.4084
+          }
+        },
+        "MsUntilDisplayed": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.12761660258289323,
+          "StandardDeviation": 0.021609199517690313,
+          "Sum": 215934.4381,
+          "Percentiles": {
+            "0": 0.0896,
+            "1": 0.1044,
+            "5": 0.107,
+            "50": 0.1286,
+            "90": 0.1414,
+            "95": 0.1456,
+            "99": 0.2083,
+            "99.9": 0.3061,
+            "99.99": 0.4742150499998592,
+            "100": 7.4084
+          }
+        },
+        "CPUStartTimeInMs": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 154971.54663851194,
+          "StandardDeviation": 86510.00107350554,
+          "Sum": 262220535318.97394,
+          "Percentiles": {
+            "0": 5008.353,
+            "1": 8037.21437,
+            "5": 20455.284975,
+            "50": 154821.384,
+            "90": 275099.37385,
+            "95": 290150.75922500005,
+            "99": 302093.24917499995,
+            "99.9": 304727.0185550001,
+            "99.99": 304987.15422709996,
+            "100": 305017.2825
+          }
+        },
+        "MsBetweenAppStart": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.17730453885687,
+          "StandardDeviation": 0.037740448179106094,
+          "Sum": 300009.2088,
+          "Percentiles": {
+            "0": 0.0818,
+            "1": 0.0914,
+            "5": 0.1434,
+            "50": 0.1771,
+            "90": 0.2026,
+            "95": 0.2474,
+            "99": 0.3166,
+            "99.9": 0.4313,
+            "99.99": 0.5538794499999843,
+            "100": 7.5309
+          }
+        },
+        "MsCPUBusy": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.1253786112870969,
+          "StandardDeviation": 0.031322860710653,
+          "Sum": 212147.63150000002,
+          "Percentiles": {
+            "0": 0.0308,
+            "1": 0.0335,
+            "5": 0.0733,
+            "50": 0.1329,
+            "90": 0.1436,
+            "95": 0.1496,
+            "99": 0.2192,
+            "99.9": 0.3001,
+            "99.99": 0.4630889999996871,
+            "100": 7.421
+          }
+        },
+        "MsCPUWait": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.05192592756977311,
+          "StandardDeviation": 0.026861362464847802,
+          "Sum": 87861.5773,
+          "Percentiles": {
+            "0": 0.0344,
+            "1": 0.0389,
+            "5": 0.0393,
+            "50": 0.0426,
+            "90": 0.0589,
+            "95": 0.1327,
+            "99": 0.163,
+            "99.9": 0.2715,
+            "99.99": 0.3164,
+            "100": 0.5827
+          }
+        },
+        "MsGPULatency": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.07672253678365255,
+          "StandardDeviation": 0.026469955408303728,
+          "Sum": 129818.82870000001,
+          "Percentiles": {
+            "0": 0.0,
+            "1": 0.0,
+            "5": 0.0266,
+            "50": 0.0827,
+            "90": 0.0905,
+            "95": 0.0938,
+            "99": 0.1529,
+            "99.9": 0.2384,
+            "99.99": 0.36527669999990614,
+            "100": 7.3476
+          }
+        },
+        "MsGPUTime": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.17730394916007508,
+          "StandardDeviation": 0.027382391442414503,
+          "Sum": 300008.211,
+          "Percentiles": {
+            "0": 0.1373,
+            "1": 0.1455,
+            "5": 0.1483,
+            "50": 0.1776,
+            "90": 0.1998,
+            "95": 0.2055,
+            "99": 0.2988,
+            "99.9": 0.3839,
+            "99.99": 0.5479588999999687,
+            "100": 7.4164
+          }
+        },
+        "MsGPUBusy": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.14914819751828545,
+          "StandardDeviation": 0.02219943844622922,
+          "Sum": 252367.1025,
+          "Percentiles": {
+            "0": 0.1146,
+            "1": 0.1227,
+            "5": 0.1254,
+            "50": 0.1517,
+            "90": 0.1655,
+            "95": 0.1696,
+            "99": 0.2315,
+            "99.9": 0.3097,
+            "99.99": 0.48263009999971834,
+            "100": 7.412
+          }
+        },
+        "MsGPUWait": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 0.028155751641789635,
+          "StandardDeviation": 0.010972747962436023,
+          "Sum": 47641.1085,
+          "Percentiles": {
+            "0": 0.0044,
+            "1": 0.0218,
+            "5": 0.0222,
+            "50": 0.0255,
+            "90": 0.0344,
+            "95": 0.0368,
+            "99": 0.0554,
+            "99.9": 0.18049450000002978,
+            "99.99": 0.21823834999995306,
+            "100": 0.5813
+          }
+        },
+        "MsAnimationError": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 3.014084640224559e-09,
+          "StandardDeviation": 0.039238870543350415,
+          "Sum": 0.005099999999999806,
+          "Percentiles": {
+            "0": -7.2749,
+            "1": -0.1178,
+            "5": -0.0544,
+            "50": 0.0,
+            "90": 0.0137,
+            "95": 0.0633,
+            "99": 0.123,
+            "99.9": 0.223,
+            "99.99": 0.3558355999998748,
+            "100": 7.3425
+          }
+        },
+        "AnimationTime": {
+          "Count": 1692056,
+          "Available": 1692056,
+          "Missing": 0,
+          "Mean": 154971.54663851194,
+          "StandardDeviation": 86510.00107350554,
+          "Sum": 262220535318.97394,
+          "Percentiles": {
+            "0": 5008.353,
+            "1": 8037.21437,
+            "5": 20455.284975,
+            "50": 154821.384,
+            "90": 275099.37385,
+            "95": 290150.75922500005,
+            "99": 302093.24917499995,
+            "99.9": 304727.0185550001,
+            "99.99": 304987.15422709996,
+            "100": 305017.2825
+          }
+        },
+        "MsFlipDelay": {
+          "Count": 1692056,
+          "Available": 0,
+          "Missing": 1692056
+        },
+        "MsAllInputToPhotonLatency": {
+          "Count": 1692056,
+          "Available": 0,
+          "Missing": 1692056
+        },
+        "MsClickToPhotonLatency": {
+          "Count": 1692056,
+          "Available": 0,
+          "Missing": 1692056
+        }
+      },
+      "Validation": {
+        "StrictlyIncreasingTimestamps": true,
+        "MaximumIntervalTimestampResidualMs": 5.802139324551092e-11,
+        "BoundaryCount": 44,
+        "Boundaries": [
+          {
+            "Part": 2,
+            "GlobalRow": 37601,
+            "TimestampGapMs": 0.16170000000056461,
+            "RecordedIntervalMs": 0.1617,
+            "DifferenceMs": 5.646039191731234e-13
+          },
+          {
+            "Part": 3,
+            "GlobalRow": 75202,
+            "TimestampGapMs": 0.17810000000099535,
+            "RecordedIntervalMs": 0.1781,
+            "DifferenceMs": 9.953426971520685e-13
+          },
+          {
+            "Part": 4,
+            "GlobalRow": 112803,
+            "TimestampGapMs": 0.18070000000079744,
+            "RecordedIntervalMs": 0.1807,
+            "DifferenceMs": 7.974454430126343e-13
+          },
+          {
+            "Part": 5,
+            "GlobalRow": 150404,
+            "TimestampGapMs": 0.1569000000017695,
+            "RecordedIntervalMs": 0.1569,
+            "DifferenceMs": 1.7695012122231901e-12
+          },
+          {
+            "Part": 6,
+            "GlobalRow": 188005,
+            "TimestampGapMs": 0.1569000000017695,
+            "RecordedIntervalMs": 0.1569,
+            "DifferenceMs": 1.7695012122231901e-12
+          },
+          {
+            "Part": 7,
+            "GlobalRow": 225606,
+            "TimestampGapMs": 0.16119999999500578,
+            "RecordedIntervalMs": 0.1612,
+            "DifferenceMs": -4.994227253973804e-12
+          },
+          {
+            "Part": 8,
+            "GlobalRow": 263207,
+            "TimestampGapMs": 0.17970000000059372,
+            "RecordedIntervalMs": 0.1797,
+            "DifferenceMs": 5.937195179939181e-13
+          },
+          {
+            "Part": 9,
+            "GlobalRow": 300808,
+            "TimestampGapMs": 0.15580000000045402,
+            "RecordedIntervalMs": 0.1558,
+            "DifferenceMs": 4.5402570592045777e-13
+          },
+          {
+            "Part": 10,
+            "GlobalRow": 338409,
+            "TimestampGapMs": 0.19090000000142027,
+            "RecordedIntervalMs": 0.1909,
+            "DifferenceMs": 1.4202805598273471e-12
+          },
+          {
+            "Part": 11,
+            "GlobalRow": 376010,
+            "TimestampGapMs": 0.22890000000188593,
+            "RecordedIntervalMs": 0.2289,
+            "DifferenceMs": 1.8859358519307534e-12
+          },
+          {
+            "Part": 12,
+            "GlobalRow": 413611,
+            "TimestampGapMs": 0.18460000000777654,
+            "RecordedIntervalMs": 0.1846,
+            "DifferenceMs": 7.776557175986909e-12
+          },
+          {
+            "Part": 13,
+            "GlobalRow": 451212,
+            "TimestampGapMs": 0.17720000000554137,
+            "RecordedIntervalMs": 0.1772,
+            "DifferenceMs": 5.541372916084697e-12
+          },
+          {
+            "Part": 14,
+            "GlobalRow": 488813,
+            "TimestampGapMs": 0.14880000000994187,
+            "RecordedIntervalMs": 0.1488,
+            "DifferenceMs": 9.941880652064583e-12
+          },
+          {
+            "Part": 15,
+            "GlobalRow": 526414,
+            "TimestampGapMs": 0.19740000000456348,
+            "RecordedIntervalMs": 0.1974,
+            "DifferenceMs": 4.563488475994859e-12
+          },
+          {
+            "Part": 16,
+            "GlobalRow": 564015,
+            "TimestampGapMs": 0.19900000000779983,
+            "RecordedIntervalMs": 0.199,
+            "DifferenceMs": 7.799816348352806e-12
+          },
+          {
+            "Part": 17,
+            "GlobalRow": 601616,
+            "TimestampGapMs": 0.1889999999984866,
+            "RecordedIntervalMs": 0.189,
+            "DifferenceMs": -1.5134005160177821e-12
+          },
+          {
+            "Part": 18,
+            "GlobalRow": 639217,
+            "TimestampGapMs": 0.1812999999965541,
+            "RecordedIntervalMs": 0.1813,
+            "DifferenceMs": -3.4458824682559452e-12
+          },
+          {
+            "Part": 19,
+            "GlobalRow": 676818,
+            "TimestampGapMs": 0.14530000000377186,
+            "RecordedIntervalMs": 0.1453,
+            "DifferenceMs": 3.771843948285891e-12
+          },
+          {
+            "Part": 20,
+            "GlobalRow": 714419,
+            "TimestampGapMs": 0.1815999999816995,
+            "RecordedIntervalMs": 0.1816,
+            "DifferenceMs": -1.8300500004286846e-11
+          },
+          {
+            "Part": 21,
+            "GlobalRow": 752020,
+            "TimestampGapMs": 0.18219999998109415,
+            "RecordedIntervalMs": 0.1822,
+            "DifferenceMs": -1.8905849108463713e-11
+          },
+          {
+            "Part": 22,
+            "GlobalRow": 789621,
+            "TimestampGapMs": 0.18389999997452833,
+            "RecordedIntervalMs": 0.1839,
+            "DifferenceMs": -2.5471680320521273e-11
+          },
+          {
+            "Part": 23,
+            "GlobalRow": 827222,
+            "TimestampGapMs": 0.177800000004936,
+            "RecordedIntervalMs": 0.1778,
+            "DifferenceMs": 4.935996056332215e-12
+          },
+          {
+            "Part": 24,
+            "GlobalRow": 864823,
+            "TimestampGapMs": 0.17140000002109446,
+            "RecordedIntervalMs": 0.1714,
+            "DifferenceMs": 2.10944595124829e-11
+          },
+          {
+            "Part": 25,
+            "GlobalRow": 902424,
+            "TimestampGapMs": 0.1790000000037253,
+            "RecordedIntervalMs": 0.179,
+            "DifferenceMs": 3.7252978479784815e-12
+          },
+          {
+            "Part": 26,
+            "GlobalRow": 940025,
+            "TimestampGapMs": 0.16209999998682179,
+            "RecordedIntervalMs": 0.1621,
+            "DifferenceMs": -1.317820852442253e-11
+          },
+          {
+            "Part": 27,
+            "GlobalRow": 977626,
+            "TimestampGapMs": 0.16870000000926666,
+            "RecordedIntervalMs": 0.1687,
+            "DifferenceMs": 9.266670764063178e-12
+          },
+          {
+            "Part": 28,
+            "GlobalRow": 1015227,
+            "TimestampGapMs": 0.18119999999180436,
+            "RecordedIntervalMs": 0.1812,
+            "DifferenceMs": -8.19563861220729e-12
+          },
+          {
+            "Part": 29,
+            "GlobalRow": 1052828,
+            "TimestampGapMs": 0.15330000000540167,
+            "RecordedIntervalMs": 0.1533,
+            "DifferenceMs": 5.401679104011237e-12
+          },
+          {
+            "Part": 30,
+            "GlobalRow": 1090429,
+            "TimestampGapMs": 0.17670000001089647,
+            "RecordedIntervalMs": 0.1767,
+            "DifferenceMs": 1.0896478164212908e-11
+          },
+          {
+            "Part": 31,
+            "GlobalRow": 1128030,
+            "TimestampGapMs": 0.19809999997960404,
+            "RecordedIntervalMs": 0.1981,
+            "DifferenceMs": -2.0395962696539982e-11
+          },
+          {
+            "Part": 32,
+            "GlobalRow": 1165631,
+            "TimestampGapMs": 0.16209999998682179,
+            "RecordedIntervalMs": 0.1621,
+            "DifferenceMs": -1.317820852442253e-11
+          },
+          {
+            "Part": 33,
+            "GlobalRow": 1203232,
+            "TimestampGapMs": 0.18619999999646097,
+            "RecordedIntervalMs": 0.1862,
+            "DifferenceMs": -3.539030180021996e-12
+          },
+          {
+            "Part": 34,
+            "GlobalRow": 1240833,
+            "TimestampGapMs": 0.19909999999799766,
+            "RecordedIntervalMs": 0.1991,
+            "DifferenceMs": -2.002342736062701e-12
+          },
+          {
+            "Part": 35,
+            "GlobalRow": 1278434,
+            "TimestampGapMs": 0.145699999993667,
+            "RecordedIntervalMs": 0.1457,
+            "DifferenceMs": -6.332989688218049e-12
+          },
+          {
+            "Part": 36,
+            "GlobalRow": 1316035,
+            "TimestampGapMs": 0.19800000000395812,
+            "RecordedIntervalMs": 0.198,
+            "DifferenceMs": 3.958111616242377e-12
+          },
+          {
+            "Part": 37,
+            "GlobalRow": 1353636,
+            "TimestampGapMs": 0.18020000000251457,
+            "RecordedIntervalMs": 0.1802,
+            "DifferenceMs": 2.5145718840491327e-12
+          },
+          {
+            "Part": 38,
+            "GlobalRow": 1391237,
+            "TimestampGapMs": 0.18410000001313165,
+            "RecordedIntervalMs": 0.1841,
+            "DifferenceMs": 1.3131634668539505e-11
+          },
+          {
+            "Part": 39,
+            "GlobalRow": 1428838,
+            "TimestampGapMs": 0.18430000002263114,
+            "RecordedIntervalMs": 0.1843,
+            "DifferenceMs": 2.2631146956442194e-11
+          },
+          {
+            "Part": 40,
+            "GlobalRow": 1466439,
+            "TimestampGapMs": 0.18760000000474975,
+            "RecordedIntervalMs": 0.1876,
+            "DifferenceMs": 4.749756143951345e-12
+          },
+          {
+            "Part": 41,
+            "GlobalRow": 1504040,
+            "TimestampGapMs": 0.24869999999646097,
+            "RecordedIntervalMs": 0.2487,
+            "DifferenceMs": -3.539030180021996e-12
+          },
+          {
+            "Part": 42,
+            "GlobalRow": 1541641,
+            "TimestampGapMs": 0.16390000004321337,
+            "RecordedIntervalMs": 0.1639,
+            "DifferenceMs": 4.321337732093866e-11
+          },
+          {
+            "Part": 43,
+            "GlobalRow": 1579242,
+            "TimestampGapMs": 0.165099999983795,
+            "RecordedIntervalMs": 0.1651,
+            "DifferenceMs": -1.6205009556458094e-11
+          },
+          {
+            "Part": 44,
+            "GlobalRow": 1616843,
+            "TimestampGapMs": 0.19929999997839332,
+            "RecordedIntervalMs": 0.1993,
+            "DifferenceMs": -2.160668866046933e-11
+          },
+          {
+            "Part": 45,
+            "GlobalRow": 1654444,
+            "TimestampGapMs": 0.19630000001052395,
+            "RecordedIntervalMs": 0.1963,
+            "DifferenceMs": 1.0523942828299937e-11
+          }
+        ]
+      },
+      "CaptureLog": {
+        "Samples": 303,
+        "Maximum": {
+          "BufferFillPct": 5.1,
+          "BuffersInUse": 13.0,
+          "TotalBuffers": 256.0,
+          "EventsLost": 0.0,
+          "BuffersLost": 0.0,
+          "OverflowedPresents": 0.0
+        },
+        "OtherLines": [
+          "Started recording.",
+          "Stopped recording."
+        ],
+        "Sha256": "bb9fd90ccc89901f4ef58075fa9b2715023ad38d03935cad207d72f3f4eb146f"
+      },
+      "InputManifest": [
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 01.csv",
+          "Bytes": 9714234,
+          "DataRows": 37600,
+          "FirstTimeInMs": 5008.5291,
+          "LastTimeInMs": 11898.509,
+          "Sha256": "0921e9c983cb2e49f2c2c44c15da787088741e69ccb5ab6f605552d57c1e9f0c"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 02.csv",
+          "Bytes": 9794900,
+          "DataRows": 37601,
+          "FirstTimeInMs": 11898.6707,
+          "LastTimeInMs": 18838.9554,
+          "Sha256": "7ff035c37a345d1ed0dc6b72f54590684ef1fef67e6f734842f184f0083eb84b"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 03.csv",
+          "Bytes": 9794859,
+          "DataRows": 37601,
+          "FirstTimeInMs": 18839.1335,
+          "LastTimeInMs": 25415.7474,
+          "Sha256": "420e76344552f425c5c991c13fe1491aa2459dec7855154f99eed0d4450b8f46"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 04.csv",
+          "Bytes": 9794705,
+          "DataRows": 37601,
+          "FirstTimeInMs": 25415.9281,
+          "LastTimeInMs": 31973.6972,
+          "Sha256": "9cb0b0e30f415ae38e4250c694c6f6e1e4a4f38c52fa52eed5eca957d2c49910"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 05.csv",
+          "Bytes": 9794859,
+          "DataRows": 37601,
+          "FirstTimeInMs": 31973.8541,
+          "LastTimeInMs": 38595.6581,
+          "Sha256": "0912a0cd3740de234754ad86c3e6ed5978a4f7b1d1b55dda199bb692495adbb5"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 06.csv",
+          "Bytes": 9794863,
+          "DataRows": 37601,
+          "FirstTimeInMs": 38595.815,
+          "LastTimeInMs": 45330.2804,
+          "Sha256": "ea2949d54bfa4e729cdd1c0629c1f94a33ef0e7e5533cdbf8e2339424d699f61"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 07.csv",
+          "Bytes": 9794738,
+          "DataRows": 37601,
+          "FirstTimeInMs": 45330.4416,
+          "LastTimeInMs": 51879.4119,
+          "Sha256": "2eacc1a0f5469b8456a3f50e5f70cedfb8a5c15cc01140d299be2dcd04a0ab3d"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 08.csv",
+          "Bytes": 9794809,
+          "DataRows": 37601,
+          "FirstTimeInMs": 51879.5916,
+          "LastTimeInMs": 58478.4156,
+          "Sha256": "e4bc3c5ec7e0dc838c999be61e79463c8171de6b465cdaf06ae33b732336496c"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 09.csv",
+          "Bytes": 9794828,
+          "DataRows": 37601,
+          "FirstTimeInMs": 58478.5714,
+          "LastTimeInMs": 65007.7396,
+          "Sha256": "690055dd8923315b165c9dcf661835aa5bd69f6111f8dac5030187875cbae121"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 10.csv",
+          "Bytes": 9794695,
+          "DataRows": 37601,
+          "FirstTimeInMs": 65007.9305,
+          "LastTimeInMs": 71697.1315,
+          "Sha256": "3c13e7a12b38befc6203a1fc3324e1320bf0bb3faa1696c978cbb325bc509dc8"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 11.csv",
+          "Bytes": 9794802,
+          "DataRows": 37601,
+          "FirstTimeInMs": 71697.3604,
+          "LastTimeInMs": 78435.2407,
+          "Sha256": "b4820245e432a2d10e28d118cd21c3a2d3978d8ee6a178692bbaf67166948216"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 12.csv",
+          "Bytes": 9794706,
+          "DataRows": 37601,
+          "FirstTimeInMs": 78435.4253,
+          "LastTimeInMs": 85091.0618,
+          "Sha256": "43fc3e47c8d17a19315fd5cc3a7760d399f1ff8faf5443b761b459e4c2ee3558"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 13.csv",
+          "Bytes": 9794851,
+          "DataRows": 37601,
+          "FirstTimeInMs": 85091.239,
+          "LastTimeInMs": 91810.5272,
+          "Sha256": "6253b6121eae567cd226e4184a035d37477523cb00d3ecd6c474b1a0bfe05d10"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 14.csv",
+          "Bytes": 9794874,
+          "DataRows": 37601,
+          "FirstTimeInMs": 91810.676,
+          "LastTimeInMs": 98501.2815,
+          "Sha256": "6c507486391261032439afd054445f9c0920528f6207f5f7fa4487ef0224fcc3"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 15.csv",
+          "Bytes": 9882292,
+          "DataRows": 37601,
+          "FirstTimeInMs": 98501.4789,
+          "LastTimeInMs": 105176.6001,
+          "Sha256": "797413825bbe6dc8907dd8034a8627510e3e2576a11c77aa5ea47ae9ef9435f0"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 16.csv",
+          "Bytes": 9907613,
+          "DataRows": 37601,
+          "FirstTimeInMs": 105176.7991,
+          "LastTimeInMs": 111655.8887,
+          "Sha256": "3914fe9c7b85b599d0ab5a34d956686b844bdedce47484e11f8cfb782bdfb0e4"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 17.csv",
+          "Bytes": 9907782,
+          "DataRows": 37601,
+          "FirstTimeInMs": 111656.0777,
+          "LastTimeInMs": 118215.9571,
+          "Sha256": "df9072430d2543cdc72736a3e83e6b30017126cb81de269598225e34bc09bf66"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 18.csv",
+          "Bytes": 9907774,
+          "DataRows": 37601,
+          "FirstTimeInMs": 118216.1384,
+          "LastTimeInMs": 124727.3814,
+          "Sha256": "462d3aef74e5da00b99095838998a0ee7ebb235263e5b221f351cf8336c4b58c"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 19.csv",
+          "Bytes": 9907877,
+          "DataRows": 37601,
+          "FirstTimeInMs": 124727.5267,
+          "LastTimeInMs": 131397.9273,
+          "Sha256": "832ac925e6b8d41d5a9c5e7a3ff6ca99284da2dffbad75b71864b671d6885d3c"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 20.csv",
+          "Bytes": 9907778,
+          "DataRows": 37601,
+          "FirstTimeInMs": 131398.1089,
+          "LastTimeInMs": 138211.7503,
+          "Sha256": "5e81761ebbb95f843eb85deae0d9f41444b69274cbf0bc109a88678bf471e60b"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 21.csv",
+          "Bytes": 9907650,
+          "DataRows": 37601,
+          "FirstTimeInMs": 138211.9325,
+          "LastTimeInMs": 144802.9733,
+          "Sha256": "eb216f1f651cdafe1299121648f24145bb06c0c2a6d20923d93931398940b9cf"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 22.csv",
+          "Bytes": 9907775,
+          "DataRows": 37601,
+          "FirstTimeInMs": 144803.1572,
+          "LastTimeInMs": 151441.0605,
+          "Sha256": "35cbe446f2865b9682de4d2319151128dfa7d556569313e4e701a29a24211abf"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 23.csv",
+          "Bytes": 9907844,
+          "DataRows": 37601,
+          "FirstTimeInMs": 151441.2383,
+          "LastTimeInMs": 158077.6891,
+          "Sha256": "c83090527624e0312874495efb3dcb330a97639f1f7d87c5544772b1fcf8fcfc"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 24.csv",
+          "Bytes": 9907818,
+          "DataRows": 37601,
+          "FirstTimeInMs": 158077.8605,
+          "LastTimeInMs": 164580.3816,
+          "Sha256": "26a69320171abeb47b2e2d58d601e3c10ec7293306d24188558188c365ad094d"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 25.csv",
+          "Bytes": 9907742,
+          "DataRows": 37601,
+          "FirstTimeInMs": 164580.5606,
+          "LastTimeInMs": 171132.0118,
+          "Sha256": "632e1a6b3f192099920e315cb2314f7231add80f0a4fddc371c3f6808e9ac4c8"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 26.csv",
+          "Bytes": 9907807,
+          "DataRows": 37601,
+          "FirstTimeInMs": 171132.1739,
+          "LastTimeInMs": 177865.4103,
+          "Sha256": "0351e1b3677b5e31393214bd238de6b6d313dfec31e52e1b84b6da7387e1adbb"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 27.csv",
+          "Bytes": 9907742,
+          "DataRows": 37601,
+          "FirstTimeInMs": 177865.579,
+          "LastTimeInMs": 184530.6748,
+          "Sha256": "e00272823298787fce83410ee59c0f6eac103e6a353c395a3529f49f596ae141"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 28.csv",
+          "Bytes": 9907641,
+          "DataRows": 37601,
+          "FirstTimeInMs": 184530.856,
+          "LastTimeInMs": 191178.7555,
+          "Sha256": "b1a7e4d799b5eaa8093e9b123a35f469601b9d87858d565c8940e9cabeffbddf"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 29.csv",
+          "Bytes": 9907638,
+          "DataRows": 37601,
+          "FirstTimeInMs": 191178.9088,
+          "LastTimeInMs": 198058.4516,
+          "Sha256": "6e26b32f251fbbcaeddafa2981eef780bc7c5ef3c48d54950ae787a62c135535"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 30.csv",
+          "Bytes": 9907574,
+          "DataRows": 37601,
+          "FirstTimeInMs": 198058.6283,
+          "LastTimeInMs": 204849.8495,
+          "Sha256": "cac693004102a84116ec1cf05bc834559da410f6ecab80b52bbb9d2e6f923757"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 31.csv",
+          "Bytes": 9907491,
+          "DataRows": 37601,
+          "FirstTimeInMs": 204850.0476,
+          "LastTimeInMs": 211424.6596,
+          "Sha256": "fb9cce3841dfbfe8666c94227f9918a332f90d59c4fd36643c6fa7c31cebf961"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 32.csv",
+          "Bytes": 9907750,
+          "DataRows": 37601,
+          "FirstTimeInMs": 211424.8217,
+          "LastTimeInMs": 218076.3773,
+          "Sha256": "12be0a9f55779b815093aa8c44677f738a53372bededddff2c32e696be15e064"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 33.csv",
+          "Bytes": 9907677,
+          "DataRows": 37601,
+          "FirstTimeInMs": 218076.5635,
+          "LastTimeInMs": 224759.5547,
+          "Sha256": "34a97d069893061cf70c44fbeefdf417d508fe51433e0940d53500e54920a3ef"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 34.csv",
+          "Bytes": 9907643,
+          "DataRows": 37601,
+          "FirstTimeInMs": 224759.7538,
+          "LastTimeInMs": 231599.9773,
+          "Sha256": "67e2d696d2f710dca230f9b6627d9384f32873be89ed67b16259f23de7dafde7"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 35.csv",
+          "Bytes": 9907636,
+          "DataRows": 37601,
+          "FirstTimeInMs": 231600.123,
+          "LastTimeInMs": 238354.1719,
+          "Sha256": "d32512f1c64d7f7d8a672e4cc62a2f14bb41cd433793be25d7df10539b871b38"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 36.csv",
+          "Bytes": 9907452,
+          "DataRows": 37601,
+          "FirstTimeInMs": 238354.3699,
+          "LastTimeInMs": 244978.6711,
+          "Sha256": "94a498a50e6cf03bd2f2aa293fe3188ac5a0fee4bb3d857a406eb87fe967c385"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 37.csv",
+          "Bytes": 9907623,
+          "DataRows": 37601,
+          "FirstTimeInMs": 244978.8513,
+          "LastTimeInMs": 251679.9746,
+          "Sha256": "d6f94a2025da980376994202bce0710b47d3e86e9b8730ea4e31f5d18b5e59f7"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 38.csv",
+          "Bytes": 9907611,
+          "DataRows": 37601,
+          "FirstTimeInMs": 251680.1587,
+          "LastTimeInMs": 258416.8594,
+          "Sha256": "a5b67fae2966416b96a3433aeac6e3b8130027c102088ec514e4557d7d78e8fd"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 39.csv",
+          "Bytes": 9907617,
+          "DataRows": 37601,
+          "FirstTimeInMs": 258417.0437,
+          "LastTimeInMs": 265188.2793,
+          "Sha256": "0d385e6358339712e85ab1dcc3708ee494fcededd478839de8424f4075770c33"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 40.csv",
+          "Bytes": 9907654,
+          "DataRows": 37601,
+          "FirstTimeInMs": 265188.4669,
+          "LastTimeInMs": 271707.3335,
+          "Sha256": "b8c85d1e05ef2f9338b51764d67281feb5ab74a586bd0496cb49655be29caddf"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 41.csv",
+          "Bytes": 9907667,
+          "DataRows": 37601,
+          "FirstTimeInMs": 271707.5822,
+          "LastTimeInMs": 278367.7556,
+          "Sha256": "5089f75e335f4e985650a6b964d379f14c172260f3256bf2a004dc1aa5e01116"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 42.csv",
+          "Bytes": 9907541,
+          "DataRows": 37601,
+          "FirstTimeInMs": 278367.9195,
+          "LastTimeInMs": 284953.3066,
+          "Sha256": "01eb3280d24832c49c27973b88679b153398a5dd5a93332d7e79c0c3296da778"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 43.csv",
+          "Bytes": 9907563,
+          "DataRows": 37601,
+          "FirstTimeInMs": 284953.4717,
+          "LastTimeInMs": 291818.0468,
+          "Sha256": "54b339b0b65953fbd599b7cac562048659eeef5af02823f6e033ff0da58c5c6a"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 44.csv",
+          "Bytes": 9907602,
+          "DataRows": 37601,
+          "FirstTimeInMs": 291818.2461,
+          "LastTimeInMs": 298353.8146,
+          "Sha256": "532454bbe38ea35501dfd6912d0b62a4fa8e584f58dc41b9097b7b9f6efc28b0"
+        },
+        {
+          "File": "2026-09-11_13-59-13/PresentMon part 45.csv",
+          "Bytes": 9910807,
+          "DataRows": 37613,
+          "FirstTimeInMs": 298354.0109,
+          "LastTimeInMs": 305017.4406,
+          "Sha256": "c5d89ac0b972a1b42e7c76603167701b850ea92c1c44c13bb328e7e74f5cd848"
+        }
+      ],
+      "WorstIntervals": [
+        {
+          "Capture": "2026-09-11_13-59-13",
+          "ElapsedSecond": 1.1054365000000006,
+          "DataRow": 5687,
+          "Part": 1,
+          "FileLine": 5688,
+          "MsBetweenPresents": 7.4818,
+          "MsCPUBusy": 7.421,
+          "MsCPUWait": 0.1099,
+          "MsGPUTime": 0.2317,
+          "MsGPUBusy": 0.1776,
+          "MsGPUWait": 0.0541,
+          "MsInPresentAPI": 0.1099,
+          "MsUntilDisplayed": 0.1583
+        },
+        {
+          "Capture": "2026-09-11_13-59-13",
+          "ElapsedSecond": 238.66642109999998,
+          "DataRow": 1346193,
+          "Part": 36,
+          "FileLine": 30159,
+          "MsBetweenPresents": 2.3134,
+          "MsCPUBusy": 2.2628,
+          "MsCPUWait": 0.071,
+          "MsGPUTime": 0.6353,
+          "MsGPUBusy": 0.5888,
+          "MsGPUWait": 0.0465,
+          "MsInPresentAPI": 0.071,
+          "MsUntilDisplayed": 0.5655
+        },
+        {
+          "Capture": "2026-09-11_13-59-13",
+          "ElapsedSecond": 162.4904057,
+          "DataRow": 919234,
+          "Part": 25,
+          "FileLine": 16811,
+          "MsBetweenPresents": 2.2402,
+          "MsCPUBusy": 2.1848,
+          "MsCPUWait": 0.0651,
+          "MsGPUTime": 0.6345,
+          "MsGPUBusy": 0.5904,
+          "MsGPUWait": 0.0441,
+          "MsInPresentAPI": 0.0651,
+          "MsUntilDisplayed": 0.5643
+        },
+        {
+          "Capture": "2026-09-11_13-59-13",
+          "ElapsedSecond": 222.6251687,
+          "DataRow": 1256261,
+          "Part": 34,
+          "FileLine": 15429,
+          "MsBetweenPresents": 2.2344,
+          "MsCPUBusy": 2.1804,
+          "MsCPUWait": 0.0721,
+          "MsGPUTime": 0.6441,
+          "MsGPUBusy": 0.5778,
+          "MsGPUWait": 0.0663,
+          "MsInPresentAPI": 0.0721,
+          "MsUntilDisplayed": 0.5548
+        },
+        {
+          "Capture": "2026-09-11_13-59-13",
+          "ElapsedSecond": 178.5413075,
+          "DataRow": 1009727,
+          "Part": 27,
+          "FileLine": 32102,
+          "MsBetweenPresents": 2.2051,
+          "MsCPUBusy": 2.1606,
+          "MsCPUWait": 0.0678,
+          "MsGPUTime": 0.6174,
+          "MsGPUBusy": 0.567,
+          "MsGPUWait": 0.0504,
+          "MsInPresentAPI": 0.0678,
+          "MsUntilDisplayed": 0.5456
+        },
+        {
+          "Capture": "2026-09-11_13-59-13",
+          "ElapsedSecond": 166.5069962,
+          "DataRow": 942255,
+          "Part": 26,
+          "FileLine": 2231,
+          "MsBetweenPresents": 1.7976,
+          "MsCPUBusy": 1.752,
+          "MsCPUWait": 0.0669,
+          "MsGPUTime": 0.4618,
+          "MsGPUBusy": 0.4199,
+          "MsGPUWait": 0.0419,
+          "MsInPresentAPI": 0.0669,
+          "MsUntilDisplayed": 0.3953
+        },
+        {
+          "Capture": "2026-09-11_13-59-13",
+          "ElapsedSecond": 198.57434860000004,
+          "DataRow": 1121429,
+          "Part": 30,
+          "FileLine": 31001,
+          "MsBetweenPresents": 1.7908,
+          "MsCPUBusy": 1.7404,
+          "MsCPUWait": 0.0666,
+          "MsGPUTime": 0.4636,
+          "MsGPUBusy": 0.4207,
+          "MsGPUWait": 0.0429,
+          "MsInPresentAPI": 0.0666,
+          "MsUntilDisplayed": 0.3983
+        },
+        {
+          "Capture": "2026-09-11_13-59-13",
+          "ElapsedSecond": 206.5863138,
+          "DataRow": 1166579,
+          "Part": 32,
+          "FileLine": 949,
+          "MsBetweenPresents": 1.7524,
+          "MsCPUBusy": 1.7047,
+          "MsCPUWait": 0.044,
+          "MsGPUTime": 0.5218,
+          "MsGPUBusy": 0.4864,
+          "MsGPUWait": 0.0354,
+          "MsInPresentAPI": 0.044,
+          "MsUntilDisplayed": 0.4625
+        },
+        {
+          "Capture": "2026-09-11_13-59-13",
+          "ElapsedSecond": 15.792867600000001,
+          "DataRow": 86638,
+          "Part": 3,
+          "FileLine": 11437,
+          "MsBetweenPresents": 1.7463,
+          "MsCPUBusy": 1.701,
+          "MsCPUWait": 0.0437,
+          "MsGPUTime": 0.5197,
+          "MsGPUBusy": 0.4895,
+          "MsGPUWait": 0.0302,
+          "MsInPresentAPI": 0.0437,
+          "MsUntilDisplayed": 0.4626
+        },
+        {
+          "Capture": "2026-09-11_13-59-13",
+          "ElapsedSecond": 150.42177260000003,
+          "DataRow": 849562,
+          "Part": 23,
+          "FileLine": 22341,
+          "MsBetweenPresents": 1.7344,
+          "MsCPUBusy": 1.6911,
+          "MsCPUWait": 0.0451,
+          "MsGPUTime": 0.5163,
+          "MsGPUBusy": 0.489,
+          "MsGPUWait": 0.0273,
+          "MsInPresentAPI": 0.0451,
+          "MsUntilDisplayed": 0.4668
+        }
+      ]
+    },
+    {
+      "Capture": "2026-09-11_15-18-36",
+      "Rows": 1699754,
+      "Intervals": 1699753,
+      "FirstTimeInMs": 4989.9017,
+      "LastTimeInMs": 304994.9897,
+      "DurationSeconds": 300.005088,
+      "AverageFPS": 5665.747242260105,
+      "AverageFPSFromIntervals": 5665.747242260105,
+      "FirstIntervalExcludedMs": 0.1857,
+      "FrameIntervalsMs": {
+        "Count": 1699753,
+        "Available": 1699753,
+        "Missing": 0,
+        "Mean": 0.17649922547570146,
+        "StandardDeviation": 0.025445865908272323,
+        "Sum": 300005.088,
+        "Percentiles": {
+          "0": 0.1298,
+          "1": 0.1453,
+          "5": 0.1482,
+          "50": 0.1775,
+          "90": 0.1983,
+          "95": 0.2044,
+          "99": 0.2859479999999981,
+          "99.9": 0.36742480000001376,
+          "99.99": 0.5070049599999562,
+          "100": 2.1414
+        }
+      },
+      "LowFPS": {
+        "1": 2986.109688638248,
+        "0.1": 2320.9474380494757
+      },
+      "Thresholds": {
+        "0.2": {
+          "IntervalsAbove": 134134,
+          "PercentAbove": 7.891381865482808
+        },
+        "0.25": {
+          "IntervalsAbove": 31376,
+          "PercentAbove": 1.8459152594524026
+        },
+        "0.5": {
+          "IntervalsAbove": 184,
+          "PercentAbove": 0.010825102235442445
+        },
+        "1": {
+          "IntervalsAbove": 29,
+          "PercentAbove": 0.0017061302436295156
+        },
+        "2": {
+          "IntervalsAbove": 1,
+          "PercentAbove": 5.883207736653502e-05
+        },
+        "5": {
+          "IntervalsAbove": 0,
+          "PercentAbove": 0.0
+        },
+        "10": {
+          "IntervalsAbove": 0,
+          "PercentAbove": 0.0
+        },
+        "16.6667": {
+          "IntervalsAbove": 0,
+          "PercentAbove": 0.0
+        }
+      },
+      "IntervalsAtOrBelow0Point2MsPercent": 92.1086181345172,
+      "ElapsedTimeInIntervalsAtOrBelow0Point2MsPercent": 89.6680952624377,
+      "CompleteOneSecondWindows": {
+        "Count": 300,
+        "Available": 300,
+        "Missing": 0,
+        "Mean": 5665.75,
+        "StandardDeviation": 177.88363471663155,
+        "Sum": 1699725.0,
+        "Percentiles": {
+          "0": 5150.0,
+          "1": 5165.93,
+          "5": 5268.85,
+          "50": 5722.0,
+          "90": 5839.1,
+          "95": 5857.1,
+          "99": 5936.13,
+          "99.9": 6005.678000000002,
+          "99.99": 6026.667799999996,
+          "100": 6029.0
+        }
+      },
+      "SecondsAtLeast5000FPS": 300,
+      "SecondsBelow5000FPS": [],
+      "ThirtySecondBlocks": [
+        {
+          "StartSecond": 0,
+          "EndSecond": 30,
+          "Presents": 170986,
+          "FPS": 5699.533333333334
+        },
+        {
+          "StartSecond": 30,
+          "EndSecond": 60,
+          "Presents": 168488,
+          "FPS": 5616.266666666666
+        },
+        {
+          "StartSecond": 60,
+          "EndSecond": 90,
+          "Presents": 169821,
+          "FPS": 5660.7
+        },
+        {
+          "StartSecond": 90,
+          "EndSecond": 120,
+          "Presents": 171335,
+          "FPS": 5711.166666666667
+        },
+        {
+          "StartSecond": 120,
+          "EndSecond": 150,
+          "Presents": 167333,
+          "FPS": 5577.766666666666
+        },
+        {
+          "StartSecond": 150,
+          "EndSecond": 180,
+          "Presents": 172510,
+          "FPS": 5750.333333333333
+        },
+        {
+          "StartSecond": 180,
+          "EndSecond": 210,
+          "Presents": 171270,
+          "FPS": 5709.0
+        },
+        {
+          "StartSecond": 210,
+          "EndSecond": 240,
+          "Presents": 168589,
+          "FPS": 5619.633333333333
+        },
+        {
+          "StartSecond": 240,
+          "EndSecond": 270,
+          "Presents": 170327,
+          "FPS": 5677.566666666667
+        },
+        {
+          "StartSecond": 270,
+          "EndSecond": 300,
+          "Presents": 169066,
+          "FPS": 5635.533333333334
+        }
+      ],
+      "Categories": {
+        "Application": {
+          "SimpleDirectX12Game.exe": 1699754
+        },
+        "ProcessID": {
+          "2132": 1699754
+        },
+        "SwapChainAddress": {
+          "0x2011A689F50": 1699754
+        },
+        "PresentRuntime": {
+          "DXGI": 1699754
+        },
+        "SyncInterval": {
+          "0": 1699754
+        },
+        "PresentFlags": {
+          "512": 1699754
+        },
+        "AllowsTearing": {
+          "1": 1699754
+        },
+        "PresentMode": {
+          "Hardware: Independent Flip": 1699754
+        }
+      },
+      "CategoryTransitions": {
+        "Application": 0,
+        "ProcessID": 0,
+        "SwapChainAddress": 0,
+        "PresentRuntime": 0,
+        "SyncInterval": 0,
+        "PresentFlags": 0,
+        "AllowsTearing": 0,
+        "PresentMode": 0
+      },
+      "Metrics": {
+        "TimeInMs": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 154931.701856898,
+          "StandardDeviation": 86569.72105610062,
+          "Sum": 263345779958.0698,
+          "Percentiles": {
+            "0": 4989.9017,
+            "1": 8046.342008,
+            "5": 19899.371325,
+            "50": 155341.49025,
+            "90": 274840.28239,
+            "95": 289957.15766499995,
+            "99": 301923.165919,
+            "99.9": 304693.9878994,
+            "99.99": 304963.8524805799,
+            "100": 304994.9897
+          }
+        },
+        "MsBetweenSimulationStart": {
+          "Count": 1699754,
+          "Available": 0,
+          "Missing": 1699754
+        },
+        "MsBetweenPresents": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.1764992308887051,
+          "StandardDeviation": 0.025445859401732687,
+          "Sum": 300005.2737,
+          "Percentiles": {
+            "0": 0.1298,
+            "1": 0.1453,
+            "5": 0.1482,
+            "50": 0.1775,
+            "90": 0.1983,
+            "95": 0.2044,
+            "99": 0.2859469999999972,
+            "99.9": 0.3674247000000207,
+            "99.99": 0.5070049399999436,
+            "100": 2.1414
+          }
+        },
+        "MsBetweenDisplayChange": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.176499263834649,
+          "StandardDeviation": 0.02539945086027998,
+          "Sum": 300005.3297,
+          "Percentiles": {
+            "0": 0.1363,
+            "1": 0.1454,
+            "5": 0.1483,
+            "50": 0.1775,
+            "90": 0.1983,
+            "95": 0.2039,
+            "99": 0.2884,
+            "99.9": 0.3793,
+            "99.99": 0.5069691599992104,
+            "100": 2.129
+          }
+        },
+        "MsInPresentAPI": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.049593802279624004,
+          "StandardDeviation": 0.023643607769341966,
+          "Sum": 84297.26380000002,
+          "Percentiles": {
+            "0": 0.0352,
+            "1": 0.0389,
+            "5": 0.0393,
+            "50": 0.0424,
+            "90": 0.0572,
+            "95": 0.0909,
+            "99": 0.1608,
+            "99.9": 0.2622,
+            "99.99": 0.3144024699999718,
+            "100": 0.682
+          }
+        },
+        "MsRenderPresentLatency": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.12744237177850443,
+          "StandardDeviation": 0.0201061358139056,
+          "Sum": 216620.6812,
+          "Percentiles": {
+            "0": 0.084,
+            "1": 0.1044,
+            "5": 0.1071,
+            "50": 0.1288,
+            "90": 0.1406,
+            "95": 0.1447,
+            "99": 0.2073,
+            "99.9": 0.2973,
+            "99.99": 0.4282568099993514,
+            "100": 2.0821
+          }
+        },
+        "MsUntilDisplayed": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.12744237177850443,
+          "StandardDeviation": 0.0201061358139056,
+          "Sum": 216620.6812,
+          "Percentiles": {
+            "0": 0.084,
+            "1": 0.1044,
+            "5": 0.1071,
+            "50": 0.1288,
+            "90": 0.1406,
+            "95": 0.1447,
+            "99": 0.2073,
+            "99.9": 0.2973,
+            "99.99": 0.4282568099993514,
+            "100": 2.0821
+          }
+        },
+        "CPUStartTimeInMs": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 154931.57495144315,
+          "StandardDeviation": 86569.72086926867,
+          "Sum": 263345564250.01532,
+          "Percentiles": {
+            "0": 4989.7633,
+            "1": 8046.227256,
+            "5": 19899.260035000003,
+            "50": 155341.3519,
+            "90": 274840.13727999997,
+            "95": 289956.95848,
+            "99": 301923.05208,
+            "99.9": 304693.87854400004,
+            "99.99": 304963.77035052,
+            "100": 304994.8629
+          }
+        },
+        "MsBetweenAppStart": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.17649925712779616,
+          "StandardDeviation": 0.034080963487500185,
+          "Sum": 300005.31830000004,
+          "Percentiles": {
+            "0": 0.0756,
+            "1": 0.0934,
+            "5": 0.1452,
+            "50": 0.1771,
+            "90": 0.1998,
+            "95": 0.2251,
+            "99": 0.3116,
+            "99.9": 0.4263,
+            "99.99": 0.5267074099999154,
+            "100": 2.1606
+          }
+        },
+        "MsCPUBusy": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.12690545484817214,
+          "StandardDeviation": 0.028437301966507924,
+          "Sum": 215708.0545,
+          "Percentiles": {
+            "0": 0.0305,
+            "1": 0.0338,
+            "5": 0.0876,
+            "50": 0.1336,
+            "90": 0.1433,
+            "95": 0.1492,
+            "99": 0.218,
+            "99.9": 0.2988,
+            "99.99": 0.40753210999963335,
+            "100": 2.0989
+          }
+        },
+        "MsCPUWait": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.049593802279624004,
+          "StandardDeviation": 0.023643607769341966,
+          "Sum": 84297.26380000002,
+          "Percentiles": {
+            "0": 0.0352,
+            "1": 0.0389,
+            "5": 0.0393,
+            "50": 0.0424,
+            "90": 0.0572,
+            "95": 0.0909,
+            "99": 0.1608,
+            "99.9": 0.2622,
+            "99.99": 0.3144024699999718,
+            "100": 0.682
+          }
+        },
+        "MsGPULatency": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.07861225795026809,
+          "StandardDeviation": 0.024023298737518597,
+          "Sum": 133621.4999,
+          "Percentiles": {
+            "0": 0.0,
+            "1": 0.0,
+            "5": 0.0347,
+            "50": 0.0836,
+            "90": 0.0908,
+            "95": 0.0945,
+            "99": 0.1542,
+            "99.9": 0.2401,
+            "99.99": 0.3305024699999718,
+            "100": 2.0396
+          }
+        },
+        "MsGPUTime": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.176499263834649,
+          "StandardDeviation": 0.02539945086027998,
+          "Sum": 300005.3297,
+          "Percentiles": {
+            "0": 0.1363,
+            "1": 0.1454,
+            "5": 0.1483,
+            "50": 0.1775,
+            "90": 0.1983,
+            "95": 0.2039,
+            "99": 0.2884,
+            "99.9": 0.3793,
+            "99.99": 0.5069691599992104,
+            "100": 2.129
+          }
+        },
+        "MsGPUBusy": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.14906704676088423,
+          "StandardDeviation": 0.0208513635456656,
+          "Sum": 253377.309,
+          "Percentiles": {
+            "0": 0.1132,
+            "1": 0.1227,
+            "5": 0.1254,
+            "50": 0.1519,
+            "90": 0.1646,
+            "95": 0.1688,
+            "99": 0.2309,
+            "99.9": 0.3092,
+            "99.99": 0.4163419899995206,
+            "100": 2.1028
+          }
+        },
+        "MsGPUWait": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 0.02743221707376479,
+          "StandardDeviation": 0.009782351482919262,
+          "Sum": 46628.0207,
+          "Percentiles": {
+            "0": 0.0196,
+            "1": 0.0218,
+            "5": 0.0221,
+            "50": 0.0252,
+            "90": 0.0337,
+            "95": 0.0358,
+            "99": 0.0481,
+            "99.9": 0.15132470000002066,
+            "99.99": 0.2153024699999718,
+            "100": 0.6059
+          }
+        },
+        "MsAnimationError": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": -1.817910121111144e-08,
+          "StandardDeviation": 0.0352288077763087,
+          "Sum": -0.030899999999991518,
+          "Percentiles": {
+            "0": -1.9472,
+            "1": -0.1139,
+            "5": -0.0497,
+            "50": 0.0,
+            "90": 0.0115,
+            "95": 0.046,
+            "99": 0.1168,
+            "99.9": 0.2197,
+            "99.99": 0.3227222299997462,
+            "100": 1.9975
+          }
+        },
+        "AnimationTime": {
+          "Count": 1699754,
+          "Available": 1699754,
+          "Missing": 0,
+          "Mean": 154931.57495144315,
+          "StandardDeviation": 86569.72086926867,
+          "Sum": 263345564250.01532,
+          "Percentiles": {
+            "0": 4989.7633,
+            "1": 8046.227256,
+            "5": 19899.260035000003,
+            "50": 155341.3519,
+            "90": 274840.13727999997,
+            "95": 289956.95848,
+            "99": 301923.05208,
+            "99.9": 304693.87854400004,
+            "99.99": 304963.77035052,
+            "100": 304994.8629
+          }
+        },
+        "MsFlipDelay": {
+          "Count": 1699754,
+          "Available": 0,
+          "Missing": 1699754
+        },
+        "MsAllInputToPhotonLatency": {
+          "Count": 1699754,
+          "Available": 0,
+          "Missing": 1699754
+        },
+        "MsClickToPhotonLatency": {
+          "Count": 1699754,
+          "Available": 0,
+          "Missing": 1699754
+        }
+      },
+      "Validation": {
+        "StrictlyIncreasingTimestamps": true,
+        "MaximumIntervalTimestampResidualMs": 5.802139324551092e-11,
+        "BoundaryCount": 44,
+        "Boundaries": [
+          {
+            "Part": 2,
+            "GlobalRow": 37772,
+            "TimestampGapMs": 0.18730000000141445,
+            "RecordedIntervalMs": 0.1873,
+            "DifferenceMs": 1.414451888948065e-12
+          },
+          {
+            "Part": 3,
+            "GlobalRow": 75544,
+            "TimestampGapMs": 0.1500000000014552,
+            "RecordedIntervalMs": 0.15,
+            "DifferenceMs": 1.4551970739518083e-12
+          },
+          {
+            "Part": 4,
+            "GlobalRow": 113316,
+            "TimestampGapMs": 0.18980000000010477,
+            "RecordedIntervalMs": 0.1898,
+            "DifferenceMs": 1.0477729794899915e-13
+          },
+          {
+            "Part": 5,
+            "GlobalRow": 151088,
+            "TimestampGapMs": 0.19679999999789288,
+            "RecordedIntervalMs": 0.1968,
+            "DifferenceMs": -2.1071200340117002e-12
+          },
+          {
+            "Part": 6,
+            "GlobalRow": 188860,
+            "TimestampGapMs": 0.18009999999776483,
+            "RecordedIntervalMs": 0.1801,
+            "DifferenceMs": -2.235184259902212e-12
+          },
+          {
+            "Part": 7,
+            "GlobalRow": 226632,
+            "TimestampGapMs": 0.17929999999614665,
+            "RecordedIntervalMs": 0.1793,
+            "DifferenceMs": -3.853334318293378e-12
+          },
+          {
+            "Part": 8,
+            "GlobalRow": 264404,
+            "TimestampGapMs": 0.19939999999769498,
+            "RecordedIntervalMs": 0.1994,
+            "DifferenceMs": -2.3050172881511344e-12
+          },
+          {
+            "Part": 9,
+            "GlobalRow": 302176,
+            "TimestampGapMs": 0.16569999999774154,
+            "RecordedIntervalMs": 0.1657,
+            "DifferenceMs": -2.258443432268109e-12
+          },
+          {
+            "Part": 10,
+            "GlobalRow": 339948,
+            "TimestampGapMs": 0.1805000000022119,
+            "RecordedIntervalMs": 0.1805,
+            "DifferenceMs": 2.2118973319606994e-12
+          },
+          {
+            "Part": 11,
+            "GlobalRow": 377720,
+            "TimestampGapMs": 0.15080000000307336,
+            "RecordedIntervalMs": 0.1508,
+            "DifferenceMs": 3.0733748879185896e-12
+          },
+          {
+            "Part": 12,
+            "GlobalRow": 415492,
+            "TimestampGapMs": 0.1499000000039814,
+            "RecordedIntervalMs": 0.1499,
+            "DifferenceMs": 3.9813985441838895e-12
+          },
+          {
+            "Part": 13,
+            "GlobalRow": 453264,
+            "TimestampGapMs": 0.2260999999998603,
+            "RecordedIntervalMs": 0.2261,
+            "DifferenceMs": -1.3969381207346032e-13
+          },
+          {
+            "Part": 14,
+            "GlobalRow": 491036,
+            "TimestampGapMs": 0.18289999999979045,
+            "RecordedIntervalMs": 0.1829,
+            "DifferenceMs": -2.095545958979983e-13
+          },
+          {
+            "Part": 15,
+            "GlobalRow": 528808,
+            "TimestampGapMs": 0.17919999999867287,
+            "RecordedIntervalMs": 0.1792,
+            "DifferenceMs": -1.3271328480612965e-12
+          },
+          {
+            "Part": 16,
+            "GlobalRow": 566580,
+            "TimestampGapMs": 0.14609999999811407,
+            "RecordedIntervalMs": 0.1461,
+            "DifferenceMs": -1.8859358519307534e-12
+          },
+          {
+            "Part": 17,
+            "GlobalRow": 604352,
+            "TimestampGapMs": 0.15450000000419095,
+            "RecordedIntervalMs": 0.1545,
+            "DifferenceMs": 4.190953140081888e-12
+          },
+          {
+            "Part": 18,
+            "GlobalRow": 642124,
+            "TimestampGapMs": 0.18119999999180436,
+            "RecordedIntervalMs": 0.1812,
+            "DifferenceMs": -8.19563861220729e-12
+          },
+          {
+            "Part": 19,
+            "GlobalRow": 679896,
+            "TimestampGapMs": 0.16469999999389984,
+            "RecordedIntervalMs": 0.1647,
+            "DifferenceMs": -6.100175919954154e-12
+          },
+          {
+            "Part": 20,
+            "GlobalRow": 717668,
+            "TimestampGapMs": 0.19869999997899868,
+            "RecordedIntervalMs": 0.1987,
+            "DifferenceMs": -2.100131180071685e-11
+          },
+          {
+            "Part": 21,
+            "GlobalRow": 755440,
+            "TimestampGapMs": 0.1937999999790918,
+            "RecordedIntervalMs": 0.1938,
+            "DifferenceMs": -2.0908191844526414e-11
+          },
+          {
+            "Part": 22,
+            "GlobalRow": 793212,
+            "TimestampGapMs": 0.1780000000144355,
+            "RecordedIntervalMs": 0.178,
+            "DifferenceMs": 1.4435508344234904e-11
+          },
+          {
+            "Part": 23,
+            "GlobalRow": 830984,
+            "TimestampGapMs": 0.2021999999997206,
+            "RecordedIntervalMs": 0.2022,
+            "DifferenceMs": -2.7938762414692064e-13
+          },
+          {
+            "Part": 24,
+            "GlobalRow": 868756,
+            "TimestampGapMs": 0.20279999999911524,
+            "RecordedIntervalMs": 0.2028,
+            "DifferenceMs": -8.847644838994029e-13
+          },
+          {
+            "Part": 25,
+            "GlobalRow": 906528,
+            "TimestampGapMs": 0.18099999998230487,
+            "RecordedIntervalMs": 0.181,
+            "DifferenceMs": -1.7695123144534364e-11
+          },
+          {
+            "Part": 26,
+            "GlobalRow": 944300,
+            "TimestampGapMs": 0.17350000000442378,
+            "RecordedIntervalMs": 0.1735,
+            "DifferenceMs": 4.423794663921399e-12
+          },
+          {
+            "Part": 27,
+            "GlobalRow": 982072,
+            "TimestampGapMs": 0.17169999997713603,
+            "RecordedIntervalMs": 0.1717,
+            "DifferenceMs": -2.286396072470609e-11
+          },
+          {
+            "Part": 28,
+            "GlobalRow": 1019844,
+            "TimestampGapMs": 0.14830000000074506,
+            "RecordedIntervalMs": 0.1483,
+            "DifferenceMs": 7.450706718259426e-13
+          },
+          {
+            "Part": 29,
+            "GlobalRow": 1057616,
+            "TimestampGapMs": 0.15389999997569248,
+            "RecordedIntervalMs": 0.1539,
+            "DifferenceMs": -2.430752821247495e-11
+          },
+          {
+            "Part": 30,
+            "GlobalRow": 1095388,
+            "TimestampGapMs": 0.15549999999348074,
+            "RecordedIntervalMs": 0.1555,
+            "DifferenceMs": -6.519257356174535e-12
+          },
+          {
+            "Part": 31,
+            "GlobalRow": 1133160,
+            "TimestampGapMs": 0.16660000002593733,
+            "RecordedIntervalMs": 0.1666,
+            "DifferenceMs": 2.593733561262468e-11
+          },
+          {
+            "Part": 32,
+            "GlobalRow": 1170932,
+            "TimestampGapMs": 0.16379999998025596,
+            "RecordedIntervalMs": 0.1638,
+            "DifferenceMs": -1.974403973648009e-11
+          },
+          {
+            "Part": 33,
+            "GlobalRow": 1208704,
+            "TimestampGapMs": 0.17759999999543652,
+            "RecordedIntervalMs": 0.1776,
+            "DifferenceMs": -4.563488475994859e-12
+          },
+          {
+            "Part": 34,
+            "GlobalRow": 1246476,
+            "TimestampGapMs": 0.1484000000054948,
+            "RecordedIntervalMs": 0.1484,
+            "DifferenceMs": 5.494799060201672e-12
+          },
+          {
+            "Part": 35,
+            "GlobalRow": 1284248,
+            "TimestampGapMs": 0.17729999998118728,
+            "RecordedIntervalMs": 0.1773,
+            "DifferenceMs": -1.8812729152273278e-11
+          },
+          {
+            "Part": 36,
+            "GlobalRow": 1322020,
+            "TimestampGapMs": 0.14900000000488944,
+            "RecordedIntervalMs": 0.149,
+            "DifferenceMs": 4.889449956024805e-12
+          },
+          {
+            "Part": 37,
+            "GlobalRow": 1359792,
+            "TimestampGapMs": 0.14690000002156012,
+            "RecordedIntervalMs": 0.1469,
+            "DifferenceMs": 2.1560114804586306e-11
+          },
+          {
+            "Part": 38,
+            "GlobalRow": 1397564,
+            "TimestampGapMs": 0.14950000002863817,
+            "RecordedIntervalMs": 0.1495,
+            "DifferenceMs": 2.8638175164630297e-11
+          },
+          {
+            "Part": 39,
+            "GlobalRow": 1435336,
+            "TimestampGapMs": 0.17889999999897555,
+            "RecordedIntervalMs": 0.1789,
+            "DifferenceMs": -1.0244582959728632e-12
+          },
+          {
+            "Part": 40,
+            "GlobalRow": 1473108,
+            "TimestampGapMs": 0.1755000000121072,
+            "RecordedIntervalMs": 0.1755,
+            "DifferenceMs": 1.2107204128142257e-11
+          },
+          {
+            "Part": 41,
+            "GlobalRow": 1510880,
+            "TimestampGapMs": 0.15179999999236315,
+            "RecordedIntervalMs": 0.1518,
+            "DifferenceMs": -7.636835608337833e-12
+          },
+          {
+            "Part": 42,
+            "GlobalRow": 1548652,
+            "TimestampGapMs": 0.1755000000121072,
+            "RecordedIntervalMs": 0.1755,
+            "DifferenceMs": 1.2107204128142257e-11
+          },
+          {
+            "Part": 43,
+            "GlobalRow": 1586424,
+            "TimestampGapMs": 0.15150000003632158,
+            "RecordedIntervalMs": 0.1515,
+            "DifferenceMs": 3.6321584628851156e-11
+          },
+          {
+            "Part": 44,
+            "GlobalRow": 1624196,
+            "TimestampGapMs": 0.17969999997876585,
+            "RecordedIntervalMs": 0.1797,
+            "DifferenceMs": -2.123415332455636e-11
+          },
+          {
+            "Part": 45,
+            "GlobalRow": 1661968,
+            "TimestampGapMs": 0.18030000000726432,
+            "RecordedIntervalMs": 0.1803,
+            "DifferenceMs": 7.264328028000477e-12
+          }
+        ]
+      },
+      "CaptureLog": {
+        "Samples": 302,
+        "Maximum": {
+          "BufferFillPct": 5.1,
+          "BuffersInUse": 13.0,
+          "TotalBuffers": 256.0,
+          "EventsLost": 0.0,
+          "BuffersLost": 0.0,
+          "OverflowedPresents": 0.0
+        },
+        "OtherLines": [
+          "Started recording.",
+          "Stopped recording."
+        ],
+        "Sha256": "b5dfd6021c8a7c182b574867c9bc9383ce22b5385a6e9587aecc1bfe592a5ba6"
+      },
+      "InputManifest": [
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 01.csv",
+          "Bytes": 9755913,
+          "DataRows": 37771,
+          "FirstTimeInMs": 4989.9017,
+          "LastTimeInMs": 11666.3041,
+          "Sha256": "55307ea4e2696afd2559375e052777873d54fa24c861777ea6168b37161d0cb5"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 02.csv",
+          "Bytes": 9839380,
+          "DataRows": 37772,
+          "FirstTimeInMs": 11666.4914,
+          "LastTimeInMs": 18191.6656,
+          "Sha256": "9bfb1ff936f6523f55a2feee7cd9b8fe373bc82bd0c3b8d655af838c45dec84a"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 03.csv",
+          "Bytes": 9839289,
+          "DataRows": 37772,
+          "FirstTimeInMs": 18191.8156,
+          "LastTimeInMs": 24788.4854,
+          "Sha256": "cb353cf69dfb88b9d55554a301a6351330a157b3edede0db9f517bf0ecb4cd1b"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 04.csv",
+          "Bytes": 9839358,
+          "DataRows": 37772,
+          "FirstTimeInMs": 24788.6752,
+          "LastTimeInMs": 31441.0174,
+          "Sha256": "9d148518292d9a4d2f54a212a62ed9d5fccd754dde27ce7f658d32dad52e929b"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 05.csv",
+          "Bytes": 9839290,
+          "DataRows": 37772,
+          "FirstTimeInMs": 31441.2142,
+          "LastTimeInMs": 38206.7097,
+          "Sha256": "cf6725c6a7aef3be73d1cf78759cdf34b67f0357f2f42b7d7fb548f158832163"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 06.csv",
+          "Bytes": 9839399,
+          "DataRows": 37772,
+          "FirstTimeInMs": 38206.8898,
+          "LastTimeInMs": 44850.7485,
+          "Sha256": "3fc29bbc7b7242571cd21e116dc184c9cee94d4f9d898d81277931f325da120f"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 07.csv",
+          "Bytes": 9839453,
+          "DataRows": 37772,
+          "FirstTimeInMs": 44850.9278,
+          "LastTimeInMs": 51691.4677,
+          "Sha256": "6ae70b4af2d11bd88b3021d33a20baf8821672d331a8dd080c21f1c988c9ed0e"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 08.csv",
+          "Bytes": 9839449,
+          "DataRows": 37772,
+          "FirstTimeInMs": 51691.6671,
+          "LastTimeInMs": 58413.9773,
+          "Sha256": "7296304e59a9c4deb3d3934def69ac30243d19ddaf134161e2d0181d235eff0f"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 09.csv",
+          "Bytes": 9839420,
+          "DataRows": 37772,
+          "FirstTimeInMs": 58414.143,
+          "LastTimeInMs": 65071.2632,
+          "Sha256": "27132998e2066eccdff4dd5b744c478d1e8ea5d1677eb280afe9533dc1b218a0"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 10.csv",
+          "Bytes": 9839293,
+          "DataRows": 37772,
+          "FirstTimeInMs": 65071.4437,
+          "LastTimeInMs": 71672.6552,
+          "Sha256": "d049afaeaf680bd6dd520a3c9e57deec32cd382e0d401fec88fa60b37b443784"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 11.csv",
+          "Bytes": 9839354,
+          "DataRows": 37772,
+          "FirstTimeInMs": 71672.806,
+          "LastTimeInMs": 78327.817,
+          "Sha256": "fa2bc9aa05393a980b654458598801fa5e412e247fccd5a06ec7d878ef6e1400"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 12.csv",
+          "Bytes": 9839389,
+          "DataRows": 37772,
+          "FirstTimeInMs": 78327.9669,
+          "LastTimeInMs": 84990.5197,
+          "Sha256": "22f087aefbe0ea61b7143df2482699bddcaf58eca65e828de49057721173b927"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 13.csv",
+          "Bytes": 9839401,
+          "DataRows": 37772,
+          "FirstTimeInMs": 84990.7458,
+          "LastTimeInMs": 91680.5206,
+          "Sha256": "2f829c2763bb620a18ab90adf54d4d717023032867244de1c22d401b85392974"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 14.csv",
+          "Bytes": 9839176,
+          "DataRows": 37772,
+          "FirstTimeInMs": 91680.7035,
+          "LastTimeInMs": 98441.1182,
+          "Sha256": "79bf676e3a0c53dfd5575553d8dda252e758db5eb278bfc0f9109156fcab186e"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 15.csv",
+          "Bytes": 9925511,
+          "DataRows": 37772,
+          "FirstTimeInMs": 98441.2974,
+          "LastTimeInMs": 105012.1867,
+          "Sha256": "5a9f32c6ebf16fce6c027df6364e89dd4fe62aec25406b87450e6d93e129c27f"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 16.csv",
+          "Bytes": 9952534,
+          "DataRows": 37772,
+          "FirstTimeInMs": 105012.3328,
+          "LastTimeInMs": 111598.746,
+          "Sha256": "ffe8e279e078d7b1f6bf07e2eaaf1da25a6e87ed3c459ad4489af68cbc301c7a"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 17.csv",
+          "Bytes": 9952692,
+          "DataRows": 37772,
+          "FirstTimeInMs": 111598.9005,
+          "LastTimeInMs": 118203.7099,
+          "Sha256": "466e624d99e729c177ebbf3bff13a31b3eebb67a6dc0fee39cdf9175aa1a6747"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 18.csv",
+          "Bytes": 9952716,
+          "DataRows": 37772,
+          "FirstTimeInMs": 118203.8911,
+          "LastTimeInMs": 124862.4829,
+          "Sha256": "1fd212c50a53902b27f74b4d9e2f498ff1ef4ac775bbfa7230355b51065075b9"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 19.csv",
+          "Bytes": 9952641,
+          "DataRows": 37772,
+          "FirstTimeInMs": 124862.6476,
+          "LastTimeInMs": 131498.0824,
+          "Sha256": "d8c5153aa72ebe966dbfc21845e83d0ecb5c36faf2fd86c053e83c9fc65b7675"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 20.csv",
+          "Bytes": 9952650,
+          "DataRows": 37772,
+          "FirstTimeInMs": 131498.2811,
+          "LastTimeInMs": 138291.7471,
+          "Sha256": "e7c3ad08f3facd461250851631e0be56b670fd8cfb508aa529f4a22579b223ef"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 21.csv",
+          "Bytes": 9952628,
+          "DataRows": 37772,
+          "FirstTimeInMs": 138291.9409,
+          "LastTimeInMs": 145040.1163,
+          "Sha256": "6cba99c57eb2a6f336e2c5d19c0a7dbd6ce00c6c2074fdf8623f58dc0deba1ae"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 22.csv",
+          "Bytes": 9952733,
+          "DataRows": 37772,
+          "FirstTimeInMs": 145040.2943,
+          "LastTimeInMs": 151829.7217,
+          "Sha256": "bd26195124e11653a5c526b49de85d4086ffe0a888e21e5a187a4c3b540e5099"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 23.csv",
+          "Bytes": 9952821,
+          "DataRows": 37772,
+          "FirstTimeInMs": 151829.9239,
+          "LastTimeInMs": 158661.3284,
+          "Sha256": "99b5cf59fe27dcf3871644ed0dc098cc3d9162dc79024776610da67002263519"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 24.csv",
+          "Bytes": 9952876,
+          "DataRows": 37772,
+          "FirstTimeInMs": 158661.5312,
+          "LastTimeInMs": 165201.8244,
+          "Sha256": "76a40424457356c3af3ad16721260fe1351ff45200bed789a92e94454fbbc5fa"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 25.csv",
+          "Bytes": 9952976,
+          "DataRows": 37772,
+          "FirstTimeInMs": 165202.0054,
+          "LastTimeInMs": 171744.7805,
+          "Sha256": "5ae9d555d71c35a5b26d98fb2edfd02753b0a1aa4e10f116bcaa582a29570a45"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 26.csv",
+          "Bytes": 9952948,
+          "DataRows": 37772,
+          "FirstTimeInMs": 171744.954,
+          "LastTimeInMs": 178278.1528,
+          "Sha256": "fcef115104e7d30167d96be806cf7603f72acff2ac8b1501d78d57974ae38c31"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 27.csv",
+          "Bytes": 9952756,
+          "DataRows": 37772,
+          "FirstTimeInMs": 178278.3245,
+          "LastTimeInMs": 184882.956,
+          "Sha256": "9c9e9d3e4e5599cf193836e272b5176bb07e34a3660875bdf22413e505dc8c6c"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 28.csv",
+          "Bytes": 9952674,
+          "DataRows": 37772,
+          "FirstTimeInMs": 184883.1043,
+          "LastTimeInMs": 191493.0174,
+          "Sha256": "7848380cd43e4048363d7225144f8833735ff79abd741406d5902895cc7d3e41"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 29.csv",
+          "Bytes": 9952631,
+          "DataRows": 37772,
+          "FirstTimeInMs": 191493.1713,
+          "LastTimeInMs": 198065.0324,
+          "Sha256": "228d4955c0198dc1478271c1cf6dab77ef1c85f55b5dc61e3571c1802448b616"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 30.csv",
+          "Bytes": 9952717,
+          "DataRows": 37772,
+          "FirstTimeInMs": 198065.1879,
+          "LastTimeInMs": 204731.1088,
+          "Sha256": "d568e738c6f5b4551ad659029ca2df74c8ea12db2e5a555ef27cd662ef4f46b0"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 31.csv",
+          "Bytes": 9952568,
+          "DataRows": 37772,
+          "FirstTimeInMs": 204731.2754,
+          "LastTimeInMs": 211362.1258,
+          "Sha256": "8f1c44a72452b2ca3e75f062b0d6fbe819d60e55c89273eb4b9bcefde50a98ff"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 32.csv",
+          "Bytes": 9952704,
+          "DataRows": 37772,
+          "FirstTimeInMs": 211362.2896,
+          "LastTimeInMs": 218111.1835,
+          "Sha256": "c78e5e52bff15eb36ed08d6be23b5da066bc10d6865281c53d54acd07cf9cb0a"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 33.csv",
+          "Bytes": 9952963,
+          "DataRows": 37772,
+          "FirstTimeInMs": 218111.3611,
+          "LastTimeInMs": 224936.251,
+          "Sha256": "b4de8d6eb40eb957ac1afa6315368ad35a100eb79c5c23fde16ae50efcecfbc6"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 34.csv",
+          "Bytes": 9952703,
+          "DataRows": 37772,
+          "FirstTimeInMs": 224936.3994,
+          "LastTimeInMs": 231666.6639,
+          "Sha256": "454aa807ced26e9556ab47597bbdacb43afd5f7f055f9ef2b29b16527ac165fe"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 35.csv",
+          "Bytes": 9952653,
+          "DataRows": 37772,
+          "FirstTimeInMs": 231666.8412,
+          "LastTimeInMs": 238254.1037,
+          "Sha256": "42cc642da47d9c8dfe7809558c04151f5849f8bf8892ad72ab8a6a67d0f17b9b"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 36.csv",
+          "Bytes": 9952539,
+          "DataRows": 37772,
+          "FirstTimeInMs": 238254.2527,
+          "LastTimeInMs": 244901.3877,
+          "Sha256": "26aa08657685f920206f7ebac311230f5844c6006d653c63fb7725e0d9d3ece5"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 37.csv",
+          "Bytes": 9952597,
+          "DataRows": 37772,
+          "FirstTimeInMs": 244901.5346,
+          "LastTimeInMs": 251466.6198,
+          "Sha256": "0a378d99f96264ca299e7552aa10d1f6c789aabb867ebdf92e2a7645a4e38673"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 38.csv",
+          "Bytes": 9952630,
+          "DataRows": 37772,
+          "FirstTimeInMs": 251466.7693,
+          "LastTimeInMs": 258124.0375,
+          "Sha256": "f3da7a245e1013de67aa83ac2a50f01368c0a81074d3432272ea9bbae93409e0"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 39.csv",
+          "Bytes": 9952563,
+          "DataRows": 37772,
+          "FirstTimeInMs": 258124.2164,
+          "LastTimeInMs": 264785.4427,
+          "Sha256": "1fd5729bfb19d83409168a665fd29de082650b8a1792fba7bbd8663f0dcd3f4d"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 40.csv",
+          "Bytes": 9952706,
+          "DataRows": 37772,
+          "FirstTimeInMs": 264785.6182,
+          "LastTimeInMs": 271493.8638,
+          "Sha256": "4ab83cdf06e813ef1d8a12345043b18460afbd975b029450dec16dd6fdc95a62"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 41.csv",
+          "Bytes": 9952650,
+          "DataRows": 37772,
+          "FirstTimeInMs": 271494.0156,
+          "LastTimeInMs": 278187.691,
+          "Sha256": "07b0cd0ac05c068191a13c4877661ecae18d06a812df37a4c45572b89ef55cb5"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 42.csv",
+          "Bytes": 9952752,
+          "DataRows": 37772,
+          "FirstTimeInMs": 278187.8665,
+          "LastTimeInMs": 284941.801,
+          "Sha256": "cbbe1c8d70089dedcb16803f13ac9c6adb72eabc849f9e0c7bde66699283fbb4"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 43.csv",
+          "Bytes": 9952744,
+          "DataRows": 37772,
+          "FirstTimeInMs": 284941.9525,
+          "LastTimeInMs": 291608.3762,
+          "Sha256": "1edf80d9e35f163fe8e238a288eed5332121a2407dfd5c7cc44998a7f28a884e"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 44.csv",
+          "Bytes": 9952532,
+          "DataRows": 37772,
+          "FirstTimeInMs": 291608.5559,
+          "LastTimeInMs": 298261.5996,
+          "Sha256": "21f342ee963e8e9faad8a929b73c910faaca1d910df08a4d95462c82df1ca98a"
+        },
+        {
+          "File": "2026-09-11_15-18-36/PresentMon part 45.csv",
+          "Bytes": 9956623,
+          "DataRows": 37787,
+          "FirstTimeInMs": 298261.7799,
+          "LastTimeInMs": 304994.9897,
+          "Sha256": "c8dbfa0270214f0b4e4554d49b8e26725307386b82ebc2be991c974af7910f7a"
+        }
+      ],
+      "WorstIntervals": [
+        {
+          "Capture": "2026-09-11_15-18-36",
+          "ElapsedSecond": 84.357493,
+          "DataRow": 477937,
+          "Part": 13,
+          "FileLine": 24674,
+          "MsBetweenPresents": 2.1414,
+          "MsCPUBusy": 2.0989,
+          "MsCPUWait": 0.0617,
+          "MsGPUTime": 0.5853,
+          "MsGPUBusy": 0.5432,
+          "MsGPUWait": 0.0421,
+          "MsInPresentAPI": 0.0617,
+          "MsUntilDisplayed": 0.526
+        },
+        {
+          "Capture": "2026-09-11_15-18-36",
+          "ElapsedSecond": 243.0133527,
+          "DataRow": 1377406,
+          "Part": 37,
+          "FileLine": 17615,
+          "MsBetweenPresents": 1.7656,
+          "MsCPUBusy": 1.4747,
+          "MsCPUWait": 0.0449,
+          "MsGPUTime": 0.3625,
+          "MsGPUBusy": 0.3346,
+          "MsGPUWait": 0.0279,
+          "MsInPresentAPI": 0.0449,
+          "MsUntilDisplayed": 0.3139
+        },
+        {
+          "Capture": "2026-09-11_15-18-36",
+          "ElapsedSecond": 295.2337931,
+          "DataRow": 1673350,
+          "Part": 45,
+          "FileLine": 11383,
+          "MsBetweenPresents": 1.7339,
+          "MsCPUBusy": 1.6864,
+          "MsCPUWait": 0.0475,
+          "MsGPUTime": 0.6019,
+          "MsGPUBusy": 0.5669,
+          "MsGPUWait": 0.035,
+          "MsInPresentAPI": 0.0475,
+          "MsUntilDisplayed": 0.5419
+        },
+        {
+          "Capture": "2026-09-11_15-18-36",
+          "ElapsedSecond": 198.8295142,
+          "DataRow": 1128064,
+          "Part": 30,
+          "FileLine": 32677,
+          "MsBetweenPresents": 1.7176,
+          "MsCPUBusy": 1.6721,
+          "MsCPUWait": 0.0485,
+          "MsGPUTime": 0.5109,
+          "MsGPUBusy": 0.4821,
+          "MsGPUWait": 0.0288,
+          "MsInPresentAPI": 0.0485,
+          "MsUntilDisplayed": 0.4622
+        },
+        {
+          "Capture": "2026-09-11_15-18-36",
+          "ElapsedSecond": 190.79741900000002,
+          "DataRow": 1082355,
+          "Part": 29,
+          "FileLine": 24740,
+          "MsBetweenPresents": 1.7158,
+          "MsCPUBusy": 1.6709,
+          "MsCPUWait": 0.0448,
+          "MsGPUTime": 0.5196,
+          "MsGPUBusy": 0.4909,
+          "MsGPUWait": 0.0287,
+          "MsInPresentAPI": 0.0448,
+          "MsUntilDisplayed": 0.4673
+        },
+        {
+          "Capture": "2026-09-11_15-18-36",
+          "ElapsedSecond": 12.054581,
+          "DataRow": 68892,
+          "Part": 2,
+          "FileLine": 31121,
+          "MsBetweenPresents": 1.6914,
+          "MsCPUBusy": 1.6405,
+          "MsCPUWait": 0.0459,
+          "MsGPUTime": 0.5356,
+          "MsGPUBusy": 0.506,
+          "MsGPUWait": 0.0296,
+          "MsInPresentAPI": 0.0459,
+          "MsUntilDisplayed": 0.4849
+        },
+        {
+          "Capture": "2026-09-11_15-18-36",
+          "ElapsedSecond": 263.0994883,
+          "DataRow": 1491615,
+          "Part": 40,
+          "FileLine": 18508,
+          "MsBetweenPresents": 1.6907,
+          "MsCPUBusy": 1.6432,
+          "MsCPUWait": 0.0458,
+          "MsGPUTime": 0.5173,
+          "MsGPUBusy": 0.4768,
+          "MsGPUWait": 0.0405,
+          "MsInPresentAPI": 0.0458,
+          "MsUntilDisplayed": 0.4552
+        },
+        {
+          "Capture": "2026-09-11_15-18-36",
+          "ElapsedSecond": 289.21013020000004,
+          "DataRow": 1639074,
+          "Part": 44,
+          "FileLine": 14879,
+          "MsBetweenPresents": 1.6904,
+          "MsCPUBusy": 1.6454,
+          "MsCPUWait": 0.066,
+          "MsGPUTime": 0.4317,
+          "MsGPUBusy": 0.3943,
+          "MsGPUWait": 0.0374,
+          "MsInPresentAPI": 0.066,
+          "MsUntilDisplayed": 0.3774
+        },
+        {
+          "Capture": "2026-09-11_15-18-36",
+          "ElapsedSecond": 247.03191880000003,
+          "DataRow": 1400941,
+          "Part": 38,
+          "FileLine": 3378,
+          "MsBetweenPresents": 1.6707,
+          "MsCPUBusy": 1.6245,
+          "MsCPUWait": 0.0457,
+          "MsGPUTime": 0.5042,
+          "MsGPUBusy": 0.4744,
+          "MsGPUWait": 0.0298,
+          "MsInPresentAPI": 0.0457,
+          "MsUntilDisplayed": 0.4547
+        },
+        {
+          "Capture": "2026-09-11_15-18-36",
+          "ElapsedSecond": 80.34017440000001,
+          "DataRow": 455020,
+          "Part": 13,
+          "FileLine": 1757,
+          "MsBetweenPresents": 1.6486,
+          "MsCPUBusy": 1.6081,
+          "MsCPUWait": 0.0472,
+          "MsGPUTime": 0.5981,
+          "MsGPUBusy": 0.5644,
+          "MsGPUWait": 0.0337,
+          "MsInPresentAPI": 0.0472,
+          "MsUntilDisplayed": 0.5434
+        }
+      ]
+    }
+  ],
+  "Combined": {
+    "CapturedRows": 3391810,
+    "MeasuredIntervals": 3391808,
+    "DurationSeconds": 600.0139995,
+    "AverageFPS": 5652.881437477194
+  },
+  "SecondCaptureFPSChangePercent": 0.4562300270724462
+}

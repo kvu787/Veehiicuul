@@ -1,0 +1,380 @@
+{
+  "Capture": "2026-09-11_13-59-13",
+  "Rows": 1692056,
+  "DurationSeconds": 300.0089115,
+  "AverageFPS": 5640.015796664094,
+  "LowFPS": {
+    "1": 2914.6852456879337,
+    "0.1": 2209.2338930146193
+  },
+  "FrameIntervalsMs": {
+    "Count": 1692055,
+    "Available": 1692055,
+    "Missing": 0,
+    "Mean": 0.17730446793987192,
+    "StandardDeviation": 0.02743966714602325,
+    "Sum": 300008.9115,
+    "Percentiles": {
+      "0": 0.135,
+      "1": 0.1453,
+      "5": 0.1483,
+      "50": 0.1776,
+      "90": 0.1998,
+      "95": 0.2063,
+      "99": 0.2996,
+      "99.9": 0.3772946000000229,
+      "99.99": 0.535838379999972,
+      "100": 7.4818
+    }
+  },
+  "Thresholds": {
+    "0.2": {
+      "IntervalsAbove": 163447,
+      "PercentAbove": 9.659674183167805
+    },
+    "0.25": {
+      "IntervalsAbove": 33141,
+      "PercentAbove": 1.9586242763976347
+    },
+    "0.5": {
+      "IntervalsAbove": 232,
+      "PercentAbove": 0.013711138231322268
+    },
+    "1": {
+      "IntervalsAbove": 42,
+      "PercentAbove": 0.0024821888177393764
+    },
+    "2": {
+      "IntervalsAbove": 5,
+      "PercentAbove": 0.00029549866877849715
+    },
+    "5": {
+      "IntervalsAbove": 1,
+      "PercentAbove": 5.909973375569943e-05
+    },
+    "10": {
+      "IntervalsAbove": 0,
+      "PercentAbove": 0.0
+    },
+    "16.6667": {
+      "IntervalsAbove": 0,
+      "PercentAbove": 0.0
+    }
+  },
+  "CompleteOneSecondWindows": {
+    "Count": 300,
+    "Available": 300,
+    "Missing": 0,
+    "Mean": 5640.02,
+    "StandardDeviation": 203.91797272432856,
+    "Sum": 1692006.0,
+    "Percentiles": {
+      "0": 5100.0,
+      "1": 5120.97,
+      "5": 5228.75,
+      "50": 5711.5,
+      "90": 5850.0,
+      "95": 5877.1,
+      "99": 5951.2699999999995,
+      "99.9": 6008.844000000001,
+      "99.99": 6020.684399999997,
+      "100": 6022.0
+    }
+  },
+  "SecondsAtLeast5000FPS": 300,
+  "ThirtySecondBlocks": [
+    {
+      "StartSecond": 0,
+      "EndSecond": 30,
+      "Presents": 167759,
+      "FPS": 5591.966666666666
+    },
+    {
+      "StartSecond": 30,
+      "EndSecond": 60,
+      "Presents": 170653,
+      "FPS": 5688.433333333333
+    },
+    {
+      "StartSecond": 60,
+      "EndSecond": 90,
+      "Presents": 168371,
+      "FPS": 5612.366666666667
+    },
+    {
+      "StartSecond": 90,
+      "EndSecond": 120,
+      "Presents": 171680,
+      "FPS": 5722.666666666667
+    },
+    {
+      "StartSecond": 120,
+      "EndSecond": 150,
+      "Presents": 168653,
+      "FPS": 5621.766666666666
+    },
+    {
+      "StartSecond": 150,
+      "EndSecond": 180,
+      "Presents": 170647,
+      "FPS": 5688.233333333334
+    },
+    {
+      "StartSecond": 180,
+      "EndSecond": 210,
+      "Presents": 168198,
+      "FPS": 5606.6
+    },
+    {
+      "StartSecond": 210,
+      "EndSecond": 240,
+      "Presents": 167850,
+      "FPS": 5595.0
+    },
+    {
+      "StartSecond": 240,
+      "EndSecond": 270,
+      "Presents": 168500,
+      "FPS": 5616.666666666667
+    },
+    {
+      "StartSecond": 270,
+      "EndSecond": 300,
+      "Presents": 169695,
+      "FPS": 5656.5
+    }
+  ],
+  "Categories": {
+    "Application": {
+      "SimpleDirectX12Game.exe": 1692056
+    },
+    "ProcessID": {
+      "2132": 1692056
+    },
+    "SwapChainAddress": {
+      "0x2011A689F50": 1692056
+    },
+    "PresentRuntime": {
+      "DXGI": 1692056
+    },
+    "SyncInterval": {
+      "0": 1692056
+    },
+    "PresentFlags": {
+      "512": 1692056
+    },
+    "AllowsTearing": {
+      "1": 1692056
+    },
+    "PresentMode": {
+      "Hardware: Independent Flip": 1692056
+    }
+  },
+  "CaptureLog": {
+    "Samples": 303,
+    "Maximum": {
+      "BufferFillPct": 5.1,
+      "BuffersInUse": 13.0,
+      "TotalBuffers": 256.0,
+      "EventsLost": 0.0,
+      "BuffersLost": 0.0,
+      "OverflowedPresents": 0.0
+    },
+    "OtherLines": [
+      "Started recording.",
+      "Stopped recording."
+    ],
+    "Sha256": "bb9fd90ccc89901f4ef58075fa9b2715023ad38d03935cad207d72f3f4eb146f"
+  }
+}
+{
+  "Capture": "2026-09-11_15-18-36",
+  "Rows": 1699754,
+  "DurationSeconds": 300.005088,
+  "AverageFPS": 5665.747242260105,
+  "LowFPS": {
+    "1": 2986.109688638248,
+    "0.1": 2320.9474380494757
+  },
+  "FrameIntervalsMs": {
+    "Count": 1699753,
+    "Available": 1699753,
+    "Missing": 0,
+    "Mean": 0.17649922547570146,
+    "StandardDeviation": 0.025445865908272323,
+    "Sum": 300005.088,
+    "Percentiles": {
+      "0": 0.1298,
+      "1": 0.1453,
+      "5": 0.1482,
+      "50": 0.1775,
+      "90": 0.1983,
+      "95": 0.2044,
+      "99": 0.2859479999999981,
+      "99.9": 0.36742480000001376,
+      "99.99": 0.5070049599999562,
+      "100": 2.1414
+    }
+  },
+  "Thresholds": {
+    "0.2": {
+      "IntervalsAbove": 134134,
+      "PercentAbove": 7.891381865482808
+    },
+    "0.25": {
+      "IntervalsAbove": 31376,
+      "PercentAbove": 1.8459152594524026
+    },
+    "0.5": {
+      "IntervalsAbove": 184,
+      "PercentAbove": 0.010825102235442445
+    },
+    "1": {
+      "IntervalsAbove": 29,
+      "PercentAbove": 0.0017061302436295156
+    },
+    "2": {
+      "IntervalsAbove": 1,
+      "PercentAbove": 5.883207736653502e-05
+    },
+    "5": {
+      "IntervalsAbove": 0,
+      "PercentAbove": 0.0
+    },
+    "10": {
+      "IntervalsAbove": 0,
+      "PercentAbove": 0.0
+    },
+    "16.6667": {
+      "IntervalsAbove": 0,
+      "PercentAbove": 0.0
+    }
+  },
+  "CompleteOneSecondWindows": {
+    "Count": 300,
+    "Available": 300,
+    "Missing": 0,
+    "Mean": 5665.75,
+    "StandardDeviation": 177.88363471663155,
+    "Sum": 1699725.0,
+    "Percentiles": {
+      "0": 5150.0,
+      "1": 5165.93,
+      "5": 5268.85,
+      "50": 5722.0,
+      "90": 5839.1,
+      "95": 5857.1,
+      "99": 5936.13,
+      "99.9": 6005.678000000002,
+      "99.99": 6026.667799999996,
+      "100": 6029.0
+    }
+  },
+  "SecondsAtLeast5000FPS": 300,
+  "ThirtySecondBlocks": [
+    {
+      "StartSecond": 0,
+      "EndSecond": 30,
+      "Presents": 170986,
+      "FPS": 5699.533333333334
+    },
+    {
+      "StartSecond": 30,
+      "EndSecond": 60,
+      "Presents": 168488,
+      "FPS": 5616.266666666666
+    },
+    {
+      "StartSecond": 60,
+      "EndSecond": 90,
+      "Presents": 169821,
+      "FPS": 5660.7
+    },
+    {
+      "StartSecond": 90,
+      "EndSecond": 120,
+      "Presents": 171335,
+      "FPS": 5711.166666666667
+    },
+    {
+      "StartSecond": 120,
+      "EndSecond": 150,
+      "Presents": 167333,
+      "FPS": 5577.766666666666
+    },
+    {
+      "StartSecond": 150,
+      "EndSecond": 180,
+      "Presents": 172510,
+      "FPS": 5750.333333333333
+    },
+    {
+      "StartSecond": 180,
+      "EndSecond": 210,
+      "Presents": 171270,
+      "FPS": 5709.0
+    },
+    {
+      "StartSecond": 210,
+      "EndSecond": 240,
+      "Presents": 168589,
+      "FPS": 5619.633333333333
+    },
+    {
+      "StartSecond": 240,
+      "EndSecond": 270,
+      "Presents": 170327,
+      "FPS": 5677.566666666667
+    },
+    {
+      "StartSecond": 270,
+      "EndSecond": 300,
+      "Presents": 169066,
+      "FPS": 5635.533333333334
+    }
+  ],
+  "Categories": {
+    "Application": {
+      "SimpleDirectX12Game.exe": 1699754
+    },
+    "ProcessID": {
+      "2132": 1699754
+    },
+    "SwapChainAddress": {
+      "0x2011A689F50": 1699754
+    },
+    "PresentRuntime": {
+      "DXGI": 1699754
+    },
+    "SyncInterval": {
+      "0": 1699754
+    },
+    "PresentFlags": {
+      "512": 1699754
+    },
+    "AllowsTearing": {
+      "1": 1699754
+    },
+    "PresentMode": {
+      "Hardware: Independent Flip": 1699754
+    }
+  },
+  "CaptureLog": {
+    "Samples": 302,
+    "Maximum": {
+      "BufferFillPct": 5.1,
+      "BuffersInUse": 13.0,
+      "TotalBuffers": 256.0,
+      "EventsLost": 0.0,
+      "BuffersLost": 0.0,
+      "OverflowedPresents": 0.0
+    },
+    "OtherLines": [
+      "Started recording.",
+      "Stopped recording."
+    ],
+    "Sha256": "b5dfd6021c8a7c182b574867c9bc9383ce22b5385a6e9587aecc1bfe592a5ba6"
+  }
+}
+COMBINED {"CapturedRows": 3391810, "MeasuredIntervals": 3391808, "DurationSeconds": 600.0139995, "AverageFPS": 5652.881437477194}
+FPS change percent 0.4562300270724462
