@@ -212,6 +212,16 @@ $captureTimestamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
 $captureDirectory = "$env:UserProfile\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyLogOutput\$captureTimestamp"
 New-Item -ItemType Directory -Path $captureDirectory | Out-Null
 
+& "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
+    --process_id $gameProcessId `
+    --session_name "SimpleDirectX12Game-$captureTimestamp" `
+    --set_circular_buffer_size 65536 `
+    --no_console_stats `
+    --track_etw_status `
+    --delay 5 --timed 300 --terminate_after_timed `
+    --output_file "$captureDirectory\PresentMon.csv" `
+    *> "$captureDirectory\PresentMon.log"
+
 & "C:\Program Files\Git\usr\bin\winpty.exe" -Xallow-non-tty -Xplain `
     "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
     --process_id $gameProcessId `
@@ -222,13 +232,4 @@ New-Item -ItemType Directory -Path $captureDirectory | Out-Null
     --delay 5 --timed 30 --terminate_after_timed `
     --output_file "$captureDirectory\PresentMon.csv" `
     2>&1 | Tee-Object -FilePath "$captureDirectory\PresentMon.log"
-
-& "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
-    --process_id $gameProcessId `
-    --session_name "SimpleDirectX12Game-$captureTimestamp" `
-    --set_circular_buffer_size 65536 `
-    --no_console_stats `
-    --track_etw_status `
-    --delay 5 --timed 30 --terminate_after_timed `
-    --output_file "$captureDirectory\PresentMon.csv"
 ```
