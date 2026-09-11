@@ -1,6 +1,6 @@
 #pragma once
 
-#include "generated/CarMesh.generated.h"
+#include "Generated/CarMesh.generated.h"
 
 #include <cmath>
 #include <cstdint>

@@ -8,7 +8,7 @@
 #include "BackgroundVS.h"
 #include "SimplePaintPS.h"
 #include "SimplePaintVS.h"
-#include "generated/CarMesh.generated.h"
+#include "Generated/CarMesh.generated.h"
 
 #include <wincodec.h>
 
@@ -822,7 +822,7 @@ void Renderer::CreateStaticResources()
     static_assert(GeneratedCarMesh::MaterialCount == CarMaterialCount);
 
     const std::filesystem::path backgroundPath =
-        ModuleDirectory() / L"assets" / L"SceneBackground.png";
+        ModuleDirectory() / L"Assets" / L"SceneBackground.png";
     const DecodedImage background = DecodeRgbaImage(backgroundPath);
     if (background.width != 5120 || background.height != 1440)
     {

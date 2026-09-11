@@ -110,10 +110,10 @@ int main()
 {
     try
     {
-        std::ifstream input("assets/Settings.json");
+        std::ifstream input("Assets/Settings.json");
         const auto document = nlohmann::json::parse(input);
         CheckIntegerConversion(document);
-        const auto shipped = LoadSettings("assets/Settings.json");
+        const auto shipped = LoadSettings("Assets/Settings.json");
         Require(Parse(document.dump()) == shipped);
         // Every root section and every nested field is required, including inactive controls.
         for (auto section = document.begin(); section != document.end(); ++section)

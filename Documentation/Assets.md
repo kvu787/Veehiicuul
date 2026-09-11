@@ -12,7 +12,7 @@ parameter ranges; `Sphere` controls mesh resolution. The normal build copies bot
 files beside the executable. Edit the source JSON and relaunch through `Run.cmd`
 to apply changes.
 
-Regenerate the background and `Source/generated/CarMesh.generated.h` with Blender
+Regenerate the background and `Source/Generated/CarMesh.generated.h` with Blender
 4.5.12 LTS from the repository root:
 
 ```powershell
@@ -20,10 +20,10 @@ Regenerate the background and `Source/generated/CarMesh.generated.h` with Blende
     --background --factory-startup --disable-autoexec `
     ".\Blender\Car.blend" `
     --python-exit-code 1 `
-    --python ".\tools\GenerateAssets.py" `
+    --python ".\Tools\GenerateAssets.py" `
     -- `
-    --car-output ".\Source\generated\CarMesh.generated.h" `
-    --background-output ".\assets\SceneBackground.png"
+    --car-output ".\Source\Generated\CarMesh.generated.h" `
+    --background-output ".\Assets\SceneBackground.png"
 ```
 
 The generated mesh uses Blender's evaluated triangle loops and corner normals,

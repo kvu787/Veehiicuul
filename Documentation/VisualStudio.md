@@ -87,7 +87,7 @@ The repository currently has no checked-in CMake preset file. For a repeatable l
 }
 ```
 
-The preset separates IDE output from the launcher's `build/debug` and `build/release`. Both `out/` and `CMakeUserPresets.json` are already ignored by Git. The user preset file can exist without a project preset file. [CMake preset format](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
+The preset separates IDE output from the launcher's `MyBuildOutput/Debug` and `MyBuildOutput/Release`. Both `out/` and `CMakeUserPresets.json` are already ignored by Git. The user preset file can exist without a project preset file. [CMake preset format](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
 
 In **Tools > Options > CMake > General**, enable preset-based configuration, using **Always use CMakePresets.json** or the equivalent option in your version. Close and reopen the folder if necessary. Select **Local Machine**, **Windows x64 Debug**, and the associated `vs-debug` build preset if that selector is shown. Wait for successful configuration. Visual Studio supplies the MSVC environment for the preset's external x64 architecture. [Visual Studio preset setup](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170)
 
@@ -97,8 +97,8 @@ Use the generated output paths below after following this setup:
 | ------------------------ | ---------------------------- |
 | Visual Studio Debug      | `out/build/vs-debug`         |
 | Visual Studio Release    | `out/build/vs-release`       |
-| Run.cmd default Release  | `build/release`              |
-| Run.ps1 explicit Debug   | `build/debug`                |
+| Run.cmd default Release  | `MyBuildOutput/Release`              |
+| Run.ps1 explicit Debug   | `MyBuildOutput/Debug`                |
 
 The first CMake configure checks the compiler and locates DXC. Configuration generates the build system; building then compiles the C++ and shaders and stages the assets.
 
@@ -139,7 +139,7 @@ Read these files in this order:
 | `Source/SimplePaint/SimplePaintCore.hlsli`    | Shared paint shading logic.                                   |
 | `Source/Shaders/Background.hlsl`              | Background rendering.                                         |
 | `Source/UVSphere.h`                           | Procedural sphere generation.                                 |
-| `tests/`                                      | Executable examples of expected behavior and edge cases.      |
+| `Tests/`                                      | Executable examples of expected behavior and edge cases.      |
 
 Useful editor commands are **Go To Definition**, **Peek Definition**, **Find All References**, **Go To All**, and **Find in Files**. Use the symbol's context menu or Visual Studio command search if your keyboard mapping differs. Navigation becomes most useful after CMake configuration and indexing succeed.
 
@@ -175,15 +175,15 @@ The renderer sends its pipeline description through `OutputDebugStringW`; look i
 
 ## 7. Edit settings, C++, and shaders
 
-**Settings:** edit the repository's `assets/Settings.json`, save, build the game target, and restart. The `RuntimeAssets` dependency copies updated settings next to the selected executable. Settings load at startup; there is no live reload. Editing only the output copy is temporary because a subsequent build can replace it.
+**Settings:** edit the repository's `Assets/Settings.json`, save, build the game target, and restart. The `RuntimeAssets` dependency copies updated settings next to the selected executable. Settings load at startup; there is no live reload. Editing only the output copy is temporary because a subsequent build can replace it.
 
 **C++:** stop debugging, edit, save, build, and restart. Add new `.cpp` files to the relevant CMake target. Merely creating a file in Folder View does not ensure it is compiled. The main application target is in the root CMake file; the reusable paint library has its own `Source/SimplePaint/CMakeLists.txt`.
 
-**Shaders:** edit the original `.hlsl` or `.hlsli` files, then build and restart. CMake invokes DXC and embeds generated shader byte arrays in the executable. Do not edit the generated headers under the build directory's `generated/shaders`.
+**Shaders:** edit the original `.hlsl` or `.hlsli` files, then build and restart. CMake invokes DXC and embeds generated shader byte arrays in the executable. Do not edit the generated headers under the build directory's `Generated/shaders`.
 
 The current shader command always uses optimization and strips debug information, including when C++ is built in Debug. A C++ Debug build therefore does not provide shader source stepping. Adding shader-debug compilation would require a separate build change.
 
-**Mesh/background assets:** ordinary builds reuse `Source/generated/CarMesh.generated.h` and `assets/SceneBackground.png`. Regenerate them from Blender only when needed. The optional `RegenerateAssets` CMake target appears when a supported Blender installation is detected. It rewrites those source assets; see [asset generation](Assets.md).
+**Mesh/background assets:** ordinary builds reuse `Source/Generated/CarMesh.generated.h` and `Assets/SceneBackground.png`. Regenerate them from Blender only when needed. The optional `RegenerateAssets` CMake target appears when a supported Blender installation is detected. It rewrites those source assets; see [asset generation](Assets.md).
 
 ## 8. Run the tests
 
@@ -219,7 +219,7 @@ The existing launcher also provides an independent route from PowerShell in the 
 .\Run.ps1 -Test
 ```
 
-These build and test `build/debug` and `build/release`, respectively, rather than the IDE output. `-Test` runs tests instead of launching the normal game.
+These build and test `MyBuildOutput/Debug` and `MyBuildOutput/Release`, respectively, rather than the IDE output. `-Test` runs tests instead of launching the normal game.
 
 ## 9. Use Release builds and the launcher
 
@@ -231,7 +231,7 @@ Release with the presets produces:
 out/build/vs-release/SimpleDirectX12Game.exe
 ```
 
-Double-clicking `Run.cmd` independently builds and launches Release in `build/release`. It does not use whichever preset is active in Visual Studio.
+Double-clicking `Run.cmd` independently builds and launches Release in `MyBuildOutput/Release`. It does not use whichever preset is active in Visual Studio.
 
 Other existing PowerShell commands are:
 

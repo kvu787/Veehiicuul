@@ -17,7 +17,7 @@ if(NOT DXC_EXECUTABLE)
     )
 endif()
 
-set(SHADER_GENERATED_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated/shaders")
+set(SHADER_GENERATED_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Generated/shaders")
 set(BACKGROUND_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Source/Shaders/Background.hlsl")
 set(SIMPLE_PAINT_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Source/SimplePaint/SimplePaint.hlsl")
 set(SIMPLE_PAINT_CORE "${CMAKE_CURRENT_SOURCE_DIR}/Source/SimplePaint/SimplePaintCore.hlsli")
@@ -94,7 +94,7 @@ foreach(target SettingsValidation RenderPreparation PlatformPaths Settings)
     endif()
 endforeach()
 
-set(CAR_MESH_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/Source/generated/CarMesh.generated.h")
+set(CAR_MESH_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/Source/Generated/CarMesh.generated.h")
 add_executable(SimpleDirectX12Game WIN32
     ${SHADER_HEADERS}
     ${BACKGROUND_SHADER_SOURCE}
@@ -116,16 +116,16 @@ set_source_files_properties(
 )
 target_include_directories(SimpleDirectX12Game PRIVATE "${SHADER_GENERATED_DIRECTORY}")
 
-set(BACKGROUND_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/assets/SceneBackground.png")
-set(GAME_SETTINGS "${CMAKE_CURRENT_SOURCE_DIR}/assets/Settings.json")
+set(BACKGROUND_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/Assets/SceneBackground.png")
+set(GAME_SETTINGS "${CMAKE_CURRENT_SOURCE_DIR}/Assets/Settings.json")
 add_custom_target(RuntimeAssets ALL
     COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
         "${BACKGROUND_IMAGE}"
-        "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets/SceneBackground.png"
+        "$<TARGET_FILE_DIR:SimpleDirectX12Game>/Assets/SceneBackground.png"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
         "${GAME_SETTINGS}"
-        "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets/Settings.json"
+        "$<TARGET_FILE_DIR:SimpleDirectX12Game>/Assets/Settings.json"
     DEPENDS "${BACKGROUND_IMAGE}" "${GAME_SETTINGS}"
     COMMENT "Staging runtime image and paint settings"
     VERBATIM
@@ -147,7 +147,7 @@ if(BLENDER_EXECUTABLE)
             --disable-autoexec
             "${CMAKE_CURRENT_SOURCE_DIR}/Blender/Car.blend"
             --python-exit-code 1
-            --python "${CMAKE_CURRENT_SOURCE_DIR}/tools/GenerateAssets.py"
+            --python "${CMAKE_CURRENT_SOURCE_DIR}/Tools/GenerateAssets.py"
             --
             --car-output "${CAR_MESH_HEADER}"
             --background-output "${BACKGROUND_IMAGE}"
@@ -186,28 +186,28 @@ target_link_libraries(SimpleDirectX12Game PRIVATE
 set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT SimpleDirectX12Game)
 
 if(BUILD_TESTING)
-    add_executable(UVSphereTests tests/UVSphereTests.cpp)
+    add_executable(UVSphereTests Tests/UVSphereTests.cpp)
     target_include_directories(UVSphereTests PRIVATE Source)
     target_compile_features(UVSphereTests PRIVATE cxx_std_20)
     add_test(NAME UVSphereGeometry COMMAND UVSphereTests)
-    add_executable(PaintGeometryIntegrationTests tests/PaintGeometryIntegrationTests.cpp)
+    add_executable(PaintGeometryIntegrationTests Tests/PaintGeometryIntegrationTests.cpp)
     target_link_libraries(PaintGeometryIntegrationTests PRIVATE SimplePaint)
     add_test(NAME PaintGeometryIntegration COMMAND PaintGeometryIntegrationTests)
 endif()
 
 if(BUILD_TESTING)
-    add_executable(SettingsTests tests/SettingsTests.cpp)
+    add_executable(SettingsTests Tests/SettingsTests.cpp)
     target_link_libraries(SettingsTests PRIVATE RenderPreparation)
     add_dependencies(SettingsTests RuntimeAssets)
     add_test(NAME SettingsContract COMMAND SettingsTests)
-    add_executable(SettingsJsonTests tests/SettingsJsonTests.cpp)
+    add_executable(SettingsJsonTests Tests/SettingsJsonTests.cpp)
     target_link_libraries(SettingsJsonTests PRIVATE Settings nlohmann_json::nlohmann_json)
     add_dependencies(SettingsJsonTests RuntimeAssets)
     add_test(NAME SettingsJsonContract COMMAND SettingsJsonTests)
     if(MSVC)
         target_compile_options(SettingsJsonTests PRIVATE /W4 /WX /EHsc /permissive-)
     endif()
-    add_executable(RenderPipelineGpuTests tests/RenderPipelineGpuTests.cpp Source/Renderer.cpp ${SHADER_HEADERS})
+    add_executable(RenderPipelineGpuTests Tests/RenderPipelineGpuTests.cpp Source/Renderer.cpp ${SHADER_HEADERS})
     add_dependencies(RenderPipelineGpuTests CompiledShaders RuntimeAssets)
     target_include_directories(RenderPipelineGpuTests PRIVATE "${SHADER_GENERATED_DIRECTORY}")
     target_compile_definitions(RenderPipelineGpuTests PRIVATE NOMINMAX UNICODE _UNICODE WIN32_LEAN_AND_MEAN SIMPLE_PAINT_MATERIAL_COUNT=${SIMPLE_PAINT_MATERIAL_COUNT})
@@ -222,7 +222,7 @@ if(BUILD_TESTING)
 endif()
 
 if(BUILD_TESTING)
-    add_executable(ApplicationSmokeTests tests/ApplicationSmokeTests.cpp Source/Application.cpp Source/Renderer.cpp ${SHADER_HEADERS})
+    add_executable(ApplicationSmokeTests Tests/ApplicationSmokeTests.cpp Source/Application.cpp Source/Renderer.cpp ${SHADER_HEADERS})
     add_dependencies(ApplicationSmokeTests CompiledShaders RuntimeAssets)
     target_include_directories(ApplicationSmokeTests PRIVATE "${SHADER_GENERATED_DIRECTORY}")
     target_compile_definitions(ApplicationSmokeTests PRIVATE NOMINMAX UNICODE _UNICODE WIN32_LEAN_AND_MEAN SIMPLE_PAINT_MATERIAL_COUNT=${SIMPLE_PAINT_MATERIAL_COUNT})

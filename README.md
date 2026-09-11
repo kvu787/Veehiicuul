@@ -39,7 +39,7 @@ human developers and coding agents.
 
 ### Platform and GPU policy
 
-The runtime platform preconditions are **Windows 10 or Windows 11** and
+The runtime platform preconditions are **Windows 11** and
 **x86_64 (x64)**. There are **no GPU preconditions**: no particular GPU vendor,
 model, generation, or hardware feature set may be required.
 
@@ -84,7 +84,7 @@ Build prerequisites:
   and
 - a current Windows SDK containing the DirectX Shader Compiler (`dxc.exe`).
 
-The generated executable is `build\release\SimpleDirectX12Game.exe`. CMake
+The generated executable is `MyBuildOutput\Release\SimpleDirectX12Game.exe`. CMake
 places `SceneBackground.png` and `Settings.json` in its adjacent `assets`
 directory.
 
@@ -102,7 +102,7 @@ With VSync off, presentation permits tearing only when the selected pipeline req
 
 ## Render pipeline
 
-Edit `assets/Settings.json` and restart the app to select `RenderPipeline.Preset`:
+Edit `Assets/Settings.json` and restart the app to select `RenderPipeline.Preset`:
 `MinimizeInputLatency` (selected in the shipped JSON), `Standard`, `MaximizeFps`,
 or `Custom`.
 `RenderPipeline.VSync` is independent of every preset and defaults to `false` in the
@@ -123,7 +123,7 @@ example to compare queue sizes and wait strategies; higher FPS is not guaranteed
 
 ## Adjust the paint and sphere
 
-Edit `assets/Settings.json`, then relaunch through `Run.cmd`. The six `SimplePaintShader_*`
+Edit `Assets/Settings.json`, then relaunch through `Run.cmd`. The six `SimplePaintShader_*`
 objects provide independent paint controls for Axles, Body, Cabin, Headlights,
 Wheels, and Sphere. See [Usage.md](Source/SimplePaint/Usage.md) for accepted numerical ranges, examples,
 and instructions for embedding the shader in another C++/DX12 project.
@@ -167,9 +167,9 @@ The GPU tests exercise both the preferred adapter and WARP.
 
 ## Assets and implementation
 
-`tools/GenerateAssets.py` uses Blender's own triangulation and evaluated corner
+`Tools/GenerateAssets.py` uses Blender's own triangulation and evaluated corner
 normals to turn `Blender/Car.blend` into the checked-in generated mesh header.
-It also bakes the old static 3D scene into `assets/SceneBackground.png`. The
+It also bakes the old static 3D scene into `Assets/SceneBackground.png`. The
 background is 32:9 so normal windows can center-crop it while preserving the
 camera's vertical scale; its center half is a native 2560x1440 image at 16:9.
 Windows wider than 32:9 use matching side mattes and a centered 32:9 scene

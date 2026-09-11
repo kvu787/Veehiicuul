@@ -13,7 +13,7 @@ All reported color outputs are linear red-channel values before sRGB encoding an
 
 **How to reproduce the settings-only examples**
 
-Use the listed Brightness, set both DarkPoint and LightPoint to T, and set Body to the sRGB triple C, C, C in assets/CarPaint.ini. Leave Shift=0, RotationDegrees=0, and FacingCutoff=0.01. Equal tone endpoints make the result independent of surface orientation. Relaunch using Run.cmd.
+Use the listed Brightness, set both DarkPoint and LightPoint to T, and set Body to the sRGB triple C, C, C in Assets/CarPaint.ini. Leave Shift=0, RotationDegrees=0, and FacingCutoff=0.01. Equal tone endpoints make the result independent of surface orientation. Relaunch using Run.cmd.
 
 The [Presets](Presets) directory contains ten complete INI files. They were generated as examples; the application's source settings file has not been changed. [Examples.csv](Examples.csv) contains 42 named cases, exact parameter values, supplied normals, measured outputs, and reference outputs. CSV columns B/S/R/D/L/F mean Brightness/Shift/RotationDegrees/DarkPoint/LightPoint/FacingCutoff; r/g/b are requested sRGB channels and nx/ny/nz are supplied view-space normal components before normalization. gpu_r is the production result; requested_r is the mathematical reference before CPU clamps; safe_r uses the stored parameters. NoFloor_r, Positive_r, and Stable_r identify the three experiments. Blank references mark an undefined formula. Rows with names beginning floor_white were negative controls and do not actually activate the denominator floor; use the demonstrated rows below.
 

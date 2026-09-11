@@ -65,7 +65,7 @@ try {
         }
     }
 
-    $buildDirectory = Join-Path $PSScriptRoot ('build\' + $Configuration.ToLowerInvariant())
+    $buildDirectory = Join-Path $PSScriptRoot ('MyBuildOutput\' + $Configuration)
     $cachePath = Join-Path $buildDirectory 'CMakeCache.txt'
     $configureOptions = @()
 

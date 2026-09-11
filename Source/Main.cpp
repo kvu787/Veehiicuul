@@ -12,7 +12,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, const int showCommand)
     try
     {
         Application application;
-        const auto settings = LoadSettings(ModuleDirectory() / L"assets" / L"Settings.json");
+        const auto settings = LoadSettings(ModuleDirectory() / L"Assets" / L"Settings.json");
         return application.Run(instance, showCommand, settings);
     }
     catch (const std::exception& error)

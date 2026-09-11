@@ -1,7 +1,7 @@
 # Settings architecture
 
 [Settings.h](../Source/Settings.h) is the single C++ model
-of [Settings.json](../assets/Settings.json). Its nested types group the fields
+of [Settings.json](../Assets/Settings.json). Its nested types group the fields
 found in the file. Read this header to see the field names and C++ types.
 For accepted values and when settings apply, see
 [render pipeline configuration](RenderPipeline.md) for presets and custom controls,
@@ -70,7 +70,7 @@ the plain C++ validator. Update the consuming renderer code and relevant tests.
 
 Double-click [Run.cmd](../Run.cmd). It builds and launches the application using Visual Studio's C++ tools, CMake, Ninja, and the Windows SDK's DXC shader compiler. See [README.md](../README.md) for installation requirements and app controls.
 
-Edit [assets/Settings.json](../assets/Settings.json), then launch again. The six `SimplePaintShader_*` objects provide independent controls for Axles, Body, Cabin, Headlights, Wheels, and Sphere. The setting name for Rotation is `RotationDegrees`.
+Edit [Assets/Settings.json](../Assets/Settings.json), then launch again. The six `SimplePaintShader_*` objects provide independent controls for Axles, Body, Cabin, Headlights, Wheels, and Sphere. The setting name for Rotation is `RotationDegrees`.
 
 For example, edit these fields within the complete file to change the sphere's
 paint and select the minimum-latency pipeline:
@@ -93,7 +93,7 @@ paint and select the minimum-latency pipeline:
 ```
 
 The example above shows sections to edit within the complete
-[settings file](../assets/Settings.json); retain every other field, including
+[settings file](../Assets/Settings.json); retain every other field, including
 the six custom controls in `RenderPipeline`.
 
 Every declared section and field is required, even when a fixed pipeline

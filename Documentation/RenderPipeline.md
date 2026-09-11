@@ -2,7 +2,7 @@
 
 ## Presets
 
-Select a preset with `RenderPipeline.Preset` in [assets/Settings.json](../assets/Settings.json).
+Select a preset with `RenderPipeline.Preset` in [Assets/Settings.json](../Assets/Settings.json).
 Each preset supplies a fixed combination of the six pipeline settings below.
 `RenderPipeline.VSync` is chosen separately and remains independent of every preset.
 The shipped JSON selects `MinimizeInputLatency` with `"VSync": false`.
@@ -78,7 +78,7 @@ and the application implements no FPS cap or timed frame-rate limiter.
 
 `Custom` lets you supply all six pipeline settings explicitly. To start with the
 same pipeline behavior as `MaximizeFps`, set the `RenderPipeline` object in
-`assets/Settings.json` as shown below:
+`Assets/Settings.json` as shown below:
 
 ```json
 {
@@ -383,8 +383,8 @@ including across a cancelled attempt or buffer resize.
 
 ## Applying changes and reading diagnostics
 
-The application reads `assets/Settings.json` beside the executable at startup.
-Edit the repository's [source JSON](../assets/Settings.json) and launch through
+The application reads `Assets/Settings.json` beside the executable at startup.
+Edit the repository's [source JSON](../Assets/Settings.json) and launch through
 [Run.cmd](../Run.cmd) to build and stage it. Restart after configuration changes;
 the `V` key toggles only the current run's VSync state.
 
