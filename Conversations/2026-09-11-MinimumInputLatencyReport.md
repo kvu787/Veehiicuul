@@ -65,3 +65,16 @@ Both captures sustained **5,640–5,666 FPS at 2560×1440 with `MinimizeInputLat
 
 The report includes system specs, configuration evidence, charts, limitations, and reproducible analysis code saved alongside it.
 
+
+## User
+
+in report.md, rewrite the "CPU, GPU, and display timing" section using microseconds instead of milliseconds
+
+## Assistant
+
+I’ll convert that section’s values and units to microseconds and update the report generator to preserve the change when rerun.
+
+## Assistant
+
+Updated [Report.md](<C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/SavedLogOutput/2026-09-11 MinimumInputLatency/Report.md:289>) to use **microseconds (µs)** throughout that section. The report generator was updated too.
+
