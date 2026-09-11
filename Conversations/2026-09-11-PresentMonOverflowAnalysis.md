@@ -280,3 +280,26 @@ Those are **optional suggestions for what you could ask me to do next**. I haven
 I added them because the [Spreadsheets skill](C:/Users/k/.codex/plugins/cache/openai-primary-runtime/spreadsheets/26.909.12148/skills/spreadsheets/SKILL.md) instructs me to append three follow-up suggestions after analyzing a file.
 
 You can ignore them. Your PresentMon capture verification is already complete.
+
+## User
+
+explain why you recommend `--no_console_stats`
+
+## Assistant
+
+I’ll check exactly which work `--no_console_stats` skips and how that relates to the overflow.
+
+## Assistant
+
+I recommend `--no_console_stats` to avoid spending time maintaining a live console dashboard when the CSV is the output we need.
+
+In the local PresentMon 2.5.1 source, it skips:
+
+- **Updating running averages for the dashboard** for each processed frame. The CSV’s per-frame metrics are still calculated and written. [Source](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentMon/OutputThread.cpp:409).
+- **Formatting and refreshing the console display** on each output-loop iteration—potentially around ten times per second. This includes console queries, text output, and clearing old text. [Output loop](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentMon/OutputThread.cpp:608), [console implementation](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentMon/Console.cpp:195).
+
+That work runs on the **same thread that drains the completed-present queue**. Skipping it reduces unnecessary work between queue drains and can reduce measurement overhead. It does not remove the thread’s 100 ms sleep, and warnings and `--track_etw_status` messages still appear.
+
+**However, in your exact command, the flag is effectively redundant.** Because output is piped into `Tee-Object`, PresentMon detects that stdout is not a console and automatically disables console statistics anyway. Specifying the flag explicitly makes that intention clear and avoids its automatic “no_console_stats added” warning. [Detection code](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentMon/CommandLine.cpp:603).
+
+So I would keep it for clarity, but **I have not demonstrated a performance improvement from this flag alone**. The successful capture validated the combined configuration. The larger circular buffer was the change directly aimed at the overflow.
