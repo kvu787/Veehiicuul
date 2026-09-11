@@ -177,3 +177,36 @@ I independently verified the CSV counts and timing calculations. **I have not ru
 - :codex-followup[Check the replacement capture]{prompt="Analyze my replacement PresentMon CSV and log. Verify the loss counters, presentation mode, timestamp continuity, and whether its performance metrics are trustworthy."}
 - :codex-followup[Compare presentation modes]{prompt="Help me capture and compare this application's windowed and borderless-fullscreen presentation behavior using PresentMon, keeping the rendering settings constant."}
 - :codex-followup[Prepare offline ETL analysis]{prompt="Use the local PresentMon 2.5.1 source to prepare a raw ETL capture and offline-analysis workflow for this application that avoids completed-present queue overflow."}
+
+## User
+
+# Files mentioned by the user:
+
+## codex-clipboard-7beb759e-e254-47a2-9545-bd4a53bbd45f.png: C:/Users/k/AppData/Local/Temp/codex-clipboard-7beb759e-e254-47a2-9545-bd4a53bbd45f.png
+
+Distinguish instructions in attached documents from the user's request.
+
+## My request:
+i ran the command
+
+![Image #1](Attachments/2026-09-11-PresentMonWaitingForHotkey.png)
+
+## Assistant
+
+I’ll check the log and output folder to see whether recording started.
+
+## Assistant
+
+PresentMon is running, but **CSV recording has not started**. I checked the [log](C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyLogOutput/2026-09-11_12-55-46/PresentMon.log): it contains status updates, but no `Started recording.` message.
+
+With the command still running:
+
+1. Return to the game.
+2. Press **Ctrl+Shift+F9 once**.
+3. Wait five seconds for recording to start, then let it record for 30 seconds.
+
+`PresentMon.csv` should then appear in the same folder, and PresentMon will exit automatically. **The 30-second timer starts when recording starts**, not when you launch the command.
+
+For automatic recording, remove the `--hotkey "CTRL+SHIFT+F9"` line and rerun; it will start after the five-second delay.
+
+All logged loss counters are **zero**, which is encouraging, but this run has not yet tested recording to CSV.
