@@ -1,0 +1,283 @@
+Start testing: Sep 11 16:43 Pacific Daylight Time
+----------------------------------------------------------
+1/13 Testing: UVSphereGeometry
+1/13 Test: UVSphereGeometry
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/UVSphereTests.exe"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release
+"UVSphereGeometry" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+UV sphere geometry checks passed.
+<end of output>
+Test time =   0.35 sec
+----------------------------------------------------------
+Test Passed.
+"UVSphereGeometry" end time: Sep 11 16:43 Pacific Daylight Time
+"UVSphereGeometry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/13 Testing: PaintGeometryIntegration
+2/13 Test: PaintGeometryIntegration
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/PaintGeometryIntegrationTests.exe"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release
+"PaintGeometryIntegration" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+Game mesh paint validation passed.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"PaintGeometryIntegration" end time: Sep 11 16:43 Pacific Daylight Time
+"PaintGeometryIntegration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/13 Testing: SettingsContract
+3/13 Test: SettingsContract
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/SettingsTests.exe"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release
+"SettingsContract" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+Pure C++ validation and renderer preparation passed.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"SettingsContract" end time: Sep 11 16:43 Pacific Daylight Time
+"SettingsContract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/13 Testing: SettingsJsonContract
+4/13 Test: SettingsJsonContract
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/SettingsJsonTests.exe"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release
+"SettingsJsonContract" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+Typed JSON, required fields, and validated file loading passed.
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"SettingsJsonContract" end time: Sep 11 16:43 Pacific Daylight Time
+"SettingsJsonContract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/13 Testing: RenderPipelineGpuHardware
+5/13 Test: RenderPipelineGpuHardware
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/RenderPipelineGpuTests.exe"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release
+"RenderPipelineGpuHardware" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+MinimizeInputLatency | GPU:1 Present:1 Buffers:2 | Spin | Tearing:on passed
+Standard | GPU:2 Present:2 Buffers:3 | Event | Tearing:not requested passed
+MaximizeFps | GPU:3 Present:inactive Buffers:4 | Spin | Tearing:on passed
+Custom | GPU:3 Present:inactive Buffers:2 | Spin | Tearing:on passed
+Custom | GPU:1 Present:2 Buffers:3 | Event | Tearing:on passed
+Custom | GPU:1 Present:inactive Buffers:2 | Event | Tearing:not requested passed
+Custom | GPU:16 Present:16 Buffers:16 | Event | Tearing:on passed
+All render pipeline queue budgets, buffer counts, VSync changes, resize/restore, and wait cancellation checks passed.
+<end of output>
+Test time =   4.26 sec
+----------------------------------------------------------
+Test Passed.
+"RenderPipelineGpuHardware" end time: Sep 11 16:43 Pacific Daylight Time
+"RenderPipelineGpuHardware" time elapsed: 00:00:04
+----------------------------------------------------------
+
+6/13 Testing: RenderPipelineGpuWarp
+6/13 Test: RenderPipelineGpuWarp
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/RenderPipelineGpuTests.exe" "--warp"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release
+"RenderPipelineGpuWarp" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+MinimizeInputLatency | GPU:1 Present:1 Buffers:2 | Spin | Tearing:on passed
+Standard | GPU:2 Present:2 Buffers:3 | Event | Tearing:not requested passed
+MaximizeFps | GPU:3 Present:inactive Buffers:4 | Spin | Tearing:on passed
+Custom | GPU:3 Present:inactive Buffers:2 | Spin | Tearing:on passed
+Custom | GPU:1 Present:2 Buffers:3 | Event | Tearing:on passed
+Custom | GPU:1 Present:inactive Buffers:2 | Event | Tearing:not requested passed
+Custom | GPU:16 Present:16 Buffers:16 | Event | Tearing:on passed
+All render pipeline queue budgets, buffer counts, VSync changes, resize/restore, and wait cancellation checks passed.
+<end of output>
+Test time =   1.52 sec
+----------------------------------------------------------
+Test Passed.
+"RenderPipelineGpuWarp" end time: Sep 11 16:43 Pacific Daylight Time
+"RenderPipelineGpuWarp" time elapsed: 00:00:01
+----------------------------------------------------------
+
+7/13 Testing: ApplicationWindowLifecycle
+7/13 Test: ApplicationWindowLifecycle
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/ApplicationSmokeTests.exe"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release
+"ApplicationWindowLifecycle" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+Application initialization, VSync hotkeys, fullscreen, minimize/restore, and close passed.
+<end of output>
+Test time =   0.51 sec
+----------------------------------------------------------
+Test Passed.
+"ApplicationWindowLifecycle" end time: Sep 11 16:43 Pacific Daylight Time
+"ApplicationWindowLifecycle" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/13 Testing: ApplicationMaximizeFpsWindowLifecycle
+8/13 Test: ApplicationMaximizeFpsWindowLifecycle
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/ApplicationSmokeTests.exe" "--maximize-fps"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release
+"ApplicationMaximizeFpsWindowLifecycle" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+Application initialization, VSync hotkeys, fullscreen, minimize/restore, and close passed.
+<end of output>
+Test time =   0.51 sec
+----------------------------------------------------------
+Test Passed.
+"ApplicationMaximizeFpsWindowLifecycle" end time: Sep 11 16:43 Pacific Daylight Time
+"ApplicationMaximizeFpsWindowLifecycle" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/13 Testing: SimplePaintStandalone
+9/13 Test: SimplePaintStandalone
+Command: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" "-DMODULE_DIR=C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/Tests/.." "-DCONSUMER_DIR=C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/Tests/SimplePaintStandalone" "-DSMOKE_ROOT=C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/SimplePaintCopyCheck" "-DGENERATOR=Ninja" "-DCXX_COMPILER=C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe" "-DMAKE_PROGRAM=C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe" "-DCONFIGURATION=Release" "-DDXC_EXECUTABLE=C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/dxc.exe" "-DCTEST_COMMAND=C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/ctest.exe" "-P" "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/Tests/VerifySimplePaintStandalone.cmake"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests
+"SimplePaintStandalone" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (1.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/SimplePaintCopyCheck/12f5ab680851/Build
+[1/8] Generating PaintPS-3.dxil
+[2/8] Generating PaintVS-default.dxil
+[3/8] Generating PaintVS-3.dxil
+[4/8] Generating PaintPS-default.dxil
+[5/8] Building CXX object CMakeFiles\SimplePaintCopyConsumer.dir\Main.cpp.obj
+[6/8] Building CXX object SimplePaint\CMakeFiles\SimplePaint.dir\Material.cpp.obj
+[7/8] Linking CXX static library SimplePaint\SimplePaint.lib
+[8/8] Linking CXX executable SimplePaintCopyConsumer.exe
+Test project C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/SimplePaintCopyCheck/12f5ab680851/Build
+    Start 1: CopiedSimplePaint
+1/1 Test #1: CopiedSimplePaint ................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.05 sec
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.7s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/SimplePaintCopyCheck/12f5ab680851/ModuleBuild
+[1/10] Generating Generated/SimplePaintPS.h
+[2/10] Generating Generated/SimplePaintVS.h
+[3/10] Building CXX object CMakeFiles\SimplePaint.dir\Material.cpp.obj
+[4/10] Linking CXX static library SimplePaint.lib
+[5/10] Building CXX object Tests\CMakeFiles\SimplePaintTests.dir\SimplePaintTests.cpp.obj
+[6/10] Building CXX object Tests\CMakeFiles\OrthographicTransformTests.dir\OrthographicTransformTests.cpp.obj
+[7/10] Linking CXX executable Tests\SimplePaintTests.exe
+[8/10] Linking CXX executable Tests\OrthographicTransformTests.exe
+[9/10] Building CXX object Tests\CMakeFiles\SimplePaintGpuTests.dir\SimplePaintGpuTests.cpp.obj
+[10/10] Linking CXX executable Tests\SimplePaintGpuTests.exe
+Test project C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/SimplePaintCopyCheck/12f5ab680851/ModuleBuild
+    Start 1: SimplePaintContract
+1/4 Test #1: SimplePaintContract ..............   Passed    0.03 sec
+    Start 2: SimplePaintGpuHardware
+2/4 Test #2: SimplePaintGpuHardware ...........   Passed    0.33 sec
+    Start 3: SimplePaintGpuWarp
+3/4 Test #3: SimplePaintGpuWarp ...............   Passed    0.29 sec
+    Start 4: OrthographicTransforms
+4/4 Test #4: OrthographicTransforms ...........   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   0.73 sec
+<end of output>
+Test time =   5.32 sec
+----------------------------------------------------------
+Test Passed.
+"SimplePaintStandalone" end time: Sep 11 16:43 Pacific Daylight Time
+"SimplePaintStandalone" time elapsed: 00:00:05
+----------------------------------------------------------
+
+10/13 Testing: SimplePaintContract
+10/13 Test: SimplePaintContract
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/SimplePaintTests.exe"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests
+"SimplePaintContract" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+81940 curve comparisons; parameter boundaries, anchors and transform validation passed.
+20,000 independent original K12 slice/Schlick/remap comparisons passed.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"SimplePaintContract" end time: Sep 11 16:43 Pacific Daylight Time
+"SimplePaintContract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/13 Testing: SimplePaintGpuHardware
+11/13 Test: SimplePaintGpuHardware
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/SimplePaintGpuTests.exe"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests
+"SimplePaintGpuHardware" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+Adapter: NVIDIA GeForce RTX 5070 Ti Laptop GPU
+30208 production VS/PS cases passed; max linear error=0.00021466, max sRGB error=0.000112257; debug layer=checked
+<end of output>
+Test time =   0.32 sec
+----------------------------------------------------------
+Test Passed.
+"SimplePaintGpuHardware" end time: Sep 11 16:43 Pacific Daylight Time
+"SimplePaintGpuHardware" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/13 Testing: SimplePaintGpuWarp
+12/13 Test: SimplePaintGpuWarp
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/SimplePaintGpuTests.exe" "--warp"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests
+"SimplePaintGpuWarp" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+Adapter: Microsoft Basic Render Driver
+30208 production VS/PS cases passed; max linear error=0.000201116, max sRGB error=0.000105149; debug layer=checked
+<end of output>
+Test time =   0.30 sec
+----------------------------------------------------------
+Test Passed.
+"SimplePaintGpuWarp" end time: Sep 11 16:43 Pacific Daylight Time
+"SimplePaintGpuWarp" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/13 Testing: OrthographicTransforms
+13/13 Test: OrthographicTransforms
+Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/OrthographicTransformTests.exe"
+Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests
+"OrthographicTransforms" start time: Sep 11 16:43 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+4,000 packed transforms, depth endpoints passed.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"OrthographicTransforms" end time: Sep 11 16:43 Pacific Daylight Time
+"OrthographicTransforms" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 11 16:43 Pacific Daylight Time

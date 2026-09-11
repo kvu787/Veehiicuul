@@ -1,0 +1,145 @@
+{
+  "ReviewedCommit": "7a8b14d",
+  "ProductionCommit": "824a787e62f1e1678b48b3a27a5dbcd1459c4e18",
+  "Date": "2026-09-11",
+  "CaptureAudit": "All recorded rows checked. Existing verification executed with its final write disabled. Analysis functions executed without file-writing main.",
+  "CaptureResults": [
+    {
+      "Capture": "2026-09-11_13-59-13",
+      "Differences": [],
+      "Rows": 1692056,
+      "FPS": 5640.015796664094,
+      "ETW": {
+        "Samples": 303,
+        "Maximum": {
+          "BufferFillPct": 5.1,
+          "BuffersInUse": 13,
+          "TotalBuffers": 256,
+          "EventsLost": 0,
+          "BuffersLost": 0,
+          "OverflowedPresents": 0
+        },
+        "OtherLines": [
+          "Started recording.",
+          "Stopped recording."
+        ],
+        "Sha256": "bb9fd90ccc89901f4ef58075fa9b2715023ad38d03935cad207d72f3f4eb146f"
+      },
+      "Sha256ManifestsMatch": true
+    },
+    {
+      "Capture": "2026-09-11_15-18-36",
+      "Differences": [],
+      "Rows": 1699754,
+      "FPS": 5665.747242260105,
+      "ETW": {
+        "Samples": 302,
+        "Maximum": {
+          "BufferFillPct": 5.1,
+          "BuffersInUse": 13,
+          "TotalBuffers": 256,
+          "EventsLost": 0,
+          "BuffersLost": 0,
+          "OverflowedPresents": 0
+        },
+        "OtherLines": [
+          "Started recording.",
+          "Stopped recording."
+        ],
+        "Sha256": "b5dfd6021c8a7c182b574867c9bc9383ce22b5385a6e9587aecc1bfe592a5ba6"
+      },
+      "Sha256ManifestsMatch": true
+    }
+  ],
+  "IndependentStreamingResults": [
+    {
+      "Capture": "2026-09-11_13-59-13",
+      "VerifiedRows": 1692056,
+      "AverageFPS": 5640.015796664094,
+      "CompleteSeconds": 300,
+      "MinimumOneSecondFPS": 5100,
+      "MaximumOneSecondFPS": 6022,
+      "IntervalSumTicks": 3000089115,
+      "Status": "Passed"
+    },
+    {
+      "Capture": "2026-09-11_15-18-36",
+      "VerifiedRows": 1699754,
+      "AverageFPS": 5665.747242260105,
+      "CompleteSeconds": 300,
+      "MinimumOneSecondFPS": 5150,
+      "MaximumOneSecondFPS": 6029,
+      "IntervalSumTicks": 3000050880,
+      "Status": "Passed"
+    }
+  ],
+  "ContextAndExecutableHashesBeforeTests": [
+    {
+      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\Application.log",
+      "ManifestMatches": true
+    },
+    {
+      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\Launcher.log",
+      "ManifestMatches": true
+    },
+    {
+      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\Settings.json",
+      "ManifestMatches": true
+    },
+    {
+      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\CMakeCache.txt",
+      "ManifestMatches": true
+    },
+    {
+      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\build.ninja",
+      "ManifestMatches": true
+    },
+    {
+      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\MyBuildOutput\\Release\\SimpleDirectX12Game.exe",
+      "ManifestMatches": true
+    },
+    {
+      "Path": "C:\\Users\\k\\Program\\PresentMon-2.5.1-x64.exe",
+      "ManifestMatches": true
+    }
+  ],
+  "ReportProbe": {
+    "SyntheticAverageFPS": 100,
+    "SyntheticSecondsAtLeast5000": 0,
+    "SyntheticEventsLost": 123,
+    "SyntheticOverflowedPresents": 456,
+    "SyntheticPresentMode": "Composed: Flip",
+    "GeneratorSucceeded": true,
+    "Incorrect5000FPSClaimRetained": true,
+    "IncorrectZeroLossClaimRetained": true,
+    "IncorrectZeroTransitionClaimRetained": true,
+    "OriginalFilesChanged": false
+  },
+  "Tests": {
+    "Release": {
+      "Passed": 13,
+      "Failed": 0,
+      "DurationSeconds": 13.42,
+      "SessionDirectory": "MyLogOutput/2026-09-11_16-43-07",
+      "Evidence": "ReleaseTests.log"
+    },
+    "Debug": {
+      "Passed": 13,
+      "Failed": 0,
+      "DurationSeconds": 13.41,
+      "SessionDirectory": "MyLogOutput/2026-09-11_16-44-31",
+      "Evidence": "DebugTests.log"
+    }
+  },
+  "ReportChecks": {
+    "LocalLinks": 14,
+    "AlignedTables": 9,
+    "PythonSyntax": "Passed"
+  },
+  "VendoredJsonHeaderSha256": "AAF127C04CB31C406E5B04A63F1AE89369FCCDE6D8FA7CDDA1ED4F32DFC5DE63",
+  "Limits": [
+    "No new performance capture or input-to-photon measurement performed.",
+    "No production source, settings or archived capture files edited.",
+    "Preserved context and fingerprints provide consistency checks, not capture-time attestation."
+  ]
+}
