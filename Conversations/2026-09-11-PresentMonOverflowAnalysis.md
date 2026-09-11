@@ -83,3 +83,97 @@ No. I did not read that CSV; my recommendation was based on the screenshot and s
 ## Assistant
 
 No. I did not read that CSV. The **65,536 buffer recommendation was based on the source code**, and I had not validated it against the captured frame data.
+
+## User
+
+take into account "C:\Users\k\Downloads\2026-09-11_12-35-07 SimpleDirectX12Game.csv" which was outputted from the screenshotted command, redo your analysis, and output a final answer
+
+## Assistant
+
+I’ll use the Spreadsheets skill to analyze the CSV, compare its gaps and frame timings with PresentMon’s source, and revise the capture recommendation based on that evidence.
+
+## Assistant
+
+The CSV shows a strong pattern: 84,215 rows over 38.42 seconds, with most later seconds retaining only about 2,000 rows despite typical present intervals near 0.17 ms. It also contains repeated gaps around 0.6 seconds. I’m checking how much of that pattern comes from lost capture records before interpreting it as game stutter.
+
+## Assistant
+
+The source and CSV now point to bursts of records overwhelming the 2,048-entry queue. Thirty-five of the 39 blocks between large gaps contain 2,000–2,048 rows, and block endings recur about once per second. That is consistent with ETW’s default flush interval. My earlier emphasis on the 100 ms output-thread sleep was incomplete: at the observed rate, smooth delivery over 100 ms would not fill the queue.
+
+## Assistant
+
+The capture also switches from composed presentation to independent flip around 12.73 seconds, so combining the whole file would mix two display behaviors. I’ll recommend starting the capture with a hotkey after the game is settled, and adding PresentMon’s loss counters so the next CSV can show whether the capture stayed clean.
+
+## Assistant
+
+I read **all 84,215 data rows** in your [CSV](<C:/Users/k/Downloads/2026-09-11_12-35-07 SimpleDirectX12Game.csv>) and rechecked the local PresentMon 2.5.1 source.
+
+**This capture shows substantial record loss. I still recommend a 65,536-entry buffer, but the evidence now points specifically to bursts overwhelming the default queue. The CSV should not be used for reliable average FPS, stutter percentiles, or latency summaries.**
+
+| Observation                         | Result                                      |
+| ----------------------------------- | ------------------------------------------- |
+| Time covered by retained rows       | 38.4188 seconds                             |
+| Process / swap chains               | PID 11708 / one swap chain                  |
+| Median `MsBetweenPresents`           | 0.1719 ms                                   |
+| Gaps exceeding 100 ms               | 38                                          |
+| Median / largest such gap           | 635.944 ms / 1,642.642 ms                    |
+| Blocks between those gaps           | 35 of 39 contain 2,000–2,048 rows            |
+| Rows retained per elapsed second    | About 2,192                                 |
+
+The median interval corresponds to roughly **5,817 presents/second among the surviving measurements**. That is not a trustworthy whole-run FPS estimate. The repeated blocks near 2,048 rows—the default buffer capacity—are strong evidence of capture truncation.
+
+For example, CSV rows **25,499–25,500** jump from **9,953.9275 ms to 11,596.5690 ms**. The next row reports:
+
+- `MsBetweenPresents`: **1,642.6415 ms**
+- `MsCPUBusy`: **1,642.5511 ms**
+- `MsInPresentAPI`: **0.0662 ms**
+- `MsGPUBusy`: **0.1072 ms**
+
+Those large CPU/frame-time values do **not establish a 1.64-second game stall**. PresentMon calculates the interval from the previous present available to its metrics calculator, and derives CPU start from the previous present’s end. Missing records therefore contaminate these calculations. The CSV cannot recover the missing work or distinguish every capture gap from a real pause. See [interval calculation](C:/Users/k/Repository/External/PresentMon_2-5-1/IntelPresentMon/CommonUtilities/mc/MetricsCalculatorAnimation.cpp:148) and [CPU-start calculation](C:/Users/k/Repository/External/PresentMon_2-5-1/IntelPresentMon/CommonUtilities/mc/MetricsCalculator.cpp:317).
+
+My earlier explanation placed too much emphasis on the output thread’s **100 ms sleep**. At approximately 5,800 presents/second, smooth delivery would produce only about 580 records in 100 ms. Here, block endings recur around **1.006 seconds** apart. PresentMon leaves ETW’s flush timer at zero, which means a **one-second default for real-time sessions**. Together, these facts support burst delivery as the explanation, although the CSV does not record callback arrival times and cannot prove the exact scheduling sequence. See [session initialization](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentData/PresentMonTraceSession.cpp:484) and [Microsoft’s flush-timer documentation](https://learn.microsoft.com/en-us/windows/win32/api/evntrace/ns-evntrace-event_trace_properties#members).
+
+The screenshot’s **136,997** counts overwrites in PresentMon’s completed-present queue. It is cumulative, and name filtering occurs later, so some counted records can belong to other processes. It is neither a required buffer size nor an exact game-frame loss count. [Overflow implementation](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentData/PresentMonTraceConsumer.cpp:2331).
+
+There is also a separate measurement issue: around **12.73 seconds**, presentation changes from `Composed: Flip` to `Hardware: Independent Flip`, with one intermediate hardware-composed frame. `AllowsTearing` changes from 0 to 1, while `SyncInterval` remains 0 throughout. Capture the desired presentation mode separately instead of combining these behaviors into one benchmark.
+
+For this application, use:
+
+- **PID filtering** to reduce records entering PresentMon’s consumer. DWM tracking remains available. [Source](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentMon/MainThread.cpp:322).
+- **65,536 entries** for substantial burst headroom. The warning’s fixed suggestion of 4,096 is not robust for several thousand presents arriving together. The exact smallest sufficient size still requires a clean repeat.
+- **A hotkey and fixed duration**, with GPU/display tracking retained and loss counters enabled.
+
+Launch one game instance, then run this in **Administrator PowerShell**:
+
+```powershell
+$gameProcesses = @(Get-Process -Name SimpleDirectX12Game -ErrorAction Stop)
+if ($gameProcesses.Count -ne 1) { throw 'Run exactly one game instance.' }
+$gameProcessId = $gameProcesses[0].Id
+$captureTimestamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
+$captureDirectory = "$env:UserProfile\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyLogOutput\$captureTimestamp"
+New-Item -ItemType Directory -Path $captureDirectory | Out-Null
+
+& "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
+    --process_id $gameProcessId `
+    --session_name "SimpleDirectX12Game-$captureTimestamp" `
+    --set_circular_buffer_size 65536 `
+    --no_console_stats `
+    --track_etw_status `
+    --hotkey "CTRL+SHIFT+F9" `
+    --delay 5 --timed 30 --terminate_after_timed `
+    --terminate_on_proc_exit `
+    --output_file "$captureDirectory\PresentMon.csv" `
+    2>&1 | Tee-Object -FilePath "$captureDirectory\PresentMon.log"
+```
+
+Return to the game, select the intended window/fullscreen mode, let it settle, and press **Ctrl+Shift+F9**. Recording starts five seconds later and lasts 30 seconds. Keep VSync, presentation mode, and the rendering preset unchanged during that capture.
+
+`--track_etw_status` is a supported but hidden 2.5.1 option; I verified that your executable accepts it. It adds `EtwEventsLost`, `EtwBuffersLost`, and `OverflowedPresents` to the CSV and prints status once per second. Require all three to remain **zero**, and check the final warning log too. [Counter output](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentMon/CsvOutput.cpp:505).
+
+Keep frames that were not displayed—do not add `--exclude_dropped`. If overflow persists with this configuration, investigate with a raw ETL capture and offline analysis; the local source supports backpressure during offline processing. Increasing buffer capacity cannot solve a sustained processing bottleneck indefinitely.
+
+I independently verified the CSV counts and timing calculations. **I have not run the replacement capture, so 65,536 remains a justified recommendation rather than a demonstrated loss-free setting.**
+
+- :codex-followup[Check the replacement capture]{prompt="Analyze my replacement PresentMon CSV and log. Verify the loss counters, presentation mode, timestamp continuity, and whether its performance metrics are trustworthy."}
+- :codex-followup[Compare presentation modes]{prompt="Help me capture and compare this application's windowed and borderless-fullscreen presentation behavior using PresentMon, keeping the rendering settings constant."}
+- :codex-followup[Prepare offline ETL analysis]{prompt="Use the local PresentMon 2.5.1 source to prepare a raw ETL capture and offline-analysis workflow for this application that avoids completed-present queue overflow."}
