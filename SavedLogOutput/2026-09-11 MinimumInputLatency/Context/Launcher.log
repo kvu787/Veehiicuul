@@ -1,0 +1,27 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260911135905
+Username: DESKTOP-E37L44C\k
+RunAs User: DESKTOP-E37L44C\k
+Configuration Name: 
+Machine: DESKTOP-E37L44C (Microsoft Windows NT 10.0.26200.0)
+Host Application: powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Run.ps1
+Process ID: 2552
+PSVersion: 5.1.26100.9444
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9444
+BuildVersion: 10.0.26100.9444
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Session logs: C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyLogOutput\2026-09-11_13-59-05
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release
+[1/1] Staging runtime image and paint settings
+**********************
+Windows PowerShell transcript end
+End time: 20260911152407
+**********************

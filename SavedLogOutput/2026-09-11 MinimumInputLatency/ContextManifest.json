@@ -1,0 +1,53 @@
+[
+  {
+    "Source": "MyLogOutput\\2026-09-11_13-59-05\\Application.log",
+    "Snapshot": "Context/Application.log",
+    "Length": 73,
+    "LastWriteTime": "2026-09-11T15:24:07.5433645-07:00",
+    "Sha256": "17AEC8A5DF942F29FF508F5980939F4E92406F4FD35ADDF4C965165B391F5263"
+  },
+  {
+    "Source": "MyLogOutput\\2026-09-11_13-59-05\\Launcher.log",
+    "Snapshot": "Context/Launcher.log",
+    "Length": 1116,
+    "LastWriteTime": "2026-09-11T15:24:07.5540321-07:00",
+    "Sha256": "3AC3CDE6AC1EE02086A60609EB48D98171083E2F992C651849DC5D9D9E497620"
+  },
+  {
+    "Source": "MyBuildOutput\\Release\\Assets\\Settings.json",
+    "Snapshot": "Context/Settings.json",
+    "Length": 1626,
+    "LastWriteTime": "2026-09-11T11:57:36.1407556-07:00",
+    "Sha256": "BBEDAF3D29DA7F240E1785E5DA60C13303774BE55C22CA96D67421D1BFBED2C6"
+  },
+  {
+    "Source": "MyBuildOutput\\Release\\CMakeCache.txt",
+    "Snapshot": "Context/CMakeCache.txt",
+    "Length": 16795,
+    "LastWriteTime": "2026-09-11T11:57:35.8888719-07:00",
+    "Sha256": "70AC4046D15FAA99FDBFE5F795388973BBCB4252A64B5B56F08AD384C5E783D6"
+  },
+  {
+    "Source": "MyBuildOutput\\Release\\build.ninja",
+    "Snapshot": "Context/build.ninja",
+    "Length": 100129,
+    "LastWriteTime": "2026-09-11T13:59:06.3230438-07:00",
+    "Sha256": "11F08B18447799E4836F9FF5A26BC288B59E9D3B6D86DCDBE0CB512D1FBC9719"
+  },
+  {
+    "Source": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\MyBuildOutput\\Release\\SimpleDirectX12Game.exe",
+    "Length": 524288,
+    "LastWriteTime": "2026-09-11T12:00:59.2101202-07:00",
+    "Sha256": "156EF78C39EDDC2496C5FA234D026035D6147750B83E2B553797C26E307F1820",
+    "FileVersion": null,
+    "ProductVersion": null
+  },
+  {
+    "Source": "C:\\Users\\k\\Program\\PresentMon-2.5.1-x64.exe",
+    "Length": 956768,
+    "LastWriteTime": "2026-08-27T09:16:36.8502597-07:00",
+    "Sha256": "9BEC3083069F58F911E6A512F4806DB51A27BD096103087BC1D05EF54C80A191",
+    "FileVersion": null,
+    "ProductVersion": null
+  }
+]

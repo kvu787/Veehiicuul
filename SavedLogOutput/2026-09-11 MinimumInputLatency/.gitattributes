@@ -1,0 +1,3 @@
+# Keep diagnostic and copied provenance files byte-for-byte through Git checkout.
+Context/** -text
+DirectXDiagnostics.txt -text
