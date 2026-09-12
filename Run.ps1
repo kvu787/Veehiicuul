@@ -107,13 +107,13 @@ try {
         Invoke-Checked (Join-Path (Split-Path $cmake) 'ctest.exe') --test-dir $buildDirectory --output-on-failure
     }
     elseif (-not $BuildOnly) {
-        $previousLogDirectory = $env:SIMPLE_DIRECTX12_LOG_DIRECTORY
+        $previousLogDirectory = $env:VEEHIICUUL_LOG_DIRECTORY
         try {
-            $env:SIMPLE_DIRECTX12_LOG_DIRECTORY = $logFolderPath
-            $applicationProcess = Start-Process -FilePath (Join-Path $buildDirectory 'SimpleDirectX12Game.exe') -PassThru
+            $env:VEEHIICUUL_LOG_DIRECTORY = $logFolderPath
+            $applicationProcess = Start-Process -FilePath (Join-Path $buildDirectory 'Veehiicuul.exe') -PassThru
         }
         finally {
-            $env:SIMPLE_DIRECTX12_LOG_DIRECTORY = $previousLogDirectory
+            $env:VEEHIICUUL_LOG_DIRECTORY = $previousLogDirectory
         }
         $applicationProcess.WaitForExit()
         if ($applicationProcess.ExitCode -ne 0) {

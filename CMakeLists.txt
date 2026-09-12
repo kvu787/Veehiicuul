@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(SimpleDirectX12Game LANGUAGES CXX)
+project(Veehiicuul LANGUAGES CXX)
 
 find_program(DXC_EXECUTABLE NAMES dxc.exe dxc)
 if(NOT DXC_EXECUTABLE AND DEFINED ENV{WindowsSdkVerBinPath})
@@ -95,7 +95,7 @@ foreach(target SettingsValidation RenderPreparation PlatformPaths Settings)
 endforeach()
 
 set(CAR_MESH_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/Source/Generated/CarMesh.generated.h")
-add_executable(SimpleDirectX12Game WIN32
+add_executable(Veehiicuul WIN32
     ${SHADER_HEADERS}
     ${BACKGROUND_SHADER_SOURCE}
     ${SIMPLE_PAINT_SHADER_SOURCE}
@@ -108,29 +108,29 @@ add_executable(SimpleDirectX12Game WIN32
     Source/UVSphere.h
 )
 
-add_dependencies(SimpleDirectX12Game CompiledShaders)
+add_dependencies(Veehiicuul CompiledShaders)
 set_source_files_properties(
     "${BACKGROUND_SHADER_SOURCE}"
     "${SIMPLE_PAINT_SHADER_SOURCE}"
     PROPERTIES HEADER_FILE_ONLY TRUE
 )
-target_include_directories(SimpleDirectX12Game PRIVATE "${SHADER_GENERATED_DIRECTORY}")
+target_include_directories(Veehiicuul PRIVATE "${SHADER_GENERATED_DIRECTORY}")
 
 set(BACKGROUND_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/Assets/SceneBackground.png")
 set(GAME_SETTINGS "${CMAKE_CURRENT_SOURCE_DIR}/Assets/Settings.json")
 add_custom_target(RuntimeAssets ALL
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:SimpleDirectX12Game>/assets"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:Veehiicuul>/assets"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
         "${BACKGROUND_IMAGE}"
-        "$<TARGET_FILE_DIR:SimpleDirectX12Game>/Assets/SceneBackground.png"
+        "$<TARGET_FILE_DIR:Veehiicuul>/Assets/SceneBackground.png"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
         "${GAME_SETTINGS}"
-        "$<TARGET_FILE_DIR:SimpleDirectX12Game>/Assets/Settings.json"
+        "$<TARGET_FILE_DIR:Veehiicuul>/Assets/Settings.json"
     DEPENDS "${BACKGROUND_IMAGE}" "${GAME_SETTINGS}"
     COMMENT "Staging runtime image and paint settings"
     VERBATIM
 )
-add_dependencies(SimpleDirectX12Game RuntimeAssets)
+add_dependencies(Veehiicuul RuntimeAssets)
 
 find_program(BLENDER_EXECUTABLE
     NAMES blender.exe
@@ -157,8 +157,8 @@ if(BLENDER_EXECUTABLE)
     )
 endif()
 
-target_compile_features(SimpleDirectX12Game PRIVATE cxx_std_20)
-target_compile_definitions(SimpleDirectX12Game PRIVATE
+target_compile_features(Veehiicuul PRIVATE cxx_std_20)
+target_compile_definitions(Veehiicuul PRIVATE
     APPLICATION_LOG_ROOT=L"${CMAKE_SOURCE_DIR}/MyLogOutput"
     NOMINMAX
     UNICODE
@@ -168,7 +168,7 @@ target_compile_definitions(SimpleDirectX12Game PRIVATE
 )
 
 if(MSVC)
-    target_compile_options(SimpleDirectX12Game PRIVATE
+    target_compile_options(Veehiicuul PRIVATE
         /W4
         /permissive-
         /EHsc
@@ -176,7 +176,7 @@ if(MSVC)
     )
 endif()
 
-target_link_libraries(SimpleDirectX12Game PRIVATE
+target_link_libraries(Veehiicuul PRIVATE
     Settings RenderPreparation PlatformPaths
     d3d12
     dxgi
@@ -184,7 +184,7 @@ target_link_libraries(SimpleDirectX12Game PRIVATE
     windowscodecs
 )
 
-set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT SimpleDirectX12Game)
+set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT Veehiicuul)
 
 if(BUILD_TESTING)
     add_executable(UVSphereTests Tests/UVSphereTests.cpp)

@@ -104,7 +104,7 @@ void Application::CreateMainWindow(HINSTANCE instance, const int showCommand)
     m_window = CreateWindowExW(
         0,
         WindowClassName,
-        L"Simple DirectX 12 Car",
+        L"Veehiicuul",
         windowStyle,
         CW_USEDEFAULT,
         CW_USEDEFAULT,
@@ -297,7 +297,7 @@ void Application::UpdateWindowTitle() const
     wchar_t title[512]{};
     swprintf_s(
         title,
-        L"Simple DirectX 12 Car | %s | VSync: %s | %s | V: VSync  F11: fullscreen  Esc: quit",
+        L"Veehiicuul | %s | VSync: %s | %s | V: VSync  F11: fullscreen  Esc: quit",
         m_renderer.RenderPipelineDescription().c_str(),
         vsyncState,
         displayState);

@@ -37,7 +37,7 @@ int main(int argc, char** argv)
             if (!wait([&] { EnumThreadWindows(uiThread, [](HWND candidate, LPARAM target) -> BOOL {
                     wchar_t name[128]{};
                     GetClassNameW(candidate, name, 128);
-                    if (std::wstring_view(name) != L"SimpleDirectX12GameWindow") return TRUE;
+                    if (std::wstring_view(name) != L"VeehiicuulWindow") return TRUE;
                     *reinterpret_cast<HWND*>(target) = candidate;
                     return FALSE;
                 }, reinterpret_cast<LPARAM>(&window));

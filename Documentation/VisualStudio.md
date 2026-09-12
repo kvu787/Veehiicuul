@@ -21,10 +21,7 @@ For Direct3D validation during development, search Windows Settings for **Option
 
 1. Start Visual Studio.
 2. Choose **Open a local folder** on the start screen, or **File > Open > Folder**.
-3. Open:
-   ```text
-   C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game
-   ```
+3. Open the Veehiicuul repository folder containing `Run.cmd` and the root `CMakeLists.txt`.
 4. Confirm that Solution Explorer contains the root `CMakeLists.txt`, `Source`, `assets`, and `tests`.
 5. Allow the initial CMake configuration and IntelliSense indexing to finish.
 
@@ -106,7 +103,7 @@ The first CMake configure checks the compiler and locates DXC. Configuration gen
 
 1. Choose **Build > Build All**.
 2. Open **View > Output** and inspect the build output if anything fails.
-3. In the startup-item dropdown beside the green run button, select **SimpleDirectX12Game.exe**. Some views show the target as **SimpleDirectX12Game**.
+3. In the startup-item dropdown beside the green run button, select **Veehiicuul.exe**. Some views show the target as **Veehiicuul**.
 4. Press **F5** to build as needed and launch under the debugger.
 5. Press **Ctrl+F5** to launch without the debugger.
 
@@ -115,7 +112,7 @@ There are several test executables. Select the game explicitly. In Solution Expl
 The Debug executable is:
 
 ```text
-out/build/vs-debug/SimpleDirectX12Game.exe
+out/build/vs-debug/Veehiicuul.exe
 ```
 
 Its adjacent `assets` folder should contain `Settings.json` and `SceneBackground.png`. The game locates these relative to its executable, so its working directory normally needs no adjustment.
@@ -194,7 +191,7 @@ In Visual Studio, use **Test > Run CTests for ...** or **Test > Run Test Preset 
 Open the installed Visual Studio's **x64 Native Tools Command Prompt** from Start. This supplies the x64 MSVC environment; the preset alone does not initialize that environment in a normal terminal.
 
 ```bat
-cd /d C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game
+cd /d "<path to the Veehiicuul repository>"
 cmake --preset vs-debug
 cmake --build --preset vs-debug
 ctest --preset vs-debug
@@ -228,7 +225,7 @@ Switch to **Windows x64 Release**, build, select the game, then use **Ctrl+F5** 
 Release with the presets produces:
 
 ```text
-out/build/vs-release/SimpleDirectX12Game.exe
+out/build/vs-release/Veehiicuul.exe
 ```
 
 Double-clicking `Run.cmd` independently builds and launches Release in `MyBuildOutput/Release`. It does not use whichever preset is active in Visual Studio.

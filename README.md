@@ -1,4 +1,4 @@
-# Simple DirectX 12 3D Car Scene
+# Veehiicuul
 
 A native Win32/C++ DirectX 12 scene with an orthographic camera and SimplePaint shading.
 
@@ -84,7 +84,7 @@ Build prerequisites:
   and
 - a current Windows SDK containing the DirectX Shader Compiler (`dxc.exe`).
 
-The generated executable is `MyBuildOutput\Release\SimpleDirectX12Game.exe`. CMake
+The generated executable is `MyBuildOutput\Release\Veehiicuul.exe`. CMake
 places `SceneBackground.png` and `Settings.json` in its adjacent `Assets`
 directory.
 
@@ -205,16 +205,16 @@ at runtime.
 # [temp] PresentMon
 
 ```powershell
-$gameProcesses = @(Get-Process -Name SimpleDirectX12Game -ErrorAction Stop)
+$gameProcesses = @(Get-Process -Name Veehiicuul -ErrorAction Stop)
 if ($gameProcesses.Count -ne 1) { throw 'Run exactly one game instance.' }
 $gameProcessId = $gameProcesses[0].Id
 $captureTimestamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
-$captureDirectory = "$env:UserProfile\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyLogOutput\$captureTimestamp"
+$captureDirectory = Join-Path $PWD "MyLogOutput\$captureTimestamp"
 New-Item -ItemType Directory -Path $captureDirectory | Out-Null
 
 & "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
     --process_id $gameProcessId `
-    --session_name "SimpleDirectX12Game-$captureTimestamp" `
+    --session_name "Veehiicuul-$captureTimestamp" `
     --set_circular_buffer_size 65536 `
     --no_console_stats `
     --track_etw_status `
@@ -225,7 +225,7 @@ New-Item -ItemType Directory -Path $captureDirectory | Out-Null
 & "C:\Program Files\Git\usr\bin\winpty.exe" -Xallow-non-tty -Xplain `
     "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
     --process_id $gameProcessId `
-    --session_name "SimpleDirectX12Game-$captureTimestamp" `
+    --session_name "Veehiicuul-$captureTimestamp" `
     --set_circular_buffer_size 65536 `
     --no_console_stats `
     --track_etw_status `

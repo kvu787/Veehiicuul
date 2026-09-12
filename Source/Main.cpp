@@ -20,7 +20,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, const int showCommand)
         std::filesystem::path logDirectory;
         wchar_t* configuredDirectory = nullptr;
         std::size_t length = 0;
-        if (_wdupenv_s(&configuredDirectory, &length, L"SIMPLE_DIRECTX12_LOG_DIRECTORY") != 0)
+        if (_wdupenv_s(&configuredDirectory, &length, L"VEEHIICUUL_LOG_DIRECTORY") != 0)
             throw std::runtime_error("Could not read the session log directory.");
         if (configuredDirectory && *configuredDirectory)
             logDirectory = configuredDirectory;
@@ -48,7 +48,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, const int showCommand)
     catch (const std::exception& error)
     {
         if (log) log << "Error: " << error.what() << std::endl;
-        MessageBoxA(nullptr, error.what(), "Simple DirectX 12 Car", MB_OK | MB_ICONERROR);
+        MessageBoxA(nullptr, error.what(), "Veehiicuul", MB_OK | MB_ICONERROR);
         return EXIT_FAILURE;
     }
 }

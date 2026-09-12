@@ -23,7 +23,7 @@ private:
     void ToggleFullscreen();
     void UpdateWindowTitle() const;
 
-    static constexpr wchar_t WindowClassName[] = L"SimpleDirectX12GameWindow";
+    static constexpr wchar_t WindowClassName[] = L"VeehiicuulWindow";
 
     HWND m_window = nullptr;
     Renderer m_renderer;
