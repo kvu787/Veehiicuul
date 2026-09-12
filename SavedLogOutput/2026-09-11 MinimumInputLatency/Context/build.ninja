@@ -11,7 +11,7 @@
 # =============================================================================
 
 # =============================================================================
-# Project: SimpleDirectX12Game
+# Project: Veehiicuul
 # Configurations: Release
 # =============================================================================
 
@@ -39,7 +39,7 @@ include CMakeFiles\rules.ninja
 #############################################
 # Logical path to working directory; prefix for absolute paths.
 
-cmake_ninja_workdir = C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\
+cmake_ninja_workdir = .\MyBuildOutput\Release\
 
 #############################################
 # Utility command for CompiledShaders
@@ -223,11 +223,11 @@ build ContinuousSubmit: phony CMakeFiles\ContinuousSubmit
 
 build cmake_object_order_depends_target_SettingsValidation: phony || cmake_object_order_depends_target_SimplePaint
 
-build CMakeFiles\SettingsValidation.dir\Source\SettingsValidation.cpp.obj: CXX_COMPILER__SettingsValidation_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SettingsValidation.cpp || cmake_object_order_depends_target_SettingsValidation
+build CMakeFiles\SettingsValidation.dir\Source\SettingsValidation.cpp.obj: CXX_COMPILER__SettingsValidation_unscanned_Release .\Source\SettingsValidation.cpp || cmake_object_order_depends_target_SettingsValidation
   CONFIG = Release
   DEFINES = -DNOMINMAX -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\Source -I.\Source\SimplePaint\..
   OBJECT_DIR = CMakeFiles\SettingsValidation.dir
   OBJECT_FILE_DIR = CMakeFiles\SettingsValidation.dir\Source
   TARGET_COMPILE_PDB = CMakeFiles\SettingsValidation.dir\SettingsValidation.pdb
@@ -263,11 +263,11 @@ build SettingsValidation.lib: CXX_STATIC_LIBRARY_LINKER__SettingsValidation_Rele
 
 build cmake_object_order_depends_target_RenderPreparation: phony || cmake_object_order_depends_target_SettingsValidation cmake_object_order_depends_target_SimplePaint
 
-build CMakeFiles\RenderPreparation.dir\Source\RenderPreparation.cpp.obj: CXX_COMPILER__RenderPreparation_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\RenderPreparation.cpp || cmake_object_order_depends_target_RenderPreparation
+build CMakeFiles\RenderPreparation.dir\Source\RenderPreparation.cpp.obj: CXX_COMPILER__RenderPreparation_unscanned_Release .\Source\RenderPreparation.cpp || cmake_object_order_depends_target_RenderPreparation
   CONFIG = Release
   DEFINES = -DNOMINMAX -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\Source -I.\Source\SimplePaint\..
   OBJECT_DIR = CMakeFiles\RenderPreparation.dir
   OBJECT_FILE_DIR = CMakeFiles\RenderPreparation.dir\Source
   TARGET_COMPILE_PDB = CMakeFiles\RenderPreparation.dir\RenderPreparation.pdb
@@ -303,11 +303,11 @@ build RenderPreparation.lib: CXX_STATIC_LIBRARY_LINKER__RenderPreparation_Releas
 
 build cmake_object_order_depends_target_PlatformPaths: phony || .
 
-build CMakeFiles\PlatformPaths.dir\Source\PlatformPaths.cpp.obj: CXX_COMPILER__PlatformPaths_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\PlatformPaths.cpp || cmake_object_order_depends_target_PlatformPaths
+build CMakeFiles\PlatformPaths.dir\Source\PlatformPaths.cpp.obj: CXX_COMPILER__PlatformPaths_unscanned_Release .\Source\PlatformPaths.cpp || cmake_object_order_depends_target_PlatformPaths
   CONFIG = Release
   DEFINES = -DNOMINMAX -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source
+  INCLUDES = -I.\Source
   OBJECT_DIR = CMakeFiles\PlatformPaths.dir
   OBJECT_FILE_DIR = CMakeFiles\PlatformPaths.dir\Source
   TARGET_COMPILE_PDB = CMakeFiles\PlatformPaths.dir\PlatformPaths.pdb
@@ -343,11 +343,11 @@ build PlatformPaths.lib: CXX_STATIC_LIBRARY_LINKER__PlatformPaths_Release CMakeF
 
 build cmake_object_order_depends_target_Settings: phony || cmake_object_order_depends_target_SettingsValidation cmake_object_order_depends_target_SimplePaint
 
-build CMakeFiles\Settings.dir\Source\Settings.cpp.obj: CXX_COMPILER__Settings_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\Settings.cpp || cmake_object_order_depends_target_Settings
+build CMakeFiles\Settings.dir\Source\Settings.cpp.obj: CXX_COMPILER__Settings_unscanned_Release .\Source\Settings.cpp || cmake_object_order_depends_target_Settings
   CONFIG = Release
   DEFINES = -DJSON_USE_IMPLICIT_CONVERSIONS=0 -DNOMINMAX -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\.. -external:IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\ThirdParty\nlohmann_json\include -external:W0
+  INCLUDES = -I.\Source -I.\Source\SimplePaint\.. -external:I.\ThirdParty\nlohmann_json\include -external:W0
   OBJECT_DIR = CMakeFiles\Settings.dir
   OBJECT_FILE_DIR = CMakeFiles\Settings.dir\Source
   TARGET_COMPILE_PDB = CMakeFiles\Settings.dir\Settings.pdb
@@ -375,68 +375,68 @@ build Settings.lib: CXX_STATIC_LIBRARY_LINKER__Settings_Release CMakeFiles\Setti
   TARGET_SUPPORT_DIR = CMakeFiles\Settings.dir
 
 # =============================================================================
-# Object build statements for EXECUTABLE target SimpleDirectX12Game
+# Object build statements for EXECUTABLE target Veehiicuul
 
 
 #############################################
-# Order-only phony target for SimpleDirectX12Game
+# Order-only phony target for Veehiicuul
 
-build cmake_object_order_depends_target_SimpleDirectX12Game: phony || CompiledShaders Generated\Shaders\BackgroundPS.dxil Generated\Shaders\BackgroundPS.h Generated\Shaders\BackgroundVS.dxil Generated\Shaders\BackgroundVS.h Generated\Shaders\SimplePaintPS.dxil Generated\Shaders\SimplePaintPS.h Generated\Shaders\SimplePaintVS.dxil Generated\Shaders\SimplePaintVS.h RuntimeAssets cmake_object_order_depends_target_PlatformPaths cmake_object_order_depends_target_RenderPreparation cmake_object_order_depends_target_Settings cmake_object_order_depends_target_SettingsValidation cmake_object_order_depends_target_SimplePaint
+build cmake_object_order_depends_target_Veehiicuul: phony || CompiledShaders Generated\Shaders\BackgroundPS.dxil Generated\Shaders\BackgroundPS.h Generated\Shaders\BackgroundVS.dxil Generated\Shaders\BackgroundVS.h Generated\Shaders\SimplePaintPS.dxil Generated\Shaders\SimplePaintPS.h Generated\Shaders\SimplePaintVS.dxil Generated\Shaders\SimplePaintVS.h RuntimeAssets cmake_object_order_depends_target_PlatformPaths cmake_object_order_depends_target_RenderPreparation cmake_object_order_depends_target_Settings cmake_object_order_depends_target_SettingsValidation cmake_object_order_depends_target_SimplePaint
 
-build CMakeFiles\SimpleDirectX12Game.dir\Source\Application.cpp.obj: CXX_COMPILER__SimpleDirectX12Game_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\Application.cpp || cmake_object_order_depends_target_SimpleDirectX12Game
+build CMakeFiles\Veehiicuul.dir\Source\Application.cpp.obj: CXX_COMPILER__Veehiicuul_unscanned_Release .\Source\Application.cpp || cmake_object_order_depends_target_Veehiicuul
   CONFIG = Release
-  DEFINES = -DAPPLICATION_LOG_ROOT=L\"C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyLogOutput\" -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
+  DEFINES = -DAPPLICATION_LOG_ROOT=L\"./MyLogOutput\" -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /permissive- /EHsc /Zc:__cplusplus
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Generated\Shaders -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
-  OBJECT_DIR = CMakeFiles\SimpleDirectX12Game.dir
-  OBJECT_FILE_DIR = CMakeFiles\SimpleDirectX12Game.dir\Source
-  TARGET_COMPILE_PDB = CMakeFiles\SimpleDirectX12Game.dir\
-  TARGET_PDB = SimpleDirectX12Game.pdb
-  TARGET_SUPPORT_DIR = CMakeFiles\SimpleDirectX12Game.dir
+  INCLUDES = -I.\MyBuildOutput\Release\Generated\Shaders -I.\Source -I.\Source\SimplePaint\..
+  OBJECT_DIR = CMakeFiles\Veehiicuul.dir
+  OBJECT_FILE_DIR = CMakeFiles\Veehiicuul.dir\Source
+  TARGET_COMPILE_PDB = CMakeFiles\Veehiicuul.dir\
+  TARGET_PDB = Veehiicuul.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Veehiicuul.dir
 
-build CMakeFiles\SimpleDirectX12Game.dir\Source\Main.cpp.obj: CXX_COMPILER__SimpleDirectX12Game_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\Main.cpp || cmake_object_order_depends_target_SimpleDirectX12Game
+build CMakeFiles\Veehiicuul.dir\Source\Main.cpp.obj: CXX_COMPILER__Veehiicuul_unscanned_Release .\Source\Main.cpp || cmake_object_order_depends_target_Veehiicuul
   CONFIG = Release
-  DEFINES = -DAPPLICATION_LOG_ROOT=L\"C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyLogOutput\" -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
+  DEFINES = -DAPPLICATION_LOG_ROOT=L\"./MyLogOutput\" -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /permissive- /EHsc /Zc:__cplusplus
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Generated\Shaders -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
-  OBJECT_DIR = CMakeFiles\SimpleDirectX12Game.dir
-  OBJECT_FILE_DIR = CMakeFiles\SimpleDirectX12Game.dir\Source
-  TARGET_COMPILE_PDB = CMakeFiles\SimpleDirectX12Game.dir\
-  TARGET_PDB = SimpleDirectX12Game.pdb
-  TARGET_SUPPORT_DIR = CMakeFiles\SimpleDirectX12Game.dir
+  INCLUDES = -I.\MyBuildOutput\Release\Generated\Shaders -I.\Source -I.\Source\SimplePaint\..
+  OBJECT_DIR = CMakeFiles\Veehiicuul.dir
+  OBJECT_FILE_DIR = CMakeFiles\Veehiicuul.dir\Source
+  TARGET_COMPILE_PDB = CMakeFiles\Veehiicuul.dir\
+  TARGET_PDB = Veehiicuul.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Veehiicuul.dir
 
-build CMakeFiles\SimpleDirectX12Game.dir\Source\Renderer.cpp.obj: CXX_COMPILER__SimpleDirectX12Game_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\Renderer.cpp || cmake_object_order_depends_target_SimpleDirectX12Game
+build CMakeFiles\Veehiicuul.dir\Source\Renderer.cpp.obj: CXX_COMPILER__Veehiicuul_unscanned_Release .\Source\Renderer.cpp || cmake_object_order_depends_target_Veehiicuul
   CONFIG = Release
-  DEFINES = -DAPPLICATION_LOG_ROOT=L\"C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyLogOutput\" -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
+  DEFINES = -DAPPLICATION_LOG_ROOT=L\"./MyLogOutput\" -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /permissive- /EHsc /Zc:__cplusplus
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Generated\Shaders -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
-  OBJECT_DIR = CMakeFiles\SimpleDirectX12Game.dir
-  OBJECT_FILE_DIR = CMakeFiles\SimpleDirectX12Game.dir\Source
-  TARGET_COMPILE_PDB = CMakeFiles\SimpleDirectX12Game.dir\
-  TARGET_PDB = SimpleDirectX12Game.pdb
-  TARGET_SUPPORT_DIR = CMakeFiles\SimpleDirectX12Game.dir
+  INCLUDES = -I.\MyBuildOutput\Release\Generated\Shaders -I.\Source -I.\Source\SimplePaint\..
+  OBJECT_DIR = CMakeFiles\Veehiicuul.dir
+  OBJECT_FILE_DIR = CMakeFiles\Veehiicuul.dir\Source
+  TARGET_COMPILE_PDB = CMakeFiles\Veehiicuul.dir\
+  TARGET_PDB = Veehiicuul.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Veehiicuul.dir
 
 
 # =============================================================================
-# Link build statements for EXECUTABLE target SimpleDirectX12Game
+# Link build statements for EXECUTABLE target Veehiicuul
 
 
 #############################################
-# Link the executable SimpleDirectX12Game.exe
+# Link the executable Veehiicuul.exe
 
-build SimpleDirectX12Game.exe: CXX_EXECUTABLE_LINKER__SimpleDirectX12Game_Release CMakeFiles\SimpleDirectX12Game.dir\Source\Application.cpp.obj CMakeFiles\SimpleDirectX12Game.dir\Source\Main.cpp.obj CMakeFiles\SimpleDirectX12Game.dir\Source\Renderer.cpp.obj | Settings.lib RenderPreparation.lib PlatformPaths.lib SettingsValidation.lib Source\SimplePaint\SimplePaint.lib || CompiledShaders PlatformPaths.lib RenderPreparation.lib RuntimeAssets Settings.lib SettingsValidation.lib Source\SimplePaint\SimplePaint.lib
+build Veehiicuul.exe: CXX_EXECUTABLE_LINKER__Veehiicuul_Release CMakeFiles\Veehiicuul.dir\Source\Application.cpp.obj CMakeFiles\Veehiicuul.dir\Source\Main.cpp.obj CMakeFiles\Veehiicuul.dir\Source\Renderer.cpp.obj | Settings.lib RenderPreparation.lib PlatformPaths.lib SettingsValidation.lib Source\SimplePaint\SimplePaint.lib || CompiledShaders PlatformPaths.lib RenderPreparation.lib RuntimeAssets Settings.lib SettingsValidation.lib Source\SimplePaint\SimplePaint.lib
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -MD
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:windows
   LINK_LIBRARIES = Settings.lib  RenderPreparation.lib  PlatformPaths.lib  d3d12.lib  dxgi.lib  ole32.lib  windowscodecs.lib  SettingsValidation.lib  Source\SimplePaint\SimplePaint.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
-  OBJECT_DIR = CMakeFiles\SimpleDirectX12Game.dir
+  OBJECT_DIR = CMakeFiles\Veehiicuul.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
-  TARGET_COMPILE_PDB = CMakeFiles\SimpleDirectX12Game.dir\
-  TARGET_FILE = SimpleDirectX12Game.exe
-  TARGET_IMPLIB = SimpleDirectX12Game.lib
-  TARGET_PDB = SimpleDirectX12Game.pdb
-  TARGET_SUPPORT_DIR = CMakeFiles\SimpleDirectX12Game.dir
+  TARGET_COMPILE_PDB = CMakeFiles\Veehiicuul.dir\
+  TARGET_FILE = Veehiicuul.exe
+  TARGET_IMPLIB = Veehiicuul.lib
+  TARGET_PDB = Veehiicuul.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Veehiicuul.dir
 
 
 #############################################
@@ -453,10 +453,10 @@ build RuntimeAssets: phony CMakeFiles\RuntimeAssets
 
 build cmake_object_order_depends_target_UVSphereTests: phony || .
 
-build CMakeFiles\UVSphereTests.dir\Tests\UVSphereTests.cpp.obj: CXX_COMPILER__UVSphereTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Tests\UVSphereTests.cpp || cmake_object_order_depends_target_UVSphereTests
+build CMakeFiles\UVSphereTests.dir\Tests\UVSphereTests.cpp.obj: CXX_COMPILER__UVSphereTests_unscanned_Release .\Tests\UVSphereTests.cpp || cmake_object_order_depends_target_UVSphereTests
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source
+  INCLUDES = -I.\Source
   OBJECT_DIR = CMakeFiles\UVSphereTests.dir
   OBJECT_FILE_DIR = CMakeFiles\UVSphereTests.dir\Tests
   TARGET_COMPILE_PDB = CMakeFiles\UVSphereTests.dir\
@@ -494,10 +494,10 @@ build UVSphereTests.exe: CXX_EXECUTABLE_LINKER__UVSphereTests_Release CMakeFiles
 
 build cmake_object_order_depends_target_PaintGeometryIntegrationTests: phony || cmake_object_order_depends_target_SimplePaint
 
-build CMakeFiles\PaintGeometryIntegrationTests.dir\Tests\PaintGeometryIntegrationTests.cpp.obj: CXX_COMPILER__PaintGeometryIntegrationTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Tests\PaintGeometryIntegrationTests.cpp || cmake_object_order_depends_target_PaintGeometryIntegrationTests
+build CMakeFiles\PaintGeometryIntegrationTests.dir\Tests\PaintGeometryIntegrationTests.cpp.obj: CXX_COMPILER__PaintGeometryIntegrationTests_unscanned_Release .\Tests\PaintGeometryIntegrationTests.cpp || cmake_object_order_depends_target_PaintGeometryIntegrationTests
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\Source\SimplePaint\..
   OBJECT_DIR = CMakeFiles\PaintGeometryIntegrationTests.dir
   OBJECT_FILE_DIR = CMakeFiles\PaintGeometryIntegrationTests.dir\Tests
   TARGET_COMPILE_PDB = CMakeFiles\PaintGeometryIntegrationTests.dir\
@@ -535,10 +535,10 @@ build PaintGeometryIntegrationTests.exe: CXX_EXECUTABLE_LINKER__PaintGeometryInt
 
 build cmake_object_order_depends_target_SettingsTests: phony || RuntimeAssets cmake_object_order_depends_target_RenderPreparation cmake_object_order_depends_target_SettingsValidation cmake_object_order_depends_target_SimplePaint
 
-build CMakeFiles\SettingsTests.dir\Tests\SettingsTests.cpp.obj: CXX_COMPILER__SettingsTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Tests\SettingsTests.cpp || cmake_object_order_depends_target_SettingsTests
+build CMakeFiles\SettingsTests.dir\Tests\SettingsTests.cpp.obj: CXX_COMPILER__SettingsTests_unscanned_Release .\Tests\SettingsTests.cpp || cmake_object_order_depends_target_SettingsTests
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\Source -I.\Source\SimplePaint\..
   OBJECT_DIR = CMakeFiles\SettingsTests.dir
   OBJECT_FILE_DIR = CMakeFiles\SettingsTests.dir\Tests
   TARGET_COMPILE_PDB = CMakeFiles\SettingsTests.dir\
@@ -576,11 +576,11 @@ build SettingsTests.exe: CXX_EXECUTABLE_LINKER__SettingsTests_Release CMakeFiles
 
 build cmake_object_order_depends_target_SettingsJsonTests: phony || RuntimeAssets cmake_object_order_depends_target_Settings cmake_object_order_depends_target_SettingsValidation cmake_object_order_depends_target_SimplePaint
 
-build CMakeFiles\SettingsJsonTests.dir\Tests\SettingsJsonTests.cpp.obj: CXX_COMPILER__SettingsJsonTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Tests\SettingsJsonTests.cpp || cmake_object_order_depends_target_SettingsJsonTests
+build CMakeFiles\SettingsJsonTests.dir\Tests\SettingsJsonTests.cpp.obj: CXX_COMPILER__SettingsJsonTests_unscanned_Release .\Tests\SettingsJsonTests.cpp || cmake_object_order_depends_target_SettingsJsonTests
   CONFIG = Release
   DEFINES = -DJSON_USE_IMPLICIT_CONVERSIONS=0
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\.. -external:IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\ThirdParty\nlohmann_json\include -external:W0
+  INCLUDES = -I.\Source -I.\Source\SimplePaint\.. -external:I.\ThirdParty\nlohmann_json\include -external:W0
   OBJECT_DIR = CMakeFiles\SettingsJsonTests.dir
   OBJECT_FILE_DIR = CMakeFiles\SettingsJsonTests.dir\Tests
   TARGET_COMPILE_PDB = CMakeFiles\SettingsJsonTests.dir\
@@ -618,22 +618,22 @@ build SettingsJsonTests.exe: CXX_EXECUTABLE_LINKER__SettingsJsonTests_Release CM
 
 build cmake_object_order_depends_target_RenderPipelineGpuTests: phony || CompiledShaders Generated\Shaders\BackgroundPS.dxil Generated\Shaders\BackgroundPS.h Generated\Shaders\BackgroundVS.dxil Generated\Shaders\BackgroundVS.h Generated\Shaders\SimplePaintPS.dxil Generated\Shaders\SimplePaintPS.h Generated\Shaders\SimplePaintVS.dxil Generated\Shaders\SimplePaintVS.h RuntimeAssets cmake_object_order_depends_target_PlatformPaths cmake_object_order_depends_target_RenderPreparation cmake_object_order_depends_target_SettingsValidation cmake_object_order_depends_target_SimplePaint
 
-build CMakeFiles\RenderPipelineGpuTests.dir\Tests\RenderPipelineGpuTests.cpp.obj: CXX_COMPILER__RenderPipelineGpuTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Tests\RenderPipelineGpuTests.cpp || cmake_object_order_depends_target_RenderPipelineGpuTests
+build CMakeFiles\RenderPipelineGpuTests.dir\Tests\RenderPipelineGpuTests.cpp.obj: CXX_COMPILER__RenderPipelineGpuTests_unscanned_Release .\Tests\RenderPipelineGpuTests.cpp || cmake_object_order_depends_target_RenderPipelineGpuTests
   CONFIG = Release
   DEFINES = -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Generated\Shaders -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\MyBuildOutput\Release\Generated\Shaders -I.\Source -I.\Source\SimplePaint\..
   OBJECT_DIR = CMakeFiles\RenderPipelineGpuTests.dir
   OBJECT_FILE_DIR = CMakeFiles\RenderPipelineGpuTests.dir\Tests
   TARGET_COMPILE_PDB = CMakeFiles\RenderPipelineGpuTests.dir\
   TARGET_PDB = RenderPipelineGpuTests.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\RenderPipelineGpuTests.dir
 
-build CMakeFiles\RenderPipelineGpuTests.dir\Source\Renderer.cpp.obj: CXX_COMPILER__RenderPipelineGpuTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\Renderer.cpp || cmake_object_order_depends_target_RenderPipelineGpuTests
+build CMakeFiles\RenderPipelineGpuTests.dir\Source\Renderer.cpp.obj: CXX_COMPILER__RenderPipelineGpuTests_unscanned_Release .\Source\Renderer.cpp || cmake_object_order_depends_target_RenderPipelineGpuTests
   CONFIG = Release
   DEFINES = -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Generated\Shaders -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\MyBuildOutput\Release\Generated\Shaders -I.\Source -I.\Source\SimplePaint\..
   OBJECT_DIR = CMakeFiles\RenderPipelineGpuTests.dir
   OBJECT_FILE_DIR = CMakeFiles\RenderPipelineGpuTests.dir\Source
   TARGET_COMPILE_PDB = CMakeFiles\RenderPipelineGpuTests.dir\
@@ -671,33 +671,33 @@ build RenderPipelineGpuTests.exe: CXX_EXECUTABLE_LINKER__RenderPipelineGpuTests_
 
 build cmake_object_order_depends_target_ApplicationSmokeTests: phony || CompiledShaders Generated\Shaders\BackgroundPS.dxil Generated\Shaders\BackgroundPS.h Generated\Shaders\BackgroundVS.dxil Generated\Shaders\BackgroundVS.h Generated\Shaders\SimplePaintPS.dxil Generated\Shaders\SimplePaintPS.h Generated\Shaders\SimplePaintVS.dxil Generated\Shaders\SimplePaintVS.h RuntimeAssets cmake_object_order_depends_target_PlatformPaths cmake_object_order_depends_target_RenderPreparation cmake_object_order_depends_target_SettingsValidation cmake_object_order_depends_target_SimplePaint
 
-build CMakeFiles\ApplicationSmokeTests.dir\Tests\ApplicationSmokeTests.cpp.obj: CXX_COMPILER__ApplicationSmokeTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Tests\ApplicationSmokeTests.cpp || cmake_object_order_depends_target_ApplicationSmokeTests
+build CMakeFiles\ApplicationSmokeTests.dir\Tests\ApplicationSmokeTests.cpp.obj: CXX_COMPILER__ApplicationSmokeTests_unscanned_Release .\Tests\ApplicationSmokeTests.cpp || cmake_object_order_depends_target_ApplicationSmokeTests
   CONFIG = Release
   DEFINES = -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Generated\Shaders -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\MyBuildOutput\Release\Generated\Shaders -I.\Source -I.\Source\SimplePaint\..
   OBJECT_DIR = CMakeFiles\ApplicationSmokeTests.dir
   OBJECT_FILE_DIR = CMakeFiles\ApplicationSmokeTests.dir\Tests
   TARGET_COMPILE_PDB = CMakeFiles\ApplicationSmokeTests.dir\
   TARGET_PDB = ApplicationSmokeTests.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\ApplicationSmokeTests.dir
 
-build CMakeFiles\ApplicationSmokeTests.dir\Source\Application.cpp.obj: CXX_COMPILER__ApplicationSmokeTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\Application.cpp || cmake_object_order_depends_target_ApplicationSmokeTests
+build CMakeFiles\ApplicationSmokeTests.dir\Source\Application.cpp.obj: CXX_COMPILER__ApplicationSmokeTests_unscanned_Release .\Source\Application.cpp || cmake_object_order_depends_target_ApplicationSmokeTests
   CONFIG = Release
   DEFINES = -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Generated\Shaders -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\MyBuildOutput\Release\Generated\Shaders -I.\Source -I.\Source\SimplePaint\..
   OBJECT_DIR = CMakeFiles\ApplicationSmokeTests.dir
   OBJECT_FILE_DIR = CMakeFiles\ApplicationSmokeTests.dir\Source
   TARGET_COMPILE_PDB = CMakeFiles\ApplicationSmokeTests.dir\
   TARGET_PDB = ApplicationSmokeTests.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\ApplicationSmokeTests.dir
 
-build CMakeFiles\ApplicationSmokeTests.dir\Source\Renderer.cpp.obj: CXX_COMPILER__ApplicationSmokeTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\Renderer.cpp || cmake_object_order_depends_target_ApplicationSmokeTests
+build CMakeFiles\ApplicationSmokeTests.dir\Source\Renderer.cpp.obj: CXX_COMPILER__ApplicationSmokeTests_unscanned_Release .\Source\Renderer.cpp || cmake_object_order_depends_target_ApplicationSmokeTests
   CONFIG = Release
   DEFINES = -DNOMINMAX -DSIMPLE_PAINT_MATERIAL_COUNT=6 -DUNICODE -DWIN32_LEAN_AND_MEAN -D_UNICODE
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /permissive-
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Generated\Shaders -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\MyBuildOutput\Release\Generated\Shaders -I.\Source -I.\Source\SimplePaint\..
   OBJECT_DIR = CMakeFiles\ApplicationSmokeTests.dir
   OBJECT_FILE_DIR = CMakeFiles\ApplicationSmokeTests.dir\Source
   TARGET_COMPILE_PDB = CMakeFiles\ApplicationSmokeTests.dir\
@@ -731,7 +731,7 @@ build ApplicationSmokeTests.exe: CXX_EXECUTABLE_LINKER__ApplicationSmokeTests_Re
 # Utility command for test
 
 build CMakeFiles\test.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" "
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" "
   DESC = Running tests...
   pool = console
   restat = 1
@@ -743,7 +743,7 @@ build test: phony CMakeFiles\test.util
 # Utility command for edit_cache
 
 build CMakeFiles\edit_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
   DESC = No interactive CMake dialog available...
   restat = 1
 
@@ -754,7 +754,7 @@ build edit_cache: phony CMakeFiles\edit_cache.util
 # Utility command for rebuild_cache
 
 build CMakeFiles\rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --regenerate-during-build -SC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game -BC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --regenerate-during-build -S. -B.\MyBuildOutput\Release"
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -771,8 +771,8 @@ build CMakeFiles\CompiledShaders | ${cmake_ninja_workdir}CMakeFiles\CompiledShad
 #############################################
 # Custom command for Generated\Shaders\BackgroundPS.dxil
 
-build Generated\Shaders\BackgroundPS.dxil Generated\Shaders\BackgroundPS.h | ${cmake_ninja_workdir}Generated\Shaders\BackgroundPS.dxil ${cmake_ninja_workdir}Generated\Shaders\BackgroundPS.h: CUSTOM_COMMAND C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\Shaders\Background.hlsl
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E PSMain -T ps_6_0 -Fo C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders/BackgroundPS.dxil -Fh C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders/BackgroundPS.h -Vn g_backgroundPixelShader -O3 -Ges -WX -all_resources_bound -Qstrip_debug -Qstrip_reflect C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/Shaders/Background.hlsl"
+build Generated\Shaders\BackgroundPS.dxil Generated\Shaders\BackgroundPS.h | ${cmake_ninja_workdir}Generated\Shaders\BackgroundPS.dxil ${cmake_ninja_workdir}Generated\Shaders\BackgroundPS.h: CUSTOM_COMMAND .\Source\Shaders\Background.hlsl
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory ./MyBuildOutput/Release/Generated/Shaders && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E PSMain -T ps_6_0 -Fo ./MyBuildOutput/Release/Generated/Shaders/BackgroundPS.dxil -Fh ./MyBuildOutput/Release/Generated/Shaders/BackgroundPS.h -Vn g_backgroundPixelShader -O3 -Ges -WX -all_resources_bound -Qstrip_debug -Qstrip_reflect ./Source/Shaders/Background.hlsl"
   DESC = Compiling BackgroundPS as ps_6_0 with DXC
   restat = 1
 
@@ -780,8 +780,8 @@ build Generated\Shaders\BackgroundPS.dxil Generated\Shaders\BackgroundPS.h | ${c
 #############################################
 # Custom command for Generated\Shaders\BackgroundVS.dxil
 
-build Generated\Shaders\BackgroundVS.dxil Generated\Shaders\BackgroundVS.h | ${cmake_ninja_workdir}Generated\Shaders\BackgroundVS.dxil ${cmake_ninja_workdir}Generated\Shaders\BackgroundVS.h: CUSTOM_COMMAND C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\Shaders\Background.hlsl
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E VSMain -T vs_6_0 -Fo C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders/BackgroundVS.dxil -Fh C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders/BackgroundVS.h -Vn g_backgroundVertexShader -O3 -Ges -WX -all_resources_bound -Qstrip_debug -Qstrip_reflect C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/Shaders/Background.hlsl"
+build Generated\Shaders\BackgroundVS.dxil Generated\Shaders\BackgroundVS.h | ${cmake_ninja_workdir}Generated\Shaders\BackgroundVS.dxil ${cmake_ninja_workdir}Generated\Shaders\BackgroundVS.h: CUSTOM_COMMAND .\Source\Shaders\Background.hlsl
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory ./MyBuildOutput/Release/Generated/Shaders && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E VSMain -T vs_6_0 -Fo ./MyBuildOutput/Release/Generated/Shaders/BackgroundVS.dxil -Fh ./MyBuildOutput/Release/Generated/Shaders/BackgroundVS.h -Vn g_backgroundVertexShader -O3 -Ges -WX -all_resources_bound -Qstrip_debug -Qstrip_reflect ./Source/Shaders/Background.hlsl"
   DESC = Compiling BackgroundVS as vs_6_0 with DXC
   restat = 1
 
@@ -789,8 +789,8 @@ build Generated\Shaders\BackgroundVS.dxil Generated\Shaders\BackgroundVS.h | ${c
 #############################################
 # Custom command for Generated\Shaders\SimplePaintPS.dxil
 
-build Generated\Shaders\SimplePaintPS.dxil Generated\Shaders\SimplePaintPS.h | ${cmake_ninja_workdir}Generated\Shaders\SimplePaintPS.dxil ${cmake_ninja_workdir}Generated\Shaders\SimplePaintPS.h: CUSTOM_COMMAND C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\SimplePaint.hlsl C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\SimplePaintCore.hlsli
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E PSMain -T ps_6_0 -Fo C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders/SimplePaintPS.dxil -Fh C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders/SimplePaintPS.h -Vn g_simplePaintPixelShader -O3 -Ges -WX -all_resources_bound -D SIMPLE_PAINT_MATERIAL_COUNT=6 -Qstrip_debug -Qstrip_reflect C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/SimplePaint.hlsl"
+build Generated\Shaders\SimplePaintPS.dxil Generated\Shaders\SimplePaintPS.h | ${cmake_ninja_workdir}Generated\Shaders\SimplePaintPS.dxil ${cmake_ninja_workdir}Generated\Shaders\SimplePaintPS.h: CUSTOM_COMMAND .\Source\SimplePaint\SimplePaint.hlsl .\Source\SimplePaint\SimplePaintCore.hlsli
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory ./MyBuildOutput/Release/Generated/Shaders && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E PSMain -T ps_6_0 -Fo ./MyBuildOutput/Release/Generated/Shaders/SimplePaintPS.dxil -Fh ./MyBuildOutput/Release/Generated/Shaders/SimplePaintPS.h -Vn g_simplePaintPixelShader -O3 -Ges -WX -all_resources_bound -D SIMPLE_PAINT_MATERIAL_COUNT=6 -Qstrip_debug -Qstrip_reflect ./Source/SimplePaint/SimplePaint.hlsl"
   DESC = Compiling SimplePaintPS as ps_6_0 with DXC
   restat = 1
 
@@ -798,8 +798,8 @@ build Generated\Shaders\SimplePaintPS.dxil Generated\Shaders\SimplePaintPS.h | $
 #############################################
 # Custom command for Generated\Shaders\SimplePaintVS.dxil
 
-build Generated\Shaders\SimplePaintVS.dxil Generated\Shaders\SimplePaintVS.h | ${cmake_ninja_workdir}Generated\Shaders\SimplePaintVS.dxil ${cmake_ninja_workdir}Generated\Shaders\SimplePaintVS.h: CUSTOM_COMMAND C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\SimplePaint.hlsl C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\SimplePaintCore.hlsli
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E VSMain -T vs_6_0 -Fo C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders/SimplePaintVS.dxil -Fh C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Generated/Shaders/SimplePaintVS.h -Vn g_simplePaintVertexShader -O3 -Ges -WX -all_resources_bound -D SIMPLE_PAINT_MATERIAL_COUNT=6 -Qstrip_debug -Qstrip_reflect C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/SimplePaint.hlsl"
+build Generated\Shaders\SimplePaintVS.dxil Generated\Shaders\SimplePaintVS.h | ${cmake_ninja_workdir}Generated\Shaders\SimplePaintVS.dxil ${cmake_ninja_workdir}Generated\Shaders\SimplePaintVS.h: CUSTOM_COMMAND .\Source\SimplePaint\SimplePaint.hlsl .\Source\SimplePaint\SimplePaintCore.hlsli
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory ./MyBuildOutput/Release/Generated/Shaders && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E VSMain -T vs_6_0 -Fo ./MyBuildOutput/Release/Generated/Shaders/SimplePaintVS.dxil -Fh ./MyBuildOutput/Release/Generated/Shaders/SimplePaintVS.h -Vn g_simplePaintVertexShader -O3 -Ges -WX -all_resources_bound -D SIMPLE_PAINT_MATERIAL_COUNT=6 -Qstrip_debug -Qstrip_reflect ./Source/SimplePaint/SimplePaint.hlsl"
   DESC = Compiling SimplePaintVS as vs_6_0 with DXC
   restat = 1
 
@@ -808,7 +808,7 @@ build Generated\Shaders\SimplePaintVS.dxil Generated\Shaders\SimplePaintVS.h | $
 # Custom command for CMakeFiles\Experimental
 
 build CMakeFiles\Experimental | ${cmake_ninja_workdir}CMakeFiles\Experimental: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -816,7 +816,7 @@ build CMakeFiles\Experimental | ${cmake_ninja_workdir}CMakeFiles\Experimental: C
 # Custom command for CMakeFiles\Nightly
 
 build CMakeFiles\Nightly | ${cmake_ninja_workdir}CMakeFiles\Nightly: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -824,7 +824,7 @@ build CMakeFiles\Nightly | ${cmake_ninja_workdir}CMakeFiles\Nightly: CUSTOM_COMM
 # Custom command for CMakeFiles\Continuous
 
 build CMakeFiles\Continuous | ${cmake_ninja_workdir}CMakeFiles\Continuous: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -832,7 +832,7 @@ build CMakeFiles\Continuous | ${cmake_ninja_workdir}CMakeFiles\Continuous: CUSTO
 # Custom command for CMakeFiles\NightlyMemoryCheck
 
 build CMakeFiles\NightlyMemoryCheck | ${cmake_ninja_workdir}CMakeFiles\NightlyMemoryCheck: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=NightlyMemoryCheck -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=NightlyMemoryCheck -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -840,7 +840,7 @@ build CMakeFiles\NightlyMemoryCheck | ${cmake_ninja_workdir}CMakeFiles\NightlyMe
 # Custom command for CMakeFiles\NightlyStart
 
 build CMakeFiles\NightlyStart | ${cmake_ninja_workdir}CMakeFiles\NightlyStart: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Start -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Start -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -848,7 +848,7 @@ build CMakeFiles\NightlyStart | ${cmake_ninja_workdir}CMakeFiles\NightlyStart: C
 # Custom command for CMakeFiles\NightlyUpdate
 
 build CMakeFiles\NightlyUpdate | ${cmake_ninja_workdir}CMakeFiles\NightlyUpdate: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Update -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Update -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -856,7 +856,7 @@ build CMakeFiles\NightlyUpdate | ${cmake_ninja_workdir}CMakeFiles\NightlyUpdate:
 # Custom command for CMakeFiles\NightlyConfigure
 
 build CMakeFiles\NightlyConfigure | ${cmake_ninja_workdir}CMakeFiles\NightlyConfigure: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Configure -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Configure -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -864,7 +864,7 @@ build CMakeFiles\NightlyConfigure | ${cmake_ninja_workdir}CMakeFiles\NightlyConf
 # Custom command for CMakeFiles\NightlyBuild
 
 build CMakeFiles\NightlyBuild | ${cmake_ninja_workdir}CMakeFiles\NightlyBuild: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Build -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Build -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -872,7 +872,7 @@ build CMakeFiles\NightlyBuild | ${cmake_ninja_workdir}CMakeFiles\NightlyBuild: C
 # Custom command for CMakeFiles\NightlyTest
 
 build CMakeFiles\NightlyTest | ${cmake_ninja_workdir}CMakeFiles\NightlyTest: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Test -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Test -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -880,7 +880,7 @@ build CMakeFiles\NightlyTest | ${cmake_ninja_workdir}CMakeFiles\NightlyTest: CUS
 # Custom command for CMakeFiles\NightlyCoverage
 
 build CMakeFiles\NightlyCoverage | ${cmake_ninja_workdir}CMakeFiles\NightlyCoverage: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Coverage -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Coverage -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -888,7 +888,7 @@ build CMakeFiles\NightlyCoverage | ${cmake_ninja_workdir}CMakeFiles\NightlyCover
 # Custom command for CMakeFiles\NightlyMemCheck
 
 build CMakeFiles\NightlyMemCheck | ${cmake_ninja_workdir}CMakeFiles\NightlyMemCheck: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=MemCheck -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=MemCheck -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -896,7 +896,7 @@ build CMakeFiles\NightlyMemCheck | ${cmake_ninja_workdir}CMakeFiles\NightlyMemCh
 # Custom command for CMakeFiles\NightlySubmit
 
 build CMakeFiles\NightlySubmit | ${cmake_ninja_workdir}CMakeFiles\NightlySubmit: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Submit -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Nightly -DACTIONS=Submit -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -904,7 +904,7 @@ build CMakeFiles\NightlySubmit | ${cmake_ninja_workdir}CMakeFiles\NightlySubmit:
 # Custom command for CMakeFiles\ExperimentalStart
 
 build CMakeFiles\ExperimentalStart | ${cmake_ninja_workdir}CMakeFiles\ExperimentalStart: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Start -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Start -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -912,7 +912,7 @@ build CMakeFiles\ExperimentalStart | ${cmake_ninja_workdir}CMakeFiles\Experiment
 # Custom command for CMakeFiles\ExperimentalUpdate
 
 build CMakeFiles\ExperimentalUpdate | ${cmake_ninja_workdir}CMakeFiles\ExperimentalUpdate: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Update -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Update -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -920,7 +920,7 @@ build CMakeFiles\ExperimentalUpdate | ${cmake_ninja_workdir}CMakeFiles\Experimen
 # Custom command for CMakeFiles\ExperimentalConfigure
 
 build CMakeFiles\ExperimentalConfigure | ${cmake_ninja_workdir}CMakeFiles\ExperimentalConfigure: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Configure -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Configure -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -928,7 +928,7 @@ build CMakeFiles\ExperimentalConfigure | ${cmake_ninja_workdir}CMakeFiles\Experi
 # Custom command for CMakeFiles\ExperimentalBuild
 
 build CMakeFiles\ExperimentalBuild | ${cmake_ninja_workdir}CMakeFiles\ExperimentalBuild: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Build -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Build -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -936,7 +936,7 @@ build CMakeFiles\ExperimentalBuild | ${cmake_ninja_workdir}CMakeFiles\Experiment
 # Custom command for CMakeFiles\ExperimentalTest
 
 build CMakeFiles\ExperimentalTest | ${cmake_ninja_workdir}CMakeFiles\ExperimentalTest: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Test -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Test -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -944,7 +944,7 @@ build CMakeFiles\ExperimentalTest | ${cmake_ninja_workdir}CMakeFiles\Experimenta
 # Custom command for CMakeFiles\ExperimentalCoverage
 
 build CMakeFiles\ExperimentalCoverage | ${cmake_ninja_workdir}CMakeFiles\ExperimentalCoverage: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Coverage -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Coverage -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -952,7 +952,7 @@ build CMakeFiles\ExperimentalCoverage | ${cmake_ninja_workdir}CMakeFiles\Experim
 # Custom command for CMakeFiles\ExperimentalMemCheck
 
 build CMakeFiles\ExperimentalMemCheck | ${cmake_ninja_workdir}CMakeFiles\ExperimentalMemCheck: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=MemCheck -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=MemCheck -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -960,7 +960,7 @@ build CMakeFiles\ExperimentalMemCheck | ${cmake_ninja_workdir}CMakeFiles\Experim
 # Custom command for CMakeFiles\ExperimentalSubmit
 
 build CMakeFiles\ExperimentalSubmit | ${cmake_ninja_workdir}CMakeFiles\ExperimentalSubmit: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Submit -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Experimental -DACTIONS=Submit -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -968,7 +968,7 @@ build CMakeFiles\ExperimentalSubmit | ${cmake_ninja_workdir}CMakeFiles\Experimen
 # Custom command for CMakeFiles\ContinuousStart
 
 build CMakeFiles\ContinuousStart | ${cmake_ninja_workdir}CMakeFiles\ContinuousStart: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Start -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Start -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -976,7 +976,7 @@ build CMakeFiles\ContinuousStart | ${cmake_ninja_workdir}CMakeFiles\ContinuousSt
 # Custom command for CMakeFiles\ContinuousUpdate
 
 build CMakeFiles\ContinuousUpdate | ${cmake_ninja_workdir}CMakeFiles\ContinuousUpdate: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Update -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Update -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -984,7 +984,7 @@ build CMakeFiles\ContinuousUpdate | ${cmake_ninja_workdir}CMakeFiles\ContinuousU
 # Custom command for CMakeFiles\ContinuousConfigure
 
 build CMakeFiles\ContinuousConfigure | ${cmake_ninja_workdir}CMakeFiles\ContinuousConfigure: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Configure -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Configure -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -992,7 +992,7 @@ build CMakeFiles\ContinuousConfigure | ${cmake_ninja_workdir}CMakeFiles\Continuo
 # Custom command for CMakeFiles\ContinuousBuild
 
 build CMakeFiles\ContinuousBuild | ${cmake_ninja_workdir}CMakeFiles\ContinuousBuild: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Build -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Build -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -1000,7 +1000,7 @@ build CMakeFiles\ContinuousBuild | ${cmake_ninja_workdir}CMakeFiles\ContinuousBu
 # Custom command for CMakeFiles\ContinuousTest
 
 build CMakeFiles\ContinuousTest | ${cmake_ninja_workdir}CMakeFiles\ContinuousTest: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Test -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Test -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -1008,7 +1008,7 @@ build CMakeFiles\ContinuousTest | ${cmake_ninja_workdir}CMakeFiles\ContinuousTes
 # Custom command for CMakeFiles\ContinuousCoverage
 
 build CMakeFiles\ContinuousCoverage | ${cmake_ninja_workdir}CMakeFiles\ContinuousCoverage: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Coverage -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Coverage -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -1016,7 +1016,7 @@ build CMakeFiles\ContinuousCoverage | ${cmake_ninja_workdir}CMakeFiles\Continuou
 # Custom command for CMakeFiles\ContinuousMemCheck
 
 build CMakeFiles\ContinuousMemCheck | ${cmake_ninja_workdir}CMakeFiles\ContinuousMemCheck: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=MemCheck -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=MemCheck -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
@@ -1024,20 +1024,20 @@ build CMakeFiles\ContinuousMemCheck | ${cmake_ninja_workdir}CMakeFiles\Continuou
 # Custom command for CMakeFiles\ContinuousSubmit
 
 build CMakeFiles\ContinuousSubmit | ${cmake_ninja_workdir}CMakeFiles\ContinuousSubmit: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Submit -S CMakeFiles/CTestScript.cmake -V"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" -DMODEL=Continuous -DACTIONS=Submit -S CMakeFiles/CTestScript.cmake -V"
   pool = console
 
 
 #############################################
 # Custom command for CMakeFiles\RuntimeAssets
 
-build CMakeFiles\RuntimeAssets | ${cmake_ninja_workdir}CMakeFiles\RuntimeAssets: CUSTOM_COMMAND C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Assets\SceneBackground.png C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Assets\Settings.json
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/assets && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_if_different C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Assets/SceneBackground.png C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Assets/SceneBackground.png && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_if_different C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Assets/Settings.json C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Assets/Settings.json"
+build CMakeFiles\RuntimeAssets | ${cmake_ninja_workdir}CMakeFiles\RuntimeAssets: CUSTOM_COMMAND .\Assets\SceneBackground.png .\Assets\Settings.json
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory ./MyBuildOutput/Release/assets && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_if_different ./Assets/SceneBackground.png ./MyBuildOutput/Release/Assets/SceneBackground.png && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_if_different ./Assets/Settings.json ./MyBuildOutput/Release/Assets/Settings.json"
   DESC = Staging runtime image and paint settings
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
-# C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/CMakeLists.txt
+# ./CMakeLists.txt
 # =============================================================================
 
 # =============================================================================
@@ -1049,10 +1049,10 @@ build CMakeFiles\RuntimeAssets | ${cmake_ninja_workdir}CMakeFiles\RuntimeAssets:
 
 build cmake_object_order_depends_target_SimplePaint: phony || .
 
-build Source\SimplePaint\CMakeFiles\SimplePaint.dir\Material.cpp.obj: CXX_COMPILER__SimplePaint_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\Material.cpp || cmake_object_order_depends_target_SimplePaint
+build Source\SimplePaint\CMakeFiles\SimplePaint.dir\Material.cpp.obj: CXX_COMPILER__SimplePaint_unscanned_Release .\Source\SimplePaint\Material.cpp || cmake_object_order_depends_target_SimplePaint
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /permissive- /EHsc /fp:precise
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\Source\SimplePaint\..
   OBJECT_DIR = Source\SimplePaint\CMakeFiles\SimplePaint.dir
   OBJECT_FILE_DIR = Source\SimplePaint\CMakeFiles\SimplePaint.dir
   TARGET_COMPILE_PDB = Source\SimplePaint\CMakeFiles\SimplePaint.dir\SimplePaint.pdb
@@ -1084,7 +1084,7 @@ build Source\SimplePaint\SimplePaint.lib: CXX_STATIC_LIBRARY_LINKER__SimplePaint
 # Utility command for test
 
 build Source\SimplePaint\CMakeFiles\test.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" "
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\Source\SimplePaint && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" "
   DESC = Running tests...
   pool = console
   restat = 1
@@ -1096,7 +1096,7 @@ build Source\SimplePaint\test: phony Source\SimplePaint\CMakeFiles\test.util
 # Utility command for edit_cache
 
 build Source\SimplePaint\CMakeFiles\edit_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\Source\SimplePaint && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
   DESC = No interactive CMake dialog available...
   restat = 1
 
@@ -1107,7 +1107,7 @@ build Source\SimplePaint\edit_cache: phony Source\SimplePaint\CMakeFiles\edit_ca
 # Utility command for rebuild_cache
 
 build Source\SimplePaint\CMakeFiles\rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --regenerate-during-build -SC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game -BC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\Source\SimplePaint && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --regenerate-during-build -S. -B.\MyBuildOutput\Release"
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -1116,7 +1116,7 @@ build Source\SimplePaint\rebuild_cache: phony Source\SimplePaint\CMakeFiles\rebu
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
-# C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/CMakeLists.txt
+# ./Source/SimplePaint/CMakeLists.txt
 # =============================================================================
 
 
@@ -1134,10 +1134,10 @@ build Source\SimplePaint\Tests\SimplePaintTestShaders: phony Source\SimplePaint\
 
 build cmake_object_order_depends_target_SimplePaintTests: phony || cmake_object_order_depends_target_SimplePaint
 
-build Source\SimplePaint\Tests\CMakeFiles\SimplePaintTests.dir\SimplePaintTests.cpp.obj: CXX_COMPILER__SimplePaintTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\Tests\SimplePaintTests.cpp || cmake_object_order_depends_target_SimplePaintTests
+build Source\SimplePaint\Tests\CMakeFiles\SimplePaintTests.dir\SimplePaintTests.cpp.obj: CXX_COMPILER__SimplePaintTests_unscanned_Release .\Source\SimplePaint\Tests\SimplePaintTests.cpp || cmake_object_order_depends_target_SimplePaintTests
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /fp:precise
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\Source\SimplePaint\..
   OBJECT_DIR = Source\SimplePaint\Tests\CMakeFiles\SimplePaintTests.dir
   OBJECT_FILE_DIR = Source\SimplePaint\Tests\CMakeFiles\SimplePaintTests.dir
   TARGET_COMPILE_PDB = Source\SimplePaint\Tests\CMakeFiles\SimplePaintTests.dir\
@@ -1175,11 +1175,11 @@ build Source\SimplePaint\Tests\SimplePaintTests.exe: CXX_EXECUTABLE_LINKER__Simp
 
 build cmake_object_order_depends_target_SimplePaintGpuTests: phony || Source\SimplePaint\Tests\Generated\SimplePaintPS.h Source\SimplePaint\Tests\Generated\SimplePaintVS.h Source\SimplePaint\Tests\SimplePaintTestShaders cmake_object_order_depends_target_SimplePaint
 
-build Source\SimplePaint\Tests\CMakeFiles\SimplePaintGpuTests.dir\SimplePaintGpuTests.cpp.obj: CXX_COMPILER__SimplePaintGpuTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\Tests\SimplePaintGpuTests.cpp || cmake_object_order_depends_target_SimplePaintGpuTests
+build Source\SimplePaint\Tests\CMakeFiles\SimplePaintGpuTests.dir\SimplePaintGpuTests.cpp.obj: CXX_COMPILER__SimplePaintGpuTests_unscanned_Release .\Source\SimplePaint\Tests\SimplePaintGpuTests.cpp || cmake_object_order_depends_target_SimplePaintGpuTests
   CONFIG = Release
   DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD /W4 /WX /EHsc /fp:precise
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint\Tests\Generated -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\MyBuildOutput\Release\Source\SimplePaint\Tests\Generated -I.\Source\SimplePaint\..
   OBJECT_DIR = Source\SimplePaint\Tests\CMakeFiles\SimplePaintGpuTests.dir
   OBJECT_FILE_DIR = Source\SimplePaint\Tests\CMakeFiles\SimplePaintGpuTests.dir
   TARGET_COMPILE_PDB = Source\SimplePaint\Tests\CMakeFiles\SimplePaintGpuTests.dir\
@@ -1217,10 +1217,10 @@ build Source\SimplePaint\Tests\SimplePaintGpuTests.exe: CXX_EXECUTABLE_LINKER__S
 
 build cmake_object_order_depends_target_OrthographicTransformTests: phony || cmake_object_order_depends_target_SimplePaint
 
-build Source\SimplePaint\Tests\CMakeFiles\OrthographicTransformTests.dir\OrthographicTransformTests.cpp.obj: CXX_COMPILER__OrthographicTransformTests_unscanned_Release C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\Tests\OrthographicTransformTests.cpp || cmake_object_order_depends_target_OrthographicTransformTests
+build Source\SimplePaint\Tests\CMakeFiles\OrthographicTransformTests.dir\OrthographicTransformTests.cpp.obj: CXX_COMPILER__OrthographicTransformTests_unscanned_Release .\Source\SimplePaint\Tests\OrthographicTransformTests.cpp || cmake_object_order_depends_target_OrthographicTransformTests
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD
-  INCLUDES = -IC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\..
+  INCLUDES = -I.\Source\SimplePaint\..
   OBJECT_DIR = Source\SimplePaint\Tests\CMakeFiles\OrthographicTransformTests.dir
   OBJECT_FILE_DIR = Source\SimplePaint\Tests\CMakeFiles\OrthographicTransformTests.dir
   TARGET_COMPILE_PDB = Source\SimplePaint\Tests\CMakeFiles\OrthographicTransformTests.dir\
@@ -1254,7 +1254,7 @@ build Source\SimplePaint\Tests\OrthographicTransformTests.exe: CXX_EXECUTABLE_LI
 # Utility command for test
 
 build Source\SimplePaint\Tests\CMakeFiles\test.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint\Tests && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" "
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\Source\SimplePaint\Tests && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" "
   DESC = Running tests...
   pool = console
   restat = 1
@@ -1266,7 +1266,7 @@ build Source\SimplePaint\Tests\test: phony Source\SimplePaint\Tests\CMakeFiles\t
 # Utility command for edit_cache
 
 build Source\SimplePaint\Tests\CMakeFiles\edit_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint\Tests && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\Source\SimplePaint\Tests && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
   DESC = No interactive CMake dialog available...
   restat = 1
 
@@ -1277,7 +1277,7 @@ build Source\SimplePaint\Tests\edit_cache: phony Source\SimplePaint\Tests\CMakeF
 # Utility command for rebuild_cache
 
 build Source\SimplePaint\Tests\CMakeFiles\rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint\Tests && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --regenerate-during-build -SC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game -BC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\Source\SimplePaint\Tests && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --regenerate-during-build -S. -B.\MyBuildOutput\Release"
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -1294,8 +1294,8 @@ build Source\SimplePaint\Tests\CMakeFiles\SimplePaintTestShaders | ${cmake_ninja
 #############################################
 # Custom command for Source\SimplePaint\Tests\Generated\SimplePaintPS.h
 
-build Source\SimplePaint\Tests\Generated\SimplePaintPS.h | ${cmake_ninja_workdir}Source\SimplePaint\Tests\Generated\SimplePaintPS.h: CUSTOM_COMMAND C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\SimplePaint.hlsl C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\SimplePaintCore.hlsli
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint\Tests && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/Generated && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E PSMain -T ps_6_0 -O3 -Ges -WX -all_resources_bound -Qstrip_debug -Qstrip_reflect -D SIMPLE_PAINT_MATERIAL_COUNT=6 -Fh C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/Generated/SimplePaintPS.h -Vn g_simplePaintPixelShader -Fo C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/Generated/SimplePaintPS.dxil C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/Tests/../SimplePaint.hlsl"
+build Source\SimplePaint\Tests\Generated\SimplePaintPS.h | ${cmake_ninja_workdir}Source\SimplePaint\Tests\Generated\SimplePaintPS.h: CUSTOM_COMMAND .\Source\SimplePaint\SimplePaint.hlsl .\Source\SimplePaint\SimplePaintCore.hlsli
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\Source\SimplePaint\Tests && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory ./MyBuildOutput/Release/Source/SimplePaint/Tests/Generated && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E PSMain -T ps_6_0 -O3 -Ges -WX -all_resources_bound -Qstrip_debug -Qstrip_reflect -D SIMPLE_PAINT_MATERIAL_COUNT=6 -Fh ./MyBuildOutput/Release/Source/SimplePaint/Tests/Generated/SimplePaintPS.h -Vn g_simplePaintPixelShader -Fo ./MyBuildOutput/Release/Source/SimplePaint/Tests/Generated/SimplePaintPS.dxil ./Source/SimplePaint/Tests/../SimplePaint.hlsl"
   DESC = Generating Generated/SimplePaintPS.h
   restat = 1
 
@@ -1303,14 +1303,14 @@ build Source\SimplePaint\Tests\Generated\SimplePaintPS.h | ${cmake_ninja_workdir
 #############################################
 # Custom command for Source\SimplePaint\Tests\Generated\SimplePaintVS.h
 
-build Source\SimplePaint\Tests\Generated\SimplePaintVS.h | ${cmake_ninja_workdir}Source\SimplePaint\Tests\Generated\SimplePaintVS.h: CUSTOM_COMMAND C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\SimplePaint.hlsl C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\SimplePaintCore.hlsli
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint\Tests && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/Generated && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E VSMain -T vs_6_0 -O3 -Ges -WX -all_resources_bound -Qstrip_debug -Qstrip_reflect -D SIMPLE_PAINT_MATERIAL_COUNT=6 -Fh C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/Generated/SimplePaintVS.h -Vn g_simplePaintVertexShader -Fo C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests/Generated/SimplePaintVS.dxil C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/Tests/../SimplePaint.hlsl"
+build Source\SimplePaint\Tests\Generated\SimplePaintVS.h | ${cmake_ninja_workdir}Source\SimplePaint\Tests\Generated\SimplePaintVS.h: CUSTOM_COMMAND .\Source\SimplePaint\SimplePaint.hlsl .\Source\SimplePaint\SimplePaintCore.hlsli
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\Source\SimplePaint\Tests && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory ./MyBuildOutput/Release/Source/SimplePaint/Tests/Generated && "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\dxc.exe" -E VSMain -T vs_6_0 -O3 -Ges -WX -all_resources_bound -Qstrip_debug -Qstrip_reflect -D SIMPLE_PAINT_MATERIAL_COUNT=6 -Fh ./MyBuildOutput/Release/Source/SimplePaint/Tests/Generated/SimplePaintVS.h -Vn g_simplePaintVertexShader -Fo ./MyBuildOutput/Release/Source/SimplePaint/Tests/Generated/SimplePaintVS.dxil ./Source/SimplePaint/Tests/../SimplePaint.hlsl"
   DESC = Generating Generated/SimplePaintVS.h
   restat = 1
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
-# C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/CMakeLists.txt
+# ./CMakeLists.txt
 # =============================================================================
 
 
@@ -1318,7 +1318,7 @@ build Source\SimplePaint\Tests\Generated\SimplePaintVS.h | ${cmake_ninja_workdir
 # Utility command for test
 
 build ThirdParty\nlohmann_json\CMakeFiles\test.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\ThirdParty\nlohmann_json && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" "
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\ThirdParty\nlohmann_json && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe" "
   DESC = Running tests...
   pool = console
   restat = 1
@@ -1330,7 +1330,7 @@ build ThirdParty\nlohmann_json\test: phony ThirdParty\nlohmann_json\CMakeFiles\t
 # Utility command for edit_cache
 
 build ThirdParty\nlohmann_json\CMakeFiles\edit_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\ThirdParty\nlohmann_json && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\ThirdParty\nlohmann_json && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E echo "No interactive CMake dialog available.""
   DESC = No interactive CMake dialog available...
   restat = 1
 
@@ -1341,7 +1341,7 @@ build ThirdParty\nlohmann_json\edit_cache: phony ThirdParty\nlohmann_json\CMakeF
 # Utility command for rebuild_cache
 
 build ThirdParty\nlohmann_json\CMakeFiles\rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\ThirdParty\nlohmann_json && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --regenerate-during-build -SC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game -BC:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release"
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D .\MyBuildOutput\Release\ThirdParty\nlohmann_json && "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --regenerate-during-build -S. -B.\MyBuildOutput\Release"
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -1373,7 +1373,7 @@ build SettingsTests: phony SettingsTests.exe
 
 build SettingsValidation: phony SettingsValidation.lib
 
-build SimpleDirectX12Game: phony SimpleDirectX12Game.exe
+build Veehiicuul: phony Veehiicuul.exe
 
 build SimplePaint: phony Source\SimplePaint\SimplePaint.lib
 
@@ -1397,28 +1397,28 @@ build UVSphereTests: phony UVSphereTests.exe
 # =============================================================================
 
 #############################################
-# Folder: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release
+# Folder: ./MyBuildOutput/Release
 
-build all: phony SettingsValidation.lib RenderPreparation.lib PlatformPaths.lib Settings.lib SimpleDirectX12Game.exe RuntimeAssets UVSphereTests.exe PaintGeometryIntegrationTests.exe SettingsTests.exe SettingsJsonTests.exe RenderPipelineGpuTests.exe ApplicationSmokeTests.exe Source\SimplePaint\all ThirdParty\nlohmann_json\all
+build all: phony SettingsValidation.lib RenderPreparation.lib PlatformPaths.lib Settings.lib Veehiicuul.exe RuntimeAssets UVSphereTests.exe PaintGeometryIntegrationTests.exe SettingsTests.exe SettingsJsonTests.exe RenderPipelineGpuTests.exe ApplicationSmokeTests.exe Source\SimplePaint\all ThirdParty\nlohmann_json\all
 
 # =============================================================================
 
 #############################################
-# Folder: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint
+# Folder: ./MyBuildOutput/Release/Source/SimplePaint
 
 build Source\SimplePaint\all: phony Source\SimplePaint\SimplePaint.lib Source\SimplePaint\Tests\all
 
 # =============================================================================
 
 #############################################
-# Folder: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/Source/SimplePaint/Tests
+# Folder: ./MyBuildOutput/Release/Source/SimplePaint/Tests
 
 build Source\SimplePaint\Tests\all: phony Source\SimplePaint\Tests\SimplePaintTests.exe Source\SimplePaint\Tests\SimplePaintGpuTests.exe Source\SimplePaint\Tests\OrthographicTransformTests.exe
 
 # =============================================================================
 
 #############################################
-# Folder: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Release/ThirdParty/nlohmann_json
+# Folder: ./MyBuildOutput/Release/ThirdParty/nlohmann_json
 
 build ThirdParty\nlohmann_json\all: phony
 
@@ -1429,14 +1429,14 @@ build ThirdParty\nlohmann_json\all: phony
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\cmake_install.cmake C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint\cmake_install.cmake C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint\Tests\cmake_install.cmake C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\ThirdParty\nlohmann_json\cmake_install.cmake C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\CTestTestfile.cmake C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint\CTestTestfile.cmake C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\Source\SimplePaint\Tests\CTestTestfile.cmake C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\MyBuildOutput\Release\ThirdParty\nlohmann_json\CTestTestfile.cmake: RERUN_CMAKE | C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeRCInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTest.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTestTargets.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTestUseLaunchers.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\DartConfiguration.tcl.in C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Linker\MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Templates\CTestScript.cmake.in C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\CMakeLists.txt C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\CMakeLists.txt C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\Tests\CMakeLists.txt C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\ThirdParty\nlohmann_json\CMakeLists.txt CMakeCache.txt CMakeFiles\4.3.1-msvc1\CMakeCXXCompiler.cmake CMakeFiles\4.3.1-msvc1\CMakeRCCompiler.cmake CMakeFiles\4.3.1-msvc1\CMakeSystem.cmake
+build build.ninja .\MyBuildOutput\Release\cmake_install.cmake .\MyBuildOutput\Release\Source\SimplePaint\cmake_install.cmake .\MyBuildOutput\Release\Source\SimplePaint\Tests\cmake_install.cmake .\MyBuildOutput\Release\ThirdParty\nlohmann_json\cmake_install.cmake .\MyBuildOutput\Release\CTestTestfile.cmake .\MyBuildOutput\Release\Source\SimplePaint\CTestTestfile.cmake .\MyBuildOutput\Release\Source\SimplePaint\Tests\CTestTestfile.cmake .\MyBuildOutput\Release\ThirdParty\nlohmann_json\CTestTestfile.cmake: RERUN_CMAKE | C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeRCInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTest.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTestTargets.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTestUseLaunchers.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\DartConfiguration.tcl.in C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Linker\MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Templates\CTestScript.cmake.in .\CMakeLists.txt .\Source\SimplePaint\CMakeLists.txt .\Source\SimplePaint\Tests\CMakeLists.txt .\ThirdParty\nlohmann_json\CMakeLists.txt CMakeCache.txt CMakeFiles\4.3.1-msvc1\CMakeCXXCompiler.cmake CMakeFiles\4.3.1-msvc1\CMakeRCCompiler.cmake CMakeFiles\4.3.1-msvc1\CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeRCInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTest.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTestTargets.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTestUseLaunchers.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\DartConfiguration.tcl.in C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Linker\MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Templates\CTestScript.cmake.in C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\CMakeLists.txt C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\CMakeLists.txt C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint\Tests\CMakeLists.txt C$:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\ThirdParty\nlohmann_json\CMakeLists.txt CMakeCache.txt CMakeFiles\4.3.1-msvc1\CMakeCXXCompiler.cmake CMakeFiles\4.3.1-msvc1\CMakeRCCompiler.cmake CMakeFiles\4.3.1-msvc1\CMakeSystem.cmake: phony
+build C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeRCInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTest.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTestTargets.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\CTestUseLaunchers.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Compiler\MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\DartConfiguration.tcl.in C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Linker\MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\Windows.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake C$:\Program$ Files\Microsoft$ Visual$ Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-4.3\Templates\CTestScript.cmake.in .\CMakeLists.txt .\Source\SimplePaint\CMakeLists.txt .\Source\SimplePaint\Tests\CMakeLists.txt .\ThirdParty\nlohmann_json\CMakeLists.txt CMakeCache.txt CMakeFiles\4.3.1-msvc1\CMakeCXXCompiler.cmake CMakeFiles\4.3.1-msvc1\CMakeRCCompiler.cmake CMakeFiles\4.3.1-msvc1\CMakeSystem.cmake: phony
 
 
 #############################################

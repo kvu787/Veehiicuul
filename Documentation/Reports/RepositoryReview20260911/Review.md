@@ -1,5 +1,10 @@
 # Repository review: PresentMon experiment confidence
 
+Project rename on 2026-09-12: saved application labels now use Veehiicuul,
+and saved checkout paths are relative to the repository root. Capture and
+snapshot fingerprints were refreshed after renaming. The review date,
+measurements, executable fingerprints, and conclusions refer to the original run.
+
 Review date: 2026-09-11. Reviewed repository commit: 7a8b14d.
 The latest production Source/Assets/CMakeLists.txt commit is
 824a787e62f1e1678b48b3a27a5dbcd1459c4e18, which is also the production revision

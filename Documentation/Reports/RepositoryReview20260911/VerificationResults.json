@@ -75,27 +75,27 @@
   ],
   "ContextAndExecutableHashesBeforeTests": [
     {
-      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\Application.log",
+      "Path": ".\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\Application.log",
       "ManifestMatches": true
     },
     {
-      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\Launcher.log",
+      "Path": ".\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\Launcher.log",
       "ManifestMatches": true
     },
     {
-      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\Settings.json",
+      "Path": ".\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\Settings.json",
       "ManifestMatches": true
     },
     {
-      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\CMakeCache.txt",
+      "Path": ".\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\CMakeCache.txt",
       "ManifestMatches": true
     },
     {
-      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\build.ninja",
+      "Path": ".\\SavedLogOutput\\2026-09-11 MinimumInputLatency\\Context\\build.ninja",
       "ManifestMatches": true
     },
     {
-      "Path": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\MyBuildOutput\\Release\\SimpleDirectX12Game.exe",
+      "Path": ".\\MyBuildOutput\\Release\\Veehiicuul.exe",
       "ManifestMatches": true
     },
     {

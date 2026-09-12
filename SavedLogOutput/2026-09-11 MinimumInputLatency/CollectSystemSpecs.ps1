@@ -36,7 +36,7 @@ $inventory = [ordered]@{
     DeviceGuard = Read-CimData Win32_DeviceGuard @('VirtualizationBasedSecurityStatus','SecurityServicesConfigured','SecurityServicesRunning') 'root/Microsoft/Windows/DeviceGuard'
     ActivePowerScheme = @(& powercfg.exe /getactivescheme)
     ProcessorPowerSettings = @(& powercfg.exe /query SCHEME_CURRENT SUB_PROCESSOR)
-    GameProcess = @(Get-Process -Name SimpleDirectX12Game -ErrorAction SilentlyContinue | Select-Object Id,StartTime,Path,MainWindowTitle,PriorityClass,ProcessorAffinity)
+    GameProcess = @(Get-Process -Name Veehiicuul -ErrorAction SilentlyContinue | Select-Object Id,StartTime,Path,MainWindowTitle,PriorityClass,ProcessorAffinity)
     RepositoryCommit = (& git -C $repositoryDirectory rev-parse HEAD)
     RepositoryStatus = @(& git -C $repositoryDirectory status --short)
 }
@@ -59,7 +59,7 @@ foreach ($relativePath in $sourceFiles) {
         $manifest += [ordered]@{ Source=$relativePath; Snapshot=('Context/' + $item.Name); Length=$item.Length; LastWriteTime=$item.LastWriteTime.ToString('o'); Sha256=(Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash }
     }
 }
-foreach ($sourcePath in @((Join-Path $repositoryDirectory 'MyBuildOutput\Release\SimpleDirectX12Game.exe'), (Join-Path $env:USERPROFILE 'Program\PresentMon-2.5.1-x64.exe'))) {
+foreach ($sourcePath in @((Join-Path $repositoryDirectory 'MyBuildOutput\Release\Veehiicuul.exe'), (Join-Path $env:USERPROFILE 'Program\PresentMon-2.5.1-x64.exe'))) {
     if (Test-Path -LiteralPath $sourcePath) {
         $item = Get-Item -LiteralPath $sourcePath
         $manifest += [ordered]@{ Source=$sourcePath; Length=$item.Length; LastWriteTime=$item.LastWriteTime.ToString('o'); Sha256=(Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash; FileVersion=$item.VersionInfo.FileVersion; ProductVersion=$item.VersionInfo.ProductVersion }

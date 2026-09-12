@@ -2,8 +2,8 @@ Start testing: Sep 11 16:44 Pacific Daylight Time
 ----------------------------------------------------------
 1/13 Testing: UVSphereGeometry
 1/13 Test: UVSphereGeometry
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/UVSphereTests.exe"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug
+Command: "./MyBuildOutput/Debug/UVSphereTests.exe"
+Directory: ./MyBuildOutput/Debug
 "UVSphereGeometry" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -18,8 +18,8 @@ Test Passed.
 
 2/13 Testing: PaintGeometryIntegration
 2/13 Test: PaintGeometryIntegration
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/PaintGeometryIntegrationTests.exe"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug
+Command: "./MyBuildOutput/Debug/PaintGeometryIntegrationTests.exe"
+Directory: ./MyBuildOutput/Debug
 "PaintGeometryIntegration" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -34,8 +34,8 @@ Test Passed.
 
 3/13 Testing: SettingsContract
 3/13 Test: SettingsContract
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/SettingsTests.exe"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug
+Command: "./MyBuildOutput/Debug/SettingsTests.exe"
+Directory: ./MyBuildOutput/Debug
 "SettingsContract" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -50,8 +50,8 @@ Test Passed.
 
 4/13 Testing: SettingsJsonContract
 4/13 Test: SettingsJsonContract
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/SettingsJsonTests.exe"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug
+Command: "./MyBuildOutput/Debug/SettingsJsonTests.exe"
+Directory: ./MyBuildOutput/Debug
 "SettingsJsonContract" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -66,8 +66,8 @@ Test Passed.
 
 5/13 Testing: RenderPipelineGpuHardware
 5/13 Test: RenderPipelineGpuHardware
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/RenderPipelineGpuTests.exe"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug
+Command: "./MyBuildOutput/Debug/RenderPipelineGpuTests.exe"
+Directory: ./MyBuildOutput/Debug
 "RenderPipelineGpuHardware" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -89,8 +89,8 @@ Test Passed.
 
 6/13 Testing: RenderPipelineGpuWarp
 6/13 Test: RenderPipelineGpuWarp
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/RenderPipelineGpuTests.exe" "--warp"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug
+Command: "./MyBuildOutput/Debug/RenderPipelineGpuTests.exe" "--warp"
+Directory: ./MyBuildOutput/Debug
 "RenderPipelineGpuWarp" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -112,8 +112,8 @@ Test Passed.
 
 7/13 Testing: ApplicationWindowLifecycle
 7/13 Test: ApplicationWindowLifecycle
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/ApplicationSmokeTests.exe"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug
+Command: "./MyBuildOutput/Debug/ApplicationSmokeTests.exe"
+Directory: ./MyBuildOutput/Debug
 "ApplicationWindowLifecycle" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -128,8 +128,8 @@ Test Passed.
 
 8/13 Testing: ApplicationMaximizeFpsWindowLifecycle
 8/13 Test: ApplicationMaximizeFpsWindowLifecycle
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/ApplicationSmokeTests.exe" "--maximize-fps"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug
+Command: "./MyBuildOutput/Debug/ApplicationSmokeTests.exe" "--maximize-fps"
+Directory: ./MyBuildOutput/Debug
 "ApplicationMaximizeFpsWindowLifecycle" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -144,8 +144,8 @@ Test Passed.
 
 9/13 Testing: SimplePaintStandalone
 9/13 Test: SimplePaintStandalone
-Command: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" "-DMODULE_DIR=C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/Tests/.." "-DCONSUMER_DIR=C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/Tests/SimplePaintStandalone" "-DSMOKE_ROOT=C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintCopyCheck" "-DGENERATOR=Ninja" "-DCXX_COMPILER=C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe" "-DMAKE_PROGRAM=C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe" "-DCONFIGURATION=Debug" "-DDXC_EXECUTABLE=C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/dxc.exe" "-DCTEST_COMMAND=C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/ctest.exe" "-P" "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/Source/SimplePaint/Tests/VerifySimplePaintStandalone.cmake"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests
+Command: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" "-DMODULE_DIR=./Source/SimplePaint/Tests/.." "-DCONSUMER_DIR=./Source/SimplePaint/Tests/SimplePaintStandalone" "-DSMOKE_ROOT=./MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintCopyCheck" "-DGENERATOR=Ninja" "-DCXX_COMPILER=C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe" "-DMAKE_PROGRAM=C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe" "-DCONFIGURATION=Debug" "-DDXC_EXECUTABLE=C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/dxc.exe" "-DCTEST_COMMAND=C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/ctest.exe" "-P" "./Source/SimplePaint/Tests/VerifySimplePaintStandalone.cmake"
+Directory: ./MyBuildOutput/Debug/Source/SimplePaint/Tests
 "SimplePaintStandalone" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -157,7 +157,7 @@ Output:
 -- Detecting CXX compile features - done
 -- Configuring done (0.6s)
 -- Generating done (0.0s)
--- Build files have been written to: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintCopyCheck/a001654f22ae/Build
+-- Build files have been written to: ./MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintCopyCheck/a001654f22ae/Build
 [1/8] Generating PaintPS-default.dxil
 [2/8] Generating PaintPS-3.dxil
 [3/8] Generating PaintVS-3.dxil
@@ -166,7 +166,7 @@ Output:
 [6/8] Building CXX object SimplePaint\CMakeFiles\SimplePaint.dir\Material.cpp.obj
 [7/8] Linking CXX static library SimplePaint\SimplePaint.lib
 [8/8] Linking CXX executable SimplePaintCopyConsumer.exe
-Test project C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintCopyCheck/a001654f22ae/Build
+Test project ./MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintCopyCheck/a001654f22ae/Build
     Start 1: CopiedSimplePaint
 1/1 Test #1: CopiedSimplePaint ................   Passed    0.03 sec
 
@@ -181,7 +181,7 @@ Total Test time (real) =   0.05 sec
 -- Detecting CXX compile features - done
 -- Configuring done (0.7s)
 -- Generating done (0.0s)
--- Build files have been written to: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintCopyCheck/a001654f22ae/ModuleBuild
+-- Build files have been written to: ./MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintCopyCheck/a001654f22ae/ModuleBuild
 [1/10] Generating Generated/SimplePaintPS.h
 [2/10] Generating Generated/SimplePaintVS.h
 [3/10] Building CXX object CMakeFiles\SimplePaint.dir\Material.cpp.obj
@@ -192,7 +192,7 @@ Total Test time (real) =   0.05 sec
 [8/10] Linking CXX executable Tests\SimplePaintTests.exe
 [9/10] Building CXX object Tests\CMakeFiles\SimplePaintGpuTests.dir\SimplePaintGpuTests.cpp.obj
 [10/10] Linking CXX executable Tests\SimplePaintGpuTests.exe
-Test project C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintCopyCheck/a001654f22ae/ModuleBuild
+Test project ./MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintCopyCheck/a001654f22ae/ModuleBuild
     Start 1: SimplePaintContract
 1/4 Test #1: SimplePaintContract ..............   Passed    0.03 sec
     Start 2: SimplePaintGpuHardware
@@ -215,8 +215,8 @@ Test Passed.
 
 10/13 Testing: SimplePaintContract
 10/13 Test: SimplePaintContract
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintTests.exe"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests
+Command: "./MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintTests.exe"
+Directory: ./MyBuildOutput/Debug/Source/SimplePaint/Tests
 "SimplePaintContract" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -232,8 +232,8 @@ Test Passed.
 
 11/13 Testing: SimplePaintGpuHardware
 11/13 Test: SimplePaintGpuHardware
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintGpuTests.exe"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests
+Command: "./MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintGpuTests.exe"
+Directory: ./MyBuildOutput/Debug/Source/SimplePaint/Tests
 "SimplePaintGpuHardware" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -249,8 +249,8 @@ Test Passed.
 
 12/13 Testing: SimplePaintGpuWarp
 12/13 Test: SimplePaintGpuWarp
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintGpuTests.exe" "--warp"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests
+Command: "./MyBuildOutput/Debug/Source/SimplePaint/Tests/SimplePaintGpuTests.exe" "--warp"
+Directory: ./MyBuildOutput/Debug/Source/SimplePaint/Tests
 "SimplePaintGpuWarp" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------
@@ -266,8 +266,8 @@ Test Passed.
 
 13/13 Testing: OrthographicTransforms
 13/13 Test: OrthographicTransforms
-Command: "C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests/OrthographicTransformTests.exe"
-Directory: C:/Users/k/Repository/CPlusPlus/Simple_DirectX12_3D_Game/MyBuildOutput/Debug/Source/SimplePaint/Tests
+Command: "./MyBuildOutput/Debug/Source/SimplePaint/Tests/OrthographicTransformTests.exe"
+Directory: ./MyBuildOutput/Debug/Source/SimplePaint/Tests
 "OrthographicTransforms" start time: Sep 11 16:44 Pacific Daylight Time
 Output:
 ----------------------------------------------------------

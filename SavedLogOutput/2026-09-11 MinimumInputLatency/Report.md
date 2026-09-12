@@ -1,5 +1,12 @@
 # More than 5,000 FPS with the minimum-latency configuration
 
+Project rename on 2026-09-12: application labels in the saved captures and
+supporting files now use Veehiicuul, and saved checkout paths are relative
+to the repository root. All measurement fields are unchanged. Input and
+snapshot byte counts and SHA-256 hashes describe the renamed files; capture
+timestamps and executable fingerprints still describe the original run.
+Git history retains the original capture bytes.
+
 **This native C++/DirectX 12 application sustained approximately 5,600 FPS at
 2560 x 1440 while using its `MinimizeInputLatency` preset.** Two approximately
 five-minute PresentMon captures averaged **5,640.0 FPS** and
@@ -52,7 +59,7 @@ The user confirmed **2560 x 1440**, the application's fullscreen mode, and
 the window border and covers the monitor: this is borderless fullscreen.
 The exact confirmation is preserved in [CaptureContext.json](CaptureContext.json).
 
-Both CSV sets contain only `SimpleDirectX12Game.exe`, process ID `2132`,
+Both CSV sets contain only `Veehiicuul.exe`, process ID `2132`,
 and swap chain `0x2011A689F50`. Their identities agree with the user's statement
 that this was one uninterrupted game session. The preserved
 [launcher transcript](Context/Launcher.log) starts at **13:59:05** and ends at
@@ -186,7 +193,7 @@ change the observed presentation counts.
 
 | Item                                   | Recorded or inspected context                                                  |
 | -------------------------------------- | ------------------------------------------------------------------------------ |
-| Executable                             | SimpleDirectX12Game.exe; 524,288 bytes; last modified 2026-09-11 12:00:59 PDT  |
+| Executable                             | Veehiicuul.exe; 524,288 bytes; last modified 2026-09-11 12:00:59 PDT           |
 | Build                                  | Release, x64, C++20; MSVC /O2 /Ob2 /DNDEBUG; no _DEBUG renderer path           |
 | Compiler toolset                       | MSVC 14.51.36231 under Microsoft Visual Studio 18 Community                    |
 | Graphics / shaders                     | Direct3D 12, DXGI flip-discard; SDK DXC 10.0.26100.0; vs_6_0 / ps_6_0; -O3     |

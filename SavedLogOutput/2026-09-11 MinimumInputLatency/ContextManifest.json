@@ -9,9 +9,9 @@
   {
     "Source": "MyLogOutput\\2026-09-11_13-59-05\\Launcher.log",
     "Snapshot": "Context/Launcher.log",
-    "Length": 1116,
+    "Length": 924,
     "LastWriteTime": "2026-09-11T15:24:07.5540321-07:00",
-    "Sha256": "3AC3CDE6AC1EE02086A60609EB48D98171083E2F992C651849DC5D9D9E497620"
+    "Sha256": "6A8E07256CF13CA1514553B7C91E38C2BBFD6DE82C4FEFD78C4A2D7139B6BFD7"
   },
   {
     "Source": "MyBuildOutput\\Release\\Assets\\Settings.json",
@@ -23,19 +23,19 @@
   {
     "Source": "MyBuildOutput\\Release\\CMakeCache.txt",
     "Snapshot": "Context/CMakeCache.txt",
-    "Length": 16795,
+    "Length": 16032,
     "LastWriteTime": "2026-09-11T11:57:35.8888719-07:00",
-    "Sha256": "70AC4046D15FAA99FDBFE5F795388973BBCB4252A64B5B56F08AD384C5E783D6"
+    "Sha256": "A23F611DF9CE2DB1F5205FCF76707516FB767E44440A984D7564B3D0A953CBC2"
   },
   {
     "Source": "MyBuildOutput\\Release\\build.ninja",
     "Snapshot": "Context/build.ninja",
-    "Length": 100129,
+    "Length": 87942,
     "LastWriteTime": "2026-09-11T13:59:06.3230438-07:00",
-    "Sha256": "11F08B18447799E4836F9FF5A26BC288B59E9D3B6D86DCDBE0CB512D1FBC9719"
+    "Sha256": "06A81C74EB0928106DE26D677B31371D87F57A4536CFDEF9A217C23DC2E49315"
   },
   {
-    "Source": "C:\\Users\\k\\Repository\\CPlusPlus\\Simple_DirectX12_3D_Game\\MyBuildOutput\\Release\\SimpleDirectX12Game.exe",
+    "Source": ".\\MyBuildOutput\\Release\\Veehiicuul.exe",
     "Length": 524288,
     "LastWriteTime": "2026-09-11T12:00:59.2101202-07:00",
     "Sha256": "156EF78C39EDDC2496C5FA234D026035D6147750B83E2B553797C26E307F1820",
