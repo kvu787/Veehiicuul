@@ -9,16 +9,16 @@ rewrite of ZoomTracks.
 - [Blender](Blender): shared source assets, including `Car.blend`.
 - [Conversations](Conversations): repository conversation records.
 
-Double-click [Run.cmd](Run.cmd) to build and launch the current C++ application.
-The root launcher delegates to [Cpp/Run.ps1](Cpp/Run.ps1); builds and session
+Double-click [Cpp/Run.cmd](Cpp/Run.cmd) to build and launch the current C++ application.
+The launcher uses [Cpp/Run.ps1](Cpp/Run.ps1); builds and session
 logs stay under `Cpp/MyBuildOutput` and `Cpp/MyLogOutput`.
 
 From PowerShell at the repository root:
 
 ```powershell
-.\Run.ps1 -BuildOnly
-.\Run.ps1 -Test
-.\Run.ps1 -Test -Configuration Debug
+.\Cpp\Run.ps1 -BuildOnly
+.\Cpp\Run.ps1 -Test
+.\Cpp\Run.ps1 -Test -Configuration Debug
 ```
 
 For CMake commands or Visual Studio's Open Folder workflow, use the `Cpp`
