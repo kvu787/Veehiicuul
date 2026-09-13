@@ -102,5 +102,5 @@ projection multiplication, and fewer bytes uploaded per frame. A larger scene
 or one dominated by shifted-paint pixel work may benefit differently.
 
 Temporary probe sources, snapshots, raw images, PNGs, and timing samples remain
-in the ignored build/orthographic-validation directory for local inspection.
+in the ignored Build/orthographic-validation directory for local inspection.
 

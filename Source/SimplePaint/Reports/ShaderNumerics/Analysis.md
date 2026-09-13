@@ -238,9 +238,9 @@ The stable GPU result is approximately 0.74563253. The remaining difference from
 - The maximum constant-tone grid error versus stored-parameter references was about 0.99999 in production, 0.48058 after merely removing the color floor, and 1.239e-7 with the nonnegative color formula.
 - In 200 default-body samples, the largest differences versus the unclamped requested-color formula were approximately 3.93e-5 red, 7.13e-8 green, and 8.61e-4 blue. These are much smaller than the stress cases. The dramatic floor failures should not be read as a claim that every default pixel is visibly wrong.
 - GPU checks used the local NVIDIA adapter selected by the renderer; the prior adapter enumeration identified an RTX 5070 Ti Laptop GPU. Other GPU/driver arithmetic may differ slightly. HLSL mad is permitted to use fused or non-fused operations. [Microsoft mad documentation](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/mad).
-- The experimental shaders remained under build/shader-numerics. No production shader, renderer, or source paint settings were changed. No performance comparison was performed.
+- The experimental shaders remained under Build/shader-numerics. No production shader, renderer, or source paint settings were changed. No performance comparison was performed.
 
-The complete local experiment inputs, raw outputs, alternate shaders, and harness are in build/shader-numerics; that directory is ignored by Git. The checked-in CSV and presets preserve the named reproductions.
+The complete local experiment inputs, raw outputs, alternate shaders, and harness are in Build/shader-numerics; that directory is ignored by Git. The checked-in CSV and presets preserve the named reproductions.
 
 The original K12 source was consulted to distinguish the intended rational curve from the added endpoint protections. Its own exact endpoint and pole behavior is not a reliable reference for undefined cases. [Original K12 source](https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader).
 

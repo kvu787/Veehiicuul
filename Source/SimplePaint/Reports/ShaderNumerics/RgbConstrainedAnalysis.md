@@ -190,7 +190,7 @@ If separate margins were permitted, keeping Brightness>=0.01 while raising only 
 - The production coefficient denominator was below its floor in 287 primary cases. The largest primary sampled color error was 0.2259287834. This is a sampled maximum, not a proof of the global maximum.
 - A diagnostic pixel shader exposed tone, raw coefficient denominator, facing, and normalized Z. A separate experimental pixel shader evaluated the nonnegative color denominator. Both are confined to the ignored test directory and were not installed into the application.
 - Stable references preserve the stored float32 color conversion, brightness, shift, input angles, tone endpoints, and vertex normals while evaluating normalization, warp, tone interpolation, and the rational curve in double precision. Requested-input references are also recorded. The stable reference includes arbitrarily small allowed shifts; it intentionally does not apply the implementation's tiny-shift shortcut.
-- [RgbConstrainedExamples.csv](RgbConstrainedExamples.csv) contains 44 named examples/comparisons, including exact normals and diagnostic denominators. Complete inputs, GPU outputs, the harness, and the analysis script are retained locally under build/rgb-margin-numerics.
+- [RgbConstrainedExamples.csv](RgbConstrainedExamples.csv) contains 44 named examples/comparisons, including exact normals and diagnostic denominators. Complete inputs, GPU outputs, the harness, and the analysis script are retained locally under Build/rgb-margin-numerics.
 
 Production source hashes used by the harness:
 

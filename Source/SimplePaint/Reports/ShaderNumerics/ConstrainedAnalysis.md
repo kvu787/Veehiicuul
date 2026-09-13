@@ -177,7 +177,7 @@ The unchanged production pixel shader was evaluated using the existing isolated 
 
 All final production outputs in the analyzed set were finite. This is not an exhaustive proof over all float inputs. The current sample's maximum difference from a stable same-stored-parameter reference was approximately 0.99 in the color grid. In the structured neutral-material warp set it was about 1.053e-6. These errors concern different stages; a good warp result does not imply a good final color result.
 
-A pre-existing experimental positive-color shader was used only to distinguish final-denominator errors from upstream rounding; no new implementation was installed. Exact values for named examples and epsilon comparisons are in [ConstrainedExamples.csv](ConstrainedExamples.csv). Full local inputs/results remain in the ignored build/shader-numerics directory.
+A pre-existing experimental positive-color shader was used only to distinguish final-denominator errors from upstream rounding; no new implementation was installed. Exact values for named examples and epsilon comparisons are in [ConstrainedExamples.csv](ConstrainedExamples.csv). Full local inputs/results remain in the ignored Build/shader-numerics directory.
 
 The contract, this analysis, and the example data are documentation changes. The DirectX renderer, shader, active CarPaint.ini, and external Godot K12 file remain unchanged.
 

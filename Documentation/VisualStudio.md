@@ -29,73 +29,20 @@ Open the repository root, rather than just `Source`, a generated build directory
 
 ## 3. Set up predictable Debug and Release configurations
 
-The repository currently has no checked-in CMake preset file. For a repeatable local setup, create **CMakeUserPresets.json** beside the root `CMakeLists.txt`, using the following complete contents. If you already have this file, merge the presets instead of overwriting your own settings.
+The checked-in [CMakePresets.json](../CMakePresets.json) provides `vs-debug` and `vs-release` configure, build, and test presets. Their explicit `Out/Build/${presetName}` output path preserves the folder capitalization when Visual Studio creates new build directories. Personal presets can inherit these configurations in the ignored `CMakeUserPresets.json` file.
 
-```json
-{
-  "version": 3,
-  "configurePresets": [
-    {
-      "name": "vs-debug",
-      "displayName": "Windows x64 Debug",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "cl",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "BUILD_TESTING": true
-      }
-    },
-    {
-      "name": "vs-release",
-      "displayName": "Windows x64 Release",
-      "inherits": "vs-debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "vs-debug",
-      "configurePreset": "vs-debug"
-    },
-    {
-      "name": "vs-release",
-      "configurePreset": "vs-release"
-    }
-  ],
-  "testPresets": [
-    {
-      "name": "vs-debug",
-      "configurePreset": "vs-debug",
-      "output": { "outputOnFailure": true }
-    },
-    {
-      "name": "vs-release",
-      "configurePreset": "vs-release",
-      "output": { "outputOnFailure": true }
-    }
-  ]
-}
-```
-
-The preset separates IDE output from the launcher's `MyBuildOutput/Debug` and `MyBuildOutput/Release`. Both `out/` and `CMakeUserPresets.json` are already ignored by Git. The user preset file can exist without a project preset file. [CMake preset format](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
+The preset separates IDE output from the launcher's `MyBuildOutput/Debug` and `MyBuildOutput/Release`. Both `Out/` and `CMakeUserPresets.json` are already ignored by Git. The shared presets are versioned; personal overrides remain local. [CMake preset format](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
 
 In **Tools > Options > CMake > General**, enable preset-based configuration, using **Always use CMakePresets.json** or the equivalent option in your version. Close and reopen the folder if necessary. Select **Local Machine**, **Windows x64 Debug**, and the associated `vs-debug` build preset if that selector is shown. Wait for successful configuration. Visual Studio supplies the MSVC environment for the preset's external x64 architecture. [Visual Studio preset setup](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170)
 
 Use the generated output paths below after following this setup:
 
-| Purpose                  | Directory                    |
-| ------------------------ | ---------------------------- |
-| Visual Studio Debug      | `out/build/vs-debug`         |
-| Visual Studio Release    | `out/build/vs-release`       |
-| Run.cmd default Release  | `MyBuildOutput/Release`      |
-| Run.ps1 explicit Debug   | `MyBuildOutput/Debug`        |
+| Purpose                 | Directory               |
+| ----------------------- | ----------------------- |
+| Visual Studio Debug     | `Out/Build/vs-debug`     |
+| Visual Studio Release   | `Out/Build/vs-release`   |
+| Run.cmd default Release | `MyBuildOutput/Release`  |
+| Run.ps1 explicit Debug  | `MyBuildOutput/Debug`    |
 
 The first CMake configure checks the compiler and locates DXC. Configuration generates the build system; building then compiles the C++ and shaders and stages the assets.
 
@@ -112,7 +59,7 @@ There are several test executables. Select the game explicitly. In Solution Expl
 The Debug executable is:
 
 ```text
-out/build/vs-debug/Veehiicuul.exe
+Out/Build/vs-debug/Veehiicuul.exe
 ```
 
 Its adjacent `assets` folder should contain `Settings.json` and `SceneBackground.png`. The game locates these relative to its executable, so its working directory normally needs no adjustment.
@@ -200,12 +147,12 @@ ctest --preset vs-debug
 These commands use the same output as the IDE presets. To run one test or list the suite:
 
 ```bat
-ctest --test-dir out/build/vs-debug -N
-ctest --test-dir out/build/vs-debug -R "^SimplePaintContract$" --output-on-failure
-ctest --test-dir out/build/vs-debug -R "Warp" --output-on-failure
+ctest --test-dir Out/Build/vs-debug -N
+ctest --test-dir Out/Build/vs-debug -R "^SimplePaintContract$" --output-on-failure
+ctest --test-dir Out/Build/vs-debug -R "Warp" --output-on-failure
 ```
 
-The current root configuration registers 11 tests, covering paint contracts, standalone module consumption, sphere geometry, orthographic transforms, application settings, hardware/WARP rendering, pipeline behavior, and window lifecycle.
+The current root configuration registers 13 tests, covering paint contracts, standalone module consumption, sphere geometry, orthographic transforms, application settings, hardware/WARP rendering, pipeline behavior, and window lifecycle.
 
 For step-by-step test debugging, select an executable such as `SimplePaintTests` as the startup item and press F5. Return the startup item to the game afterward.
 
@@ -225,7 +172,7 @@ Switch to **Windows x64 Release**, build, select the game, then use **Ctrl+F5** 
 Release with the presets produces:
 
 ```text
-out/build/vs-release/Veehiicuul.exe
+Out/Build/vs-release/Veehiicuul.exe
 ```
 
 Double-clicking `Run.cmd` independently builds and launches Release in `MyBuildOutput/Release`. It does not use whichever preset is active in Visual Studio.
@@ -266,7 +213,7 @@ Use the actual installed path on another machine. Release inherits this value. R
 
 **Only default presets appear**
 
-Check the JSON syntax, ensure the file is named exactly `CMakeUserPresets.json` rather than ending in `.txt`, and enable preset mode. In the x64 developer prompt, run `cmake --list-presets` from the repository root. Close and reopen the folder after changing CMake integration settings. [Preset troubleshooting](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170)
+Ensure the root `CMakePresets.json` is present and enable preset mode. Check the JSON syntax of any personal `CMakeUserPresets.json` overrides. In the x64 developer prompt, run `cmake --list-presets` from the repository root. Close and reopen the folder after changing CMake integration settings. [Preset troubleshooting](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170)
 
 **Headers have red squiggles**
 
