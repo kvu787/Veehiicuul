@@ -34,6 +34,7 @@ Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must di
 ### Running
 
 If you create a runnable application, create a `Run.cmd` file that builds and launches the application when Run.cmd is double-clicked from File Explorer.
+Run.cmd must be located at the root of the application's folder in the git repo.
 Run.cmd must be a simple wrapper for a PowerShell script named `Run.ps1` that contains the actual logic to minimize the amount of batch code written.
 
 ### Logging
