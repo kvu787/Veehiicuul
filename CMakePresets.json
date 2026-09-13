@@ -23,6 +23,18 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "RunDebug",
+      "displayName": "Launcher Windows x64 Debug",
+      "inherits": "vs-debug",
+      "binaryDir": "${sourceDir}/MyBuildOutput/Debug"
+    },
+    {
+      "name": "RunRelease",
+      "displayName": "Launcher Windows x64 Release",
+      "inherits": "vs-release",
+      "binaryDir": "${sourceDir}/MyBuildOutput/Release"
     }
   ],
   "buildPresets": [
@@ -33,6 +45,14 @@
     {
       "name": "vs-release",
       "configurePreset": "vs-release"
+    },
+    {
+      "name": "RunDebug",
+      "configurePreset": "RunDebug"
+    },
+    {
+      "name": "RunRelease",
+      "configurePreset": "RunRelease"
     }
   ],
   "testPresets": [
@@ -45,6 +65,16 @@
       "name": "vs-release",
       "configurePreset": "vs-release",
       "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "RunDebug",
+      "inherits": "vs-debug",
+      "configurePreset": "RunDebug"
+    },
+    {
+      "name": "RunRelease",
+      "inherits": "vs-release",
+      "configurePreset": "RunRelease"
     }
   ]
 }

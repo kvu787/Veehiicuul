@@ -71,7 +71,11 @@ try {
         }
     }
 
-    $buildDirectory = Join-Path $PSScriptRoot ('MyBuildOutput\' + $Configuration)
+    $presetName = if ($Configuration -ieq 'Debug') { 'RunDebug' } else { 'RunRelease' }
+    $presets = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'CMakePresets.json') -Raw | ConvertFrom-Json
+    $configurePreset = $presets.configurePresets | Where-Object { $_.name -ceq $presetName }
+    # Launcher presets declare their output path directly, using only ${sourceDir}.
+    $buildDirectory = $configurePreset.binaryDir.Replace('${sourceDir}', $PSScriptRoot)
     $cachePath = Join-Path $buildDirectory 'CMakeCache.txt'
     $configureOptions = @()
 
@@ -95,16 +99,11 @@ try {
         }
     }
 
-    Invoke-Checked $cmake @configureOptions `
-        -S $PSScriptRoot `
-        -B $buildDirectory `
-        -G Ninja `
-        "-DCMAKE_BUILD_TYPE=$Configuration" `
-        "-DCMAKE_MAKE_PROGRAM=$ninja"
+    Invoke-Checked $cmake --preset $presetName @configureOptions "-DCMAKE_MAKE_PROGRAM=$ninja"
 
-    Invoke-Checked $cmake --build $buildDirectory --parallel
+    Invoke-Checked $cmake --build --preset $presetName --parallel
     if ($Test) {
-        Invoke-Checked (Join-Path (Split-Path $cmake) 'ctest.exe') --test-dir $buildDirectory --output-on-failure
+        Invoke-Checked (Join-Path (Split-Path $cmake) 'ctest.exe') --preset $presetName
     }
     elseif (-not $BuildOnly) {
         $previousLogDirectory = $env:VEEHIICUUL_LOG_DIRECTORY

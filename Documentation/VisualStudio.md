@@ -31,7 +31,7 @@ Open the repository root, rather than just `Source`, a generated build directory
 
 The checked-in [CMakePresets.json](../CMakePresets.json) provides `vs-debug` and `vs-release` configure, build, and test presets. Their explicit `Out/Build/${presetName}` output path preserves the folder capitalization when Visual Studio creates new build directories. Personal presets can inherit these configurations in the ignored `CMakeUserPresets.json` file.
 
-The preset separates IDE output from the launcher's `MyBuildOutput/Debug` and `MyBuildOutput/Release`. Both `Out/` and `CMakeUserPresets.json` are already ignored by Git. The shared presets are versioned; personal overrides remain local. [CMake preset format](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
+The `RunDebug` and `RunRelease` launcher presets inherit these shared settings and use the launcher's `MyBuildOutput/Debug` and `MyBuildOutput/Release`. Both `Out/` and `CMakeUserPresets.json` are already ignored by Git. The shared presets are versioned; personal overrides remain local. [CMake preset format](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
 
 In **Tools > Options > CMake > General**, enable preset-based configuration, using **Always use CMakePresets.json** or the equivalent option in your version. Close and reopen the folder if necessary. Select **Local Machine**, **Windows x64 Debug**, and the associated `vs-debug` build preset if that selector is shown. Wait for successful configuration. Visual Studio supplies the MSVC environment for the preset's external x64 architecture. [Visual Studio preset setup](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170)
 
@@ -156,7 +156,7 @@ The current root configuration registers 13 tests, covering paint contracts, sta
 
 For step-by-step test debugging, select an executable such as `SimplePaintTests` as the startup item and press F5. Return the startup item to the game afterward.
 
-The existing launcher also provides an independent route from PowerShell in the repository root:
+The launcher uses the inherited `RunDebug` and `RunRelease` configure, build, and test presets and prepares the compiler environment automatically. From PowerShell in the repository root:
 
 ```powershell
 .\Run.ps1 -Test -Configuration Debug
@@ -175,7 +175,7 @@ Release with the presets produces:
 Out/Build/vs-release/Veehiicuul.exe
 ```
 
-Double-clicking `Run.cmd` independently builds and launches Release in `MyBuildOutput/Release`. It does not use whichever preset is active in Visual Studio.
+Double-clicking `Run.cmd` uses the `RunRelease` preset to build and launch Release in `MyBuildOutput/Release`. It does not use whichever preset is active in Visual Studio.
 
 Other existing PowerShell commands are:
 

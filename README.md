@@ -71,10 +71,14 @@ app-owned timing delays to impose an FPS target.
 
 Double-click `Run.cmd` in File Explorer. This minimal wrapper starts `Run.ps1`,
 which discovers Visual Studio, configures a 64-bit Release build with its
-bundled CMake and Ninja, stages the runtime assets, builds, and launches the
+bundled CMake and Ninja through the `RunRelease` preset, stages the runtime
+assets, builds, and launches the
 game. Subsequent launches rebuild only changed files. If the repository or its
 build folder has moved, the launcher automatically refreshes the saved CMake
-configuration before building.
+configuration before building. `-Configuration Debug` selects `RunDebug`.
+These configure, build, and test presets in `CMakePresets.json` inherit the
+shared compiler and build settings; the launcher supplies the installed Ninja
+path and prepares the x64 compiler environment.
 
 Build prerequisites:
 
