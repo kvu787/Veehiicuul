@@ -1,6 +1,8 @@
 # Using Visual Studio with this project
 
-This guide covers the full Visual Studio IDE on Windows. Use the repository's CMake project directly.
+This guide covers the full Visual Studio IDE on Windows. Use the CMake project
+in `Cpp` directly. Paths and command examples below are relative to `Cpp`
+unless stated otherwise.
 
 Verified on 2026-09-06: this computer has Visual Studio Community 2026 version 18.9.2, the required MSVC and CMake components, bundled CMake 4.3.1, and Windows SDK 10.0.26100.0 with DXC. The repository documents Visual Studio 2022 or newer as its prerequisite. Menu wording can vary between versions.
 
@@ -21,11 +23,11 @@ For Direct3D validation during development, search Windows Settings for **Option
 
 1. Start Visual Studio.
 2. Choose **Open a local folder** on the start screen, or **File > Open > Folder**.
-3. Open the Veehiicuul repository folder containing `Run.cmd` and the root `CMakeLists.txt`.
-4. Confirm that Solution Explorer contains the root `CMakeLists.txt`, `Source`, `assets`, and `tests`.
+3. Open the Veehiicuul repository's `Cpp` folder containing `Run.cmd`, `CMakeLists.txt`, and `CMakePresets.json`.
+4. Confirm that Solution Explorer contains `CMakeLists.txt`, `Source`, `Assets`, and `Tests`.
 5. Allow the initial CMake configuration and IntelliSense indexing to finish.
 
-Open the repository root, rather than just `Source`, a generated build directory, or a single C++ file. Visual Studio can consume CMake directly for editing, building, and debugging; no solution conversion is necessary. [Microsoft CMake project guide](https://learn.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-170)
+Open `Cpp` as the CMake project folder. Visual Studio can consume CMake directly for editing, building, and debugging; no solution conversion is necessary. [Microsoft CMake project guide](https://learn.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-170)
 
 ## 3. Set up predictable Debug and Release configurations
 
@@ -119,9 +121,9 @@ The renderer sends its pipeline description through `OutputDebugStringW`; look i
 
 ## 7. Edit settings, C++, and shaders
 
-**Settings:** edit the repository's `Assets/Settings.json`, save, build the game target, and restart. The `RuntimeAssets` dependency copies updated settings next to the selected executable. Settings load at startup; there is no live reload. Editing only the output copy is temporary because a subsequent build can replace it.
+**Settings:** edit `Assets/Settings.json` in `Cpp`, save, build the game target, and restart. The `RuntimeAssets` dependency copies updated settings next to the selected executable. Settings load at startup; there is no live reload. Editing only the output copy is temporary because a subsequent build can replace it.
 
-**C++:** stop debugging, edit, save, build, and restart. Add new `.cpp` files to the relevant CMake target. Merely creating a file in Folder View does not ensure it is compiled. The main application target is in the root CMake file; the reusable paint library has its own `Source/SimplePaint/CMakeLists.txt`.
+**C++:** stop debugging, edit, save, build, and restart. Add new `.cpp` files to the relevant CMake target. Merely creating a file in Folder View does not ensure it is compiled. The main application target is in this folder's `CMakeLists.txt`; the reusable paint library has its own `Source/SimplePaint/CMakeLists.txt`.
 
 **Shaders:** edit the original `.hlsl` or `.hlsli` files, then build and restart. CMake invokes DXC and embeds generated shader byte arrays in the executable. Do not edit the generated headers under the build directory's `Generated/Shaders`.
 
@@ -138,7 +140,7 @@ In Visual Studio, use **Test > Run CTests for ...** or **Test > Run Test Preset 
 Open the installed Visual Studio's **x64 Native Tools Command Prompt** from Start. This supplies the x64 MSVC environment; the preset alone does not initialize that environment in a normal terminal.
 
 ```bat
-cd /d "<path to the Veehiicuul repository>"
+cd /d "<path to the Veehiicuul repository>\Cpp"
 cmake --preset vs-debug
 cmake --build --preset vs-debug
 ctest --preset vs-debug
@@ -152,11 +154,11 @@ ctest --test-dir Out/Build/vs-debug -R "^SimplePaintContract$" --output-on-failu
 ctest --test-dir Out/Build/vs-debug -R "Warp" --output-on-failure
 ```
 
-The current root configuration registers 13 tests, covering paint contracts, standalone module consumption, sphere geometry, orthographic transforms, application settings, hardware/WARP rendering, pipeline behavior, and window lifecycle.
+The C++ configuration registers 13 tests, covering paint contracts, standalone module consumption, sphere geometry, orthographic transforms, application settings, hardware/WARP rendering, pipeline behavior, and window lifecycle.
 
 For step-by-step test debugging, select an executable such as `SimplePaintTests` as the startup item and press F5. Return the startup item to the game afterward.
 
-The launcher uses the inherited `RunDebug` and `RunRelease` configure, build, and test presets and prepares the compiler environment automatically. From PowerShell in the repository root:
+The launcher uses the inherited `RunDebug` and `RunRelease` configure, build, and test presets and prepares the compiler environment automatically. From PowerShell in `Cpp`:
 
 ```powershell
 .\Run.ps1 -Test -Configuration Debug
@@ -193,7 +195,7 @@ Debug builds enable additional validation when available and have different CPU 
 
 **CMake configuration fails before anything builds**
 
-Read the first actual failure in the CMake Output stream. Check that you opened the repository root, selected Local Machine/x64, and installed the required workload. A later missing-target error can be a consequence of failed configuration.
+Read the first actual failure in the CMake Output stream. Check that you opened `Cpp`, selected Local Machine/x64, and installed the required workload. A later missing-target error can be a consequence of failed configuration.
 
 **DXC is not found**
 
@@ -213,7 +215,7 @@ Use the actual installed path on another machine. Release inherits this value. R
 
 **Only default presets appear**
 
-Ensure the root `CMakePresets.json` is present and enable preset mode. Check the JSON syntax of any personal `CMakeUserPresets.json` overrides. In the x64 developer prompt, run `cmake --list-presets` from the repository root. Close and reopen the folder after changing CMake integration settings. [Preset troubleshooting](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170)
+Ensure `Cpp/CMakePresets.json` is present and enable preset mode. Check the JSON syntax of any personal `CMakeUserPresets.json` overrides in `Cpp`. In the x64 developer prompt, run `cmake --list-presets` from `Cpp`. Close and reopen the folder after changing CMake integration settings. [Preset troubleshooting](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170)
 
 **Headers have red squiggles**
 
@@ -251,6 +253,6 @@ Read the message and inspect `Renderer::CreateDevice`. The renderer tries qualif
 
 Review edits in Visual Studio's Git Changes window. Commit source, intended assets, tests, and documentation as appropriate. The repository already ignores IDE state and build output; keep machine-specific preset settings local.
 
-Follow the shared [README constraints](../README.md#constraints): Windows x64, vendor-neutral graphics interfaces, and no application-owned frame-rate limiter. Rendering synchronization and VSync are permitted. Record conversations under `Conversations` and keep their `[cnv]` commits separate from implementation or documentation commits.
+Follow the shared [README constraints](../../README.md#constraints): Windows x64, vendor-neutral graphics interfaces, and no application-owned frame-rate limiter. Rendering synchronization and VSync are permitted. Record conversations under [Conversations](../../Conversations) at the repository root and keep their `[cnv]` commits separate from implementation or documentation commits.
 
 A normal development cycle is: choose Debug, edit, build, debug, run relevant tests, then check Release behavior before committing.

@@ -145,7 +145,7 @@ if(BLENDER_EXECUTABLE)
             --background
             --factory-startup
             --disable-autoexec
-            "${CMAKE_CURRENT_SOURCE_DIR}/Blender/Car.blend"
+            "${CMAKE_CURRENT_SOURCE_DIR}/../Blender/Car.blend"
             --python-exit-code 1
             --python "${CMAKE_CURRENT_SOURCE_DIR}/Tools/GenerateAssets.py"
             --

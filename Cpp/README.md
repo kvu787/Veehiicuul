@@ -14,13 +14,15 @@ Double-click [Run.cmd](Run.cmd) to build and launch the app.
 - [Asset generation](Documentation/Assets.md): background and mesh regeneration instructions.
 - [Historical reports](Documentation/Reports/README.md): earlier rendering and numerical analyses with supporting data.
 
-Paths and command examples in these guides are relative to the repository root unless stated otherwise.
+Paths and command examples in these guides are relative to this `Cpp` directory
+unless stated otherwise. The [repository overview](../README.md) describes the
+shared folders and the planned Godot rewrite.
 
 A small native Win32/C++ DirectX 12 scene moving toward the visual structure of
 Zoom Tracks:
 
 - a fixed orthographic camera with a 3/4 overhead view (orthographic-only by design);
-- one 3D car, sourced from `Blender/Car.blend`, moving between `x = -7` and
+- one 3D car, sourced from `../Blender/Car.blend`, moving between `x = -7` and
   `x = +7` at 8 units per second while rotating at 90 degrees per second;
 - a stationary UV sphere below and to the right of the cube, clear of the car;
 - an optimized SimplePaint/K12 shader shared by the car and sphere; and
@@ -34,38 +36,16 @@ Both composite above the flattened environment.
 
 ## Constraints
 
-This section is the single source of truth for constraints that apply to both
-human developers and coding agents.
+Follow the shared [repository constraints](../README.md#constraints).
+That section is the single source of truth for both developers and coding agents.
 
-### Platform and GPU policy
-
-The runtime platform preconditions are **Windows 11** and
-**x86_64 (x64)**. There are **no GPU preconditions**: no particular GPU vendor,
-model, generation, or hardware feature set may be required.
-
-All repository code must use vendor-neutral interfaces and behavior. Do not
-implement or integrate GPU-vendor-specific APIs, SDKs, extensions,
-optimizations, workarounds, or vendor-ID-based paths. **NVIDIA Reflex and AMD
-Anti-Lag 2 are prohibited**, including optional integrations. Rendering and
-latency/queueing work must use vendor-neutral Windows, Direct3D 12, and DXGI
-capability queries and fallbacks.
+### Current renderer support
 
 Hardware adapter selection checks both Direct3D 12 device creation and Shader
 Model 6.0 support. If no hardware adapter qualifies, the renderer tries WARP.
 The compiled shaders still require Shader Model 6.0 in the selected runtime,
 including WARP. Support for Windows installations whose WARP runtime lacks
 that capability remains an implementation gap.
-
-### Frame rate policy
-
-The app must not implement any frame rate limiting of its own. Do not add
-an FPS cap, target-frame-rate or `FrameRateLimit` setting, or timer, sleep,
-spin, or pacing logic intended to enforce a frame rate. This prohibition
-includes optional limiters and background FPS caps.
-
-GPU fences, resource-availability waits, DXGI presentation waits, and VSync
-remain valid synchronization mechanisms. They must not be supplemented with
-app-owned timing delays to impose an FPS target.
 
 ## Run
 
@@ -95,7 +75,7 @@ directory.
 Each launcher invocation writes `Launcher.log` in
 `MyLogOutput/yyyy-MM-dd_HH-mm-ss/`. Game runs also write startup, shutdown,
 and errors to `Application.log` in that folder. Direct executable and Visual
-Studio launches create a session folder under the repository's `MyLogOutput`
+Studio launches create a session folder under this C++ application's `MyLogOutput`
 directory, whose location is set at build time. This directory is ignored by Git.
 
 ## Controls
@@ -178,7 +158,7 @@ The GPU tests exercise both the preferred adapter and WARP.
 ## Assets and implementation
 
 `Tools/GenerateAssets.py` uses Blender's own triangulation and evaluated corner
-normals to turn `Blender/Car.blend` into the checked-in generated mesh header.
+normals to turn `../Blender/Car.blend` into the checked-in generated mesh header.
 It also bakes the old static 3D scene into `Assets/SceneBackground.png`. The
 background is 32:9 so normal windows can center-crop it while preserving the
 camera's vertical scale; its center half is a native 2560x1440 image at 16:9.
@@ -207,6 +187,8 @@ frame synchronization. Only the two staged image/settings files are required
 at runtime.
 
 # [temp] PresentMon
+
+Run these commands from the `Cpp` directory.
 
 ```powershell
 $gameProcesses = @(Get-Process -Name Veehiicuul -ErrorAction Stop)
