@@ -670,3 +670,76 @@ I traced the limit to the September 6 frame-admission changes. I found no benchm
 **For your present experiment, draining the queue immediately before rendering is a reasonable baseline.** Bounded batches could remain useful while waiting for GPU/presentation readiness; the final input refresh is where stopping at an arbitrary count conflicts with your freshness objective. We would verify that continuous mouse movement does not cause excessive time in that final drain.
 
 My previous comment identified a possible source of stale input, **not an observed backlog or measured latency problem**. I have not changed the code.
+
+
+## User
+
+for custom cpp/dx12, what should the app do to get the freshest input possible from keyboard, mouse, and gamepad for the purposes of minimizing input latency
+
+## Assistant
+
+I’ll check the Windows APIs for each device and how they fit around your renderer’s waits, then outline the input sequence I’d use.
+
+## Assistant
+
+The important distinction is between the latest state and the events since the last frame. For example, a quick press and release can disappear from a “currently held?” check. Microsoft’s GameInput API supports both current readings and recent history for all three device types, making it a useful option for this Windows-only app.
+
+## Assistant
+
+Your renderer already has the right place for the final input read: after `PrepareFrame()` finishes its waits. I’d start with one application update thread and sample there. GameInput already collects readings asynchronously, so an extra polling thread would need a measured benefit to justify it.
+
+## Assistant
+
+**The app should finish its frame-readiness waits, obtain the newest available input, and immediately run its one game update using that input.** It should also preserve button presses and releases that happened between updates.
+
+For your Windows 11 application, **I would use Microsoft’s GameInput API as the starting point for keyboard, mouse, and gamepad input**. Microsoft recommends it for new code; it supports all three through current readings and recent input history. That is a design recommendation, not a claim that we have measured it beating every alternative on your hardware. [GameInput overview](https://learn.microsoft.com/en-us/gaming/gdk/docs/features/common/input/overviews/input-overview) Using the current PC API also adds a GameInput package and redistributable dependency. [PC setup](https://learn.microsoft.com/en-us/gaming/gdk/docs/features/common/input/overviews/input-nuget)
+
+The frame sequence should be:
+
+1. Process window events and collect input while waiting.
+2. Wait for the GPU resources and DXGI presentation admission.
+3. **Finalize a fresh input snapshot for this frame.**
+4. Run the game update once using that snapshot.
+5. Render the resulting state and present it.
+
+An “input snapshot” simply means the keys, buttons, mouse movement, and controller values that this particular update will use. Your existing [`PrepareFrame()`](C:/Users/k/Repository/Veehiicuul/Cpp/Source/Renderer.cpp:1274) already puts the rendering waits before the point where we would finalize that snapshot.
+
+**For each device, I would collect the following:**
+
+| Device   | Current information to use                 | Information to preserve between updates       |
+| -------- | ------------------------------------------ | --------------------------------------------- |
+| Keyboard | Which keys are currently held              | Press and release transitions                 |
+| Mouse    | Current buttons and accumulated movement   | Button transitions, movement, and wheel input |
+| Gamepad  | Current buttons, stick positions, triggers | Button transitions                            |
+
+GameInput’s `GetCurrentReading()` retrieves the latest available reading matching the requested device/type. Read each relevant device separately; one call with several input kinds does not return a combined snapshot of every device. [API contract](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinput/methods/igameinput_getcurrentreading)
+
+For **keyboard input**, use the reading’s pressed-key state for actions such as holding a movement key. Also examine the intervening input history to detect presses and releases.
+
+For **mouse movement**, use the accumulated movement since the previous update. GameInput maintains cumulative motion counters, so subtracting the previous counters from the latest counters preserves the total movement even when several reports arrived between frames. These are motion counts, not desktop cursor coordinates. [Keyboard and mouse behavior](https://learn.microsoft.com/en-us/gaming/gdk/docs/features/common/input/advanced/input-keyboard-mouse)
+
+For **gamepad input**, read the latest stick, trigger, and button values immediately before the update. Avoid adding temporal smoothing unless the game actually needs it: averaging several frames of stick positions makes the response trail behind the newest position.
+
+**Reading only the latest state is insufficient for short presses.** At 100 FPS, imagine these events between two updates:
+
+- At 0 ms, the button is up.
+- At 3 ms, the player presses it.
+- At 7 ms, the player releases it.
+- At 10 ms, the next update sees that it is up.
+
+Comparing only the two snapshots misses the entire press. GameInput’s `GetNextReading()` lets the app examine the intervening readings and preserve those transitions. This still produces **one game update**, not an update for every input event. [Input-history API](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinput/methods/igameinput_getnextreading)
+
+This also gives a better way to handle the concern about the 64-message limit: capture the newest reading as the endpoint for this frame, then process relevant history through that endpoint. The work has a defined endpoint, while newly arriving readings remain available for the next update. The ordinary Windows message pump still handles the window; it no longer has to serve as the sole source of current gameplay input.
+
+**If we keep a traditional Windows input implementation instead, the corresponding choices are:**
+
+- **Keyboard and mouse buttons:** buffered Raw Input for transitions. `GetAsyncKeyState()` can provide a late check of the current held state, using its high bit. Its “pressed since last call” low bit is unreliable and should not replace event tracking. [Microsoft documentation](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getasynckeystate)
+- **Relative mouse movement:** buffered Raw Input through `GetRawInputBuffer()`; accumulate all retrieved movement deltas. Reading only the last delta would discard movement. Microsoft specifically provides buffered reading for high-frequency devices. [Raw Input overview](https://learn.microsoft.com/en-us/windows/win32/inputdev/about-raw-input)
+- **Desktop cursor position:** `GetCursorPos()` near the update boundary, if the game needs screen coordinates. [API documentation](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getcursorpos)
+- **Compatible gamepads:** `XInputGetState()` near the update boundary is a straightforward alternative, although that call supplies current state rather than GameInput’s reading history. [XInput documentation](https://learn.microsoft.com/en-us/windows/win32/api/xinput/nf-xinput-xinputgetstate)
+
+I would start with **one application-owned update thread**. Keep input processing inexpensive: accumulate state and transitions, avoid per-event logging or game updates, and apply the resulting input directly during that frame’s update. GameInput already collects readings asynchronously; adding another application polling thread is not automatically a latency improvement.
+
+“Freshest” means **the newest report that has reached the input system when we sample it**. It cannot include a physical action that the device has not reported yet, or an event arriving after that frame’s snapshot. Likewise, an external FPS limiter can still introduce a wait after the snapshot; changing input APIs does not control where that limiter waits.
+
+For the PresentMon experiment, changing input APIs would require checking that its measurements still correspond to the intended input path. Its automatic input tracking in your [2.5.1 source](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentData/PresentMonTraceConsumer.cpp:1700) uses Windows input events; it should not be assumed to measure GameInput/XInput gamepad latency automatically.
