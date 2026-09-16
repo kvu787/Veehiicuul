@@ -321,3 +321,33 @@ The current plan is:
    - Look for a consistent difference across repeated runs, rather than relying on one unusually fast or slow sample.
 
 The main question this answers is: **with fresh input applied during one update per frame and both applications capped at 100 FPS, does stock Godot’s D3D12 pipeline show a repeatable latency disadvantage versus your C++ profile?**
+
+## User
+
+what does `rendering/driver/threads/thread_model = 1` do? why do the godot docs say that it is experimental? https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-rendering-driver-threads-thread-model
+
+what is the default value?
+
+## Assistant
+
+I’ll check the stable documentation and your local Godot source to see what value `1` selects and how the experimental warning applies.
+
+## Assistant
+
+**`1` means “Safe,” and it is the default value.** Our experiment plan therefore keeps Godot’s normal rendering-thread configuration. The [stable documentation](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-rendering-driver-threads-thread-model) also lists the default as `1`.
+
+With **Safe**, the main CPU thread runs your game update and then drives rendering. Godot does **not** create a separate rendering thread for this mode. The GPU still executes work asynchronously, and Godot can still use worker threads for other tasks; this setting does not make the entire engine single-threaded. [Rendering implementation](C:/Users/k/Repository/External/godot/servers/rendering/rendering_server_default.cpp:447)
+
+The options in your checkout are:
+
+| Value | Mode                | Meaning                                  |
+| ----- | ------------------- | ---------------------------------------- |
+| `0`   | Unsafe (deprecated) | Legacy option; unnecessary for our test. |
+| `1`   | Safe                | Default; no separate rendering thread.   |
+| `2`   | Separate            | Runs rendering on a separate CPU thread. |
+
+**The experimental warning concerns the separate rendering-thread feature.** The documentation attaches its warning to the entire property, which makes the wording confusing.
+
+Your source code is more explicit: it emits the experimental/crash warning **only when separate-thread rendering is enabled**, and specifically recommends setting the property to **Safe**. [Startup warning](C:/Users/k/Repository/External/godot/main/main.cpp:3517)
+
+For our experiment, `1` gives us the straightforward ordering we want: **input → game update → rendering on the main thread**. It does not itself change GPU frames in flight, VSync, or the FPS limit.
