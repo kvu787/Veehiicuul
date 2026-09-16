@@ -185,3 +185,83 @@ There are also normal missing samples: frames without associated input can conta
 Input and display tracking are **enabled by default**. These basic columns do not require the optional application-instrumentation flags. [Capture defaults](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentMon/CommandLine.cpp:391)
 
 This would give us a useful comparison of the two presentation pipelines under your driver cap. A claim about actual physical input-to-visible-response latency would additionally require verified input-to-frame association and, for the display itself, a camera or sensor measurement.
+
+## User
+
+okay, this is the part that concerns me:
+First, it infers which frame contains the response. It does not inspect the game’s input handlers, simulation state, or pixels. A program can retrieve a keypress, ignore it, and still receive a latency measurement. Likewise, if Godot postpones the visible response until a later physics update, PresentMon does not automatically discover that delay. The association is made at the process/presentation level.
+Therefore, your existing C++ program and a minimal Godot scene can potentially produce these metrics without reacting visibly. To make the comparison represent actual responsiveness, I would give both a simple immediate response—such as changing a rectangle’s color on a keypress or click—and ensure that state reaches the next rendered frame.
+
+first thing i need to emphasize: the game *does not* have a separate physics update or any kind of other separate update/step. the game is very simple. it has one update loop that should get the freshest possible input, compute game state, and then draw the game state.
+
+for custom cpp/dx12, i'm confident that we can use the proper api to get the freshest input.
+
+my concern is about godot engine. once again, my game only needs one update loop. i simply need to ensure that i get the freshest input when reading input from within the update loop in godot engine. how do i ensure this?
+
+## Assistant
+
+I’ll trace Godot’s Windows input processing into `_process()` and check whether you can refresh input there, so the answer fits your single-loop design.
+
+## Assistant
+
+Godot exposes the call you need: `DisplayServer.process_events()`. In your Windows source, it reads pending Windows input and flushes it into Godot’s input state. Calling it at the start of `_process()` lets you refresh input immediately before computing game state; input getters alone just read Godot’s stored state.
+
+## Assistant
+
+**Your single-update-loop design is supported by Godot. Use `_process()`, and call `DisplayServer.process_events()` immediately before reading input and computing game state. No engine modification is needed for that.**
+
+My earlier example about waiting for a physics update does not apply to the design you’ve described.
+
+Godot normally processes Windows input before entering its main iteration. An explicit `DisplayServer.process_events()` at the start of your update refreshes input again, catching events that arrived since that earlier processing. [Normal Windows loop](C:/Users/k/Repository/External/godot/platform/windows/os_windows.cpp:2355)
+
+In your local Godot source, that call:
+
+- Reads pending raw mouse input.
+- Processes queued keyboard, mouse-button, and other window messages.
+- Flushes the resulting events into Godot’s input state before returning.
+
+That behavior is directly visible in the [Windows implementation](C:/Users/k/Repository/External/godot/platform/windows/display_server_windows.cpp:4515), and the method is exposed to scripts. [Godot API documentation](https://docs.godotengine.org/en/latest/classes/class_displayserver.html#class-displayserver-method-process-events)
+
+For example, with a `ColorRect` child named `Indicator`:
+
+```gdscript
+extends Node
+
+@onready var Indicator: ColorRect = $Indicator
+
+func _process(_Delta: float) -> void:
+    # Refresh input immediately before this frame's game update.
+    DisplayServer.process_events()
+
+    # Read input and compute this frame's state.
+    var Pressed := (
+        Input.is_physical_key_pressed(KEY_SPACE)
+        or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+    )
+
+    # Give that state to the renderer during this same update.
+    Indicator.color = Color.WHITE if Pressed else Color.BLACK
+```
+
+Here, the rectangle is white while Space or the left mouse button is held. Godot runs the rendering step after the game’s process callbacks, so this does not intentionally defer the new color to a later game update. [Update-before-render ordering](C:/Users/k/Repository/External/godot/main/main.cpp:5055)
+
+**The important distinction is between refreshing input and reading stored input:**
+
+| Operation                        | What it does                                                |
+| -------------------------------- | ----------------------------------------------------------- |
+| `Input.is_action_pressed(...)`   | Reads Godot’s current stored input state.                   |
+| `Input.flush_buffered_events()`  | Processes events Godot has already collected.               |
+| `DisplayServer.process_events()` | Processes pending OS events and, on Windows, flushes input. |
+
+Calling only `Input.flush_buffered_events()` does **not** fetch newly arrived Windows messages. In this Windows implementation, adding it after `DisplayServer.process_events()` is redundant.
+
+For your setup, I would also:
+
+- Keep the controller’s `_process()` on the **main thread**, and use rendering thread model **Safe** (`1`).
+- Keep physics interpolation disabled and apply the computed state directly to the visible nodes.
+- For discrete presses, use a mapped action’s `Input.is_action_just_pressed()` when you need to retain a brief press that was released between updates.
+- For captured relative mouse movement, collect and sum motion events in `_input()`, then consume that sum during `_process()`. That callback collects input; it does not need to run a second game update. Do not call `process_events()` recursively from `_input()`.
+
+**You do not need to disable input accumulation to make this refresh work.** The explicit Windows processing call flushes accumulated events before returning. Disabling accumulation changes event coalescing and processing cost; it is not the essential freshness control here.
+
+The precise guarantee is that you process available Windows input immediately before your game update. It is not direct hardware polling, and input arriving after that sampling point can still miss the current frame—as it can in C++. Later GPU, presentation, or driver-limiter waits remain separate from this input-refresh question.
