@@ -265,3 +265,59 @@ For your setup, I would also:
 **You do not need to disable input accumulation to make this refresh work.** The explicit Windows processing call flushes accumulated events before returning. Disabling accumulation changes event coalescing and processing cost; it is not the essential freshness control here.
 
 The precise guarantee is that you process available Windows input immediately before your game update. It is not direct hardware polling, and input arriving after that sampling point can still miss the current frame—as it can in C++. Later GPU, presentation, or driver-limiter waits remain separate from this input-refresh question.
+
+## User
+
+okay, good. so we can say that this limitation is acceptable and shouldn't invalidate input latency data from presentmon:
+
+First, it infers which frame contains the response. It does not inspect the game’s input handlers, simulation state, or pixels. A program can retrieve a keypress, ignore it, and still receive a latency measurement. Likewise, if Godot postpones the visible response until a later physics update, PresentMon does not automatically discover that delay. The association is made at the process/presentation level.
+Therefore, your existing C++ program and a minimal Godot scene can potentially produce these metrics without reacting visibly. To make the comparison represent actual responsiveness, I would give both a simple immediate response—such as changing a rectangle’s color on a keypress or click—and ensure that state reaches the next rendered frame.
+
+given this, what is the current plan for the presentmon experiments?
+
+## Assistant
+
+I’ll consolidate the experiment plan around your single update loop and the input-refresh point we verified in Godot.
+
+## Assistant
+
+**Yes—for this controlled experiment, that limitation is acceptable, provided we establish that the sampled input changes the state drawn in the next presentation.** Your single-update-loop design makes that straightforward. We’ll interpret PresentMon’s results as Windows-input-to-presentation estimates.
+
+The current plan is:
+
+1. **Prepare the two applications.**
+   - **C++:** use the existing application with `MinimizeInputLatency` and VSync off.
+   - **Godot:** create a minimal standalone D3D12 game using one main-thread `_process()` callback: refresh input with `DisplayServer.process_events()`, read input, compute state, and update the visuals. Use Safe rendering threading, interpolation off, two swap-chain images, and Godot’s minimum frame queue size of two.
+   - Give both the same simple input indicators: a visible change on Space, a visible change on a mouse click, and a marker responding to mouse movement. Keep input collection before the game update and apply its results directly to that frame’s visuals.
+
+2. **Match and record the test conditions.**
+   - Apply the **100 FPS NVIDIA driver cap to both executables**; use no in-game FPS limiter.
+   - Use the same monitor, window size, window mode, mouse mode, and VSync/VRR settings.
+   - Run release builds outside the Godot editor. Check that both workloads are comfortably below the 10 ms frame budget.
+   - Record the executable versions, settings, monitor refresh rate, and relevant driver settings alongside the captures.
+
+3. **Do a short validation capture first.**
+   - Use your `PresentMon-2.5.1-x64.exe`, targeting the actual game process.
+   - You launch the game and focus its window. Recording starts after a short settling period, excluding the focus click.
+   - Try each input type separately and confirm that the appropriate latency columns contain valid measurements.
+   - Keep the original CSV data, including dropped frames and missing values. If a required column stays `NA`, investigate before collecting the main dataset.
+
+4. **Capture three separate input tests.**
+
+   | Test           | Your activity                                         | Primary metric              |
+   | -------------- | ----------------------------------------------------- | --------------------------- |
+   | Keyboard       | Repeatedly press and release Space; mouse stays still | `MsAllInputToPhotonLatency` |
+   | Mouse clicks   | Repeatedly click; mouse stays still                   | `MsClickToPhotonLatency`    |
+   | Mouse movement | Continuously move the mouse; no clicks or keypresses  | `MsAllInputToPhotonLatency` |
+
+   Use normal individual keypresses rather than holding a key for automatic repeats. We’ll compare each input type against the same input type in the other application.
+
+   Start with **30 seconds per capture and three repetitions per test per application**: 18 captures, or nine minutes of recorded activity. Alternate which application runs first to reduce effects from changing system conditions.
+
+5. **Compare the captures.**
+   - Report valid sample counts, missing-value rates, and dropped-frame rates.
+   - Compare median latency, the 95th percentile, and a low percentile to describe the faster responses.
+   - Check actual FPS and presentation mode to confirm comparable runs.
+   - Look for a consistent difference across repeated runs, rather than relying on one unusually fast or slow sample.
+
+The main question this answers is: **with fresh input applied during one update per frame and both applications capped at 100 FPS, does stock Godot’s D3D12 pipeline show a repeatable latency disadvantage versus your C++ profile?**
