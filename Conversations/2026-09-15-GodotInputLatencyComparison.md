@@ -568,3 +568,46 @@ Different frames can occupy different stages simultaneously. Also, submitting an
 For your proposed **100 FPS, roughly 0.5 ms of CPU-plus-GPU work** experiment, there is ample time between frames for GPU work to finish. That could make the frame-slot and GPU-wait differences small. Presentation timing and the external limiter can still matter.
 
 **The table describes differences in control, not seven measured latency penalties.** The captures are needed to establish which differences actually affect your two applications under the chosen conditions.
+
+
+## User
+
+going back to the presentmon experiment:
+Prepare the two applications.
+- C++: use the existing application with MinimizeInputLatency and VSync off.
+- Godot: create a minimal standalone D3D12 game using one main-thread _process() callback: refresh input with DisplayServer.process_events(), read input, compute state, and update the visuals. Use Safe rendering threading, interpolation off, two swap-chain images, and Godot’s minimum frame queue size of two.
+- Give both the same simple input indicators: a visible change on Space, a visible change on a mouse click, and a marker responding to mouse movement. Keep input collection before the game update and apply its results directly to that frame’s visuals.
+
+is C:\Users\k\Repository\Veehiicuul\Cpp ready for this without any further changes?
+
+## Assistant
+
+I’ll check the C++ app’s current input handling, visuals, and rendering settings against that experiment plan.
+
+## Assistant
+
+**No—not yet. Its rendering configuration is ready, but the three input indicators and their connection to rendering are missing.**
+
+The parts already in place are:
+
+- **`MinimizeInputLatency` selected and VSync off.** These are the current [settings](C:/Users/k/Repository/Veehiicuul/Cpp/Assets/Settings.json:2). The selected preset supplies one GPU frame in flight, DXGI latency of one, presentation admission, two swap-chain buffers, and spin waiting. The other custom values in that JSON do not override the selected preset.
+- **Input-message processing after rendering waits.** [`PrepareFrame()`](C:/Users/k/Repository/Veehiicuul/Cpp/Source/Renderer.cpp:1274) waits for GPU resources and presentation admission, then processes Windows messages again before rendering.
+- **One main-thread loop, with no application FPS limiter.**
+
+What is missing:
+
+| Required response        | Current implementation                         |
+| ------------------------ | ---------------------------------------------- |
+| Visible change on Space  | No Space-specific behavior.                    |
+| Visible change on click  | No mouse-button input handling for game state. |
+| Marker following motion  | No mouse-position state or game-rendered marker. |
+
+The existing [keyboard handler](C:/Users/k/Repository/Veehiicuul/Cpp/Source/Application.cpp:202) only implements Escape, F11, and V. The rendered animation is [calculated from elapsed time](C:/Users/k/Repository/Veehiicuul/Cpp/Source/Renderer.cpp:1083), independently of those test inputs. The ordinary Windows mouse cursor is not the game-rendered marker we need.
+
+The required addition is to collect keyboard/button events and mouse position, then use that collected input after `PrepareFrame()` succeeds to update the indicators and render them in that frame:
+
+**Wait for readiness → refresh input → update indicator state → render → present.**
+
+There is also one input-freshness detail to address: [`ServiceMessages()`](C:/Users/k/Repository/Veehiicuul/Cpp/Source/Application.cpp:58) processes at most 64 messages per call. Calling it after the waits does not guarantee that every queued input message has been consumed. The added input collection should account for that rather than assume the queue is empty.
+
+PresentMon may already produce input-latency measurements for this application, but it does **not yet meet our agreed requirement that those inputs directly affect that frame’s visuals**. The renderer settings can stay as they are.
