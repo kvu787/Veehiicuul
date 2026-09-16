@@ -1,0 +1,4 @@
+.godot/
+Build/
+MyLogOutput/
+*.csproj.user

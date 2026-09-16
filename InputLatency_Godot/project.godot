@@ -1,0 +1,37 @@
+config_version=5
+
+[application]
+config/name="Input Latency Godot"
+run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.7", "C#", "Forward Plus")
+run/max_fps=0
+run/frame_delay_msec=0
+run/low_processor_mode=false
+run/low_processor_mode_sleep_usec=0
+
+[debug]
+file_logging/enable_file_logging=false
+file_logging/enable_file_logging.pc=false
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/resizable=false
+window/size/mode=0
+window/vsync/vsync_mode=0
+
+[dotnet]
+project/assembly_name="InputLatencyGodot"
+
+[physics]
+common/physics_interpolation=false
+
+[rendering]
+renderer/rendering_method="forward_plus"
+rendering_device/driver.windows="d3d12"
+rendering_device/fallback_to_vulkan=false
+rendering_device/fallback_to_opengl3=false
+rendering_device/vsync/swapchain_image_count=2
+rendering_device/vsync/frame_queue_size=2
+driver/threads/thread_model=1
+environment/defaults/default_clear_color=Color(0.025, 0.035, 0.055, 1)

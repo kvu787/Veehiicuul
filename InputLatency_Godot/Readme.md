@@ -1,0 +1,63 @@
+# Godot input latency experiment
+
+Minimal Windows 11 x64 application using Godot **4.7.2 .NET**, C#, and a 3D sphere with an event display.
+
+Double-click **Run.cmd** to build a standalone release export and launch it. Close the game using its window close button. The launcher prints the game process ID for PresentMon.
+
+The launcher uses the installed Godot .NET editor and matching .NET export templates under `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`. The project targets the installed **.NET 10 SDK**. Godot packages come from that installation; the first release export may download .NET runtime packages from NuGet. The exported executable and its supporting files stay together in `Build`.
+
+## Input display
+
+- The sphere and numbers show the selected gamepad's right stick. Positive X is right; positive Y is down. There is no application deadzone, interpolation, or smoothing. Godot's controller mapping and device processing still apply.
+- The application keeps the first selected gamepad while it remains connected. Other gamepads' axis/button events are ignored. When the selected pad disconnects, its stick position resets and another connected pad is selected, or the display waits at zero. All controller connection changes appear in the gamepad feed.
+- As agreed, stock Godot combines physical keyboards into one logical keyboard and mice into one logical mouse. There is no physical keyboard/mouse selection, connection enumeration, or per-device connection notification. Missing devices require no initialization; the feeds accept events whenever Windows/Godot supplies them, including after reconnection. No keyboard or mouse is required to start the application.
+- Three independent feeds show key down/up/repeat, mouse motion/buttons/wheel, and selected gamepad axes/buttons. Each retains the latest seven events and counts all received events. Newest events appear at the bottom. Fast streams can replace entries before they are displayed; this is not a complete event recorder.
+- Space and left mouse button have held-state indicators. A game-rendered crosshair follows the sampled mouse position. The ordinary Windows cursor remains visible and uncaptured. Click the window to focus keyboard/mouse input.
+
+Event timestamps are application receipt times in seconds since engine startup, **not device timestamps or latency measurements**. Individual events are kept only in memory; no per-event console or disk logging runs during measurement.
+
+## Frame sequence and experiment settings
+
+The only application update is the main-thread `_Process` callback:
+
+1. `DisplayServer.ProcessEvents()` refreshes Godot's available Windows input.
+2. Read the selected controller axes, mouse position, and button/key state.
+3. Update the 3D sphere and event display for rendering.
+
+`_Input` only records events, and connection callbacks maintain controller selection. There is no `_PhysicsProcess`, timer-driven game update, or application polling thread. Disabling accumulated input preserves more Godot-delivered events; it does not bypass Windows event coalescing or poll physical hardware directly.
+
+| Setting                    | Value                          |
+| -------------------------- | ------------------------------ |
+| Rendering                  | D3D12, Forward+                |
+| Window                     | 1280 x 720, fixed size          |
+| VSync                      | Disabled                       |
+| Application FPS limit      | None                           |
+| Render thread mode         | Safe (1)                       |
+| Swap-chain images          | 2                              |
+| Frame queue size           | 2                              |
+| Physics interpolation      | Disabled                       |
+| Accumulated input          | Disabled                       |
+| Graphics backend fallbacks | Disabled                       |
+| Process priority           | Normal Windows launch priority |
+
+Apply the intended **100 FPS NVIDIA driver cap** to `Build\InputLatencyGodot.exe` separately, matching the C++ app's driver settings. The launcher does not alter driver settings or start PresentMon. Capture the standalone game process, not the editor/import/export processes. Run keyboard, mouse-click, and mouse-motion experiments separately as described in the earlier conversation. PresentMon's automatic keyboard/mouse metrics must not be assumed to cover gamepads.
+
+The live text display has a rendering/allocation cost. This app does not establish the hypothetical 500-microsecond workload or a measured input latency; confirm workload and valid PresentMon samples before comparing results.
+
+## Logs and verification
+
+Each launcher invocation creates `MyLogOutput\yyyy-MM-dd_HH-mm-ss`, containing launcher/import/export logs and, when run, the game log plus `Session.json`. The session records the engine version, executable, process ID, renderer, and relevant settings. `Build`, `.godot`, and `MyLogOutput` are gitignored. Use the launcher for experiment runs so startup diagnostics go into the session folder.
+
+```powershell
+.\Run.ps1 -BuildOnly
+.\Run.ps1 -Test
+.\Run.ps1 -VisualTest
+```
+
+`-Test` builds and runs 15 synthetic checks in the exported headless application: absent devices, arbitrary controller IDs, stable selection, filtering, disconnect/failover/reconnect, bounded event history, and Godot event dispatch into the scene. `-VisualTest` runs the same checks using D3D12 and saves its own rendered viewport as `Verification.png`, then exits. Verification injects synthetic Godot events; do not use those sessions for latency measurements. Headless metadata describes configured rendering settings, not an active D3D12 window.
+
+On September 16, 2026, the release build/export and D3D12 visual verification passed with zero build warnings/errors; the resulting 1280 x 720 image was inspected. A standalone launch also detected a connected gamepad. Physical unplug/replug and multiple-controller hardware behavior still need a manual check; automated checks exercise the selection logic without changing the user's devices.
+
+For a manual check: launch with any devices absent, attach a controller, move its right stick, attach a second controller, disconnect the selected controller, and reconnect it. Check that selection stays stable until disconnection, the remaining pad takes over, and the display returns to zero when none remain. Type, move/click/scroll, and reconnect keyboard/mouse devices to check the Windows/Godot event path.
+
+API references: [Input](https://docs.godotengine.org/en/4.7/classes/class_input.html), [DisplayServer.ProcessEvents](https://docs.godotengine.org/en/4.7/classes/class_displayserver.html#class-displayserver-method-process-events), [InputEvent device IDs](https://docs.godotengine.org/en/4.7/classes/class_inputevent.html).
