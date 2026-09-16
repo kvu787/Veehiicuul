@@ -114,3 +114,74 @@ Both produce 100 FPS, but the second makes the rendered input about **9.5 ms old
 Your C++ profile controls its own waiting carefully, but it cannot guarantee that an external driver limiter will not introduce another delay afterward.
 
 **For your very lightweight game, I would not assume a meaningful latency sacrifice from choosing Godot.** The ideal minimum is the same; the actual difference needs measurement with that limiter enabled. Physical input-to-screen latency also adds mouse/controller delay and display delay, which depend on the monitor’s refresh rate, VSync/VRR settings, scanout, and pixel response.
+
+## User
+
+okay, let's do some input latency experiments.
+
+i would like to use "C:\Users\k\Program\PresentMon-2.5.1-x64.exe". the plan is to use presentmon to capture data from a minimal godot scene and the program in "C:\Users\k\Repository\Veehiicuul\Cpp". for each game, i will open it, click in the window to focus it, and continually do keyboard keypresses, mouse movement, and mouse click. presentmon should capture input latency data for those inputs. then, we can compare the captures and see if there is a meaningful difference in input latencies between godot engine vs custom cpp/dx12.
+
+does this make sense? analyze the presentmon source code at C:\Users\k\Repository\External\PresentMon_2-5-1 to determine how it captures input latency.
+
+## Assistant
+
+I’ll trace how PresentMon 2.5.1 detects input and associates it with displayed frames, then check which parts of your proposed experiment it can measure reliably.
+
+## Assistant
+
+The experiment makes sense as a first comparison, but the source reveals an important limitation: PresentMon associates Windows input events with subsequently presented frames; it does not check whether those frames visibly respond to the input. It also combines input events, so mixing constant mouse movement with keypresses would make the results harder to interpret.
+
+## Assistant
+
+I found a detail that affects the test design: although the documentation says “earliest” input, this version’s code keeps the most recent general input timestamp. Continuous mouse movement can therefore replace the timestamp of an earlier keypress. I’d run clicks, keyboard presses, and mouse movement separately, starting with a short capture to confirm that each produces valid samples.
+
+## Assistant
+
+**Yes—as a first comparison of input-to-presentation timing. But PresentMon alone cannot prove how quickly the game visibly reacts to each input.** Your experiment is useful if we account for that distinction and test each input type separately.
+
+I inspected the local source at tag **v2.5.1**, commit `3e06c7dcb922`, and confirmed that your executable reports version 2.5.1.
+
+PresentMon captures input latency through **Windows tracing events**, without needing changes to either game:
+
+1. **Windows reads an input device.** PresentMon records the timestamp and whether it was a mouse or keyboard, using `InputDeviceRead_Stop`.
+2. **A process retrieves input for a window.** PresentMon associates the tracked input timestamp with that process, using `RetrieveInputMessage_Info`. Mouse clicks receive additional tracking through `OnInputXformUpdate_Info`.
+3. **That process presents a frame.** PresentMon assigns the pending input information to the newly tracked frame.
+4. **Windows reports the frame’s display timing.** PresentMon subtracts the associated input timestamp from that display timestamp.
+
+Those steps are implemented in the [input-event handlers](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentData/PresentMonTraceConsumer.cpp:1698), [input-to-frame assignment](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentData/PresentMonTraceConsumer.cpp:2576), and [latency calculation](C:/Users/k/Repository/External/PresentMon_2-5-1/IntelPresentMon/CommonUtilities/mc/MetricsCalculatorInput.cpp:14).
+
+The two relevant default CSV columns are:
+
+| Column                      | What it represents                                      |
+| --------------------------- | ------------------------------------------------------- |
+| `MsAllInputToPhotonLatency` | Associated keyboard or mouse input → frame display time |
+| `MsClickToPhotonLatency`    | Associated mouse click → frame display time             |
+
+With `--v2_metrics`, the names omit the `Ms` prefix; values remain milliseconds. There is no separate keyboard-only or mouse-movement-only column.
+
+**There are three important limitations for your experiment.**
+
+**First, it infers which frame contains the response.** It does not inspect the game’s input handlers, simulation state, or pixels. A program can retrieve a keypress, ignore it, and still receive a latency measurement. Likewise, if Godot postpones the visible response until a later physics update, PresentMon does not automatically discover that delay. The association is made at the process/presentation level.
+
+Therefore, your existing C++ program and a minimal Godot scene can potentially produce these metrics without reacting visibly. To make the comparison represent actual responsiveness, I would give both a simple immediate response—such as changing a rectangle’s color on a keypress or click—and ensure that state reaches the next rendered frame.
+
+**Second, it does not preserve a separate measurement for every input event.** This is especially relevant to your proposal to keep moving, clicking, and typing simultaneously.
+
+Although the [documentation](https://github.com/GameTechDev/PresentMon/blob/v2.5.1/README-ConsoleApplication.md) describes the “earliest” contributing input, the source explicitly keeps the **most recent general input timestamp** and replaces older timestamps. Keyboard and mouse activity share that tracking. Continuous mouse movement can therefore replace the timestamp of an earlier keypress. [Tracking state and its explanatory comments](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentData/PresentMonTraceConsumer.hpp:526)
+
+Consequently, a low value during continuous mouse movement does not mean every movement event or keypress had that latency.
+
+**Third, “to photon” is a metric name, not an optical measurement.** The normal capture starts at a Windows input-read event and ends at a display timestamp derived from system events. It does not measure the physical button’s travel, earlier device/USB delays, or the monitor’s actual pixel response.
+
+There are also normal missing samples: frames without associated input can contain `NA`. Inputs associated with a frame that was not displayed can be carried forward to a later displayed frame. Neither behavior gives us a one-row-per-keypress log. [Calculation and carry-forward behavior](C:/Users/k/Repository/External/PresentMon_2-5-1/IntelPresentMon/CommonUtilities/mc/MetricsCalculatorInput.cpp:30)
+
+**I would adjust your experiment as follows:**
+
+1. **Start with a short validation capture for each application.** Focus the window before the measurement interval, then verify that clicks, keyboard presses, and movement actually populate the expected columns. Godot and C++ use different input-reading paths, so successful coverage should be checked.
+2. **Run three separate tests:** mouse clicks with the mouse stationary; keyboard presses with the mouse stationary; and mouse movement without clicking or typing. Use discrete presses rather than holding a key for automatic repeats.
+3. **Keep the conditions identical:** standalone release builds, D3D12, the same window size, monitor, 100 FPS driver cap, VSync/VRR settings, and comparable rendering work. Capture the game process, not the Godot editor.
+4. **Repeat in alternating order.** Compare valid-sample counts, median latency, and the slower tail, such as the 95th percentile. Report missing samples separately; never treat `NA` as zero.
+
+Input and display tracking are **enabled by default**. These basic columns do not require the optional application-instrumentation flags. [Capture defaults](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentMon/CommandLine.cpp:391)
+
+This would give us a useful comparison of the two presentation pipelines under your driver cap. A claim about actual physical input-to-visible-response latency would additionally require verified input-to-frame association and, for the display itself, a camera or sensor measurement.
