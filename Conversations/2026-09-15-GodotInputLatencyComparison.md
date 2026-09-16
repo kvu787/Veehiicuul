@@ -743,3 +743,26 @@ I would start with **one application-owned update thread**. Keep input processin
 “Freshest” means **the newest report that has reached the input system when we sample it**. It cannot include a physical action that the device has not reported yet, or an event arriving after that frame’s snapshot. Likewise, an external FPS limiter can still introduce a wait after the snapshot; changing input APIs does not control where that limiter waits.
 
 For the PresentMon experiment, changing input APIs would require checking that its measurements still correspond to the intended input path. Its automatic input tracking in your [2.5.1 source](C:/Users/k/Repository/External/PresentMon_2-5-1/PresentData/PresentMonTraceConsumer.cpp:1700) uses Windows input events; it should not be assumed to measure GameInput/XInput gamepad latency automatically.
+
+
+## User
+
+I would start with one application-owned update thread.
+
+> is this not already how "C:\Users\k\Repository\Veehiicuul\Cpp" works? i thought that it is fully single-threaded
+
+## Assistant
+
+Yes—that is already how the application code is structured. I’ll confirm there are no application-created worker threads elsewhere in the current source.
+
+## Assistant
+
+**Yes. Your application already runs its own game and rendering code on one main CPU thread.** I found no application-created worker threads in the runtime source.
+
+The [main loop](C:/Users/k/Repository/Veehiicuul/Cpp/Source/Application.cpp:36) handles Windows messages, waits for GPU/presentation readiness, computes the animation state, prepares drawing commands, and submits/presents the frame on that same thread. There is no separate input, simulation, or rendering thread created by your application.
+
+My wording should have been **“keep your existing single-threaded application structure.”** I was not proposing a threading change.
+
+The qualification is that the **GPU executes submitted work asynchronously**, and Windows or graphics-driver components may use internal threads. So the application’s own code is single-threaded; that does not imply the entire graphics system runs on one thread.
+
+If we adopted GameInput, its runtime would collect input asynchronously internally, while your application would still read that input and update the game on its existing main thread.
