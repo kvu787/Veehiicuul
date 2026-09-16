@@ -611,3 +611,62 @@ The required addition is to collect keyboard/button events and mouse position, t
 There is also one input-freshness detail to address: [`ServiceMessages()`](C:/Users/k/Repository/Veehiicuul/Cpp/Source/Application.cpp:58) processes at most 64 messages per call. Calling it after the waits does not guarantee that every queued input message has been consumed. The added input collection should account for that rather than assume the queue is empty.
 
 PresentMon may already produce input-latency measurements for this application, but it does **not yet meet our agreed requirement that those inputs directly affect that frame’s visuals**. The renderer settings can stay as they are.
+
+
+## User
+
+for now, i don't care about this stuff:
+| Required response        | Current implementation                         |
+| ------------------------ | ---------------------------------------------- |
+| Visible change on Space  | No Space-specific behavior.                    |
+| Visible change on click  | No mouse-button input handling for game state. |
+| Marker following motion  | No mouse-position state or game-rendered marker. |
+
+in general, i don't currently care about displaying any visual indicator of received input
+
+i do care about this:
+There is also one input-freshness detail to address: [`ServiceMessages()` (line 58)](C:/Users/k/Repository/Veehiicuul/Cpp/Source/Application.cpp:58) processes at most 64 messages per call. Calling it after the waits does not guarantee that every queued input message has been consumed. The added input collection should account for that rather than assume the queue is empty.
+
+why does it process at most 64 messages instead of all available messages (i.e. draining the queue)?
+
+## Assistant
+
+I’ll check the reason for that limit and how Windows delivers mouse input, since draining the queue can behave differently with a continuous stream of events.
+
+## Assistant
+
+The history confirms this was a guard against message processing delaying rendering, introduced with the frame-admission changes. I found no measured justification for choosing 64. It is also a limit per call, not per frame—the app calls this function several times around its rendering waits.
+
+## Assistant
+
+**The 64-message limit is a guard against message processing preventing the game from reaching rendering. It is a design choice, not a Windows requirement or a proven optimal value.**
+
+Understood about the visual indicators—we can leave those out for now.
+
+The code states its reason directly: “A bounded batch prevents high-rate input from starving rendering.” [Application.cpp](C:/Users/k/Repository/Veehiicuul/Cpp/Source/Application.cpp:58)
+
+A drain-to-empty loop would effectively do this:
+
+```cpp
+while (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE)) {
+    TranslateMessage(&message);
+    DispatchMessageW(&message);
+}
+```
+
+The subtlety is that **the queue can receive new messages while that loop is running**. It is not processing a fixed snapshot of the messages that existed when the function started. Each call checks for another available message. [Windows documentation](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-peekmessagew)
+
+If messages arrive faster than the application can process them, the loop can keep running and postpone rendering indefinitely. Even a temporary burst can delay a frame. Limiting each batch gives rendering an opportunity to proceed despite continued message traffic.
+
+**The tradeoff is exactly the one you identified:** after processing 64 messages, the function can return with newer input still waiting. A frame can then be rendered before that input has been retrieved.
+
+Two details matter for your current application:
+
+- **It is 64 messages per call, not per frame.** The application calls it at the beginning of the loop, repeatedly while waiting for readiness, and once more immediately before rendering. It can therefore process substantially more than 64 messages between frames.
+- **Ordinary mouse movement is coalesced by Windows.** The current application does not register for Raw Input. An 8,000 Hz mouse therefore does not automatically mean 80 separate mouse-movement messages must be drained every 10 ms. Windows generates ordinary mouse-movement messages on demand and combines movement updates. [Microsoft explanation](https://devblogs.microsoft.com/oldnewthing/20051104-33/?p=33453)
+
+I traced the limit to the September 6 frame-admission changes. I found no benchmark establishing that **64** is necessary or preferable for this application. The [earlier discussion](C:/Users/k/Repository/Veehiicuul/Conversations/2026-08-30-message-pump-high-rate-input.md:124) actually recommended adding a budget **if profiling demonstrated that continuous input prevented the queue from emptying**.
+
+**For your present experiment, draining the queue immediately before rendering is a reasonable baseline.** Bounded batches could remain useful while waiting for GPU/presentation readiness; the final input refresh is where stopping at an arbitrary count conflicts with your freshness objective. We would verify that continuous mouse movement does not cause excessive time in that final drain.
+
+My previous comment identified a possible source of stale input, **not an observed backlog or measured latency problem**. I have not changed the code.
