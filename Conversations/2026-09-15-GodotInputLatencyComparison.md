@@ -69,3 +69,48 @@ To match your profile’s behavior, I would make a focused engine modification:
 That is engine/backend work, not just a GDScript setting. My rough estimate for someone familiar with Godot and D3D12 is **a few working days for a prototype and a few weeks for a tested implementation**, including resize, minimize/restore, presentation-mode changes, and measurements. I have not built or tested such a patch.
 
 For your decision, I would first compare a minimal Godot release build against C++ using the **same input-driven visual response and workload**, then test the engine patch if the gap matters. Your existing C++ captures cannot answer this: their input-to-photon fields were unavailable, and their very high presentation FPS is not an input-latency measurement. [Capture limitations](<C:/Users/k/Repository/Veehiicuul/Cpp/SavedLogOutput/2026-09-11 MinimumInputLatency/Report.md:329>)
+
+## User
+
+okay, i don't fully understand a lot of this. let's say that the game is extremely performant with respect to a target fps of 100, in that the game's frametime (cpu + gpu work) easily finishes within 500 microseconds. the game's fps is limited to 100 using nvidia app/nvidia control panel
+
+what would be the minimum achievable input latency with godot engine vs custom c++/dx12?
+
+## Assistant
+
+I’ll use your 0.5 ms workload and 100 FPS limit to separate the delay from rendering from the delay caused by waiting between frames. The key uncertainty is where the NVIDIA limiter pauses the game relative to input processing.
+
+## Assistant
+
+**In that scenario, Godot could be essentially as responsive as your custom C++ renderer. Godot does not automatically add an extra 10 ms just because it allows another frame in flight.**
+
+At **100 FPS**, a new frame is produced every **10 ms**. If producing it takes only **0.5 ms**, roughly **9.5 ms is spent waiting**. What matters most is whether the game reads your input **before or after that waiting**.
+
+For an ideal comparison, assume:
+
+- Both versions take exactly 0.5 ms to process input and produce the frame.
+- They read fresh input after waiting, once per rendered frame.
+- The response does not wait for a separate physics update, and no completed frames are held in a queue.
+
+Then the numbers are identical:
+
+| Input timing                                  | Godot    | Custom C++/DX12 |
+| --------------------------------------------- | -------- | --------------- |
+| Just before the game reads input: minimum      | ~0.5 ms  | ~0.5 ms         |
+| Randomly timed input: average                  | ~5.5 ms  | ~5.5 ms         |
+| Just after the game reads input: longest delay | ~10.5 ms | ~10.5 ms        |
+
+**These are input-available-to-completed-frame times, not physical button-to-screen times.** Since you said the work finishes *within* 0.5 ms, those figures decrease if the actual work takes less time.
+
+The minimum is small because an input arriving just before the game reads it can affect the next frame immediately. The average includes about 5 ms waiting for the next opportunity to read input.
+
+**The NVIDIA limiter prevents us from promising those numbers in practice.** Consider two simplified sequences:
+
+- **Fresh input:** wait 9.5 ms → read input → render for 0.5 ms → present.
+- **Older input:** read input → render for 0.5 ms → wait 9.5 ms → present.
+
+Both produce 100 FPS, but the second makes the rendered input about **9.5 ms older**. These illustrate possible timing arrangements; I am not claiming NVIDIA necessarily uses either one. NVIDIA documents the frame-rate cap, but its public description does not establish where that wait occurs relative to your game’s input processing. [NVIDIA’s settings reference](https://www.nvidia.com/content/Control-Panel-Help/vLatest/en-us/mergedProjects/nv3d/Manage_3D_Settings_%28reference%29.htm)
+
+Your C++ profile controls its own waiting carefully, but it cannot guarantee that an external driver limiter will not introduce another delay afterward.
+
+**For your very lightweight game, I would not assume a meaningful latency sacrifice from choosing Godot.** The ideal minimum is the same; the actual difference needs measurement with that limiter enabled. Physical input-to-screen latency also adds mouse/controller delay and display delay, which depend on the monitor’s refresh rate, VSync/VRR settings, scanout, and pixel response.
