@@ -62,14 +62,3 @@ If I attach images to prompts, save and record these in the conversation logs.
 ## Application compatibility
 
 Do not attempt to maintain any sort of application compatibility between different commits of the repo. This creates unwanted complexity.
-
-# Repository-specific
-
-Implement a Run.cmd file that launches the project when double-clicking the Run.cmd from File Explorer.
-
-Refer to `%UserProfile%\Repository\Godot\SimplePaintShaders` for the original development of SimplePaint shader.
-
-## Constraints
-
-Follow the shared developer and agent constraints in [README.md](README.md#constraints).
-That section is the single source of truth for these constraints.
