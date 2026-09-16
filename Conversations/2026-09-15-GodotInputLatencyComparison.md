@@ -351,3 +351,73 @@ The options in your checkout are:
 Your source code is more explicit: it emits the experimental/crash warning **only when separate-thread rendering is enabled**, and specifically recommends setting the property to **Safe**. [Startup warning](C:/Users/k/Repository/External/godot/main/main.cpp:3517)
 
 For our experiment, `1` gives us the straightforward ordering we want: **input → game update → rendering on the main thread**. It does not itself change GPU frames in flight, VSync, or the FPS limit.
+
+
+## User
+
+okay, i want to use this as the godot test app: C:\Users\k\Repository\VsyncStutterTest
+i would like to upgrade it to godot 4.7.2.
+
+what changes are needed for the upgrade, and what changes are needed to make this a suitable test app for the presentmon experiments?
+
+## Assistant
+
+I’ll inspect VsyncStutterTest’s current Godot version, update loop, and rendering settings, then separate the changes needed for 4.7.2 from those needed for the latency experiment.
+
+## Assistant
+
+The app already uses D3D12, disables VSync, and updates the sphere in `_process()`. Its latest log confirms Godot 4.6.3. The main experiment gaps are that the animation doesn’t respond to input, and the launcher runs an existing export with PresentMon capture commented out.
+
+## Assistant
+
+The upgrade appears straightforward: the scene uses standard nodes and one small script, with no evident 4.7 migration problems. I also found two comparison settings to align: Godot starts in its “exclusive fullscreen” mode and is raised to High process priority; the C++ app starts windowed and doesn’t raise its priority.
+
+## Assistant
+
+**This is a suitable starting point, and the changes are fairly small.** No Godot engine modifications are needed for this experiment.
+
+Your latest [runtime log](C:/Users/k/Repository/VsyncStutterTest/MyLogOutput/2026-09-15_23-28-02/Godot.log) confirms **Godot 4.6.3, D3D12, Forward+**.
+
+**For the upgrade**, I would:
+
+1. Install the standard Windows x64 Godot **4.7.2** editor and matching export templates. This project uses GDScript, so the .NET edition is unnecessary.
+2. Import and save the project with 4.7.2, then regenerate the Windows **release export**, including its supporting files.
+3. Update [Run.ps1](C:/Users/k/Repository/VsyncStutterTest/Run.ps1:17) to export with that specific engine version before launching. Currently it simply runs the existing executable, so changing the project’s version label would leave the old engine running.
+
+I found no evident required script or scene API changes when comparing this small project with the [4.7 migration guide](https://docs.godotengine.org/en/stable/tutorials/migrating/upgrading_to_godot_4.7.html). That still needs confirmation by importing and running it.
+
+The upgrade is relevant to our testing: **4.7.2 includes a Windows fix for performance problems while moving a mouse with a high polling rate.** [Release notes](https://godotengine.org/article/maintenance-release-godot-4-7-2/)
+
+**For the PresentMon experiment**, I would make these changes:
+
+1. **Apply fresh input within the existing single update loop.**
+
+   [Sphere.gd](C:/Users/k/Repository/VsyncStutterTest/Godot/Sphere.gd:24) currently moves the sphere automatically and never uses input to change game state. Keep one `_process()` update, with this order:
+
+   **`DisplayServer.process_events()` → read input → update game state and visual response → Godot renders.**
+
+   I verified that the Windows implementation in **4.7.2** processes Windows input and flushes Godot’s input buffer. The existing `Input.set_use_accumulated_input(false)` can remain. No physics update is needed.
+
+2. **Add simple visible responses.**
+
+   Use a color change for a keyboard press, another for a mouse click, and a game-rendered marker that follows mouse movement. Update these in that same loop. The existing sphere scene can remain. These responses make the intended input-to-frame relationship concrete; PresentMon still infers that relationship.
+
+3. **Make the relevant rendering settings explicit.**
+
+   [project.godot](C:/Users/k/Repository/VsyncStutterTest/Godot/project.godot:18) already selects D3D12, disables VSync, uses two swap-chain images, and disables fallback to other graphics APIs. Keep those. Explicitly record Safe rendering-thread mode (`1`), frame-queue size `2`, physics interpolation off, and Godot’s FPS limit disabled. Several are already defaults; making them explicit improves reproducibility. The **100 FPS limit remains external**.
+
+4. **Align the conditions with the C++ app.**
+
+   Godot currently starts in its “exclusive fullscreen” mode, while C++ starts windowed and offers borderless fullscreen. Choose matching window modes and resolutions, then check PresentMon’s actual presentation mode. Also match process priority: Godot’s launcher currently raises it to High; C++ does not.
+
+   Use identical driver settings for both executables. The existing [README recommendations](C:/Users/k/Repository/VsyncStutterTest/README.md:45) include 240 FPS and driver VSync on, so they need a separate set of instructions for this experiment.
+
+5. **Enable a controlled capture workflow.**
+
+   PresentMon launching is currently [commented out](C:/Users/k/Repository/VsyncStutterTest/Run.ps1:7). Add capture of the launched game’s process ID using your PresentMon 2.5.1 executable, allow focus and warm-up before recording, and save the CSV and effective test settings in the existing timestamped log folder.
+
+   Retain the planned separate keyboard, click, and movement runs: 30 seconds each, three repetitions per application.
+
+Before comparing latency, verify that both applications’ actual CPU/GPU work remains comfortably below the 10 ms frame interval. A simple-looking scene does **not** establish the earlier hypothetical 500 µs workload; time spent waiting for the external cap must be distinguished from actual work.
+
+I have inspected the project and target engine source; I have not changed VsyncStutterTest or run an upgraded export yet.
