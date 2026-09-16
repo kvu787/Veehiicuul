@@ -421,3 +421,150 @@ The upgrade is relevant to our testing: **4.7.2 includes a Windows fix for perfo
 Before comparing latency, verify that both applications’ actual CPU/GPU work remains comfortably below the 10 ms frame interval. A simple-looking scene does **not** establish the earlier hypothetical 500 µs workload; time spent waiting for the external cap must be distinguished from actual work.
 
 I have inspected the project and target engine source; I have not changed VsyncStutterTest or run an upgraded export yet.
+
+
+## User
+
+explain in detail and for someone unfamiliar with these  what each of these mean:
+| Control                    | Your C++ profile                 | Closest stock Godot D3D12                  |
+| -------------------------- | -------------------------------- | ----------------------------------------- |
+| GPU frames in flight       | 1                                | Minimum 2 frame slots                      |
+| DXGI maximum frame latency | Explicitly set to 1              | No explicit setting                       |
+| Presentation admission     | Waitable swap chain              | Not implemented                           |
+| Swap-chain buffers         | 2                                | Configurable to 2; default 3               |
+| VSync and tearing          | VSync off; tearing when supported | Can match                                 |
+| GPU wait strategy          | Spin                             | Event wait; no selectable spin             |
+| Application FPS cap        | None                             | Can disable                               |
+
+## Assistant
+
+I’ll check the relevant code and documentation, then explain each control in terms of where a frame can wait between reading input and appearing on screen.
+
+## Assistant
+
+The key distinction is that a frame slot or buffer is available capacity, not a mandatory delay. Godot having two frame slots does not automatically mean an extra 10 ms at 100 FPS. The C++ profile gives more control over how far work can get ahead and when to wait before reading input; the experiment will tell us how much that matters here.
+
+## Assistant
+
+I also confirmed that these are two separate questions: what condition must become ready, and how the CPU waits for it. The waitable swap chain supplies a readiness notification; spin versus event waiting determines how the CPU checks or waits for that notification. Neither is an FPS limiter.
+
+## Assistant
+
+**These controls govern how much work can get ahead, where the game waits, and how a finished image reaches the display.** They are related, but they control different things.
+
+One clarification to my earlier table: **Godot’s minimum of two frame slots is a capacity, not a compulsory two-frame delay.** We cannot translate that row into “Godot adds 10 ms at 100 FPS.”
+
+A frame is one image of the game. The CPU runs your update and prepares drawing instructions; the GPU executes those instructions. Windows then arranges for the image to reach the display.
+
+The visible effect of an input follows this path:
+
+```mermaid
+flowchart LR
+    A["CPU: read input, update game, prepare drawing"] --> B["GPU: draw the image"]
+    B --> C["Windows: make the image available for display"]
+    C --> D["Monitor: scan out the image"]
+```
+
+Different frames can occupy different stages simultaneously. Also, submitting an image for presentation does not mean it has already appeared on screen.
+
+1. **GPU frames in flight: how far the CPU can get ahead of completed GPU work**
+
+   The CPU can give the GPU drawing instructions and continue running while the GPU executes them. That makes overlap possible: the GPU draws frame A while the CPU prepares frame B.
+
+   Each unfinished frame needs some resources kept intact—such as its drawing instructions and object positions—until the GPU finishes using them. A **frame slot** is a reusable collection of those resources.
+
+   Your C++ profile uses **one slot**. Before preparing the next frame for rendering, it checks that the GPU has finished the work that used that slot. This prevents the application from building up multiple unfinished GPU frames. [C++ profile](C:/Users/k/Repository/Veehiicuul/Cpp/Source/RenderPreparation.h:26)
+
+   Godot’s window-rendering path allocates **at least two slots**. It can use slot B while work using slot A is unfinished, then must wait before reusing A if A is still busy. This allows more CPU/GPU overlap. [Godot 4.7.2 implementation](https://github.com/godotengine/godot/blob/4.7.2-stable/servers/rendering/rendering_device.cpp)
+
+   The tradeoff is that overlap can improve throughput, but a frame based on older input may be waiting behind earlier GPU work. With your extremely light workload and 100 FPS cap, however, the GPU might finish each frame long before the next starts. In that situation, the extra slot need not contain any pending work.
+
+   **GPU completion also has a specific meaning:** the GPU has finished its commands. The resulting image may still be waiting to appear on the monitor.
+
+2. **DXGI maximum frame latency: a limit on the swap chain’s outstanding frames**
+
+   **DXGI** is the Windows graphics infrastructure used here to manage presentation. A **swap chain** is the collection of images and associated machinery through which the application presents frames.
+
+   Calling `SetMaximumFrameLatency(1)` explicitly sets the waitable swap chain’s queue limit to one frame. The word “latency” in this API can be misleading: **the argument is a frame count, not milliseconds, and it does not guarantee any particular input-to-screen time.** [Microsoft API documentation](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency)
+
+   This addresses a different boundary from the GPU frame-slot limit. GPU work can be finished while presentation is still outstanding. Limiting unfinished GPU work alone therefore does not completely control presentation.
+
+   Your C++ renderer explicitly sets this limit. Stock Godot’s D3D12 implementation does not create the corresponding waitable swap chain or call this setter. “No explicit setting” means Godot does not exercise this particular control; Windows, the driver, buffer availability, and other synchronization still constrain it. It does not establish a specific larger queue length.
+
+3. **Presentation admission: getting permission to start another frame**
+
+   “Presentation admission” is the name I used for this behavior. A **waitable swap chain** gives the application a Windows notification it can wait for before starting another frame.
+
+   Think of that notification as: **“The presentation system has room for you to proceed with another frame under the configured queue limit.”**
+
+   The previous row sets the limit. This row provides the notification that lets the application arrange its work around that limit.
+
+   Why can waiting help responsiveness? Because **input continues to arrive while the application waits**. Consider these two orderings when presentation is congested:
+
+   - Read input → update and draw → wait for room to present.
+   - Wait for room → read input → update and draw.
+
+   In the second ordering, the update can use input that arrived during the wait. The image contains fresher information when it reaches presentation. This is the purpose of Microsoft’s [waitable swap-chain technique](https://learn.microsoft.com/en-us/windows/uwp/gaming/reduce-latency-with-dxgi-1-3-swap-chains).
+
+   Your C++ renderer waits for both its GPU resources and presentation admission, then processes Windows input messages again before proceeding. [Frame preparation](C:/Users/k/Repository/Veehiicuul/Cpp/Source/Renderer.cpp:1274)
+
+   Godot lacks this explicit DXGI admission step. It still waits where required by its renderer and the driver, but it has less control over moving this particular wait ahead of your game update.
+
+   This notification is neither a “100 FPS timer” nor a measurement of pixels becoming visible. It also cannot guarantee that a subsequent driver operation will never block.
+
+4. **Swap-chain buffers: how many image surfaces are available**
+
+   A buffer here is GPU memory containing an image. For a simplified picture of **two buffers**, imagine:
+
+   - One image is being used for display.
+   - Another image is available for the GPU to draw into.
+
+   Their roles rotate as frames are presented. A third buffer provides another image surface, which can allow work to continue when the others are occupied.
+
+   Both renderers use a modern DXGI presentation model that requires at least two buffers. Your C++ profile uses two; Godot defaults to three and can be configured to use two. Your VsyncStutterTest already requests two. [Microsoft flip-model guidance](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/for-best-performance--use-dxgi-flip-model), [project settings](C:/Users/k/Repository/VsyncStutterTest/Godot/project.godot:29)
+
+   **Buffer count and GPU frame-slot count describe different resources.** Your C++ configuration illustrates this: it has two image buffers but permits only one unfinished GPU frame. It needs an image to display while preparing the next image, even though it restricts how far rendering can advance.
+
+   Extra buffers can permit additional queuing, but the other limits may prevent that capacity from being used. Three buffers therefore do not automatically imply three frames of latency.
+
+5. **VSync and tearing: when the displayed image may change**
+
+   A monitor typically scans an image progressively across the screen. On a fixed-refresh display, new refreshes start at regular intervals: every **10 ms at 100 Hz**, or about **4.17 ms at 240 Hz**. These are monitor refresh rates; your game’s 100 FPS cap is a separate setting.
+
+   **VSync on** coordinates image changes with refresh boundaries. That avoids switching images partway through a scan, but a ready frame may have to wait for the next suitable boundary.
+
+   **VSync off with tearing allowed** permits image changes without requiring that alignment, when the presentation path supports it. This can reveal newer game information sooner. The visual tradeoff is a possible tear: one part of the screen comes from an older frame and another part from a newer frame.
+
+   Your C++ application requests VSync off and allows tearing when supported. Godot’s D3D12 backend can make equivalent requests. [Microsoft presentation documentation](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present)
+
+   With variable refresh rate—such as G-SYNC—the display can adjust refresh timing to arriving frames within its supported range. Allowing tearing through the API does not imply that you will necessarily see tearing; those flags also support the variable-refresh presentation path. Driver settings and the actual display mode matter. [Microsoft VRR documentation](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/variable-refresh-rate-displays)
+
+   Neither renderer can make every pixel change instantly: display scanout and pixel response still take time.
+
+6. **GPU wait strategy: how the CPU waits for a condition to become ready**
+
+   When the CPU needs a resource that the GPU is still using, it must wait. A **GPU fence** is a progress marker that lets the CPU check whether the relevant GPU work has completed.
+
+   With **spin waiting**, the CPU repeatedly checks the condition: “Finished yet? Finished yet?” Your C++ frame-preparation loop uses this strategy for both GPU readiness and presentation admission.
+
+   Spinning can notice readiness promptly because the thread is actively checking. Its cost is CPU activity: it can keep a logical CPU core busy during the wait, consuming power and competing with other work. Windows can still interrupt or reschedule that thread.
+
+   With an **event wait**, the thread asks Windows to wake it when the condition becomes ready. Godot’s D3D12 fence waits use this approach. It generally consumes less CPU while waiting, but signaling and rescheduling can add some delay before the thread resumes. [Godot D3D12 implementation](https://github.com/godotengine/godot/blob/4.7.2-stable/drivers/d3d12/rendering_device_driver_d3d12.cpp), [Microsoft fence-event documentation](https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12fence-seteventoncompletion)
+
+   An event wait is **condition-driven**. It does not deliberately sleep for one frame or a fixed number of milliseconds. If the condition is already ready, it can return immediately. [Windows wait behavior](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject)
+
+   Consequently, this difference may matter little when the GPU has already finished before the CPU reaches the wait. Its actual latency cost needs measurement.
+
+7. **Application FPS cap: deliberate pacing performed by the game**
+
+   An application FPS cap deliberately limits how often the game produces frames. For 100 FPS, the intended interval is 10 ms.
+
+   Your C++ application has no such limiter. Godot provides one through `application/run/max_fps`, with `0` meaning disabled. We would leave it disabled and use your external NVIDIA cap for both applications.
+
+   Disabling the application cap does not eliminate the external cap, VSync, or waits for busy resources. Those can all restrict the rate at which frames proceed.
+
+   The position of a limiter’s wait matters for input freshness. A wait before the input read lets the update use inputs arriving during that wait; a wait after the update lets the already-computed state become older. We should not assume exactly where the NVIDIA cap delays either application without observing its behavior.
+
+For your proposed **100 FPS, roughly 0.5 ms of CPU-plus-GPU work** experiment, there is ample time between frames for GPU work to finish. That could make the frame-slot and GPU-wait differences small. Presentation timing and the external limiter can still matter.
+
+**The table describes differences in control, not seven measured latency penalties.** The captures are needed to establish which differences actually affect your two applications under the chosen conditions.
