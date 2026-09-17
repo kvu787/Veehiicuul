@@ -188,3 +188,56 @@ The timing reveals a few useful details:
 Although the capture records `SyncInterval=0` and almost exclusively independent flip with tearing allowed, its 100 FPS cadence does not establish whether a limiter, driver setting, display behavior, or application pacing caused it.
 
 **Measurement limit:** these are software-tracked input-to-display estimates, not a physical mouse-to-visible-pixel measurement. PresentMon associates Windows input events with presented frames; the CSV cannot prove when the game visibly reacted or include all mouse hardware and panel delays. Continuous movement also should not be treated as equivalent to isolated clicks. [PresentMon metric definitions](https://github.com/GameTechDev/PresentMon/blob/main/README-ConsoleApplication.md).
+
+## User
+
+that capture was recorded with no vsync and an nvidia app 100 frame rate limit.
+
+analyze this capture:
+"C:\Users\k\Repository\ZoomTracks\ZoomTracks\MyLogOutput\2026-09-17_01-37-02\PresentMon.csv"
+
+context: input mainly mouse movement with a few mouse clicks. also, nvidia low latency mode was switched from off to ultra in the nvidia app.
+
+
+## Assistant
+
+I’ll compare this capture with the previous one to see whether switching NVIDIA Low Latency Mode to Ultra changed input latency or frame pacing with the 100 FPS limit.
+
+
+## Assistant
+
+The median is essentially unchanged: 9.613 ms with Low Latency Mode Off versus 9.611 ms with Ultra. Ultra’s 99th percentile is lower, but its worst sample is higher. Both runs maintain the same 100 FPS cadence and roughly 8.3 ms from Present to display, so there is no clear reduction in typical latency.
+
+
+## Assistant
+
+**Switching Low Latency Mode from Off to Ultra did not meaningfully change typical mouse-movement latency in these captures.** Both report a median of approximately **9.61 ms** with your 100 FPS NVIDIA limiter and VSync disabled.
+
+The [new capture](C:/Users/k/Repository/ZoomTracks/ZoomTracks/MyLogOutput/2026-09-17_01-37-02/PresentMon.csv) contains 3,163 frames over 31.85 seconds, including 2,653 valid all-input latency samples. Missing values are excluded.
+
+| All-input latency | Off: previous | Ultra: new |
+| ----------------- | ------------: | ---------: |
+| Samples           |         1,696 |      2,653 |
+| Mean              |       9.58 ms |    9.51 ms |
+| Median            |       9.61 ms |    9.61 ms |
+| 95th percentile   |      10.15 ms |   10.11 ms |
+| 99th percentile   |      11.33 ms |   10.35 ms |
+| Maximum           |      19.60 ms |   21.69 ms |
+
+The mean decreased by just **0.077 ms**, and the median by **0.0023 ms**. The 99th percentile improved by **0.98 ms**, but one run per setting cannot establish that Ultra caused this difference. Excluding rows with click measurements still gives a **9.61 ms median in both runs**.
+
+The eight click readings in the new capture were **11.10, 10.79, 16.63, 13.13, 15.13, 18.23, 14.96, and 14.41 ms**. Their mean decreased from **16.89 to 14.30 ms**, but eight versus four samples is too little evidence to claim a click-latency improvement, especially with clicks occurring at different points within each 10 ms frame interval.
+
+The timing breakdown is also essentially unchanged:
+
+| Mean on frames with input measurements | Off     | Ultra   |
+| -------------------------------------- | ------: | ------: |
+| Tracked input → Present                 | 1.29 ms | 1.26 ms |
+| Present → display                      | 8.29 ms | 8.25 ms |
+| GPU busy time                          | 0.65 ms | 0.65 ms |
+
+**The 100 FPS pacing remains the dominant feature.** During the input period, Ultra delivered frames every 10.000 ms on average, with a 99th-percentile display interval of 10.29 ms and a maximum of 10.68 ms. The worst input-latency sample, **21.69 ms at CSV time 13.974 seconds**, occurred with a normal 10.05 ms display interval; it was not accompanied by a display stall.
+
+These results are consistent with a lightly loaded GPU and limiter-related waiting leaving little render-queue latency for Ultra to remove. That is an interpretation, not proof of exactly where the driver waits. The application log confirms DirectX 12; NVIDIA added Ultra Low Latency support for DX12 in January 2024, so DX12 alone does not explain the lack of improvement. [NVIDIA’s announcement](https://www.nvidia.com/en-gb/geforce/news/geforce-rtx-4070-ti-super-rtx-video-hdr-game-ready-driver/).
+
+To isolate the limiter’s contribution, a useful next comparison is **Ultra with the NVIDIA frame-rate limit disabled**, keeping the scene and other settings unchanged. These remain PresentMon software estimates, rather than measurements of physical mouse-to-pixel latency.
