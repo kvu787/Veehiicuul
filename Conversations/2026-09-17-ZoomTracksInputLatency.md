@@ -286,7 +286,7 @@ Click latency is distinctly higher:
 | Samples            |              16 |               16 |
 | Mean               |        15.52 ms |         15.83 ms |
 | Median             |        15.07 ms |         16.46 ms |
-| Range              |  9.95–21.66 ms |   10.52–20.67 ms |
+| Range              |   9.95–21.66 ms |   10.52–20.67 ms |
 
 These small click samples show no improvement in the final segment. Excluding rows with click measurements gives a final-segment all-input median of **9.34 ms**, with a **13.16 ms 99th percentile**. This is a useful movement-dominated estimate, though the CSV does not explicitly identify movement-only samples.
 
@@ -303,3 +303,81 @@ Frame delivery averages **10.000 ms, or 100 FPS**, throughout the final segment.
 Compared with **ZoomTracks at 100 FPS and LLM Off**, this demo’s clean segment has a slightly lower median (**9.38 versus 9.61 ms**) but a higher 95th percentile (**10.87 versus 10.15 ms**) and 99th percentile (**13.39 versus 11.33 ms**). These runs therefore show **similar typical latency, with more variation in the C++ demo**, rather than a substantial latency advantage. Different scenes and input patterns prevent treating this as a controlled engine comparison.
 
 As before, these are PresentMon software estimates, not physical mouse-to-visible-pixel measurements.
+
+## User
+
+analyze input latency for the veehiicuul cpp demo scene:
+"C:\Users\k\Downloads\2026-09-17_02-07-27 Veehiicuul.exe logs\PresentMon.csv"
+this is with nvidia fps limit of 100 and llm=ultra
+the first 5 to 10 seconds of the capture may be less clean, so separate that portion
+
+
+
+
+## Assistant
+
+I’ll separate the first 10 seconds from the remainder, and also check a 5-second cutoff. This is the same file path as the previous Off analysis, so I’ll check whether its contents have changed before comparing the settings.
+
+
+## Assistant
+
+The file matches the previous analysis in size, frame count, timestamps, and latency results, so I’ll treat “LLM = Ultra” as a correction to its label. One detail matters for the split: the largest spike occurs 10.114 seconds after the first frame, just beyond a 10-second cutoff. I’ll retain it in the main result and show the effect of excluding the first 11 seconds.
+
+
+## User
+
+analyze input latency for the veehiicuul cpp demo scene:
+"C:\Users\k\Downloads\2026-09-17_02-13-32 Veehiicuul.exe logs\PresentMon.csv"
+this is with nvidia fps limit of 100 and llm=ultra
+the first 5 to 10 seconds of the capture may be less clean, so separate that portion
+
+
+## Assistant
+
+I’ll use this new path for the Ultra capture, separate the first 10 seconds, and compare the remainder with the earlier Off capture. I’ll also check whether a 5-second cutoff changes the result.
+
+
+## Assistant
+
+After the first 10 seconds, Ultra reports a 9.47 ms median and 9.55 ms average. Using a 5-second cutoff gives almost identical results, so the conclusion is not sensitive to that choice. Compared with the earlier Off capture’s clean final 15 seconds, typical latency is slightly higher, while the worst observed sample is lower—there’s no clear overall latency reduction.
+
+
+## Assistant
+
+**With LLM Ultra and the NVIDIA 100 FPS limit, this capture reports about 9.5 ms of typical input latency after startup.** It does not show a clear overall improvement over the previous Off capture’s clean segment.
+
+I analyzed [the new capture](<C:/Users/k/Downloads/2026-09-17_02-13-32 Veehiicuul.exe logs/PresentMon.csv>): **3,309 frames over 33.08 seconds**. The split is 10 seconds after the first recorded frame, at CSV time **23.509 seconds**. Missing input measurements are excluded.
+
+| All-input latency | First 10 seconds | Remaining 23.08 seconds |
+| ----------------- | ---------------: | ---------------------: |
+| Valid samples     |              600 |                  2,224 |
+| Mean              |          9.99 ms |                9.55 ms |
+| Median            |          9.69 ms |                9.47 ms |
+| 95th percentile   |         13.28 ms |               11.45 ms |
+| 99th percentile   |         17.27 ms |               13.51 ms |
+| Maximum           |         31.31 ms |               15.94 ms |
+
+**A 5-second cutoff gives essentially the same steady-state result:** mean 9.55 ms, median 9.47 ms, 95th percentile 11.47 ms, and 99th percentile 13.50 ms. The less-clean behavior is concentrated in the first five seconds. The largest spike, **31.31 ms at elapsed time 2.50 seconds**, coincides with composed flip and a 23.23 ms display interval.
+
+After the 10-second cutoff:
+
+- All frames use **hardware independent flip**.
+- Display intervals average **10.000 ms**, consistent with 100 FPS. Their 99th percentile is **13.52 ms**, and maximum **14.03 ms**, so some pacing variation remains.
+- Average tracked-input-to-Present time is **0.34 ms**, followed by **9.21 ms from Present to display**. GPU busy time averages **0.50 ms** on input-bearing frames. Most reported latency remains after Present, consistent with limiter-related waiting rather than heavy GPU work.
+- All-input latency exceeds 12 ms on **90 samples (4.0%)**; none exceed 16.67 ms.
+
+There are **six click measurements** after the cutoff: **12.60, 16.54, 15.55, 15.69, 18.09, and 11.85 ms**. Their mean is **15.05 ms** and median **15.62 ms**. That is too few samples to establish a reliable click-latency difference.
+
+Compared with the previously selected clean portion of the Off capture:
+
+| All-input latency | Off: final 15 seconds | Ultra: after first 10 seconds |
+| ----------------- | --------------------: | ---------------------------: |
+| Mean              |               9.44 ms |                      9.55 ms |
+| Median            |               9.38 ms |                      9.47 ms |
+| 95th percentile   |              10.87 ms |                     11.45 ms |
+| 99th percentile   |              13.39 ms |                     13.51 ms |
+| Maximum           |              19.65 ms |                     15.94 ms |
+
+**Typical latency is effectively similar.** Ultra has a lower observed maximum, but slightly higher median and percentile values. Different input patterns, segment lengths, and one run per setting prevent attributing these small differences to Ultra.
+
+These are PresentMon software estimates, not physical mouse-to-visible-pixel measurements.
