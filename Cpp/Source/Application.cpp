@@ -58,8 +58,8 @@ int Application::Run(HINSTANCE instance, const int showCommand, const Settings& 
 bool Application::ServiceMessages()
 {
     MSG message{};
-    // A bounded batch prevents high-rate input from starving rendering.
-    for (std::uint32_t count = 0; count < 64 && PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE); ++count)
+    // Drain all pending messages before continuing frame preparation.
+    while (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE))
     {
         if (message.message == WM_QUIT)
         {
