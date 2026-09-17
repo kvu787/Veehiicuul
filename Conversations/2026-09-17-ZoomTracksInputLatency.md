@@ -653,3 +653,57 @@ A useful simplified model for an **isolated click**, assuming input is sampled o
 But **D does not have to equal one frame**. Where the limiter waits relative to input sampling and rendering matters; NVIDIA describes how Reflex changes that scheduling. [NVIDIA’s explanation](https://www.nvidia.com/en-gb/geforce/news/reflex-low-latency-platform/). Stalls can also exceed two frames, as some of your captures already demonstrate.
 
 So I would describe your finding as: **“These apps, with this NVIDIA limiter configuration, report roughly one-frame mean movement latency and roughly two-frame upper-end interaction latency.”** Establishing how this scales would require repeating the test at other caps, such as 60 and 144 FPS.
+
+## User
+
+okay, review this conversation, all other conversations, and the entire repo, and create a comprehensive report on input latency and commit it to C:\Users\k\Repository\Veehiicuul\Documentation\InputLatency.md
+
+
+
+## Assistant
+
+I’ll review the repository, its recorded conversations, and the available capture evidence, then write and commit a report that separates measured results from explanations and open questions.
+
+
+
+## Assistant
+
+The repository’s constraints matter to the conclusions: it prohibits both an application-owned FPS limiter and vendor-specific integrations such as Reflex. I also confirmed that the captured Godot app is a separate project from the newer `InputLatency_Godot` experiment, so the report will keep their settings and evidence distinct.
+
+
+
+## Assistant
+
+The review confirms two distinctions worth making explicit: the archived 5,600 FPS runs measured presentation throughput, with no valid input-latency samples; and PresentMon can associate input with a frame even when the demo does not visibly react to that input. I’m now recalculating all seven recent captures with consistent statistics and documenting the exact time windows.
+
+
+
+## Assistant
+
+The recalculated capture statistics agree with the earlier answers. The report will also correct several easy misreadings: two buffers do not imply two frames of delay, Ultra is supported in DX12, and the roughly one-frame average seen here is an observed pattern rather than a latency floor. I’m preserving the startup and ending results alongside the selected comparison windows.
+
+
+
+## Assistant
+
+The report draft now brings together the capture results, rendering code, and earlier discussions. I’m checking its tables and references before committing it, including which measurements support conclusions about input latency and which establish only frame throughput.
+
+
+
+## Assistant
+
+The numerical checks passed for all seven captures, and the report now includes the requested time segments, click samples, file fingerprints, and links to all 63 conversation records. The main finding remains: the non-Reflex runs cluster near 9.4–9.6 ms, but they do not establish a one-frame minimum or a two-frame ceiling.
+
+
+
+## Assistant
+
+The report is complete. It covers the measurements, C++ and Godot input paths, queue settings, measurement limits, and controlled follow-up experiments. The tables and local references passed validation; I’m committing the report and then recording this conversation in a separate commit, as the repository requires.
+
+
+
+## Assistant
+
+Created and committed [InputLatency.md](C:/Users/k/Repository/Veehiicuul/Documentation/InputLatency.md) as `36d845f`.
+
+It covers all 63 recorded conversations, C++/Godot implementation, seven recent captures, historical runs, measurement limitations, and follow-up experiments. The conversation log was committed separately.
