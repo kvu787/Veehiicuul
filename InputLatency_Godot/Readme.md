@@ -4,6 +4,8 @@ Minimal Windows 11 x64 application using Godot **4.7.2 .NET**, C#, and a 3D sphe
 
 Double-click **Run.cmd** to build a standalone release export and launch it. Close the game using its window close button. The launcher prints the game process ID for PresentMon.
 
+The solution is `InputLatencyGodot.slnx`, with `Debug`, `ExportDebug`, and `ExportRelease` configurations. The launcher builds the `ExportRelease` configuration through this solution.
+
 The launcher uses the installed Godot .NET editor and matching .NET export templates under `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`. The project targets the installed **.NET 10 SDK**. Godot packages come from that installation; the first release export may download .NET runtime packages from NuGet. The exported executable and its supporting files stay together in `Build`.
 
 ## Input display

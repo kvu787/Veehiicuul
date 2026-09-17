@@ -40,7 +40,7 @@ try {
     Write-Host "Session logs: $logFolderPath"
     # Import first so the exporter knows about C# scripts and scene resources.
     Invoke-Checked $godot @('--headless', '--editor', '--path', $PSScriptRoot, '--import', '--log-file', (Join-Path $logFolderPath 'Import.log'))
-    Invoke-Checked 'dotnet' @('build', 'InputLatencyGodot.csproj', '--configuration', 'ExportRelease', '--nologo')
+    Invoke-Checked 'dotnet' @('build', 'InputLatencyGodot.slnx', '--configuration', 'ExportRelease', '--nologo')
     Invoke-Checked $godot @('--headless', '--path', $PSScriptRoot, '--export-release', 'Windows Desktop', '--log-file', (Join-Path $logFolderPath 'Export.log'))
     # Some export-plugin failures are logged even when Godot returns success.
     if (Select-String -LiteralPath (Join-Path $logFolderPath 'Export.log') -Pattern '^ERROR:' -Quiet) {
