@@ -585,3 +585,23 @@ On those input-bearing frames, the averages are **0.28 ms from tracked input to 
 **There are no click-to-photon samples anywhere in this CSV.** That does not establish that no clicks occurred; click latency cannot be assessed from this capture.
 
 Compared with the Godot LLM-Off middle segment, DOOM’s reported median is about **2.08 ms lower** (**7.36 versus 9.44 ms**). That is a difference in the recorded metric, not proof of lower physical input latency: game behavior, input-to-frame association, presentation path, and display settings can differ. The capture also cannot isolate G-SYNC’s contribution without a matched G-SYNC-Off run.
+
+
+## User
+
+also, note that the "C:\Users\k\Downloads\2026-09-17_10-42-33 DOOMTheDarkAges.exe logs\PresentMon.csv" capture had NvidiaReflex=on while the other apps didn't implement nvidia reflex 
+
+## Assistant
+
+I’ll record Reflex On for the DOOM capture and no Reflex integration for the other apps. Reflex is another changed variable, so DOOM’s lower reported latency cannot be attributed to G-SYNC or the game alone.
+
+## Assistant
+
+Recorded the test conditions:
+
+| Captures         | NVIDIA FPS limit | LLM          | G-SYNC | NVIDIA Reflex   |
+| ---------------- | ---------------- | ------------ | ------ | --------------- |
+| DOOM 10:42:33    | 100              | Off          | On     | On              |
+| All earlier apps | 100              | Off or Ultra | Off    | Not implemented |
+
+The measured results are unchanged. DOOM’s lower reported latency reflects a configuration with both **G-SYNC and Reflex enabled**; these captures cannot isolate either feature’s contribution or establish an engine-level advantage.
