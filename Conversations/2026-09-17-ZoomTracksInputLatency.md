@@ -1,4 +1,4 @@
-# Conversation: ZoomTracks input latency capture
+# Conversation: ZoomTracks and Veehiicuul input latency captures
 
 ## User
 
@@ -241,3 +241,65 @@ The timing breakdown is also essentially unchanged:
 These results are consistent with a lightly loaded GPU and limiter-related waiting leaving little render-queue latency for Ultra to remove. That is an interpretation, not proof of exactly where the driver waits. The application log confirms DirectX 12; NVIDIA added Ultra Low Latency support for DX12 in January 2024, so DX12 alone does not explain the lack of improvement. [NVIDIA’s announcement](https://www.nvidia.com/en-gb/geforce/news/geforce-rtx-4070-ti-super-rtx-video-hdr-game-ready-driver/).
 
 To isolate the limiter’s contribution, a useful next comparison is **Ultra with the NVIDIA frame-rate limit disabled**, keeping the scene and other settings unchanged. These remain PresentMon software estimates, rather than measurements of physical mouse-to-pixel latency.
+
+## User
+
+analyze input latency for the veehiicuul cpp demo scene:
+"C:\Users\k\Downloads\2026-09-17_02-07-27 Veehiicuul.exe logs\PresentMon.csv"
+
+this is with nvidia fps limit of 100 and llm=off
+
+in your analysis, separate the last 15 seconds which are pretty clean, while the earlier parts are less clean
+
+
+## Assistant
+
+I’ll analyze the final 15 seconds separately from the earlier portion, then compare the clean segment with the previous 100 FPS, Low Latency Mode Off capture.
+
+
+## Assistant
+
+The final 15 seconds have a 9.38 ms median and 9.44 ms average all-input latency. They are cleaner overall, though occasional spikes remain: the 95th percentile drops from 12.44 to 10.87 ms, while the 99th percentile stays around 13.3 ms. That entire final segment uses independent flip; the earlier portion includes presentation-mode changes.
+
+
+## Assistant
+
+**The final 15 seconds show about 9.4 ms of reported input latency.** They are cleaner than the earlier portion, but still contain occasional 13–20 ms samples.
+
+I split [the capture](<C:/Users/k/Downloads/2026-09-17_02-07-27 Veehiicuul.exe logs/PresentMon.csv>) at **CSV time 62.939 seconds**. The clean segment runs through 77.939 seconds; the earlier segment spans approximately 48.47 seconds. Missing measurements are excluded.
+
+| All-input latency | Earlier portion | Final 15 seconds |
+| ----------------- | --------------: | ---------------: |
+| Valid samples     |           3,748 |            1,414 |
+| Mean              |         9.73 ms |          9.44 ms |
+| Median            |         9.54 ms |          9.38 ms |
+| 95th percentile   |        12.44 ms |         10.87 ms |
+| 99th percentile   |        13.21 ms |         13.39 ms |
+| Maximum           |        30.38 ms |         19.65 ms |
+
+**The improvement is mainly fewer moderately slow samples and removal of the largest outlier.** The 99th percentile does not improve. In the final segment, 43 samples exceeded 12 ms and only one exceeded 16.67 ms.
+
+Click latency is distinctly higher:
+
+| Click-only latency | Earlier portion | Final 15 seconds |
+| ------------------ | --------------: | ---------------: |
+| Samples            |              16 |               16 |
+| Mean               |        15.52 ms |         15.83 ms |
+| Median             |        15.07 ms |         16.46 ms |
+| Range              |  9.95–21.66 ms |   10.52–20.67 ms |
+
+These small click samples show no improvement in the final segment. Excluding rows with click measurements gives a final-segment all-input median of **9.34 ms**, with a **13.16 ms 99th percentile**. This is a useful movement-dominated estimate, though the CSV does not explicitly identify movement-only samples.
+
+The final segment’s timing explains where the delay appears:
+
+- **Tracked input → Present:** 0.39 ms average.
+- **Present → display:** 9.06 ms average on those same input-bearing frames.
+- **GPU busy time:** 0.52 ms average on those frames.
+
+Thus, most of the measured delay lies after Present, consistent with the 100 FPS limiter dominating rather than GPU workload. The CSV cannot isolate the driver’s exact waiting mechanism.
+
+Frame delivery averages **10.000 ms, or 100 FPS**, throughout the final segment. Its display-interval 99th percentile is **12.94 ms**, with a maximum of **14.98 ms**: reasonably steady, but not perfectly uniform. All 1,501 final-segment frames use hardware independent flip. The earlier portion includes 80 composed-flip frames; its worst input sample, **30.38 ms**, occurs during composed flip alongside a **25.52 ms display interval**.
+
+Compared with **ZoomTracks at 100 FPS and LLM Off**, this demo’s clean segment has a slightly lower median (**9.38 versus 9.61 ms**) but a higher 95th percentile (**10.87 versus 10.15 ms**) and 99th percentile (**13.39 versus 11.33 ms**). These runs therefore show **similar typical latency, with more variation in the C++ demo**, rather than a substantial latency advantage. Different scenes and input patterns prevent treating this as a controlled engine comparison.
+
+As before, these are PresentMon software estimates, not physical mouse-to-visible-pixel measurements.
