@@ -586,14 +586,15 @@ On those input-bearing frames, the averages are **0.28 ms from tracked input to 
 
 Compared with the Godot LLM-Off middle segment, DOOM’s reported median is about **2.08 ms lower** (**7.36 versus 9.44 ms**). That is a difference in the recorded metric, not proof of lower physical input latency: game behavior, input-to-frame association, presentation path, and display settings can differ. The capture also cannot isolate G-SYNC’s contribution without a matched G-SYNC-Off run.
 
-
 ## User
 
 also, note that the "C:\Users\k\Downloads\2026-09-17_10-42-33 DOOMTheDarkAges.exe logs\PresentMon.csv" capture had NvidiaReflex=on while the other apps didn't implement nvidia reflex 
 
+
 ## Assistant
 
 I’ll record Reflex On for the DOOM capture and no Reflex integration for the other apps. Reflex is another changed variable, so DOOM’s lower reported latency cannot be attributed to G-SYNC or the game alone.
+
 
 ## Assistant
 
@@ -605,3 +606,50 @@ Recorded the test conditions:
 | All earlier apps | 100              | Off or Ultra | Off    | Not implemented |
 
 The measured results are unchanged. DOOM’s lower reported latency reflects a configuration with both **G-SYNC and Reflex enabled**; these captures cannot isolate either feature’s contribution or establish an engine-level advantage.
+
+## User
+
+okay,  when using an nvidia frame limiter with no vsync, it seems like the best mean input latency as measured by presentmon is 1 frame interval and the best worst-case input latency is 2 frame intervals?
+
+
+## Assistant
+
+I’ll check whether that pattern is a general limit or a consequence of how these apps and PresentMon handle input around the frame limiter.
+
+
+## User
+
+okay,  when using an nvidia frame limiter with no vsync, it seems like the best mean input latency as measured by presentmon is 1 frame interval and the best worst-case input latency is 2 frame intervals?
+
+
+## Assistant
+
+That is roughly the pattern in your non-Reflex captures, but movement and click measurements need different interpretations. I’m checking the distinction before treating one and two frame intervals as limits.
+
+
+## Assistant
+
+**Approximately for your movement-dominated captures, yes—but these measurements do not establish a best achievable latency or a universal bound.**
+
+At 100 FPS, one frame interval is **10 ms**. Your non-Reflex apps showed:
+
+| Measurement                         | Observed pattern              |
+| ----------------------------------- | ----------------------------- |
+| Mean all-input latency, mostly motion | About 9.4–9.6 ms, roughly 1 frame |
+| Mean click latency                  | About 14–17 ms, roughly 1.5 frames |
+| Largest normal-interaction samples  | Often around 20 ms, roughly 2 frames |
+
+The distinction matters because continuous mouse movement supplies fresh events throughout each frame. A frame-associated all-input measurement is **not the average delay experienced by every individual mouse event**. PresentMon’s input association can update the tracked input timestamp as newer input arrives. [PresentMon input-tracking implementation](https://github.com/GameTechDev/PresentMon/blob/main/PresentData/PresentMonTraceConsumer.cpp).
+
+A useful simplified model for an **isolated click**, assuming input is sampled once per frame and clicks arrive at random times, is:
+
+- Wait until the next input sample: **0–1 frame**, averaging **half a frame**.
+- Then add the delay from sampling that input to displaying its result, call it **D**.
+- Mean latency: **half a frame + D**.
+- Worst timing within that cycle: **one frame + D**, before extra stalls.
+
+**If D is approximately one frame**, this predicts a click mean near **1.5 frames** and an upper end near **2 frames**—consistent with your click measurements.
+
+But **D does not have to equal one frame**. Where the limiter waits relative to input sampling and rendering matters; NVIDIA describes how Reflex changes that scheduling. [NVIDIA’s explanation](https://www.nvidia.com/en-gb/geforce/news/reflex-low-latency-platform/). Stalls can also exceed two frames, as some of your captures already demonstrate.
+
+So I would describe your finding as: **“These apps, with this NVIDIA limiter configuration, report roughly one-frame mean movement latency and roughly two-frame upper-end interaction latency.”** Establishing how this scales would require repeating the test at other caps, such as 60 and 144 FPS.
