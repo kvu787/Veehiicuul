@@ -1,4 +1,4 @@
-# Conversation: ZoomTracks and Veehiicuul input latency captures
+# Conversation: ZoomTracks, Veehiicuul, and Godot input latency captures
 
 ## User
 
@@ -381,3 +381,64 @@ Compared with the previously selected clean portion of the Off capture:
 **Typical latency is effectively similar.** Ultra has a lower observed maximum, but slightly higher median and percentile values. Different input patterns, segment lengths, and one run per setting prevent attributing these small differences to Ultra.
 
 These are PresentMon software estimates, not physical mouse-to-visible-pixel measurements.
+
+## User
+
+analyze input latency this godot app:
+"C:\Users\k\Repository\VsyncStutterTest\MyLogOutput\2026-09-17_02-33-46\PresentMon.csv"
+this is with nvidia fps limit of 100 and llm=off
+separate the initial 5 seconds and final 5 seconds
+
+
+## Assistant
+
+I’ll split the Godot capture into the first 5 seconds, the middle, and the final 5 seconds, then compare their input latency and frame pacing.
+
+
+## Assistant
+
+The middle 40.58 seconds report a 9.44 ms median, with 95% of samples at or below 10.20 ms. The first row contains a 1,463 ms input-latency value that heavily inflates the startup average; I’ll report it separately. The final five seconds have more latency spikes, even though frame delivery continues at roughly 100 FPS.
+
+
+## Assistant
+
+**The Godot app’s middle segment reports about 9.5 ms input latency: 9.44 ms median, with 95% of samples at or below 10.20 ms.** Startup contains one extreme measurement, and the final five seconds are less consistent.
+
+I split [the capture](C:/Users/k/Repository/VsyncStutterTest/MyLogOutput/2026-09-17_02-33-46/PresentMon.csv) relative to its first recorded frame. It contains **5,060 frames over 50.58 seconds**:
+
+| All-input latency | First 5 seconds | Middle: 5–45.58 s | Final 5 seconds |
+| ----------------- | --------------: | ----------------: | --------------: |
+| Valid samples     |             310 |             3,792 |             284 |
+| Mean              |        14.70 ms |           9.51 ms |         9.98 ms |
+| Median            |         9.70 ms |           9.44 ms |         9.71 ms |
+| 95th percentile   |        12.40 ms |          10.20 ms |        12.75 ms |
+| 99th percentile   |        19.39 ms |          12.69 ms |        18.31 ms |
+| Maximum           |     1,463.13 ms |          19.39 ms |        19.72 ms |
+
+Missing input values are excluded, not treated as zero. The boundaries in the CSV’s own time are **6.966 seconds** and **47.547 seconds**.
+
+**Startup:** the very first row reports **1,463.13 ms** input latency during composed flip, alongside a 562 ms interval since the preceding Present. This is a startup-associated measurement, not representative of ongoing interaction. Excluding only that row reduces the first-five-second mean to **10.01 ms** and maximum to **19.68 ms**; its median remains **9.70 ms**.
+
+**Middle:** all frames use hardware independent flip. Display intervals average **10.000 ms**, matching the NVIDIA 100 FPS limit; their 99th percentile is **12.60 ms** and maximum **14.46 ms**. Input latency exceeds 12 ms on **66 samples (1.7%)**, and 16.67 ms on **five samples (0.13%)**.
+
+On middle-segment frames with input measurements, the average breakdown is:
+
+- Tracked input → Present: **0.53 ms**.
+- Present → display: **8.98 ms**.
+- GPU busy time: **0.87 ms**.
+
+Most measured delay therefore lies after Present, consistent with the limiter and presentation timing dominating rather than GPU rendering work.
+
+**Ending:** the input-latency tail worsens, but display intervals still average 10.000 ms. The largest late input spikes occur with approximately normal 10 ms display intervals, so they do not correspond to large display stalls. No input-latency samples appear during the final **1.63 seconds**, although frames continue.
+
+Click-only measurements are higher than the movement-dominated all-input values:
+
+| Click latency | First 5 seconds | Middle   | Final 5 seconds |
+| ------------- | --------------: | -------: | --------------: |
+| Samples       |              17 |       15 |               3 |
+| Mean          |        15.13 ms | 14.04 ms |        15.04 ms |
+| Median        |        13.92 ms | 14.42 ms |        14.70 ms |
+
+Compared with the **C++ demo’s clean LLM-Off segment**, Godot has essentially the same typical latency (**9.44 versus 9.38 ms median**), with somewhat lower 95th/99th percentiles (**10.20/12.69 versus 10.87/13.39 ms**). These are separate runs and scenes, so this suggests similar performance under the limiter, not a controlled engine ranking.
+
+These remain PresentMon software estimates, not physical mouse-to-visible-pixel measurements.
