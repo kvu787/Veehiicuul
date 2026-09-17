@@ -1,4 +1,4 @@
-# Conversation: ZoomTracks, Veehiicuul, and Godot input latency captures
+# Conversation: PresentMon input latency capture comparisons
 
 ## User
 
@@ -513,3 +513,63 @@ Comparing the middle segments of the two Godot captures:
 | Maximum           | 19.39 ms |  19.94 ms |
 
 **Ultra did not reduce typical latency in these runs.** The small percentile improvements could reflect ordinary run-to-run variation; repeated matched captures would be needed to establish an effect. These are PresentMon software estimates, not physical mouse-to-visible-pixel measurements.
+
+## User
+
+analyze input latency for this capture:
+"C:\Users\k\Downloads\2026-09-17_10-42-33 DOOMTheDarkAges.exe logs\PresentMon.csv"
+
+this is with nvidia fps limit of 100 and llm=off
+separate the initial 10 seconds and final 10 seconds
+
+
+## Assistant
+
+I’ll split the DOOM capture into the first 10 seconds, the middle, and the final 10 seconds, then check input latency and frame pacing in each.
+
+
+## User
+
+also, gsync was on
+
+
+## Assistant
+
+I’ll include G-SYNC as enabled in the test conditions. The middle segment reports a 7.36 ms median and 7.53 ms average—lower than the earlier demo captures—but no click-only measurements are recorded. GPU busy time is much higher here, so the timing breakdown does not support the same “mostly limiter waiting” interpretation as the demos.
+
+
+## Assistant
+
+**The middle of this DOOM capture reports 7.36 ms median input latency and 7.53 ms average**, with NVIDIA’s 100 FPS limit, LLM Off, and G-SYNC On. Most samples are tightly grouped, with occasional spikes into the teens.
+
+The [capture](<C:/Users/k/Downloads/2026-09-17_10-42-33 DOOMTheDarkAges.exe logs/PresentMon.csv>) contains **9,875 frames over 98.76 seconds**. These segments are measured from the first recorded frame:
+
+| All-input latency | First 10 seconds | Middle: 10–88.76 s | Final 10 seconds |
+| ----------------- | ---------------: | -----------------: | ---------------: |
+| Valid samples     |              334 |              6,554 |              382 |
+| Mean              |          8.18 ms |            7.53 ms |          7.18 ms |
+| Median            |          8.04 ms |            7.36 ms |          7.50 ms |
+| 95th percentile   |          9.81 ms |            8.71 ms |          9.62 ms |
+| 99th percentile   |         16.30 ms |           12.90 ms |         12.82 ms |
+| Maximum           |         36.66 ms |           18.56 ms |         17.77 ms |
+
+Missing input measurements are excluded. The split boundaries in CSV time are **10.006 seconds** and **88.770 seconds**.
+
+**First 10 seconds:** input measurements begin about four seconds into the capture. The largest latency spike, **36.66 ms at elapsed time 4.02 seconds**, coincides with a presentation-mode transition and a **25.11 ms display interval**. This portion contains 402 composed-flip frames.
+
+**Middle:** all 7,874 frames use **Hardware Composed: Independent Flip**. Display intervals average **10.003 ms**, approximately **99.97 FPS**. Their 95th percentile is **11.07 ms**, 99th percentile **11.59 ms**, and maximum **14.86 ms**. Frame pacing is reasonably consistent, though not perfectly uniform with G-SYNC enabled.
+
+Of the middle segment’s input samples:
+
+- **144 (2.20%)** exceed 10 ms.
+- **91 (1.39%)** exceed 12 ms.
+- **13 (0.20%)** exceed 16.67 ms.
+- None exceed 20 ms.
+
+On those input-bearing frames, the averages are **0.28 ms from tracked input to Present**, then **7.25 ms from Present to display**. GPU busy time averages **9.36 ms**—substantially more GPU work than in your small demo apps. The after-Present interval therefore should not be interpreted as pure limiter waiting. GPU work overlaps other timings; these values are not three sequential stages to add together.
+
+**Final 10 seconds:** the lower mean does not indicate consistently better responsiveness: the median is slightly higher and the distribution is wider. GPU workload also drops, so this is a different workload mix. Input measurements stop **3.71 seconds before the capture ends**. Later display gaps of **31.22 and 43.76 ms** have no associated input-latency measurement, so they do not appear in the input statistics.
+
+**There are no click-to-photon samples anywhere in this CSV.** That does not establish that no clicks occurred; click latency cannot be assessed from this capture.
+
+Compared with the Godot LLM-Off middle segment, DOOM’s reported median is about **2.08 ms lower** (**7.36 versus 9.44 ms**). That is a difference in the recorded metric, not proof of lower physical input latency: game behavior, input-to-frame association, presentation path, and display settings can differ. The capture also cannot isolate G-SYNC’s contribution without a matched G-SYNC-Off run.
