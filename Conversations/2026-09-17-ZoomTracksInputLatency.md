@@ -538,9 +538,21 @@ also, gsync was on
 I’ll include G-SYNC as enabled in the test conditions. The middle segment reports a 7.36 ms median and 7.53 ms average—lower than the earlier demo captures—but no click-only measurements are recorded. GPU busy time is much higher here, so the timing breakdown does not support the same “mostly limiter waiting” interpretation as the demos.
 
 
+## User
+
+gsync was off for all captures prior to "C:\Users\k\Downloads\2026-09-17_10-42-33 DOOMTheDarkAges.exe logs\PresentMon.csv"
+
+
+## Assistant
+
+Understood: all earlier captures had G-SYNC Off; this DOOM capture has it On. That makes G-SYNC another changed variable, so the lower DOOM latency cannot be attributed to the game alone.
+
+
 ## Assistant
 
 **The middle of this DOOM capture reports 7.36 ms median input latency and 7.53 ms average**, with NVIDIA’s 100 FPS limit, LLM Off, and G-SYNC On. Most samples are tightly grouped, with occasional spikes into the teens.
+
+All earlier captures had **G-SYNC Off**, so the cross-app comparison also changes the display configuration.
 
 The [capture](<C:/Users/k/Downloads/2026-09-17_10-42-33 DOOMTheDarkAges.exe logs/PresentMon.csv>) contains **9,875 frames over 98.76 seconds**. These segments are measured from the first recorded frame:
 
