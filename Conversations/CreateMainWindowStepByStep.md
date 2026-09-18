@@ -62,3 +62,23 @@ I’ll read `CreateMainWindow` and the surrounding code, then explain each step 
    The returned `HWND` goes into `m_window`. It is Windows' identifier for the newly created window. If it is `nullptr`, creation failed and the function throws.
 
 After this returns, `Run` queries the actual client size, initializes the renderer, updates the title, and calls `ShowWindow(m_window, showCommand)` followed by `UpdateWindow(m_window)`.
+
+## User
+
+why isn't there just a single api call for creating a window instead of an additional "registration" step?
+
+## Assistant commentary
+
+I’ll explain what registration contributes and how it applies to this app.
+
+## Assistant
+
+Win32 separates **defining a kind of window** from **creating an instance of it**.
+
+`RegisterClassExW` defines the shared behavior and defaults: the message callback, cursor, icons, and class styles. `CreateWindowExW` then creates an individual window with its own title, position, size, and other settings.
+
+This lets you register a type once and create many windows from it without repeating the shared configuration. Windows also provides predefined classes such as `BUTTON` and `EDIT`, so you can create those controls directly with `CreateWindowExW` without registering your own class first.
+
+For this app, which creates one main window, the separation does add boilerplate with little immediate benefit. **There is no fundamental reason a higher-level API couldn't combine the steps.** A wrapper could register the class internally and then create the window, exposing a single call to your code. Here, `CreateMainWindow` already serves as that wrapper.
+
+One subtlety: registration doesn't create a window or reserve screen space. It just gives Windows a named definition to look up when you request a window.
