@@ -1,343 +1,343 @@
 {
-  "CollectedAt": "2026-09-11T15:45:16.6494668-07:00",
-  "TimeZone": "Pacific Standard Time",
-  "Provenance": "Post-capture inventory of the local computer. This is not capture-time telemetry.",
-  "Computer": {
-    "Manufacturer": "ASUSTeK COMPUTER INC.",
-    "Model": "ROG Strix G18 G815LR_G815LR",
-    "SystemType": "x64-based PC",
-    "TotalPhysicalMemory": 33687629824,
-    "NumberOfProcessors": 1,
-    "NumberOfLogicalProcessors": 24,
-    "HypervisorPresent": true
-  },
-  "Processor": {
-    "Name": "Intel(R) Core(TM) Ultra 9 275HX",
-    "Manufacturer": "GenuineIntel",
-    "NumberOfCores": 24,
-    "NumberOfLogicalProcessors": 24,
-    "MaxClockSpeed": 2700,
-    "CurrentClockSpeed": 2700,
-    "L2CacheSize": 40960,
-    "L3CacheSize": 36864,
-    "SocketDesignation": "U3E1",
-    "AddressWidth": 64
-  },
-  "BaseBoard": {
-    "Manufacturer": "ASUSTeK COMPUTER INC.",
-    "Product": "G815LR",
-    "Version": "1.0"
-  },
-  "Bios": {
-    "Manufacturer": "American Megatrends International, LLC.",
-    "SMBIOSBIOSVersion": "G815LR.338",
-    "ReleaseDate": "2026-06-03T17:00:00-07:00",
-    "SMBIOSMajorVersion": 3,
-    "SMBIOSMinorVersion": 8
-  },
-  "Memory": [
-    {
-      "Manufacturer": "Samsung",
-      "PartNumber": "M425R2GA3EB0-CWMOL  ",
-      "Capacity": 17179869184,
-      "Speed": 5600,
-      "ConfiguredClockSpeed": 5600,
-      "DeviceLocator": "Controller0-ChannelA-DIMM1",
-      "BankLabel": "BANK 0",
-      "SMBIOSMemoryType": 34,
-      "ConfiguredVoltage": 1100
+    "CollectedAt": "2026-09-11T15:45:16.6494668-07:00",
+    "TimeZone": "Pacific Standard Time",
+    "Provenance": "Post-capture inventory of the local computer. This is not capture-time telemetry.",
+    "Computer": {
+        "Manufacturer": "ASUSTeK COMPUTER INC.",
+        "Model": "ROG Strix G18 G815LR_G815LR",
+        "SystemType": "x64-based PC",
+        "TotalPhysicalMemory": 33687629824,
+        "NumberOfProcessors": 1,
+        "NumberOfLogicalProcessors": 24,
+        "HypervisorPresent": true
     },
-    {
-      "Manufacturer": "Samsung",
-      "PartNumber": "M425R2GA3EB0-CWMOL  ",
-      "Capacity": 17179869184,
-      "Speed": 5600,
-      "ConfiguredClockSpeed": 5600,
-      "DeviceLocator": "Controller0-ChannelB-DIMM1",
-      "BankLabel": "BANK 1",
-      "SMBIOSMemoryType": 34,
-      "ConfiguredVoltage": 1100
-    }
-  ],
-  "OperatingSystem": {
-    "Caption": "Microsoft Windows 11 Pro",
-    "Version": "10.0.26200",
-    "BuildNumber": "26200",
-    "OSArchitecture": "64-bit",
-    "LastBootUpTime": "2026-09-09T00:37:56.43229-07:00",
-    "TotalVisibleMemorySize": 32898076
-  },
-  "WindowsVersion": {
-    "ProductName": "Windows 10 Pro",
-    "DisplayVersion": "25H2",
-    "CurrentBuild": "26200",
-    "UBR": 9445,
-    "BuildLabEx": "26100.1.amd64fre.ge_release.240331-1435",
-    "EditionID": "Professional"
-  },
-  "Graphics": [
-    {
-      "Name": "Intel(R) Graphics",
-      "VideoProcessor": "Intel(R) Graphics Family",
-      "DriverVersion": "32.0.101.8826",
-      "DriverDate": "2026-05-28T17:00:00-07:00",
-      "AdapterRAM": 2147479552,
-      "CurrentHorizontalResolution": null,
-      "CurrentVerticalResolution": null,
-      "CurrentRefreshRate": null,
-      "CurrentBitsPerPixel": null,
-      "PNPDeviceID": "PCI\\VEN_8086&DEV_7D67&SUBSYS_3E881043&REV_06\\3&11583659&0&10"
+    "Processor": {
+        "Name": "Intel(R) Core(TM) Ultra 9 275HX",
+        "Manufacturer": "GenuineIntel",
+        "NumberOfCores": 24,
+        "NumberOfLogicalProcessors": 24,
+        "MaxClockSpeed": 2700,
+        "CurrentClockSpeed": 2700,
+        "L2CacheSize": 40960,
+        "L3CacheSize": 36864,
+        "SocketDesignation": "U3E1",
+        "AddressWidth": 64
     },
-    {
-      "Name": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
-      "VideoProcessor": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
-      "DriverVersion": "32.0.15.9649",
-      "DriverDate": "2026-05-04T17:00:00-07:00",
-      "AdapterRAM": 4293918720,
-      "CurrentHorizontalResolution": 2560,
-      "CurrentVerticalResolution": 1440,
-      "CurrentRefreshRate": 119,
-      "CurrentBitsPerPixel": 32,
-      "PNPDeviceID": "PCI\\VEN_10DE&DEV_2F58&SUBSYS_3E881043&REV_A1\\50118ACEA42DB04800"
-    }
-  ],
-  "Storage": {
-    "Model": "WD PC SN5000S SDEQNSJ-2T00-1002",
-    "Size": 2048407280640,
-    "InterfaceType": "SCSI",
-    "MediaType": "Fixed hard disk media",
-    "FirmwareRevision": "34230100"
-  },
-  "PhysicalDisks": {
-    "FriendlyName": "WD PC SN5000S SDEQNSJ-2T00-1002",
-    "MediaType": 4,
-    "BusType": 17,
-    "Size": 2048408248320,
-    "FirmwareVersion": "34230100"
-  },
-  "MonitorIdentity": [
-    {
-      "Active": true,
-      "ManufacturerName": [
-        66,
-        79,
-        69,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "ProductCodeID": [
-        48,
-        67,
-        69,
-        52,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "UserFriendlyName": [
-        78,
-        69,
-        49,
-        56,
-        48,
-        81,
-        68,
-        77,
-        45,
-        78,
-        90,
-        67,
-        0
-      ],
-      "WeekOfManufacture": 12,
-      "YearOfManufacture": 2024
+    "BaseBoard": {
+        "Manufacturer": "ASUSTeK COMPUTER INC.",
+        "Product": "G815LR",
+        "Version": "1.0"
     },
-    {
-      "Active": true,
-      "ManufacturerName": [
-        65,
-        85,
-        83,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "ProductCodeID": [
-        65,
-        65,
-        48,
-        70,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "UserFriendlyName": [
-        80,
-        65,
-        50,
-        55,
-        56,
-        81,
-        71,
-        86,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "WeekOfManufacture": 51,
-      "YearOfManufacture": 2025
+    "Bios": {
+        "Manufacturer": "American Megatrends International, LLC.",
+        "SMBIOSBIOSVersion": "G815LR.338",
+        "ReleaseDate": "2026-06-03T17:00:00-07:00",
+        "SMBIOSMajorVersion": 3,
+        "SMBIOSMinorVersion": 8
     },
-    {
-      "Active": true,
-      "ManufacturerName": [
-        65,
-        85,
-        83,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "ProductCodeID": [
-        65,
-        65,
-        48,
-        70,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "UserFriendlyName": [
-        80,
-        65,
-        50,
-        55,
-        56,
-        81,
-        71,
-        86,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "WeekOfManufacture": 51,
-      "YearOfManufacture": 2025
-    }
-  ],
-  "GraphicsScheduling": {
-    "HwSchMode": null
-  },
-  "GameBar": {
-    "AutoGameModeEnabled": null,
-    "AllowAutoGameMode": null
-  },
-  "GameDvr": {
-    "GameDVR_Enabled": 1,
-    "GameDVR_FSEBehaviorMode": 0
-  },
-  "DeviceGuard": {
-    "VirtualizationBasedSecurityStatus": 2,
-    "SecurityServicesConfigured": [
-      2,
-      3,
-      4
+    "Memory": [
+        {
+            "Manufacturer": "Samsung",
+            "PartNumber": "M425R2GA3EB0-CWMOL  ",
+            "Capacity": 17179869184,
+            "Speed": 5600,
+            "ConfiguredClockSpeed": 5600,
+            "DeviceLocator": "Controller0-ChannelA-DIMM1",
+            "BankLabel": "BANK 0",
+            "SMBIOSMemoryType": 34,
+            "ConfiguredVoltage": 1100
+        },
+        {
+            "Manufacturer": "Samsung",
+            "PartNumber": "M425R2GA3EB0-CWMOL  ",
+            "Capacity": 17179869184,
+            "Speed": 5600,
+            "ConfiguredClockSpeed": 5600,
+            "DeviceLocator": "Controller0-ChannelB-DIMM1",
+            "BankLabel": "BANK 1",
+            "SMBIOSMemoryType": 34,
+            "ConfiguredVoltage": 1100
+        }
     ],
-    "SecurityServicesRunning": [
-      2,
-      3,
-      4
+    "OperatingSystem": {
+        "Caption": "Microsoft Windows 11 Pro",
+        "Version": "10.0.26200",
+        "BuildNumber": "26200",
+        "OSArchitecture": "64-bit",
+        "LastBootUpTime": "2026-09-09T00:37:56.43229-07:00",
+        "TotalVisibleMemorySize": 32898076
+    },
+    "WindowsVersion": {
+        "ProductName": "Windows 10 Pro",
+        "DisplayVersion": "25H2",
+        "CurrentBuild": "26200",
+        "UBR": 9445,
+        "BuildLabEx": "26100.1.amd64fre.ge_release.240331-1435",
+        "EditionID": "Professional"
+    },
+    "Graphics": [
+        {
+            "Name": "Intel(R) Graphics",
+            "VideoProcessor": "Intel(R) Graphics Family",
+            "DriverVersion": "32.0.101.8826",
+            "DriverDate": "2026-05-28T17:00:00-07:00",
+            "AdapterRAM": 2147479552,
+            "CurrentHorizontalResolution": null,
+            "CurrentVerticalResolution": null,
+            "CurrentRefreshRate": null,
+            "CurrentBitsPerPixel": null,
+            "PNPDeviceID": "PCI\\VEN_8086&DEV_7D67&SUBSYS_3E881043&REV_06\\3&11583659&0&10"
+        },
+        {
+            "Name": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+            "VideoProcessor": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+            "DriverVersion": "32.0.15.9649",
+            "DriverDate": "2026-05-04T17:00:00-07:00",
+            "AdapterRAM": 4293918720,
+            "CurrentHorizontalResolution": 2560,
+            "CurrentVerticalResolution": 1440,
+            "CurrentRefreshRate": 119,
+            "CurrentBitsPerPixel": 32,
+            "PNPDeviceID": "PCI\\VEN_10DE&DEV_2F58&SUBSYS_3E881043&REV_A1\\50118ACEA42DB04800"
+        }
+    ],
+    "Storage": {
+        "Model": "WD PC SN5000S SDEQNSJ-2T00-1002",
+        "Size": 2048407280640,
+        "InterfaceType": "SCSI",
+        "MediaType": "Fixed hard disk media",
+        "FirmwareRevision": "34230100"
+    },
+    "PhysicalDisks": {
+        "FriendlyName": "WD PC SN5000S SDEQNSJ-2T00-1002",
+        "MediaType": 4,
+        "BusType": 17,
+        "Size": 2048408248320,
+        "FirmwareVersion": "34230100"
+    },
+    "MonitorIdentity": [
+        {
+            "Active": true,
+            "ManufacturerName": [
+                66,
+                79,
+                69,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "ProductCodeID": [
+                48,
+                67,
+                69,
+                52,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "UserFriendlyName": [
+                78,
+                69,
+                49,
+                56,
+                48,
+                81,
+                68,
+                77,
+                45,
+                78,
+                90,
+                67,
+                0
+            ],
+            "WeekOfManufacture": 12,
+            "YearOfManufacture": 2024
+        },
+        {
+            "Active": true,
+            "ManufacturerName": [
+                65,
+                85,
+                83,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "ProductCodeID": [
+                65,
+                65,
+                48,
+                70,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "UserFriendlyName": [
+                80,
+                65,
+                50,
+                55,
+                56,
+                81,
+                71,
+                86,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "WeekOfManufacture": 51,
+            "YearOfManufacture": 2025
+        },
+        {
+            "Active": true,
+            "ManufacturerName": [
+                65,
+                85,
+                83,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "ProductCodeID": [
+                65,
+                65,
+                48,
+                70,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "UserFriendlyName": [
+                80,
+                65,
+                50,
+                55,
+                56,
+                81,
+                71,
+                86,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "WeekOfManufacture": 51,
+            "YearOfManufacture": 2025
+        }
+    ],
+    "GraphicsScheduling": {
+        "HwSchMode": null
+    },
+    "GameBar": {
+        "AutoGameModeEnabled": null,
+        "AllowAutoGameMode": null
+    },
+    "GameDvr": {
+        "GameDVR_Enabled": 1,
+        "GameDVR_FSEBehaviorMode": 0
+    },
+    "DeviceGuard": {
+        "VirtualizationBasedSecurityStatus": 2,
+        "SecurityServicesConfigured": [
+            2,
+            3,
+            4
+        ],
+        "SecurityServicesRunning": [
+            2,
+            3,
+            4
+        ]
+    },
+    "ActivePowerScheme": [
+        "Power Scheme GUID: 6fecc5ae-f350-48a5-b669-b472cb895ccf  (Turbo)"
+    ],
+    "ProcessorPowerSettings": [
+        "Power Scheme GUID: 6fecc5ae-f350-48a5-b669-b472cb895ccf  (Turbo)",
+        "  Subgroup GUID: 54533251-82be-4824-96c1-47b60b740d00  (Processor power management)",
+        "    GUID Alias: SUB_PROCESSOR",
+        "    Power Setting GUID: 893dee8e-2bef-41e0-89c6-b55d0929964c  (Minimum processor state)",
+        "      GUID Alias: PROCTHROTTLEMIN",
+        "      Minimum Possible Setting: 0x00000000",
+        "      Maximum Possible Setting: 0x00000064",
+        "      Possible Settings increment: 0x00000001",
+        "      Possible Settings units: %",
+        "    Current AC Power Setting Index: 0x00000005",
+        "    Current DC Power Setting Index: 0x00000005",
+        "",
+        "    Power Setting GUID: bc5038f7-23e0-4960-96da-33abaf5935ec  (Maximum processor state)",
+        "      GUID Alias: PROCTHROTTLEMAX",
+        "      Minimum Possible Setting: 0x00000000",
+        "      Maximum Possible Setting: 0x00000064",
+        "      Possible Settings increment: 0x00000001",
+        "      Possible Settings units: %",
+        "    Current AC Power Setting Index: 0x00000064",
+        "    Current DC Power Setting Index: 0x00000064",
+        ""
+    ],
+    "GameProcess": [],
+    "RepositoryCommit": "ede2374180d7fbbe4476ae766033e7692d17401b",
+    "RepositoryStatus": [
+        "?? \"SavedLogOutput/2026-09-11 MinimumInputLatency/CollectSystemSpecs.ps1\""
     ]
-  },
-  "ActivePowerScheme": [
-    "Power Scheme GUID: 6fecc5ae-f350-48a5-b669-b472cb895ccf  (Turbo)"
-  ],
-  "ProcessorPowerSettings": [
-    "Power Scheme GUID: 6fecc5ae-f350-48a5-b669-b472cb895ccf  (Turbo)",
-    "  Subgroup GUID: 54533251-82be-4824-96c1-47b60b740d00  (Processor power management)",
-    "    GUID Alias: SUB_PROCESSOR",
-    "    Power Setting GUID: 893dee8e-2bef-41e0-89c6-b55d0929964c  (Minimum processor state)",
-    "      GUID Alias: PROCTHROTTLEMIN",
-    "      Minimum Possible Setting: 0x00000000",
-    "      Maximum Possible Setting: 0x00000064",
-    "      Possible Settings increment: 0x00000001",
-    "      Possible Settings units: %",
-    "    Current AC Power Setting Index: 0x00000005",
-    "    Current DC Power Setting Index: 0x00000005",
-    "",
-    "    Power Setting GUID: bc5038f7-23e0-4960-96da-33abaf5935ec  (Maximum processor state)",
-    "      GUID Alias: PROCTHROTTLEMAX",
-    "      Minimum Possible Setting: 0x00000000",
-    "      Maximum Possible Setting: 0x00000064",
-    "      Possible Settings increment: 0x00000001",
-    "      Possible Settings units: %",
-    "    Current AC Power Setting Index: 0x00000064",
-    "    Current DC Power Setting Index: 0x00000064",
-    ""
-  ],
-  "GameProcess": [],
-  "RepositoryCommit": "ede2374180d7fbbe4476ae766033e7692d17401b",
-  "RepositoryStatus": [
-    "?? \"SavedLogOutput/2026-09-11 MinimumInputLatency/CollectSystemSpecs.ps1\""
-  ]
 }

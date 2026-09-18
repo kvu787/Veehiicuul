@@ -38,6 +38,10 @@ snapshot byte counts and SHA-256 hashes describe the renamed files; capture
 timestamps and executable fingerprints still describe the original run.
 Git history retains the original capture bytes.
 
+Formatting normalization on 2026-09-18: saved text follows the repository's
+`.editorconfig`. Snapshot sizes and hashes and capture-log hashes describe
+the normalized files. CSV bytes and all measurement values are unchanged.
+
 **This native C++/DirectX 12 application sustained approximately 5,600 FPS at
 2560 x 1440 while using its `MinimizeInputLatency` preset.** Two approximately
 five-minute PresentMon captures averaged **{a["AverageFPS"]:,.1f} FPS** and

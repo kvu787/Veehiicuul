@@ -1,22 +1,22 @@
 [
-  {
-    "Capture": "2026-09-11_13-59-13",
-    "VerifiedRows": 1692056,
-    "AverageFPS": 5640.015796664094,
-    "CompleteSeconds": 300,
-    "MinimumOneSecondFPS": 5100,
-    "MaximumOneSecondFPS": 6022,
-    "IntervalSumTicks": 3000089115,
-    "Status": "Passed"
-  },
-  {
-    "Capture": "2026-09-11_15-18-36",
-    "VerifiedRows": 1699754,
-    "AverageFPS": 5665.747242260105,
-    "CompleteSeconds": 300,
-    "MinimumOneSecondFPS": 5150,
-    "MaximumOneSecondFPS": 6029,
-    "IntervalSumTicks": 3000050880,
-    "Status": "Passed"
-  }
+    {
+        "Capture": "2026-09-11_13-59-13",
+        "VerifiedRows": 1692056,
+        "AverageFPS": 5640.015796664094,
+        "CompleteSeconds": 300,
+        "MinimumOneSecondFPS": 5100,
+        "MaximumOneSecondFPS": 6022,
+        "IntervalSumTicks": 3000089115,
+        "Status": "Passed"
+    },
+    {
+        "Capture": "2026-09-11_15-18-36",
+        "VerifiedRows": 1699754,
+        "AverageFPS": 5665.747242260105,
+        "CompleteSeconds": 300,
+        "MinimumOneSecondFPS": 5150,
+        "MaximumOneSecondFPS": 6029,
+        "IntervalSumTicks": 3000050880,
+        "Status": "Passed"
+    }
 ]

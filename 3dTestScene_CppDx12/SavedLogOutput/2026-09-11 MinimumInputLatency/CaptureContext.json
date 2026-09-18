@@ -1,20 +1,20 @@
 {
-  "CaptureDate": "2026-09-11",
-  "UserConfirmedContext": {
-    "SameContinuouslyRunningGame": true,
-    "ResolutionWidth": 2560,
-    "ResolutionHeight": 1440,
-    "Fullscreen": "The fullscreen mode implemented by this app (borderless fullscreen, verified in Source/Application.cpp).",
-    "PowerMode": "Armoury Crate Turbo mode",
-    "VerbatimReply": "yes both captures were taken at 2560*1440 fullscreen (as in the fullscreen implemented by this app). i was using armoury crate turbo mode",
-    "Purpose": "Demonstrate extremely high FPS in the approximately 5,000 range even with the minimum-latency configuration, as motivation to rewrite ZoomTracks using C++ and DirectX 12.",
-    "EngineComparison": "User reports that other minimal 3D scenes tested in Godot and Unity significantly underperform this application. No matching captures or numerical engine results were supplied."
-  },
-  "NotRecorded": [
-    "Capture-time temperatures, clocks, GPU wattage and CPU package power",
-    "Exact display used during the captures",
-    "Capture-time driver overrides, VRR settings, manual overclock settings, foreground/background programs and affinity",
-    "Exact capture command line and embedded application build commit",
-    "Physical input-to-photon latency"
-  ]
+    "CaptureDate": "2026-09-11",
+    "UserConfirmedContext": {
+        "SameContinuouslyRunningGame": true,
+        "ResolutionWidth": 2560,
+        "ResolutionHeight": 1440,
+        "Fullscreen": "The fullscreen mode implemented by this app (borderless fullscreen, verified in Source/Application.cpp).",
+        "PowerMode": "Armoury Crate Turbo mode",
+        "VerbatimReply": "yes both captures were taken at 2560*1440 fullscreen (as in the fullscreen implemented by this app). i was using armoury crate turbo mode",
+        "Purpose": "Demonstrate extremely high FPS in the approximately 5,000 range even with the minimum-latency configuration, as motivation to rewrite ZoomTracks using C++ and DirectX 12.",
+        "EngineComparison": "User reports that other minimal 3D scenes tested in Godot and Unity significantly underperform this application. No matching captures or numerical engine results were supplied."
+    },
+    "NotRecorded": [
+        "Capture-time temperatures, clocks, GPU wattage and CPU package power",
+        "Exact display used during the captures",
+        "Capture-time driver overrides, VRR settings, manual overclock settings, foreground/background programs and affinity",
+        "Exact capture command line and embedded application build commit",
+        "Physical input-to-photon latency"
+    ]
 }

@@ -1,53 +1,53 @@
 [
-  {
-    "Source": "MyLogOutput\\2026-09-11_13-59-05\\Application.log",
-    "Snapshot": "Context/Application.log",
-    "Length": 73,
-    "LastWriteTime": "2026-09-11T15:24:07.5433645-07:00",
-    "Sha256": "17AEC8A5DF942F29FF508F5980939F4E92406F4FD35ADDF4C965165B391F5263"
-  },
-  {
-    "Source": "MyLogOutput\\2026-09-11_13-59-05\\Launcher.log",
-    "Snapshot": "Context/Launcher.log",
-    "Length": 924,
-    "LastWriteTime": "2026-09-11T15:24:07.5540321-07:00",
-    "Sha256": "6A8E07256CF13CA1514553B7C91E38C2BBFD6DE82C4FEFD78C4A2D7139B6BFD7"
-  },
-  {
-    "Source": "MyBuildOutput\\Release\\Assets\\Settings.json",
-    "Snapshot": "Context/Settings.json",
-    "Length": 1626,
-    "LastWriteTime": "2026-09-11T11:57:36.1407556-07:00",
-    "Sha256": "BBEDAF3D29DA7F240E1785E5DA60C13303774BE55C22CA96D67421D1BFBED2C6"
-  },
-  {
-    "Source": "MyBuildOutput\\Release\\CMakeCache.txt",
-    "Snapshot": "Context/CMakeCache.txt",
-    "Length": 16032,
-    "LastWriteTime": "2026-09-11T11:57:35.8888719-07:00",
-    "Sha256": "A23F611DF9CE2DB1F5205FCF76707516FB767E44440A984D7564B3D0A953CBC2"
-  },
-  {
-    "Source": "MyBuildOutput\\Release\\build.ninja",
-    "Snapshot": "Context/build.ninja",
-    "Length": 87942,
-    "LastWriteTime": "2026-09-11T13:59:06.3230438-07:00",
-    "Sha256": "06A81C74EB0928106DE26D677B31371D87F57A4536CFDEF9A217C23DC2E49315"
-  },
-  {
-    "Source": ".\\MyBuildOutput\\Release\\Veehiicuul.exe",
-    "Length": 524288,
-    "LastWriteTime": "2026-09-11T12:00:59.2101202-07:00",
-    "Sha256": "156EF78C39EDDC2496C5FA234D026035D6147750B83E2B553797C26E307F1820",
-    "FileVersion": null,
-    "ProductVersion": null
-  },
-  {
-    "Source": "C:\\Users\\k\\Program\\PresentMon-2.5.1-x64.exe",
-    "Length": 956768,
-    "LastWriteTime": "2026-08-27T09:16:36.8502597-07:00",
-    "Sha256": "9BEC3083069F58F911E6A512F4806DB51A27BD096103087BC1D05EF54C80A191",
-    "FileVersion": null,
-    "ProductVersion": null
-  }
+    {
+        "Source": "MyLogOutput\\2026-09-11_13-59-05\\Application.log",
+        "Snapshot": "Context/Application.log",
+        "Length": 70,
+        "LastWriteTime": "2026-09-11T15:24:07.5433645-07:00",
+        "Sha256": "2F1C70A88E6DFE40305C9DE032141AFFF51BC1807A665862E47347D2604FF0F4"
+    },
+    {
+        "Source": "MyLogOutput\\2026-09-11_13-59-05\\Launcher.log",
+        "Snapshot": "Context/Launcher.log",
+        "Length": 920,
+        "LastWriteTime": "2026-09-11T15:24:07.5540321-07:00",
+        "Sha256": "339EE10694962E07589F038334150558108D7EC9A417334B8480C590BF0F1EE8"
+    },
+    {
+        "Source": "MyBuildOutput\\Release\\Assets\\Settings.json",
+        "Snapshot": "Context/Settings.json",
+        "Length": 1778,
+        "LastWriteTime": "2026-09-11T11:57:36.1407556-07:00",
+        "Sha256": "EEA27F1BEBDAA2EEC252DA47184554B8B88D0F005DEAC981EC49FEA2AF7A773E"
+    },
+    {
+        "Source": "MyBuildOutput\\Release\\CMakeCache.txt",
+        "Snapshot": "Context/CMakeCache.txt",
+        "Length": 16032,
+        "LastWriteTime": "2026-09-11T11:57:35.8888719-07:00",
+        "Sha256": "A23F611DF9CE2DB1F5205FCF76707516FB767E44440A984D7564B3D0A953CBC2"
+    },
+    {
+        "Source": "MyBuildOutput\\Release\\build.ninja",
+        "Snapshot": "Context/build.ninja",
+        "Length": 87941,
+        "LastWriteTime": "2026-09-11T13:59:06.3230438-07:00",
+        "Sha256": "72F9D47D2091CB3545A6BA832FA94CB28B4A9B02C8475051A00204C51917BD33"
+    },
+    {
+        "Source": ".\\MyBuildOutput\\Release\\Veehiicuul.exe",
+        "Length": 524288,
+        "LastWriteTime": "2026-09-11T12:00:59.2101202-07:00",
+        "Sha256": "156EF78C39EDDC2496C5FA234D026035D6147750B83E2B553797C26E307F1820",
+        "FileVersion": null,
+        "ProductVersion": null
+    },
+    {
+        "Source": "C:\\Users\\k\\Program\\PresentMon-2.5.1-x64.exe",
+        "Length": 956768,
+        "LastWriteTime": "2026-08-27T09:16:36.8502597-07:00",
+        "Sha256": "9BEC3083069F58F911E6A512F4806DB51A27BD096103087BC1D05EF54C80A191",
+        "FileVersion": null,
+        "ProductVersion": null
+    }
 ]

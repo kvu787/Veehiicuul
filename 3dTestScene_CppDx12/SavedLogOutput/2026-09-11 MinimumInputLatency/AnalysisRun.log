@@ -184,7 +184,7 @@
       "Started recording.",
       "Stopped recording."
     ],
-    "Sha256": "bb9fd90ccc89901f4ef58075fa9b2715023ad38d03935cad207d72f3f4eb146f"
+    "Sha256": "0ccce7b0028c4716cddf5863e1e1a568428589f615bd2e1fa8624054605056ea"
   }
 }
 {
@@ -373,7 +373,7 @@
       "Started recording.",
       "Stopped recording."
     ],
-    "Sha256": "b5dfd6021c8a7c182b574867c9bc9383ce22b5385a6e9587aecc1bfe592a5ba6"
+    "Sha256": "b8156151e7cdf7241b617ab04d2db04db26c4d09c990eafa308f2f63e10c9d67"
   }
 }
 COMBINED {"CapturedRows": 3391810, "MeasuredIntervals": 3391808, "DurationSeconds": 600.0139995, "AverageFPS": 5652.881437477194}
