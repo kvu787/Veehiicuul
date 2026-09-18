@@ -3,20 +3,17 @@ using System;
 
 namespace InputLatencyGodot;
 
-internal static class Verification
-{
-    public static int Run(InputState liveState)
-    {
-        try
-        {
-            var state = new InputState();
+internal static class Verification {
+    public static int Run(InputState liveState) {
+        try {
+            InputState state = new();
             Check(state.SelectedGamepad == -1, "Startup without a controller");
             state.SetConnection(6, true);
             Check(state.SelectedGamepad == 6, "A nonzero controller ID is selected");
             state.SetConnection(2, true);
             Check(state.SelectedGamepad == 6, "Connecting another controller keeps the current selection");
-            using var other = new InputEventJoypadButton { Device = 2, ButtonIndex = JoyButton.A, Pressed = true };
-            using var selected = new InputEventJoypadButton { Device = 6, ButtonIndex = JoyButton.A, Pressed = true };
+            using InputEventJoypadButton other = new() { Device = 2, ButtonIndex = JoyButton.A, Pressed = true };
+            using InputEventJoypadButton selected = new() { Device = 6, ButtonIndex = JoyButton.A, Pressed = true };
             state.Record(other);
             Check(state.Gamepad.Count == 0, "Other controller input is ignored");
             state.Record(selected);
@@ -28,19 +25,22 @@ internal static class Verification
             Check(state.SelectedGamepad == -1, "Removing the last controller is safe");
             state.SetConnection(6, true);
             Check(state.SelectedGamepad == 6, "Reconnect resumes selection");
-            using var axis = new InputEventJoypadMotion { Device = 6, Axis = JoyAxis.RightX, AxisValue = -0.75f };
+            using InputEventJoypadMotion axis = new() { Device = 6, Axis = JoyAxis.RightX, AxisValue = -0.75f };
             state.Record(axis);
             Check(state.Gamepad.Count == 2, "Gamepad axis events are shown");
 
-            using var key = new InputEventKey { Keycode = Key.Space, PhysicalKeycode = Key.Space, Pressed = true };
+            using InputEventKey key = new() { Keycode = Key.Space, PhysicalKeycode = Key.Space, Pressed = true };
             state.Record(key);
             key.Pressed = false;
             state.Record(key);
             Check(state.Keyboard.Count == 2, "Both edges of a brief keypress are retained");
-            using var motion = new InputEventMouseMotion { Position = new Vector2(30, 40), Relative = Vector2.One };
-            for (int i = 0; i < 10000; i++) state.Record(motion);
-            Check(state.Mouse.Count == 10000 && state.Mouse.Lines.Count == EventStream.Capacity, "Motion history remains bounded");
-            using var wheel = new InputEventMouseButton { ButtonIndex = MouseButton.WheelUp, Pressed = true, Factor = 1 };
+            using InputEventMouseMotion motion = new() { Position = new Vector2(30, 40), Relative = Vector2.One };
+            for (int i = 0; i < 10000; i++) {
+                state.Record(motion);
+            }
+
+            Check(state.Mouse.Count == 10000 && state.Mouse.Lines.Count == InputEventHistory.Capacity, "Motion history remains bounded");
+            using InputEventMouseButton wheel = new() { ButtonIndex = MouseButton.WheelUp, Pressed = true, Factor = 1 };
             state.Record(wheel);
             Check(state.Mouse.Count == 10001, "Mouse wheel events are shown");
             // Exercise Godot's event dispatch into the actual scene, without OS input injection.
@@ -56,16 +56,15 @@ internal static class Verification
             Check(liveState.Mouse.Count == mouseBefore + 2, "Godot delivers mouse motion and wheel events to the scene");
             GD.Print("PASS: 15 input verification checks. Synthetic events; physical hotplug and latency are not measured.");
             return 0;
-        }
-        catch (Exception exception)
-        {
+        } catch (Exception exception) {
             GD.PushError(exception.ToString());
             return 1;
         }
     }
 
-    private static void Check(bool condition, string description)
-    {
-        if (!condition) throw new InvalidOperationException(description);
+    private static void Check(bool condition, string description) {
+        if (!condition) {
+            throw new InvalidOperationException(description);
+        }
     }
 }

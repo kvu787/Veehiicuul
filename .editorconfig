@@ -29,7 +29,8 @@ indent_size = 4
 indent_style = space
 indent_size = 4
 
-# Make all rules in all categories error
+# Treat enabled-by-default analyzer rules as errors, unless overridden below.
+# This does not enable disabled rules or change compiler warning severities.
 # https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/configuration-options#scope
 dotnet_analyzer_diagnostic.severity = error
 
