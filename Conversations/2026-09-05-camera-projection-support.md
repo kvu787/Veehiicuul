@@ -2,7 +2,7 @@
 
 ## User
 
-does this app have logic to handle both multiple projection types, such as perspective and orthographic? 
+does this app have logic to handle both multiple projection types, such as perspective and orthographic?
 
 ## Assistant
 

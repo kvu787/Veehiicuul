@@ -309,17 +309,17 @@ Outputs are **linear color-channel values**, before display conversion. The refe
 
 Beyond that original clamp, the analysis found the following issues. For input-clamping issues, the comparison instead shows what the *requested* parameters mean.
 
-1. **Subtraction loses precision before the division.**  
+1. **Subtraction loses precision before the division.**
    The denominator combines a negative coefficient and a nearly equal positive coefficient. With `B=0.5, C=0.000259, T=1`, the output is **0.997992 instead of 1**, even though the denominator clamp is inactive. With `B=0.00001, C=0.04, T=1`, removing the clamp improves the output from **0.003096 to 0.519418**, but a stable calculation gives **1**. Simply deleting the clamp is insufficient.
 
-2. **Clamping base colors changes black and white.**  
+2. **Clamping base colors changes black and white.**
    The CPU replaces exact black with a small positive value and exact white with slightly less than one. The paint curve can amplify that change substantially:
 
    - `B=0.9999, C=0, T=0.8`: **0.285662 instead of black, 0**.
-   - `B=0.5, C=1, T=0.0001`: **0.908986 instead of 1**.  
+   - `B=0.5, C=1, T=0.0001`: **0.908986 instead of 1**.
    Both reference calculations are well-defined, and neither example activates the color-denominator floor.
 
-3. **Clamping brightness changes valid curves.**  
+3. **Clamping brightness changes valid curves.**
    Brightness is restricted internally to approximately `0.00001–0.99999`. Using `C=0.735356983`, approximately linear gray 0.5:
 
    - `B=0, T=0.99999`: **0.499322 instead of 0**.
@@ -328,29 +328,29 @@ Beyond that original clamp, the analysis found the following issues. For input-c
 
 The next examples involve surface orientation. They use neutral gray `C=0.735356983`, `Brightness=0.5`, `DarkPoint=0`, `LightPoint=1`, and `RotationDegrees=0`, unless stated otherwise. **N** is the surface normal expressed relative to the camera.
 
-4. **The shifted highlight has a second denominator-clamp problem.**  
+4. **The shifted highlight has a second denominator-clamp problem.**
    With `Shift=0.99999`, `FacingCutoff=0`, and `N=(0.099999, 0.9949874371, 0.0004472125)`, output is **0.020014 instead of approximately 0.100000**. This case requires lowering the cutoff; the default cutoff rejects this grazing normal. It demonstrates a shader issue without asserting that the shipped car contains that exact visible normal.
 
-5. **The shifted-highlight arithmetic also suffers cancellation.**  
+5. **The shifted-highlight arithmetic also suffers cancellation.**
    With `Shift=0.99999`, `FacingCutoff=0`, and `N≈(0.99999, 0, 0.0044721248)`, output is **0.999324 instead of approximately 1**. The denominator floor is inactive here. Separately, computing `sqrt(1 − Shift²)` loses precision near one: `Shift=0.99983`, `N=(0,0,1)` gives **0.01843869 instead of 0.01843790** for the stored parameters.
 
-6. **Clamping shift changes its requested behavior near one.**  
+6. **Clamping shift changes its requested behavior near one.**
    With `N=(0,0,1)`:
 
    - `Shift=0.999999`: **0.004475 instead of 0.001414**.
-   - `Shift=1`: **0.004475 instead of 0**.  
+   - `Shift=1`: **0.004475 instead of 0**.
    Both settings are replaced by the same internal value.
 
-7. **Tone interpolation can erase a small light endpoint.**  
+7. **Tone interpolation can erase a small light endpoint.**
    With `Shift=0`, `N=(0,0,1)`, `DarkPoint=1`, and `LightPoint=0.00000001`, output becomes **0 instead of approximately 0.00000001**. Storing `LightPoint − DarkPoint` as float32 loses the small endpoint before the shader runs. This is usually small in absolute terms.
 
-8. **Large rotation values lose precision before being reduced.**  
+8. **Large rotation values lose precision before being reduced.**
    `RotationDegrees=1000000000000` should reduce to **280°**. Parsing it into float32 first changes it to a number that reduces to **144°**. With `Shift=0.8` and `N=(0.6,0,0.8)`, that produces **0.339225 instead of approximately 0.535306**. Parsing and reducing in double precision would preserve more useful digits.
 
-9. **Tiny nonzero shifts are treated as zero.**  
+9. **Tiny nonzero shifts are treated as zero.**
    The fast path treats every shift up to `0.00001` as zero. With `Shift=0.00001` and `N=(0.6,0,0.8)`, output is **0.80000007 instead of 0.80000487**. This is a small deliberate approximation, rather than a severe instability.
 
-10. **Extremely small tones disappear through underflow.**  
+10. **Extremely small tones disappear through underflow.**
     Setting both tone endpoints to `1e-40` produced **0**, rather than approximately `1e-40`. The input is finite and accepted, but the result is visually negligible. This belongs in the numerical limits, not alongside the large visible errors.
 
 There are also two important boundaries to the findings:

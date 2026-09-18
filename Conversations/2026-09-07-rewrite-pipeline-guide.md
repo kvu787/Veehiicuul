@@ -8,14 +8,14 @@ these are the most important sections. they must appear first in this order:
 
 1. Explanation of each pipeline mode preset
 2. Explanation of how `Mode = Custom` works.
-3. Detailed explanation of each individual setting: 
+3. Detailed explanation of each individual setting:
 
 VSync
-MaxGpuFramesInFlight 
-MaxPresentLatency 
-WaitForPresentation 
-BackBufferCount 
-AllowTearing 
+MaxGpuFramesInFlight
+MaxPresentLatency
+WaitForPresentation
+BackBufferCount
+AllowTearing
 WaitStrategy
 
 the rest of the file contents is up to your discretion.

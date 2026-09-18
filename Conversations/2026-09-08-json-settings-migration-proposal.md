@@ -405,7 +405,7 @@ okay, do the change
 
 ## Assistant (commentary)
 
-Iíll make `ApplicationSettings` the declarative JSON model, separate deserialization from plain C++ validation, and move derived values into renderer-owned data. Then Iíll update the tests and documentation and verify both build configurations.
+I‚Äôll make `ApplicationSettings` the declarative JSON model, separate deserialization from plain C++ validation, and move derived values into renderer-owned data. Then I‚Äôll update the tests and documentation and verify both build configurations.
 
 
 ## Assistant (question)
@@ -419,7 +419,7 @@ Options:
 
 ## Assistant (commentary)
 
-Iím proceeding with complete settings files: every declared field will be required, and the shipped JSON already contains them all. The field declarations will still provide values for constructing settings in C++.
+I‚Äôm proceeding with complete settings files: every declared field will be required, and the shipped JSON already contains them all. The field declarations will still provide values for constructing settings in C++.
 
 Numeric counts will stay as `double` until validation checks them, so fractions cannot be silently truncated. The JSON library will handle duplicate and unknown properties normally; the custom parsing callback will be removed.
 
@@ -431,7 +431,7 @@ Require every field (recommended for clarity)
 
 ## Assistant (commentary)
 
-Every JSON field will be required, as you chose. The loader now has a direct typed deserialization call followed by validation. Iím updating the tests to verify that validation and renderer preparation work without including or linking nlohmann/json.
+Every JSON field will be required, as you chose. The loader now has a direct typed deserialization call followed by validation. I‚Äôm updating the tests to verify that validation and renderer preparation work without including or linking nlohmann/json.
 
 
 ## Assistant (commentary)
@@ -446,7 +446,7 @@ All 12 Release tests passed. The shipped configuration also produces exactly the
 
 ## Assistant (commentary)
 
-Debug also passed all 12 tests. I verified `Run.cmd` from outside the repository: it loaded the settings, launched with the expected pipeline, and closed cleanly. Iím finishing the review and recording the implementation, documentation, and conversation in separate commits.
+Debug also passed all 12 tests. I verified `Run.cmd` from outside the repository: it loaded the settings, launched with the expected pipeline, and closed cleanly. I‚Äôm finishing the review and recording the implementation, documentation, and conversation in separate commits.
 
 
 ## Assistant
@@ -466,7 +466,7 @@ ValidateSettings(settings);
 
 Every field is required. Derived pipeline values and GPU constants belong to renderer preparation.
 
-All 12 tests passed in Release and Debug. The shipped configurationís runtime values are unchanged, and `Run.cmd` launches and closes successfully.
+All 12 tests passed in Release and Debug. The shipped configuration‚Äôs runtime values are unchanged, and `Run.cmd` launches and closes successfully.
 
 
 ## User
@@ -475,7 +475,7 @@ ApplicationSettings::Pipeline should be renamed to ApplicationSettings::RenderPi
 
 ## Assistant (commentary)
 
-Iíll rename the nested type and update its references, then build and run the settings tests.
+I‚Äôll rename the nested type and update its references, then build and run the settings tests.
 
 ## Assistant
 
@@ -490,11 +490,11 @@ i see that default values are defined in C:\Users\k\Repository\CPlusPlus\Simple_
 
 ## Assistant (commentary)
 
-Iíll check how the generated deserializer constructs the object so I can distinguish required C++ initialization from configuration defaults.
+I‚Äôll check how the generated deserializer constructs the object so I can distinguish required C++ initialization from configuration defaults.
 
 ## Assistant
 
-Yes. **`Settings.json` can be the sole source of configured values.** The C++ model only needs field names and types; nlohmannís macros do not require application defaults.
+Yes. **`Settings.json` can be the sole source of configured values.** The C++ model only needs field names and types; nlohmann‚Äôs macros do not require application defaults.
 
 For example:
 
@@ -524,11 +524,11 @@ okay, do the change
 
 ## Assistant (commentary)
 
-Iíll remove the configuration defaults from the settings model and update the tests to provide explicit inputs. Then Iíll verify that loading the shipped JSON behaves the same.
+I‚Äôll remove the configuration defaults from the settings model and update the tests to provide explicit inputs. Then I‚Äôll verify that loading the shipped JSON behaves the same.
 
 ## Assistant (commentary)
 
-The model now contains no configured default values. Tests supply complete inputs, and all 12 Release tests passed, including the checks that every JSON field is required. Iím checking Debug next.
+The model now contains no configured default values. Tests supply complete inputs, and all 12 Release tests passed, including the checks that every JSON field is required. I‚Äôm checking Debug next.
 
 ## Assistant
 
@@ -545,7 +545,7 @@ however, ideally the integer members of ApplicationSettings should have actual i
 
 ## Assistant (commentary)
 
-Iíll check nlohmannís integer conversion behavior and the current count validation so I can explain what would need to change.
+I‚Äôll check nlohmann‚Äôs integer conversion behavior and the current count validation so I can explain what would need to change.
 
 ## Assistant
 
@@ -557,7 +557,7 @@ I would make these changes:
 
 1. **Use `std::int32_t` for the five count fields:** GPU frames in flight, presentation latency, back-buffer count, and the two sphere resolutions. Signed integers let the application validator report negative values as outside the allowed range.
 2. **Add a reusable checked-integer conversion policy in the JSON adapter.** Before conversion, it checks that the input is numeric, whole-valued, and representable by the destination integer type. It would preserve the current acceptance of `64.0` and reject `64.5`. The declarative field mappings and `Deserialize<ApplicationSettings>(input)` call can remain.
-3. **Simplify the separate settings validator.** Count validation becomes ordinary integer range checks. Limits such as ìsphere U resolution must be between 3 and 512î stay here, entirely independent of JSON.
+3. **Simplify the separate settings validator.** Count validation becomes ordinary integer range checks. Limits such as ‚Äúsphere U resolution must be between 3 and 512‚Äù stay here, entirely independent of JSON.
 4. **Update renderer conversions, tests, and documentation.** Fractional and unrepresentable inputs would now fail during deserialization; application-range errors would still fail afterward. This also applies to integer fields belonging to inactive preset controls.
 
 This requires one adjustment to the earlier separation: **checks needed to convert a value faithfully into its C++ type happen during deserialization; application rules happen afterward.** Unmodified nlohmann macros alone do not provide checked integer conversion.
@@ -571,15 +571,15 @@ do this change, except also reject any string that doesn't match the syntax of a
 
 ## Assistant (commentary)
 
-Iíll make the count fields actual integers and require JSON integer tokens. Values such as `64.0`, `64.`, exponent notation, and quoted strings will be rejected. Application-specific range checks will still happen after deserialization.
+I‚Äôll make the count fields actual integers and require JSON integer tokens. Values such as `64.0`, `64.`, exponent notation, and quoted strings will be rejected. Application-specific range checks will still happen after deserialization.
 
 ## Assistant (commentary)
 
-The integer model and conversion policy build successfully. The JSON adapter checks token type and integer representability before conversion; the settings validator now only checks application ranges. Iím adding tests for decimal and exponent notation, quoted values, overflow, and inactive pipeline controls.
+The integer model and conversion policy build successfully. The JSON adapter checks token type and integer representability before conversion; the settings validator now only checks application ranges. I‚Äôm adding tests for decimal and exponent notation, quoted values, overflow, and inactive pipeline controls.
 
 ## Assistant (commentary)
 
-All 12 Release tests passed. The new tests confirm that every count field rejects decimal and exponent notation, quoted values, and overflowóeven when its pipeline control is inactive. Representable integers still reach the separate validator for application-range checks.
+All 12 Release tests passed. The new tests confirm that every count field rejects decimal and exponent notation, quoted values, and overflow‚Äîeven when its pipeline control is inactive. Representable integers still reach the separate validator for application-range checks.
 
 ## Assistant
 
