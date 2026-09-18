@@ -13,7 +13,7 @@ files beside the executable. Edit the source JSON and relaunch through `Run.cmd`
 to apply changes.
 
 Regenerate the background and `Source/Generated/CarMesh.generated.h` with Blender
-4.5.12 LTS from the `Cpp` directory. The shared Blender source remains one level
+4.5.12 LTS from the `3dTestScene_CppDx12` directory. The shared Blender source remains one level
 above it, in the repository's `Blender` directory:
 
 ```powershell

@@ -1,7 +1,7 @@
 """Generate the checked-in car mesh and flattened scene backdrop.
 
 Run this script with Blender so that the mesh export uses Blender's evaluated
-corner normals and triangulation. Run from the Cpp directory:
+corner normals and triangulation. Run from the 3dTestScene_CppDx12 directory:
 
     blender --background --factory-startup --disable-autoexec ../Blender/Car.blend \
         --python-exit-code 1 --python Tools/GenerateAssets.py -- \

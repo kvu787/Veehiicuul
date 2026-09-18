@@ -232,7 +232,7 @@ The older claim that driver Ultra Low Latency cannot apply to DX12 is obsolete: 
 
 ## Historical high-throughput evidence
 
-The [September 11 report](<../Cpp/SavedLogOutput/2026-09-11%20MinimumInputLatency/Report.md>) describes two captures from the same continuously running C++ app, approximately 80 minutes apart, at user-confirmed 2560 × 1440 borderless fullscreen and Armoury Crate Turbo mode.
+The [September 11 report](<../3dTestScene_CppDx12/SavedLogOutput/2026-09-11%20MinimumInputLatency/Report.md>) describes two captures from the same continuously running C++ app, approximately 80 minutes apart, at user-confirmed 2560 × 1440 borderless fullscreen and Armoury Crate Turbo mode.
 
 | Metric                                        | 13:59:13 capture     | 15:18:36 capture     |
 | --------------------------------------------- | -------------------- | -------------------- |
@@ -243,7 +243,7 @@ The [September 11 report](<../Cpp/SavedLogOutput/2026-09-11%20MinimumInputLatenc
 | Lowest complete one-second presentation count | 5,100                | 5,150                |
 | Valid all-input / click latency values        | 0 / 0                | 0 / 0                |
 
-This review reread all 45 CSV parts per capture and reproduced the row counts and FPS, found no non-increasing timestamps, and confirmed the entirely absent input metrics. The existing independent verification and archived logs additionally record all 600 complete one-second windows above 5,000 presents and zero reported ETW event loss, buffer loss, and present overflow. Those archive checks are documented in the [verification results](<../Cpp/SavedLogOutput/2026-09-11%20MinimumInputLatency/VerificationResults.json>) and [repository review](../Cpp/Documentation/Reports/RepositoryReview20260911/Review.md).
+This review reread all 45 CSV parts per capture and reproduced the row counts and FPS, found no non-increasing timestamps, and confirmed the entirely absent input metrics. The existing independent verification and archived logs additionally record all 600 complete one-second windows above 5,000 presents and zero reported ETW event loss, buffer loss, and present overflow. Those archive checks are documented in the [verification results](<../3dTestScene_CppDx12/SavedLogOutput/2026-09-11%20MinimumInputLatency/VerificationResults.json>) and [repository review](../3dTestScene_CppDx12/Documentation/Reports/RepositoryReview20260911/Review.md).
 
 The small configured backlog was supported by saved settings and source: one unfinished GPU frame, DXGI presentation limit one, two buffers, spin waits, VSync off. The scene had a static background image and two live 3D draws. This is meaningful evidence of low prototype overhead. It is not a complete game benchmark, a monitor refreshing 5,600 times per second, or a physical input measurement. The approximately 74-minute gap between captured periods is unmeasured.
 
@@ -253,7 +253,7 @@ Older standalone throughput and overflow conversations supply useful history but
 
 ### Readiness before frame preparation
 
-The current [application loop](../Cpp/Source/Application.cpp) and [renderer](../Cpp/Source/Renderer.cpp) follow this ordering:
+The current [application loop](../3dTestScene_CppDx12/Source/Application.cpp) and [renderer](../3dTestScene_CppDx12/Source/Renderer.cpp) follow this ordering:
 
 ```text
 service Windows messages
@@ -275,7 +275,7 @@ The demo handles window controls such as VSync, fullscreen, and quit; its car an
 
 ### Independent queue controls
 
-The effective preset values come from [RenderPreparation.h](../Cpp/Source/RenderPreparation.h), not from inactive custom values in [Settings.json](../Cpp/Assets/Settings.json).
+The effective preset values come from [RenderPreparation.h](../3dTestScene_CppDx12/Source/RenderPreparation.h), not from inactive custom values in [Settings.json](../3dTestScene_CppDx12/Assets/Settings.json).
 
 | Control                              | MinimizeInputLatency | Standard | MaximizeFps |
 | ------------------------------------ | -------------------- | -------- | ----------- |
@@ -294,7 +294,7 @@ The effective preset values come from [RenderPreparation.h](../Cpp/Source/Render
 - **Spin versus Event** changes how readiness is waited for. It trades scheduling behavior against CPU/power cost; it does not remove the condition being waited on or guarantee a performance win.
 - **WaitForPresentation false** removes the explicit DXGI admission gate. It does not remove safe resource-reuse waits or guarantee a nonblocking Present call.
 
-Do not add queue capacities to calculate latency. Actual occupancy and timing matter. The complete setting semantics and valid ranges remain in [RenderPipeline.md](../Cpp/Documentation/RenderPipeline.md). Microsoft's [frame-latency API](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency) and [wait-before-render guidance](https://learn.microsoft.com/en-us/windows/uwp/gaming/reduce-latency-with-dxgi-1-3-swap-chains) describe the underlying mechanism.
+Do not add queue capacities to calculate latency. Actual occupancy and timing matter. The complete setting semantics and valid ranges remain in [RenderPipeline.md](../3dTestScene_CppDx12/Documentation/RenderPipeline.md). Microsoft's [frame-latency API](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency) and [wait-before-render guidance](https://learn.microsoft.com/en-us/windows/uwp/gaming/reduce-latency-with-dxgi-1-3-swap-chains) describe the underlying mechanism.
 
 The tests cover settings, GPU budgets, independent buffer counts, presentation permits, resizing, VSync changes, and cancellation while waiting. They test synchronization behavior, not which preset minimizes physical latency. Earlier recorded successful builds/tests were reviewed; no new application build or benchmark was necessary for this documentation-only change.
 
@@ -337,7 +337,7 @@ These controls are related but not interchangeable:
 
 NVIDIA describes Reflex as coordinating CPU and GPU scheduling to reduce stale queued work and adjust when input/simulation starts. That provides a plausible mechanism for differences from a driver-only limit, but the DOOM capture does not isolate it. The relevant test is the **same DOOM workload with only Reflex toggled**, followed separately by a G-SYNC toggle. [NVIDIA Reflex explanation](https://www.nvidia.com/en-gb/geforce/news/reflex-low-latency-platform/).
 
-The repository's [constraints](../README.md#constraints) prohibit adding Reflex, Anti-Lag 2, vendor-ID paths, or application-owned FPS limiting. Driver settings used externally for measurement do not change those implementation rules. Old conversations that suggested adding an NVAPI limiter or a timed application limiter predate the constraints and are not current implementation recommendations.
+The repository's [constraints](../3dTestScene_CppDx12/README.md#constraints) prohibit adding Reflex, Anti-Lag 2, vendor-ID paths, or application-owned FPS limiting. Driver settings used externally for measurement do not change those implementation rules. Old conversations that suggested adding an NVAPI limiter or a timed application limiter predate the constraints and are not current implementation recommendations.
 
 ## Why one and two frame intervals appear
 
@@ -391,7 +391,7 @@ The counts of missing `MsUntilDisplayed` are **0, 0, 1, 1, 0, 0, and 10** for ZO
 
 The historical 90-part data requires special care: only part 01 in each capture has a header. Reading every part as header-bearing would discard 44 rows per capture. The existing archive is capture-specific, and its report generator hard-codes some historical claims. It must not be reused to certify new inputs without replacing those assumptions and validating the actual data.
 
-The current root [capture script](../Capture-PresentMon.ps1) names PresentMon 2.5.1, chooses a process name and unique timestamped output folder, but does not save complete experiment metadata or ETW status. The metric interpretation above uses the matching 2.5.1 documentation and source; a saved command line and executable hash would establish the version actually used for each run. At review time the script had a pre-existing local edit selecting DOOM. This report does not alter that edit. The [C++ README](../Cpp/README.md) still contains two alternative capture invocations that reuse the same output paths; running the entire block can overwrite the first recording. Use one invocation in a fresh directory. These capture-workflow issues were already identified in the [September 11 review](../Cpp/Documentation/Reports/RepositoryReview20260911/Review.md).
+The current root [capture script](../Capture-PresentMon.ps1) names PresentMon 2.5.1, chooses a process name and unique timestamped output folder, but does not save complete experiment metadata or ETW status. The metric interpretation above uses the matching 2.5.1 documentation and source; a saved command line and executable hash would establish the version actually used for each run. At review time the script had a pre-existing local edit selecting DOOM. This report does not alter that edit. The [C++ README](../3dTestScene_CppDx12/README.md) still contains two alternative capture invocations that reuse the same output paths; running the entire block can overwrite the first recording. Use one invocation in a fresh directory. These capture-workflow issues were already identified in the [September 11 review](../3dTestScene_CppDx12/Documentation/Reports/RepositoryReview20260911/Review.md).
 
 ### Statistical method
 
@@ -504,9 +504,9 @@ No new vendor-specific integration, timed application limiter, or engine fork is
 
 ## Review map and supporting material
 
-The main implementation references are [Application.cpp](../Cpp/Source/Application.cpp), [Renderer.cpp](../Cpp/Source/Renderer.cpp), [preset definitions](../Cpp/Source/RenderPreparation.h), [settings guide](../Cpp/Documentation/Settings.md), [pipeline guide](../Cpp/Documentation/RenderPipeline.md), and the [Godot experiment guide](../InputLatency_Godot/Readme.md). CMake and launchers determine the build and logging path; geometry, SimplePaint, and precompiled shaders determine workload, rather than directly instrumenting input latency. `Godot/` remains a rewrite placeholder. `Blender/` supplies assets.
+The main implementation references are [Application.cpp](../3dTestScene_CppDx12/Source/Application.cpp), [Renderer.cpp](../3dTestScene_CppDx12/Source/Renderer.cpp), [preset definitions](../3dTestScene_CppDx12/Source/RenderPreparation.h), [settings guide](../3dTestScene_CppDx12/Documentation/Settings.md), [pipeline guide](../3dTestScene_CppDx12/Documentation/RenderPipeline.md), and the [Godot experiment guide](../InputLatency_Godot/Readme.md). CMake and launchers determine the build and logging path; geometry, SimplePaint, and precompiled shaders determine workload, rather than directly instrumenting input latency. `Godot/` remains a rewrite placeholder. `Blender/` supplies assets.
 
-The [historical throughput report](<../Cpp/SavedLogOutput/2026-09-11%20MinimumInputLatency/Report.md>) and [confidence review](../Cpp/Documentation/Reports/RepositoryReview20260911/Review.md) preserve detailed capture-health evidence. Shader numerical reports and the [orthographic optimization report](../Cpp/Documentation/Reports/Rendering/OrthographicOptimization.md) explain rendering choices but are not input-latency experiments.
+The [historical throughput report](<../3dTestScene_CppDx12/SavedLogOutput/2026-09-11%20MinimumInputLatency/Report.md>) and [confidence review](../3dTestScene_CppDx12/Documentation/Reports/RepositoryReview20260911/Review.md) preserve detailed capture-health evidence. Shader numerical reports and the [orthographic optimization report](../3dTestScene_CppDx12/Documentation/Reports/Rendering/OrthographicOptimization.md) explain rendering choices but are not input-latency experiments.
 
 The complete repository conversation index reviewed for this report follows. Earlier source paths and proposals are historical; current source and later explicit user decisions take precedence. Conversations about layout, tools, JSON, shader numerics, and repository organization supply context, not additional latency samples.
 

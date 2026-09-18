@@ -70,7 +70,7 @@ Possible costs include increased input latency, CPU/power use, heat, tearing,
 and buffer memory. Resolution, geometry, and shading are unchanged. With VSync
 enabled, presentation remains subject to VSync.
 
-All presets follow the [repository constraints](../../README.md#constraints):
+All presets follow the [repository constraints](../README.md#constraints):
 synchronization uses vendor-neutral Windows, Direct3D 12, and DXGI interfaces,
 and the application implements no FPS cap or timed frame-rate limiter.
 

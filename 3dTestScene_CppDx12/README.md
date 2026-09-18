@@ -4,7 +4,7 @@ A native Win32/C++ DirectX 12 scene with an orthographic camera and SimplePaint 
 
 Double-click [Run.cmd](Run.cmd) to build and launch the app.
 
-From PowerShell in this `Cpp` directory:
+From PowerShell in this `3dTestScene_CppDx12` directory:
 
 ```powershell
 .\Run.ps1 -BuildOnly
@@ -28,7 +28,7 @@ Historical reports retain their original wording and saved paths.
 - [Asset generation](Documentation/Assets.md): background and mesh regeneration instructions.
 - [Historical reports](Documentation/Reports/README.md): earlier rendering and numerical analyses with supporting data.
 
-Paths and command examples in these guides are relative to this `Cpp` directory
+Paths and command examples in these guides are relative to this `3dTestScene_CppDx12` directory
 unless stated otherwise.
 
 A small native Win32/C++ DirectX 12 scene moving toward the visual structure of
@@ -225,7 +225,7 @@ at runtime.
 
 # [temp] PresentMon
 
-Run these commands from the `Cpp` directory.
+Run these commands from the `3dTestScene_CppDx12` directory.
 
 ```powershell
 $gameProcesses = @(Get-Process -Name Veehiicuul -ErrorAction Stop)
