@@ -225,7 +225,7 @@ at runtime.
 
 # [temp] PresentMon
 
-Run these commands from the `Cpp` directory with PresentMon and winpty available on `PATH`.
+Run these commands from the `Cpp` directory.
 
 ```powershell
 $gameProcesses = @(Get-Process -Name Veehiicuul -ErrorAction Stop)
@@ -235,7 +235,7 @@ $captureTimestamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
 $captureDirectory = Join-Path $PWD "MyLogOutput\$captureTimestamp"
 New-Item -ItemType Directory -Path $captureDirectory | Out-Null
 
-& PresentMon-2.5.1-x64.exe `
+& "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
     --process_id $gameProcessId `
     --session_name "Veehiicuul-$captureTimestamp" `
     --set_circular_buffer_size 65536 `
@@ -245,8 +245,8 @@ New-Item -ItemType Directory -Path $captureDirectory | Out-Null
     --output_file "$captureDirectory\PresentMon.csv" `
     *> "$captureDirectory\PresentMon.log"
 
-& winpty.exe -Xallow-non-tty -Xplain `
-    PresentMon-2.5.1-x64.exe `
+& "C:\Program Files\Git\usr\bin\winpty.exe" -Xallow-non-tty -Xplain `
+    "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
     --process_id $gameProcessId `
     --session_name "Veehiicuul-$captureTimestamp" `
     --set_circular_buffer_size 65536 `
