@@ -158,3 +158,36 @@ The work includes controller/UI behavior, performance and memory limits, compati
 For a concrete **illustrative budget**, 200 hours at an assumed $75/hour is **$15,000 in labor**, plus the license and other expenses. That is arithmetic for planning, not a porting-studio quote.
 
 **Compared with Godot:** Unity removes the need to source a separate engine port. It does not remove the work of making your particular game run well and meet each console’s requirements.
+
+## User
+
+explain how godot c# games run on linux and macos
+
+## Assistant
+
+I’ll check how Godot packages the .NET runtime for Linux and macOS exports.
+
+## Assistant
+
+**Modern .NET runs natively on Linux and macOS, so Godot C# games can run there without Windows or Wine.** The older **.NET Framework** was Windows-only; the modern **.NET** used by Godot 4 is cross-platform. [Microsoft’s .NET overview](https://learn.microsoft.com/en-us/dotnet/core/introduction)
+
+A normal desktop export contains three main pieces:
+
+| Piece                  | What it does                                                        |
+| ---------------------- | ------------------------------------------------------------------- |
+| Native Godot engine    | Handles rendering, physics, audio, input and operating-system access |
+| Your compiled C# code  | Contains your gameplay logic                                        |
+| Bundled .NET runtime   | Executes your C# code on the target operating system and CPU          |
+
+Here is what happens:
+
+1. **During export**, your C# is compiled into .NET assemblies containing intermediate language (IL).
+2. **When the player launches the game**, the native Linux or macOS Godot executable starts and loads the bundled .NET runtime.
+3. **Normally, the runtime’s JIT compiler converts your IL into machine code** for that computer’s processor.
+4. **Your C# calls Godot through its bindings.** For example, a C# call to move a character reaches Godot’s native engine, which does the underlying work. [Godot’s explanation of its .NET integration](https://godotengine.org/article/platform-state-in-csharp-for-godot-4-2/)
+
+**Players normally do not need to install .NET or Godot.** Godot exports the C# project as self-contained, including the runtime. I verified that your local Godot 4.7.2 exporter explicitly uses `--self-contained true`. [Exporter source](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/editor/GodotTools/GodotTools/Build/BuildSystem.cs:239)
+
+You generally keep **the same C# source code**, but create **separate exports** containing the appropriate engine and runtime for each operating system and CPU architecture. Godot officially supports C# on Windows, Linux and macOS. [Godot C# platform support](https://docs.godotengine.org/en/4.7/tutorials/scripting/c_sharp/index.html)
+
+The main catch is your dependencies: Windows-specific APIs, Windows-only native libraries or hard-coded Windows paths need replacing or platform-specific handling. Using Godot’s portable APIs keeps most ordinary gameplay code portable.
