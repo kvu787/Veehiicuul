@@ -4,6 +4,20 @@ A native Win32/C++ DirectX 12 scene with an orthographic camera and SimplePaint 
 
 Double-click [Run.cmd](Run.cmd) to build and launch the app.
 
+From PowerShell in this `Cpp` directory:
+
+```powershell
+.\Run.ps1 -BuildOnly
+.\Run.ps1 -Test
+.\Run.ps1 -Test -Configuration Debug
+```
+
+For CMake commands or Visual Studio's Open Folder workflow, use this directory,
+which contains `CMakeLists.txt` and `CMakePresets.json`. Build output stays under
+`MyBuildOutput` and session logs under `MyLogOutput`.
+
+Historical reports retain their original wording and saved paths.
+
 ## Documentation
 
 - [Visual Studio guide](Documentation/VisualStudio.md): setup, code navigation, builds, debugging, tests, and troubleshooting.
@@ -15,14 +29,13 @@ Double-click [Run.cmd](Run.cmd) to build and launch the app.
 - [Historical reports](Documentation/Reports/README.md): earlier rendering and numerical analyses with supporting data.
 
 Paths and command examples in these guides are relative to this `Cpp` directory
-unless stated otherwise. The [repository overview](../README.md) describes the
-shared folders and the planned Godot rewrite.
+unless stated otherwise.
 
 A small native Win32/C++ DirectX 12 scene moving toward the visual structure of
 Zoom Tracks:
 
 - a fixed orthographic camera with a 3/4 overhead view (orthographic-only by design);
-- one 3D car, sourced from `../Blender/Car.blend`, moving between `x = -7` and
+- one 3D car using `Source/Generated/CarMesh.generated.h`, moving between `x = -7` and
   `x = +7` at 8 units per second while rotating at 90 degrees per second;
 - a stationary UV sphere below and to the right of the cube, clear of the car;
 - an optimized SimplePaint/K12 shader shared by the car and sphere; and
@@ -36,8 +49,32 @@ Both composite above the flattened environment.
 
 ## Constraints
 
-Follow the shared [repository constraints](../README.md#constraints).
-That section is the single source of truth for both developers and coding agents.
+This section is the single source of truth for constraints that apply to both
+human developers and coding agents within this C++ application.
+
+### Platform and GPU policy
+
+The runtime platform preconditions are **Windows 11** and
+**x86_64 (x64)**. There are **no GPU preconditions**: no particular GPU vendor,
+model, generation, or hardware feature set may be required.
+
+All C++ application code must use vendor-neutral interfaces and behavior. Do not
+implement or integrate GPU-vendor-specific APIs, SDKs, extensions,
+optimizations, workarounds, or vendor-ID-based paths. **NVIDIA Reflex and AMD
+Anti-Lag 2 are prohibited**, including optional integrations. Rendering and
+latency/queueing work must use vendor-neutral Windows, Direct3D 12, and DXGI
+capability queries and fallbacks.
+
+### Frame rate policy
+
+The app must not implement any frame rate limiting of its own. Do not add
+an FPS cap, target-frame-rate or `FrameRateLimit` setting, or timer, sleep,
+spin, or pacing logic intended to enforce a frame rate. This prohibition
+includes optional limiters and background FPS caps.
+
+GPU fences, resource-availability waits, DXGI presentation waits, and VSync
+remain valid synchronization mechanisms. They must not be supplemented with
+app-owned timing delays to impose an FPS target.
 
 ### Current renderer support
 
@@ -158,14 +195,14 @@ The GPU tests exercise both the preferred adapter and WARP.
 ## Assets and implementation
 
 `Tools/GenerateAssets.py` uses Blender's own triangulation and evaluated corner
-normals to turn `../Blender/Car.blend` into the checked-in generated mesh header.
+normals to produce the checked-in `Source/Generated/CarMesh.generated.h`.
 It also bakes the old static 3D scene into `Assets/SceneBackground.png`. The
 background is 32:9 so normal windows can center-crop it while preserving the
 camera's vertical scale; its center half is a native 2560x1440 image at 16:9.
 Windows wider than 32:9 use matching side mattes and a centered 32:9 scene
 viewport, so the live objects never drift relative to the baked scene.
-See [Asset generation](Documentation/Assets.md) for the regeneration command. If Blender 4.5.12 or 5.2.0
-is installed under `%UserProfile%\Program`, CMake also provides the explicit
+See [Asset generation](Documentation/Assets.md) for the regeneration command.
+When a supported Blender installation is detected, CMake also provides the explicit
 `RegenerateAssets` target.
 
 The renderer uses a configurable flip-discard swap chain, independently sized
@@ -188,7 +225,7 @@ at runtime.
 
 # [temp] PresentMon
 
-Run these commands from the `Cpp` directory.
+Run these commands from the `Cpp` directory with PresentMon and winpty available on `PATH`.
 
 ```powershell
 $gameProcesses = @(Get-Process -Name Veehiicuul -ErrorAction Stop)
@@ -198,7 +235,7 @@ $captureTimestamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
 $captureDirectory = Join-Path $PWD "MyLogOutput\$captureTimestamp"
 New-Item -ItemType Directory -Path $captureDirectory | Out-Null
 
-& "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
+& PresentMon-2.5.1-x64.exe `
     --process_id $gameProcessId `
     --session_name "Veehiicuul-$captureTimestamp" `
     --set_circular_buffer_size 65536 `
@@ -208,8 +245,8 @@ New-Item -ItemType Directory -Path $captureDirectory | Out-Null
     --output_file "$captureDirectory\PresentMon.csv" `
     *> "$captureDirectory\PresentMon.log"
 
-& "C:\Program Files\Git\usr\bin\winpty.exe" -Xallow-non-tty -Xplain `
-    "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
+& winpty.exe -Xallow-non-tty -Xplain `
+    PresentMon-2.5.1-x64.exe `
     --process_id $gameProcessId `
     --session_name "Veehiicuul-$captureTimestamp" `
     --set_circular_buffer_size 65536 `
