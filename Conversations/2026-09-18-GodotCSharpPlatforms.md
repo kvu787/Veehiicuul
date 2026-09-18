@@ -116,3 +116,45 @@ Godot explains these reasons in its [console-porting explanation](https://godote
 **A paid exporter is not an unavoidable technical requirement.** RAWRLAB’s no-access-fee Nintendo port demonstrates that a restricted-access community port can exist. You can also build your own after obtaining platform access—but then you supply the engineering effort.
 
 Also, **free mobile export does not mean free store distribution**. For example, Apple distinguishes free personal-device testing from developer-program membership for distribution. Those platform costs are separate from Godot’s exporter. [Apple developer accounts](https://developer.apple.com/help/account/basics/about-your-developer-account)
+
+## User
+
+how much work/money does it take to get unity engine games running on consoles
+
+## Assistant
+
+I’ll check Unity’s current console licensing and separate the engine cost from the work needed to port and release a game.
+
+## Assistant
+
+**Unity provides its own console ports, so you generally pay for Unity Pro and adapt your game.** You still need console-manufacturer approval, development hardware and testing; buying Pro alone does not grant console access.
+
+For a solo developer, the standard engine cost is **US$2,310/year**, plus hardware and your porting work. [Unity’s 2026 pricing](https://unity.com/products/pricing-updates)
+
+| Expense                       | What to budget                                                       |
+| ----------------------------- | -------------------------------------------------------------------- |
+| Unity Pro, paid yearly        | **$2,310 per developer seat/year**                                    |
+| Unity Pro, paid monthly       | **$210 per seat/month**, annual commitment: **$2,520/year**            |
+| Separate Unity console export | Included with the qualifying license; approval required per platform  |
+| Development hardware          | Platform/program dependent; confirm after approval                    |
+| Outsourced porting and QA     | Project-specific quote                                               |
+
+The subscription covers supported console targets rather than charging separately per console. If you already have Pro, you generally have no additional Unity exporter subscription to buy. [Unity Pro](https://unity.com/products/unity-pro)
+
+**There can be licensing exceptions:** Unity also documents platform-holder-provided “Preferred Platform” licenses. Check your approved developer portal before buying Pro; do not assume a free license is available for every console or project. [Unity console licensing](https://unity.com/solutions/console)
+
+For the **work involved**, these are rough planning estimates for an existing, finished game targeting **one console**, assuming one experienced developer—not published Unity timelines:
+
+| Milestone                                      | Rough effort                          |
+| ---------------------------------------------- | ------------------------------------- |
+| First playable build of a simple, portable game | A few days to a couple of weeks        |
+| Small game ready for certification              | Several weeks to a few months         |
+| Demanding 3D, multiplayer or incompatible plugins | Several months or more              |
+
+Those estimates exclude waiting for approval, hardware and certification responses.
+
+The work includes controller/UI behavior, performance and memory limits, compatible plugins, saves and user accounts, suspend/resume handling, and certification fixes. Unity supplies tools for common platform features such as accounts, saves and achievements, but you still integrate and test them. [Unity Platform Toolkit](https://discussions.unity.com/t/platform-toolkit-official-cross-platform-api-now-available-for-6-3/1698376)
+
+For a concrete **illustrative budget**, 200 hours at an assumed $75/hour is **$15,000 in labor**, plus the license and other expenses. That is arithmetic for planning, not a porting-studio quote.
+
+**Compared with Godot:** Unity removes the need to source a separate engine port. It does not remove the work of making your particular game run well and meet each console’s requirements.
