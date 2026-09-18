@@ -30,3 +30,21 @@ The rename broke documentation references. **The Release build and all 13 tests 
 - **Outdated folder instructions** remain in [README.md](C:/Users/k/Repository/Veehiicuul/3dTestScene_CppDx12/README.md:7), [VisualStudio.md](C:/Users/k/Repository/Veehiicuul/3dTestScene_CppDx12/Documentation/VisualStudio.md:143), [Assets.md](C:/Users/k/Repository/Veehiicuul/3dTestScene_CppDx12/Documentation/Assets.md:16), and [GenerateAssets.py](C:/Users/k/Repository/Veehiicuul/3dTestScene_CppDx12/Tools/GenerateAssets.py:4). In particular, the documented `cd ...\Cpp` command now fails.
 
 The launcher successfully refreshed the old build paths automatically. `Conversations` was excluded from the audit; this conversation was recorded in a separate `[cnv]` commit.
+
+## User
+
+do any necessary fixes
+
+## Assistant
+
+I’ll update the broken links and folder instructions, then check that the documentation paths resolve.
+
+## Assistant
+
+The folder instructions and all 21 broken links are fixed, including three existing links to the README constraints section. All 140 local documentation links checked now resolve. I’ll commit the fixes and record the conversation separately.
+
+## Assistant
+
+Fixed and committed as `5593d87`.
+
+Updated stale folder instructions and repaired all 21 broken links. All 140 checked local documentation links now resolve. The conversation was recorded in a separate commit.
