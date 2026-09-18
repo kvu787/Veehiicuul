@@ -2,7 +2,6 @@ root = true
 
 # This section should be the same for all projects.
 [*]
-
 charset = utf-8
 end_of_line = lf
 trim_trailing_whitespace = true
@@ -10,18 +9,15 @@ insert_final_newline = true
 
 # This section should be the same for all projects.
 [*.json]
-
 indent_style = space
 indent_size = 4
 
 # This section should be the same for all projects.
 [*.xml]
-
 indent_style = space
 indent_size = 4
 
 # This section should be the same for all projects.
 [*.csproj]
-
 indent_style = space
 indent_size = 4
