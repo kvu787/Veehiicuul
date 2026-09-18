@@ -82,3 +82,34 @@ This lets you register a type once and create many windows from it without repea
 For this app, which creates one main window, the separation does add boilerplate with little immediate benefit. **There is no fundamental reason a higher-level API couldn't combine the steps.** A wrapper could register the class internally and then create the window, exposing a single call to your code. Here, `CreateMainWindow` already serves as that wrapper.
 
 One subtlety: registration doesn't create a window or reserve screen space. It just gives Windows a named definition to look up when you request a window.
+
+## User
+
+can you create a window without doing an initial registration step?
+
+## Assistant commentary
+
+I’ll check the Windows API documentation for the exact requirement.
+
+## Assistant
+
+Yes—**if you use a window class Windows already provides**, such as `STATIC`. You do not need to call `RegisterClassExW` yourself. [`CreateWindowEx` accepts predefined system classes](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindoww).
+
+For example, this creates a visible top-level window using the predefined `STATIC` class:
+
+```cpp
+HWND window = CreateWindowExW(
+    0,
+    L"STATIC",
+    L"Example window",
+    WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+    CW_USEDEFAULT, CW_USEDEFAULT,
+    800, 600,
+    nullptr, nullptr,
+    instance,
+    nullptr);
+```
+
+You still need error handling and a message loop to keep it responsive. Also, it uses the built-in class’s message handler, so it will not automatically call your `Application::WindowProcedure`.
+
+**For your current `VeehiicuulWindow` class, registration is required.** Removing registration while keeping that class name would make creation fail, unless it had already been registered elsewhere. Every Win32 window belongs to a window class; you can skip registering one yourself by using an existing class.
