@@ -29,4 +29,5 @@ project/assembly_name="Veehiicuul_Godot_CSharp"
 
 [rendering]
 
+rendering_device/vsync/swapchain_image_count=2
 rendering_device/driver.windows="d3d12"
