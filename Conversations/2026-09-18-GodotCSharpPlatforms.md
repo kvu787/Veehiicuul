@@ -58,3 +58,34 @@ For the self-porting route, the process is:
 5. **For a public release**, complete the platform’s submission/certification process, age ratings and store setup. Getting a build running is an earlier milestone. [Godot’s process overview](https://godotengine.org/consoles/)
 
 My suggested first step is to **choose one target console and confirm 4.7.2 support with a provider**. You generally keep your GDScript gameplay code; the work is in the console toolchain, platform integration, performance and release requirements.
+
+## User
+
+what is the cost of each option
+
+## Assistant
+
+I’ll check the published prices and distinguish the tool costs from porting services and console development costs.
+
+## Assistant
+
+The published costs are below. **These are tool/license prices; they do not cover doing the port or the complete console release.**
+
+| Option                 | Published cost                                    | Eligibility / scope                                              |
+| ---------------------- | ------------------------------------------------- | ---------------------------------------------------------------- |
+| **W4 Starter**         | **$800/year per console**, or **$2,000/year for all** | Up to 30 people; company revenue/funds raised below $300,000       |
+| **W4 Pro**             | **$4,000/year per console**, or **$10,000/year for all** | Up to 30 people; revenue/funds raised above $300,000            |
+| **W4 Enterprise**      | **Custom quote**                                  | Larger companies, bespoke terms, permanent-license buyout option |
+| **RAWRLAB tools**      | **$0 access fee**                                 | Switch/Switch 2; Nintendo approval and contributor eligibility    |
+| **Hire a porting studio** | **Project-specific quote**                     | No published fixed price found for Pineapple Works               |
+
+Sources: [W4 pricing](https://www.w4games.com/w4consoles), [RAWRLAB](https://www.rawrlab.com/godot_nintendo_switch_free_port.html), [Pineapple Works](https://pineapple.works/).
+
+A few details affect the actual cost:
+
+- **W4:** No revenue share. Switch and Switch 2 count as separate platforms. Optional premium support is **$7,000/year**, available to Pro/Enterprise customers. Its FAQ says customers using a porting house need Enterprise licensing.
+- **W4 renewal:** Starter/Pro are annual subscriptions. After expiry, repository access and permission for new releases/content updates end; the FAQ allows updates adding no new game content using the last code received. [W4 terms summary](https://www.w4games.com/w4consoles)
+- **RAWRLAB:** Contributor eligibility can come from code contributions, promotion, sponsorship or donations. Its latest policy specifies **no fixed minimum donation**. Support and consulting are paid separately. [Access policy](https://www.rawrlab.com/priv_no_nda/RAWRLAB%20Games%20-%20Accessing%20our%20Nintendo%20Switch%20Godot%20Engine%20ports.pdf)
+- **Other costs:** Budget separately for development hardware, porting/testing work and release requirements. Godot lists devkit pricing as confidential, so there is no reliable public all-in hardware price to add here. [Godot console guide](https://godotengine.org/consoles/)
+
+For a qualifying small developer doing the work themselves, that means **$800/year for one W4 platform**, or **no RAWRLAB tool fee for Nintendo**, plus those additional costs. **Confirm Godot 4.7.2 compatibility before paying**—W4’s published version list still stops at 4.6.
