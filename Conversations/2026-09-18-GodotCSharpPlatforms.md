@@ -89,3 +89,30 @@ A few details affect the actual cost:
 - **Other costs:** Budget separately for development hardware, porting/testing work and release requirements. Godot lists devkit pricing as confidential, so there is no reliable public all-in hardware price to add here. [Godot console guide](https://godotengine.org/consoles/)
 
 For a qualifying small developer doing the work themselves, that means **$800/year for one W4 platform**, or **no RAWRLAB tool fee for Nintendo**, plus those additional costs. **Confirm Godot 4.7.2 compatibility before paying**—W4’s published version list still stops at 4.6.
+
+## User
+
+why does it cost money to get godot games running on console, but it's free to get them running on mobile and pc platforms
+
+## Assistant
+
+I’ll check how Godot explains the difference between its desktop/mobile exports and console ports.
+
+## Assistant
+
+**Because console manufacturers restrict development access, the console version of Godot has to be maintained and distributed separately.** Companies such as W4 charge for that work.
+
+For **PC and mobile**, Godot’s platform integration can be developed publicly and included in the free engine. Donations and community contributions fund that work, so you do not pay a separate exporter fee.
+
+For **consoles**:
+
+- **Access is restricted.** Developers need approval, confidential development tools and appropriate hardware. Console export templates cannot simply be posted for everyone to download.
+- **Fewer people can contribute.** Contributors need the relevant access and equipment, making development and maintenance more expensive.
+- **Maintenance continues after the initial port.** Someone must keep it working as Godot, console SDKs and hardware change.
+- **Godot’s Foundation chooses to fund openly available work.** It does not want to divert substantial resources into ports that most contributors and users cannot access. Commercial providers take on that work instead.
+
+Godot explains these reasons in its [console-porting explanation](https://godotengine.org/article/about-official-console-ports/) and [console guide](https://godotengine.org/consoles/).
+
+**A paid exporter is not an unavoidable technical requirement.** RAWRLAB’s no-access-fee Nintendo port demonstrates that a restricted-access community port can exist. You can also build your own after obtaining platform access—but then you supply the engineering effort.
+
+Also, **free mobile export does not mean free store distribution**. For example, Apple distinguishes free personal-device testing from developer-program membership for distribution. Those platform costs are separate from Godot’s exporter. [Apple developer accounts](https://developer.apple.com/help/account/basics/about-your-developer-account)
