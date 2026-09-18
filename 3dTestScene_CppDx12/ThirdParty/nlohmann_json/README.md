@@ -1,6 +1,7 @@
 # nlohmann/json
 
-Vendored **3.12.0**, with the upstream single header and MIT license unchanged.
+Vendored **3.12.0**, with the upstream single header unchanged. The MIT license
+wording is unchanged; trailing whitespace is removed to match `.editorconfig`.
 Builds use this checked-in dependency and require no network access or package manager.
 
 - [Release and published checksum](https://github.com/nlohmann/json/releases/tag/v3.12.0)
