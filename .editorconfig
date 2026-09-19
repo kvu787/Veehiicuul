@@ -8,17 +8,7 @@ trim_trailing_whitespace = true
 insert_final_newline = true
 
 # This section should be the same for all projects.
-[*.json]
-indent_style = space
-indent_size = 4
-
-# This section should be the same for all projects.
-[*.xml]
-indent_style = space
-indent_size = 4
-
-# This section should be the same for all projects.
-[*.csproj]
+[*.{json,xml,slnx,csproj}]
 indent_style = space
 indent_size = 4
 
