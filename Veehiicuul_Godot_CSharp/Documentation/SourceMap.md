@@ -1,6 +1,6 @@
 # Runtime source map
 
-Every runtime C# file from ZoomTracks/Assets/Scripts has a compiled counterpart below.
+Every runtime C# file from ZoomTracks/Assets/Scripts is mapped below.
 Source snapshot: b58ac18a28ee3f72712cdaf79d6d4ac9752e29d5.
 
 Count: 40 source files. Paths on the right are relative to this Godot application.
@@ -38,7 +38,7 @@ Count: 40 source files. Paths on the right are relative to this Godot applicatio
 | GameDataAndLogic/TrackSwitcher.cs                                | Source/GameDataAndLogic/TrackSwitcher.cs                                |
 | GameDataAndLogic/UiManager.cs                                    | Source/GameDataAndLogic/UiManager.cs                                    |
 | Main.cs                                                          | Main.cs                                                                 |
-| UnityEngineModification/QuitOnException.cs                       | Source/EngineIntegration/QuitOnException.cs                             |
+| UnityEngineModification/QuitOnException.cs                       | Main.cs callback catch blocks                                         |
 | Utility/AwaitableUtility.cs                                      | Source/Utility/SceneLoadingUtility.cs                                   |
 | Utility/DateTimeUtility.cs                                       | Source/Utility/DateTimeUtility.cs                                       |
 | Utility/GarbageCollectionUtility.cs                              | Source/Utility/GarbageCollectionUtility.cs                              |
@@ -55,6 +55,6 @@ Unity types, compatibility shims, excluded source copies, or NotImplementedExcep
 placeholders are used.
 
 SessionLog is an additional logging helper. AwaitableUtility becomes a synchronous
-scene loader so it cannot introduce a second frame loop. QuitOnException moves out
-of the Unity-specific folder. QuaternionUtility also corrects the original class
+scene loader so it cannot introduce a second frame loop. The Unity QuitOnException hook is replaced
+by simple catch blocks in Main.cs. QuaternionUtility also corrects the original class
 spelling QuaterionUtility. The pre-existing DebugInfo.cs is retained and not called.

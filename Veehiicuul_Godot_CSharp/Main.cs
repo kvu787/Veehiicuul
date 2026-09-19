@@ -29,11 +29,12 @@ public partial class Main : Node {
             // Deliberately unreachable for this learning port. Remove the throw above
             // when you want to step through initialization (scenes/assets are still needed).
 #pragma warning disable CS0162 // The requested startup stop deliberately precedes all initialization.
-            QuitOnException.Install(SessionLog.CreateDirectory());
             this.InitializeGame();
 #pragma warning restore CS0162
         } catch (Exception exception) {
-            QuitOnException.Stop(exception);
+            GD.PushError(exception.ToString());
+            this.SetProcess(false);
+            this.GetTree().Quit(1);
         }
     }
 
@@ -44,7 +45,9 @@ public partial class Main : Node {
             }
             this.UpdateGame(delta);
         } catch (Exception exception) {
-            QuitOnException.Stop(exception);
+            GD.PushError(exception.ToString());
+            this.SetProcess(false);
+            this.GetTree().Quit(1);
         }
     }
 

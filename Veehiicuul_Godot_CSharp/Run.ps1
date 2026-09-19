@@ -74,18 +74,18 @@ try {
         Set-Content -LiteralPath (Join-Path $logFolderPath 'ConsoleError.log') -Value $standardError.Result
         $applicationProcess.Dispose()
         if ($VerifyStartupFailure) {
-            if ($resultCode -ne -1) { throw "Expected immediate process termination exit code -1, got $resultCode." }
-            $fatalLog = Get-Content -LiteralPath (Join-Path $logFolderPath 'Fatal.log') -Raw
-            if ($fatalLog -notmatch 'Intentional startup stop:' -or $fatalLog -notmatch 'Main\._Ready') {
-                throw 'Fatal.log does not identify the intentional Main._Ready exception.'
+            if ($resultCode -ne 1) { throw "Expected application failure exit code 1, got $resultCode." }
+            $exceptionLog = Get-Content -LiteralPath (Join-Path $logFolderPath 'Godot.log') -Raw
+            if ($exceptionLog -notmatch 'Intentional startup stop:' -or $exceptionLog -notmatch 'Main\._Ready') {
+                throw 'Godot.log does not identify the intentional Main._Ready exception.'
             }
             if (Select-String -LiteralPath (Join-Path $logFolderPath 'Godot.log') -Pattern 'Game initialization completed|A frame ran before' -Quiet) {
                 throw 'Game initialization or processing occurred after the startup exception.'
             }
-            Write-Host 'PASS: the exported app stopped in Main._Ready and terminated immediately (exit code -1).'
+            Write-Host 'PASS: the exported app stopped in Main._Ready and quit through Godot (exit code 1).'
             $resultCode = 0
         } else {
-            Write-Host "Application exited with code $resultCode. The intentional startup exception is recorded in Fatal.log."
+            Write-Host "Application exited with code $resultCode. The intentional startup exception is recorded in Godot.log."
         }
     }
 } catch {

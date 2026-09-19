@@ -15,7 +15,8 @@ The 13 original StreamingAssets JSON files are included unchanged in `TrackData`
 `Veehiicuul_Godot_CSharp.Main._Ready` is the only application startup entry point.
 Its first statement inside the exception boundary throws `InvalidOperationException`.
 No game initialization, diagnostic report, asset loading, or frame update runs.
-Only exception reporting and immediate process termination follow the throw.
+Only exception reporting, disabling frame processing, and requesting a Godot exit
+follow the throw.
 The narrowly scoped `CS0162` suppression keeps the deliberately unreachable
 initialization code compiled and available to study.
 
@@ -27,20 +28,16 @@ have their own internal threads; this constraint concerns application code.
 The pre-existing `DebugInfo` utility remains available but is never called by
 startup or frame processing.
 
-Godot normally catches and logs exceptions at its C# callback boundary. Both
-callbacks therefore have explicit fatal exception boundaries. If the intentional
-throw is later removed, `_Ready` installs the
-[`FirstChanceException` handler](https://learn.microsoft.com/en-us/dotnet/api/system.appdomain.firstchanceexception?view=net-10.0)
-before game initialization. This is deliberately strict: even a managed exception
-that a library intended to catch ends the process. It does not turn native Godot
-error messages into C# exceptions.
+Both callbacks wrap their bodies in `try`/`catch (Exception exception)`. Each catch
+logs the full exception and stack trace with `GD.PushError(exception.ToString())`,
+disables frame processing with `SetProcess(false)`, and requests a normal Godot
+shutdown with `GetTree().Quit(1)`. Disabling processing prevents a frame update
+while Godot completes the pending quit. There is currently no `_Init` method.
+Any future initialization callback must also catch, log, and request shutdown.
 
-`QuitOnException` writes the exception to stderr and `Fatal.log`, then kills the
-current process. No later gameplay or cleanup callbacks execute. This avoids the
-CLR shutdown assertion observed when `Environment.Exit` was called from Godot's
-native-to-managed callback. Windows reports exit code `-1` for this termination.
-Reporting failures also terminate, with `Environment.FailFast` as the fallback
-if killing the process fails. The Godot editor itself is not the game process.
+Exceptions are logged in `Godot.log` (and captured stderr in `ConsoleError.log`)
+when launched through `Run.cmd`. There is no global exception hook, separate
+fatal log, forced process termination, or fail-fast fallback.
 
 ## Build and run
 
@@ -49,7 +46,7 @@ export templates. `Run.ps1` uses the editor under
 `%UserProfile%/Program/Godot_v4.7.2-stable_mono_win64`.
 
 Double-click **Run.cmd** to build and export the Windows application, launch it,
-and observe its intentional immediate exit. Each launcher session writes its
+and observe its intentional startup exit. Each launcher session writes its
 build, import, export, engine, and exception logs under
 `MyLogOutput/yyyy-MM-dd_HH-mm-ss`. Generated logs and `Build` are ignored by Git.
 
@@ -82,7 +79,7 @@ been tested. The existing Windows-only system report is not invoked.
 | TMP text                       | `Label.Text`                                                   |
 | URP graphics settings          | Live `Viewport`, `DisplayServer`, and `Engine` settings          |
 | `JsonUtility`/StreamingAssets   | `System.Text.Json`, Godot `FileAccess`, and `res://TrackData`      |
-| Unity exception log hook       | Explicit callback boundaries plus .NET first-chance reporting  |
+| Unity exception log hook       | Explicit callback catches and normal Godot shutdown            |
 
 Unity vectors `(x, y, z)` map to Godot `(x, y, -z)`. Vehicle forward is Godot `-Z`.
 The driving code retains clockwise yaw in degrees; native quaternion yaw uses
@@ -141,14 +138,13 @@ scanner, so their entry points are not application callbacks:
 ```powershell
 dotnet run --project Verification/CollisionDetection/CollisionDetectionVerification.csproj --configuration Release
 dotnet run --project Verification/PlanarCoordinates/PlanarCoordinatesVerification.csproj --configuration Release
-dotnet run --project Verification/ExceptionHandling/ExceptionHandlingVerification.csproj --configuration Release
 ```
 
 Collision verification checks 12,160 queries against the linear oracle, all 1,984
 Track001 edges, all three closing edges, and zero allocations over 100,000 queries.
-Coordinate verification checks 11,544 comparisons plus cardinal headings. The
-exception verifier launches separate child processes to check caught exceptions,
-direct termination, and fatal-log write failures. Full gameplay, imported vehicle
+Coordinate verification checks 11,544 comparisons plus cardinal headings.
+Startup exception logging and shutdown are checked by `Run.cmd -VerifyStartupFailure`.
+Full gameplay, imported vehicle
 geometry, visuals, and input hardware behavior remain untested because the scenes
 are intentionally outside this port.
 
