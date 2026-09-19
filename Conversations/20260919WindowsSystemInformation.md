@@ -181,3 +181,24 @@ I’ll replace the report’s `AppendLine()` calls with explicit `\n` characters
 Updated [DebugInfo.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/DebugInfo.cs) to append `\n` directly throughout the report.
 
 Build passed with zero warnings and zero errors.
+
+## User
+
+is there a way to reliably obtain gpu vram info?
+
+## Assistant Commentary
+
+I’ll check which Windows APIs can reliably report VRAM capacity and usage, and how to match those figures to the GPU Godot is actually using.
+
+## Assistant
+
+**Yes. For this Windows x64 report, use DXGI**, Windows’ graphics infrastructure API.
+
+- **VRAM capacity:** `IDXGIAdapter.GetDesc()` returns `DedicatedVideoMemory` in bytes. Its memory-size fields are 64-bit on x64. It also reports shared system-memory capacity separately. [Microsoft documentation](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/ns-dxgi-dxgi_adapter_desc)
+- **Current usage and budget:** `IDXGIAdapter3.QueryVideoMemoryInfo()` reports how much GPU memory **this application** uses and the budget Windows currently assigns it. Those values help diagnose memory pressure and stuttering. [Microsoft documentation](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_4/ns-dxgi1_4-dxgi_query_video_memory_info)
+
+For your current **Direct3D 12 renderer**, Godot exposes the actual `IDXGIAdapter` it uses, so we can query the correct GPU directly. I verified this in your local [Godot source](C:/Users/k/Repository/External/Godot_4-7-2/drivers/d3d12/rendering_device_driver_d3d12.cpp:5740).
+
+One distinction matters: **the application's remaining budget is different from total free VRAM across the entire GPU**. These should have separate, accurate labels in the report.
+
+The current omission was because of WMI’s limited `AdapterRAM` field. DXGI provides a suitable way to add these measurements.
