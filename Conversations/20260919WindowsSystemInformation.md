@@ -146,3 +146,24 @@ GD.Print(report.ToString().ReplaceLineEndings("\n").TrimEnd('\n'));
 ```
 
 This also removes the trailing newline that `GD.Print` already supplies, while preserving intentional blank lines between sections.
+
+## User
+
+can StringBuilder.AppendLine() be changed to use \n instead or \r\n
+
+## Assistant Commentary
+
+I’ll check whether `AppendLine()` exposes a newline setting and record the answer in the conversation log.
+
+## Assistant
+
+**There’s no built-in setting for that.** `AppendLine()` uses `Environment.NewLine`, which is read-only and equals `"\r\n"` on Windows. [Microsoft documentation](https://learn.microsoft.com/en-us/dotnet/api/system.environment.newline?view=net-10.0)
+
+Use `Append('\n')` explicitly instead:
+
+```csharp
+_ = report.Append("Some text").Append('\n');
+_ = report.Append('\n'); // Blank line.
+```
+
+For this report, that would generate LF endings directly and avoid needing the final newline conversion.
