@@ -46,9 +46,10 @@ public partial class DebugInfo {
     private static void PrintWindowsReport() {
         Stopwatch elapsed = Stopwatch.StartNew();
         StringBuilder report = new(16384);
-        _ = report.AppendLine("================ SYSTEM INFORMATION ================");
+        // Use LF explicitly; Godot's Output panel adds extra spacing for CRLF.
+        _ = report.Append("================ SYSTEM INFORMATION ================").Append('\n');
         AppendValue(report, "Captured at (UTC)", DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
-        _ = report.AppendLine("Snapshot only; collect before benchmarking. Hardware/driver values are provider-reported.");
+        _ = report.Append("Snapshot only; collect before benchmarking. Hardware/driver values are provider-reported.").Append('\n');
 
         AppendSection(report, "Windows", () => {
             AppendValue(report, "Operating system", OS.GetDistributionName());
@@ -116,7 +117,7 @@ public partial class DebugInfo {
             ("Name", "Name"), ("AdapterCompatibility", "Vendor"),
             ("VideoProcessor", "Video processor"), ("DriverVersion", "Driver version"),
             ("DriverDate", "Driver date (DMTF)"), ("Status", "Status"));
-        _ = report.AppendLine("  VRAM capacity is omitted: WMI AdapterRAM is 32-bit and can misreport modern GPUs.");
+        _ = report.Append("  VRAM capacity is omitted: WMI AdapterRAM is 32-bit and can misreport modern GPUs.").Append('\n');
 
         AppendSection(report, "Godot and active renderer", () => {
             Godot.Collections.Dictionary version = Engine.GetVersionInfo();
@@ -139,7 +140,7 @@ public partial class DebugInfo {
 
         AppendSection(report, "Displays and main window", () => {
             if (DisplayServer.GetName() == "headless") {
-                _ = report.AppendLine("  Unavailable (headless).");
+                _ = report.Append("  Unavailable (headless).").Append('\n');
                 return;
             }
             int count = DisplayServer.GetScreenCount();
@@ -157,7 +158,7 @@ public partial class DebugInfo {
             AppendValue(report, "Window size (pixels)", DisplayServer.WindowGetSize());
             AppendValue(report, "Window mode", DisplayServer.WindowGetMode());
             AppendValue(report, "Godot VSync mode", DisplayServer.WindowGetVsyncMode());
-            _ = report.AppendLine("  Driver overrides and actual VRR/G-Sync/FreeSync engagement are not measured.");
+            _ = report.Append("  Driver overrides and actual VRR/G-Sync/FreeSync engagement are not measured.").Append('\n');
         });
 
         AppendSection(report, "Timing and engine configuration", () => {
@@ -240,12 +241,12 @@ public partial class DebugInfo {
              ("FreeSpace", "Free space (bytes)")], @"root\cimv2", "DriveType = 3");
 
         AppendValue(report, "Report collection duration (ms)", elapsed.Elapsed.TotalMilliseconds);
-        _ = report.AppendLine("============== END SYSTEM INFORMATION ==============");
+        _ = report.Append("============== END SYSTEM INFORMATION ==============").Append('\n');
         GD.Print(report.ToString());
     }
 
     private static void AppendSection(StringBuilder report, string title, Action collect) {
-        _ = report.AppendLine().Append('[').Append(title).AppendLine("]");
+        _ = report.Append('\n').Append('[').Append(title).Append(']').Append('\n');
         try {
             collect();
         } catch (Exception exception) when (exception is ManagementException or COMException or
@@ -276,14 +277,14 @@ public partial class DebugInfo {
             int index = 0;
             foreach (ManagementBaseObject item in results) {
                 using (item) {
-                    _ = report.Append("  Entry ").Append(++index).AppendLine(":");
+                    _ = report.Append("  Entry ").Append(++index).Append(':').Append('\n');
                     foreach ((string Property, string Label) field in fields) {
                         AppendValue(report, field.Label, item[field.Property]);
                     }
                 }
             }
             if (index == 0) {
-                _ = report.AppendLine("  No entries reported.");
+                _ = report.Append("  No entries reported.").Append('\n');
             }
         });
     }
@@ -291,7 +292,7 @@ public partial class DebugInfo {
     private static void AppendValue(StringBuilder report, string label, object? value) {
         string? text = value is IFormattable formattable
             ? formattable.ToString(null, CultureInfo.InvariantCulture) : value?.ToString();
-        _ = report.Append("  ").Append(label).Append(": ").AppendLine(string.IsNullOrWhiteSpace(text) ? "Unavailable" : text.Trim());
+        _ = report.Append("  ").Append(label).Append(": ").Append(string.IsNullOrWhiteSpace(text) ? "Unavailable" : text.Trim()).Append('\n');
     }
 
     private static string FormatBytes(long bytes) {
