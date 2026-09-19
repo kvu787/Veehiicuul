@@ -237,3 +237,33 @@ The launcher stalled after exporting because Godot’s console wrapper waited fo
 No physical gamepad was connected, so controller behavior was tested synthetically; physical hotplug and input latency remain untested.
 
 Evidence: [headless test log](/C:/Users/k/Repository/Veehiicuul/InputLatency_Godot/MyLogOutput/2026-09-18_18-05-04/Verification.log), [visual test log](/C:/Users/k/Repository/Veehiicuul/InputLatency_Godot/MyLogOutput/2026-09-18_18-02-27/Verification.log), and [rendered screenshot](/C:/Users/k/Repository/Veehiicuul/InputLatency_Godot/MyLogOutput/2026-09-18_18-02-27/Verification.png).
+
+## User
+
+i've disabled the chatgpt app "computer use" skill because it is very slow. run tests and check if C:\Users\k\Repository\Veehiicuul\InputLatency_Godot still runs as expected. make any necessary fixes.
+
+
+## Assistant
+
+I’ll rerun the build and application tests using the project’s own verification tools, fix the launcher stall, and inspect the rendered output.
+
+## Assistant
+
+I’ll disable shared compilation for this project so exports can finish without waiting for the compiler server. I also found that the test suite reports 15 checks but contains 14; I’ll make the count automatic and add held-key and mouse-button checks.
+
+## Assistant
+
+Both launcher test modes now finish without intervention: about 13 seconds headless and 12 seconds with D3D12. All 19 checks pass, both builds have zero warnings or errors, and the captured image looks correct. I’m updating the test notes and committing the fixes.
+
+## Assistant
+
+**The application passes, and the launcher stall is fixed.**
+
+- Disabled shared C# compilation for this project, preventing the export from waiting on an idle compiler server.
+- Added held-key and mouse-button checks and corrected the test-count reporting.
+- All **19 checks passed** in both headless and D3D12 modes. Both builds had **zero warnings and errors**, and both launchers exited successfully without intervention.
+- Verified the rendered image and expected runtime settings. Full runs took approximately **13 seconds** and **12 seconds**.
+
+Committed as `6e558d1`. [View the rendered screenshot](/C:/Users/k/Repository/Veehiicuul/InputLatency_Godot/MyLogOutput/2026-09-18_18-09-04/Verification.png).
+
+No Computer Use was used. Physical controller hotplug and actual input latency remain untested.
