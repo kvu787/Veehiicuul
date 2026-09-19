@@ -6,5 +6,10 @@
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <UseSharedCompilation>false</UseSharedCompilation>
+        <!-- Required by source-generated Windows API interop in DebugInfo. -->
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="System.Management" Version="10.0.12" />
+    </ItemGroup>
 </Project>
