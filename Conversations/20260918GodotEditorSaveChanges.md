@@ -164,17 +164,17 @@ Godot treats `project.godot` as a collection of overrides to its built-in defaul
 
 Every setting deleted by this commit falls into that category:
 
-| Section       | Removed setting                           | Default          | Meaning retained after removal                                            |
-| ------------- | ----------------------------------------- | ---------------- | ------------------------------------------------------------------------- |
-| `application` | `run/max_fps`                             | `0`              | No engine FPS cap.                                                        |
-| `application` | `run/frame_delay_msec`                    | `0`              | No additional fixed delay between frames.                                 |
-| `application` | `run/low_processor_mode`                  | `false`          | Low processor usage mode remains disabled.                                |
-| `debug`       | `file_logging/enable_file_logging`        | `false`          | Base setting for automatic file logging remains disabled.                 |
-| `display`     | `window/size/mode`                        | `0`              | Start in windowed mode.                                                   |
-| `physics`     | `common/physics_interpolation`            | `false`          | Physics interpolation remains disabled.                                   |
-| `rendering`   | `renderer/rendering_method`               | `"forward_plus"` | Continue using Forward Plus.                                              |
-| `rendering`   | `rendering_device/vsync/frame_queue_size` | `2`              | Track two CPU-side frames before waiting for GPU completion.              |
-| `rendering`   | `driver/threads/thread_model`             | `1`              | Use the Safe rendering thread model, without a separate rendering thread. |
+| Section       | Removed setting                          | Default          | Meaning retained after removal                                          |
+| ------------- | ---------------------------------------- | ---------------- | ----------------------------------------------------------------------- |
+| `application` | `run/max_fps`                            | `0`              | No engine FPS cap.                                                      |
+| `application` | `run/frame_delay_msec`                   | `0`              | No additional fixed delay between frames.                               |
+| `application` | `run/low_processor_mode`                 | `false`          | Low processor usage mode remains disabled.                              |
+| `debug`       | `file_logging/enable_file_logging`       | `false`          | Base setting for automatic file logging remains disabled.               |
+| `display`     | `window/size/mode`                       | `0`              | Start in windowed mode.                                                 |
+| `physics`     | `common/physics_interpolation`           | `false`          | Physics interpolation remains disabled.                                 |
+| `rendering`   | `renderer/rendering_method`             | `"forward_plus"` | Continue using Forward Plus.                                            |
+| `rendering`   | `rendering_device/vsync/frame_queue_size` | `2`              | Track two CPU-side frames before waiting for GPU completion.             |
+| `rendering`   | `driver/threads/thread_model`            | `1`              | Use the Safe rendering thread model, without a separate rendering thread. |
 
 These defaults are also recorded in the local [ProjectSettings documentation](/C:/Users/k/Repository/External/Godot_4-7-2/doc/classes/ProjectSettings.xml). The `[physics]` heading disappears because no settings remain beneath it.
 
@@ -197,3 +197,43 @@ The changes to `Main.tscn` serve different purposes:
 Your [Run.ps1](/C:/Users/k/Repository/Veehiicuul/InputLatency_Godot/Run.ps1:42) already performs a headless editor import before building and exporting. That prepares resources without requiring a graphical open-and-save cycle. The scene then loads by path, attaches the C# script, and the script [creates the camera, light, sphere, and display at runtime](/C:/Users/k/Repository/Veehiicuul/InputLatency_Godot/Source/InputLatency.cs:30).
 
 This conclusion comes from the source and commit comparison; I did not run a new before/after performance test.
+
+## User
+
+run tests and check if C:\Users\k\Repository\Veehiicuul\InputLatency_Godot still runs as expected
+
+
+## Assistant
+
+I’ll build the project, run its self-tests, and check the rendered application and session logs.
+
+## Assistant
+
+The first attempt hit sandbox restrictions: Godot could not save its editor settings, and package checks could not reach NuGet. I’ll rerun with normal access so those restrictions don’t affect the result. I’m also using the Computer Use skill to check keyboard and mouse input in the running window.
+
+## Assistant
+
+The build succeeded, and refreshing the package check cleared the NuGet warning. The exporter wrote the release files but has not exited yet. I’m checking that delay and testing the exported application directly.
+
+## Assistant
+
+The exported application passed its self-tests, rendered correctly with D3D12, responded to keyboard, mouse-click, and wheel input, and exited cleanly. Its logged rendering settings match the expected values. The remaining issue is the launcher waiting on the exporter; I’m isolating that before giving you the final result.
+
+## Assistant
+
+I found the cause of the delay: Godot’s console wrapper waits for child processes, including an idle C# compiler server started during export. Shutting down that server let the launcher finish successfully. I’ll check a temporary build setting that avoids the delay, without changing the project files.
+
+## Assistant
+
+**The application still runs correctly. I found one launcher issue.**
+
+- Release build and export passed; the final build had **zero warnings and errors**.
+- Headless and D3D12 visual self-tests passed.
+- The window rendered correctly, displayed automated keyboard, mouse-click, movement, and wheel events, and closed with exit code **0**.
+- Runtime settings matched expectations: **1280 × 720, D3D12 Forward+, VSync off, no application FPS cap, two swapchain images, frame queue 2, and Safe rendering mode**.
+
+The launcher stalled after exporting because Godot’s console wrapper waited for an idle C# compiler server. Stopping that server allowed it to finish. A second complete launcher run succeeded unattended with `UseSharedCompilation=false` set temporarily. **That workaround is verified but has not been added to the project.**
+
+No physical gamepad was connected, so controller behavior was tested synthetically; physical hotplug and input latency remain untested.
+
+Evidence: [headless test log](/C:/Users/k/Repository/Veehiicuul/InputLatency_Godot/MyLogOutput/2026-09-18_18-05-04/Verification.log), [visual test log](/C:/Users/k/Repository/Veehiicuul/InputLatency_Godot/MyLogOutput/2026-09-18_18-02-27/Verification.log), and [rendered screenshot](/C:/Users/k/Repository/Veehiicuul/InputLatency_Godot/MyLogOutput/2026-09-18_18-02-27/Verification.png).
