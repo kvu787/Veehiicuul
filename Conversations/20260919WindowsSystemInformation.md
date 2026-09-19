@@ -202,3 +202,38 @@ For your current **Direct3D 12 renderer**, Godot exposes the actual `IDXGIAdapte
 One distinction matters: **the application's remaining budget is different from total free VRAM across the entire GPU**. These should have separate, accurate labels in the report.
 
 The current omission was because of WMI’s limited `AdapterRAM` field. DXGI provides a suitable way to add these measurements.
+
+## User
+
+okay, use this to add vram info to PrintWindowsReport
+
+## Assistant Commentary
+
+I’ll add DXGI memory reporting for the GPU Godot is using, with separate figures for capacity, application usage, and the Windows memory budget.
+
+## Assistant Commentary
+
+The DXGI layout and Godot’s adapter handle match the approach we discussed. I’ll query the handle on Godot’s render thread, preserve Godot’s ownership of it, and report “unavailable” for headless runs or other rendering backends.
+
+## Assistant Commentary
+
+The new section reports capacity, usage, and budget values for your RTX 5090 Laptop GPU, and both Debug and release builds pass. I’m now checking a separate render thread and the fallback paths for headless mode and other rendering backends.
+
+## Assistant Commentary
+
+The memory checks passed, including repeated queries and the headless/OpenGL fallbacks. Godot’s experimental separate render thread produced a shutdown error; I’m checking whether it also occurs without the diagnostic code.
+
+## Assistant Commentary
+
+The shutdown error also occurs in an empty Godot baseline. With your project’s normal render-thread setting, the report runs cleanly. I’m committing the change and the conversation record separately.
+
+## Assistant
+
+Added DXGI reporting to [DebugInfo.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/DebugInfo.cs:141) for Godot’s active GPU:
+
+- Dedicated VRAM capacity and shared-memory limit.
+- Process usage, Windows budget, and remaining budget.
+
+Debug and release builds pass with zero warnings/errors. Runtime checks passed on your RTX 5090 Laptop GPU.
+
+This uses D3D12; headless and other backends report “Unavailable.”
