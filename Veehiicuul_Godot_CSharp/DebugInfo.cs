@@ -15,6 +15,7 @@ using System.Runtime.Intrinsics.X86;
 using System.Runtime.Versioning;
 using System.Security;
 using System.Text;
+using System.Threading.Tasks;
 using Environment = System.Environment;
 
 namespace Veehiicuul_Godot_CSharp;
@@ -117,7 +118,6 @@ public partial class DebugInfo {
             ("Name", "Name"), ("AdapterCompatibility", "Vendor"),
             ("VideoProcessor", "Video processor"), ("DriverVersion", "Driver version"),
             ("DriverDate", "Driver date (DMTF)"), ("Status", "Status"));
-        _ = report.Append("  VRAM capacity is omitted: WMI AdapterRAM is 32-bit and can misreport modern GPUs.").Append('\n');
 
         AppendSection(report, "Godot and active renderer", () => {
             Godot.Collections.Dictionary version = Engine.GetVersionInfo();
@@ -137,6 +137,8 @@ public partial class DebugInfo {
             AppendValue(report, "Graphics API version", RenderingServer.GetVideoAdapterApiVersion());
             AppendValue(report, "Active GPU driver", string.Join(" / ", OS.GetVideoAdapterDriverInfo()));
         });
+
+        AppendSection(report, "Active GPU memory (DXGI)", () => AppendGraphicsMemory(report));
 
         AppendSection(report, "Displays and main window", () => {
             if (DisplayServer.GetName() == "headless") {
@@ -297,6 +299,122 @@ public partial class DebugInfo {
 
     private static string FormatBytes(long bytes) {
         return string.Create(CultureInfo.InvariantCulture, $"{bytes:N0} bytes ({bytes / 1073741824.0:F2} GiB)");
+    }
+
+    private static string FormatBytes(ulong bytes) {
+        return string.Create(CultureInfo.InvariantCulture, $"{bytes:N0} bytes ({bytes / 1073741824.0:F2} GiB)");
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static void AppendGraphicsMemory(StringBuilder report) {
+        if (DisplayServer.GetName() == "headless") {
+            AppendValue(report, "Unavailable", "No active GPU in headless mode.");
+            return;
+        }
+        string driver = RenderingServer.GetCurrentRenderingDriverName();
+        if (driver != "d3d12") {
+            // Other backends expose a different native handle, not an IDXGIAdapter.
+            AppendValue(report, "Unavailable", $"Active-adapter DXGI reporting requires D3D12; current driver: {driver}.");
+            return;
+        }
+
+        TaskCompletionSource<string> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        RenderingServer.CallOnRenderThread(Callable.From(() => {
+            try {
+                // Keep the result private so a delayed callback cannot modify a timed-out report.
+                completion.SetResult(CollectGraphicsMemory());
+            } catch (Exception exception) {
+                // Transfer errors to the calling thread's normal diagnostic error handling.
+                completion.SetException(exception);
+            }
+        }));
+        _ = report.Append(completion.Task.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static unsafe string CollectGraphicsMemory() {
+        StringBuilder report = new();
+        RenderingDevice? device = RenderingServer.GetRenderingDevice();
+        if (device == null) {
+            throw new InvalidOperationException("Godot has no active rendering device.");
+        }
+
+        // This IDXGIAdapter is borrowed from Godot. Do not release or wrap it in an owning COM object.
+        IntPtr adapter = (IntPtr)device.GetDriverResource(RenderingDevice.DriverResource.PhysicalDevice, default, 0);
+        if (adapter == IntPtr.Zero) {
+            throw new InvalidOperationException("Godot did not provide its D3D12 adapter.");
+        }
+        GraphicsAdapterDescription description = default;
+        void** adapterMethods = *(void***)adapter;
+        // IDXGIAdapter::GetDesc is COM vtable slot 8, including IUnknown and IDXGIObject.
+        int result = ((delegate* unmanaged[Stdcall]<IntPtr, GraphicsAdapterDescription*, int>)adapterMethods[8])(adapter, &description);
+        CheckGraphicsResult(result, "IDXGIAdapter.GetDesc");
+        AppendValue(report, "Adapter", new string(description.Description, 0, 128).TrimEnd('\0'));
+        AppendValue(report, "Adapter LUID", $"{description.AdapterIdentifierHigh:X8}:{description.AdapterIdentifierLow:X8}");
+        AppendValue(report, "Dedicated video memory capacity", FormatBytes((ulong)description.DedicatedVideoMemory));
+        AppendValue(report, "Dedicated system memory", FormatBytes((ulong)description.DedicatedSystemMemory));
+        AppendValue(report, "Shared system memory limit", FormatBytes((ulong)description.SharedSystemMemory));
+        _ = report.Append("  Budgets and usage below apply to this process on GPU node 0; they are not GPU-wide free memory.").Append('\n');
+        _ = report.Append("  Local memory is VRAM on discrete GPUs and shared system RAM on integrated/UMA GPUs.").Append('\n');
+
+        // Preserve capacity information even if the driver cannot provide budget information.
+        AppendSection(report, "GPU memory budgets and usage", () => {
+            Guid adapterInterface = new("645967A4-1392-4310-A798-8053CE3E93FD"); // IID_IDXGIAdapter3
+            CheckGraphicsResult(Marshal.QueryInterface(adapter, in adapterInterface, out IntPtr budgetAdapter), "QueryInterface(IDXGIAdapter3)");
+            try {
+                AppendSection(report, "Local GPU memory", () => AppendGraphicsMemoryBudget(report, budgetAdapter, 0));
+                AppendSection(report, "Non-local GPU memory (system RAM on discrete GPUs)", () => AppendGraphicsMemoryBudget(report, budgetAdapter, 1));
+            } finally {
+                // QueryInterface acquired this reference; only this reference is ours to release.
+                _ = Marshal.Release(budgetAdapter);
+            }
+        });
+        return report.ToString();
+    }
+
+    private static unsafe void AppendGraphicsMemoryBudget(StringBuilder report, IntPtr adapter, uint segmentGroup) {
+        GraphicsMemoryBudget memory = default;
+        void** methods = *(void***)adapter;
+        // IDXGIAdapter3::QueryVideoMemoryInfo is slot 14. Segment groups: LOCAL = 0, NON_LOCAL = 1.
+        int result = ((delegate* unmanaged[Stdcall]<IntPtr, uint, uint, GraphicsMemoryBudget*, int>)methods[14])(adapter, 0, segmentGroup, &memory);
+        CheckGraphicsResult(result, "IDXGIAdapter3.QueryVideoMemoryInfo");
+        AppendValue(report, "Windows budget for this process", FormatBytes(memory.Budget));
+        AppendValue(report, "Current process usage", FormatBytes(memory.CurrentUsage));
+        // Usage can exceed a shrinking budget; avoid unsigned subtraction underflow.
+        AppendValue(report, "Remaining process budget", FormatBytes(memory.Budget > memory.CurrentUsage ? memory.Budget - memory.CurrentUsage : 0UL));
+        AppendValue(report, "Process usage above budget", FormatBytes(memory.CurrentUsage > memory.Budget ? memory.CurrentUsage - memory.Budget : 0UL));
+        AppendValue(report, "Current process reservation", FormatBytes(memory.CurrentReservation));
+        AppendValue(report, "Available for reservation", FormatBytes(memory.AvailableForReservation));
+    }
+
+    private static void CheckGraphicsResult(int result, string operation) {
+        if (result < 0) {
+            throw new InvalidOperationException($"{operation} failed (HRESULT 0x{result:X8}).", Marshal.GetExceptionForHR(result));
+        }
+    }
+
+    // Native DXGI_ADAPTER_DESC (dxgi.h). SIZE_T fields use the process pointer size.
+    [StructLayout(LayoutKind.Sequential)]
+    private unsafe struct GraphicsAdapterDescription {
+        public fixed char Description[128];
+        public uint VendorIdentifier;
+        public uint DeviceIdentifier;
+        public uint SubsystemIdentifier;
+        public uint Revision;
+        public nuint DedicatedVideoMemory;
+        public nuint DedicatedSystemMemory;
+        public nuint SharedSystemMemory;
+        public uint AdapterIdentifierLow;
+        public int AdapterIdentifierHigh;
+    }
+
+    // Native DXGI_QUERY_VIDEO_MEMORY_INFO (dxgi1_4.h); all sizes are UINT64 bytes.
+    [StructLayout(LayoutKind.Sequential)]
+    private struct GraphicsMemoryBudget {
+        public ulong Budget;
+        public ulong CurrentUsage;
+        public ulong AvailableForReservation;
+        public ulong CurrentReservation;
     }
 
     private static void AppendPowerPlan(StringBuilder report) {
