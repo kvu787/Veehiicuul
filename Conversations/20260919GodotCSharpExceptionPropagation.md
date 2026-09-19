@@ -47,3 +47,32 @@ The result differs outside those callbacks:
 
 So, **escaping all of your own catches does not necessarily mean crashing: the crucial question is whether the exception reaches Godot’s catch or actually escapes all exception handling.**
 
+## User
+
+explain happens to an uncaught exception in _Init, _Ready, and _Process
+
+## Assistant
+
+I’ll check initialization separately, because C# constructors and Godot callbacks can fail differently.
+
+## Assistant
+
+In **Godot 4.7.2 .NET**, the key difference is that a constructor exception prevents successful script creation, while exceptions in `_Ready` and `_Process` abort only the current callback.
+
+First, **C# uses a constructor instead of GDScript’s `_init()`**. A C# method you name `_Init()` is not automatically an initialization callback. [Godot documentation](https://docs.godotengine.org/en/4.6/tutorials/best_practices/godot_notifications.html#init-vs-initialization-vs-export)
+
+| Where it throws           | Immediate result                                                         | What happens afterward                                                          |
+| ------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| Constructor (`_init`)      | Construction stops. When Godot creates the script, it catches and logs it. | Script creation fails; that failed script instance does not proceed to callbacks. |
+| `_Ready()`                | The rest of that `_Ready` invocation is skipped; Godot logs the exception. | The node remains. `_Process` can still run, even with incomplete initialization.  |
+| `_Process(double delta)`  | The rest of that frame’s invocation is skipped; Godot logs the exception.  | Godot calls it again next frame, assuming the node is still eligible to process.  |
+
+**Constructor:** When Godot constructs a script—for example, while instantiating a scene—its managed bridge catches the exception and reports failure. The native engine then clears the failed script attachment. The underlying native node may remain, but it does not have that successfully constructed C# script. See [constructor handling](/C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/ScriptManagerBridge.cs:113) and [failure cleanup](/C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/csharp_script.cpp:2401).
+
+If your own C# code calls `new MyNode()`, the constructor exception instead propagates through your calling C# code. For example, if you call it inside `_Ready` without catching it, it also aborts that `_Ready` invocation before Godot catches it.
+
+**`_Ready`:** Godot does not retry it automatically or disable the node because it threw. In fact, Godot enables an overridden `_Process` **before** calling `_Ready`. Consequently, failed setup in `_Ready` can produce further exceptions in `_Process` every frame. See [Node’s ready handling](/C:/Users/k/Repository/External/Godot_4-7-2/scene/main/node.cpp:255).
+
+**`_Process`:** Each frame is a new invocation. An exception ends the current invocation; it does not resume at the failing line next frame. Execution starts from the beginning of `_Process` again. Other nodes and the game loop normally continue. See [Godot’s callback catch](/C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:39).
+
+In all three cases, applicable `finally`/`using` cleanup runs, but **changes already made are not rolled back**. This describes ordinary synchronous exceptions; `async` methods and fatal runtime failures need separate treatment.
