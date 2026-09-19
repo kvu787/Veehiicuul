@@ -128,6 +128,9 @@ dotnet_diagnostic.CA1304.severity = suggestion
 # Specify IFormatProvider
 dotnet_diagnostic.CA1305.severity = suggestion
 
+# Identifiers should not contain underscores
+dotnet_diagnostic.CA1707.severity = none
+
 # Avoid unused private fields
 dotnet_diagnostic.CA1823.severity = suggestion
 
