@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Meow;
+namespace Veehiicuul_Godot_CSharp;
 
 public partial class Main : Node {
     // Called when the node enters the scene tree for the first time.
