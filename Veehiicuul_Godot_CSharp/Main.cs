@@ -22,6 +22,12 @@ public partial class Main : Node {
     private double CarControlTimeoutRemaining;
     private bool Initialized;
 
+    private void LogExceptionAndQuit(Exception exception) {
+        GD.PushError(exception.ToString());
+        this.SetProcess(false);
+        this.GetTree().Quit(1);
+    }
+
     public override void _Ready() {
         try {
             throw new InvalidOperationException(StartupStopMessage);
@@ -32,9 +38,7 @@ public partial class Main : Node {
             this.InitializeGame();
 #pragma warning restore CS0162
         } catch (Exception exception) {
-            GD.PushError(exception.ToString());
-            this.SetProcess(false);
-            this.GetTree().Quit(1);
+            this.LogExceptionAndQuit(exception);
         }
     }
 
@@ -45,9 +49,7 @@ public partial class Main : Node {
             }
             this.UpdateGame(delta);
         } catch (Exception exception) {
-            GD.PushError(exception.ToString());
-            this.SetProcess(false);
-            this.GetTree().Quit(1);
+            this.LogExceptionAndQuit(exception);
         }
     }
 
