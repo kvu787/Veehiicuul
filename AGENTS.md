@@ -62,11 +62,3 @@ If I attach images to prompts, save and record these in the conversation logs.
 ## Application compatibility
 
 Do not attempt to maintain any sort of application compatibility between different commits of the repo. This creates unwanted complexity.
-
-## Visual Studio diagnostics
-
-On 2026-09-19, Visual Studio showed 20 errors for the `[LibraryImport]` methods in `Veehiicuul_Godot_CSharp/DebugInfo.cs`: `CS8795`, `CS0170`, `CS0165`, and `IDE0060`. Fresh builds with both the .NET SDK compiler and the installed Visual Studio compiler succeeded, and the generated method implementations were present. The user confirmed that closing and reopening Visual Studio cleared all errors; the follow-up screenshot showed zero errors and warnings with `Build + IntelliSense` selected.
-
-For similar source-generation diagnostics that disagree with successful builds, distinguish Build errors from IntelliSense errors and try restarting Visual Studio before changing working code or suppressing diagnostics. Command-line build validation does not inspect the running editor's live Error List. Investigate further if errors persist after restart or occur in an actual build.
-
-The conversation and before/after screenshots are recorded in [Windows System Information](Conversations/20260919WindowsSystemInformation.md).
