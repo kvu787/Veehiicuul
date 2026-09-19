@@ -57,3 +57,39 @@ I made it `partial` because its Windows API calls use **`[LibraryImport]` source
 For example, [PowerGetActiveScheme](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/DebugInfo.cs:330) is declared as a `partial` method without a body. During compilation, .NET generates that body in another `partial` declaration of `DebugInfo`. The compiler combines both declarations into one class. [Microsoft documentation](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke-source-generation)
 
 **Removing `partial` would break the build**, because the generator needs to extend the class to implement those methods.
+
+## User
+
+what are all of these errors? why didn't these break the build when you did your validation? are you able to see all of these errors with the build workflow you use?
+
+Attached image: `C:/Users/k/AppData/Local/Temp/codex-clipboard-433868bc-287d-413d-9b7f-ac57d9c99d8b.png`
+
+![Visual Studio error list](Attachments/20260919WindowsSystemInformationErrors.png)
+
+## Assistant Commentary
+
+I’ll check the errors in your screenshot against a fresh build and compare the .NET SDK with Visual Studio’s build tools to find out why they disagree.
+
+## Assistant Commentary
+
+A fresh rebuild still passes, and I confirmed that it generates all four Windows API method implementations. The screenshot’s errors appear to stem from those implementations being missing from Visual Studio’s live analysis. I’m checking that distinction; I haven’t yet established why the editor isn’t seeing them.
+
+## Assistant
+
+**These appear to be cascading errors caused by Visual Studio’s live analysis missing the generated Windows API implementations.** My build workflow does **not** automatically read Visual Studio’s live Error List.
+
+The 20 entries in your screenshot break down as follows:
+
+| Diagnostic          | Count | Meaning in this case                                                                    |
+| ------------------- | ----- | --------------------------------------------------------------------------------------- |
+| `CS8795`            | 4     | The four `partial` Windows API methods appear to have no implementations.               |
+| `CS0170` / `CS0165` | 6     | Consequently, the analysis considers the power-status fields and pointer uninitialized. |
+| `IDE0060`           | 10    | Parameters appear unused; repository rules promote this diagnostic to an error.         |
+
+**Why validation passed:** I just forced fresh builds using both the .NET SDK compiler and your installed Visual Studio compiler. Both passed. I also inspected the [generated code](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/.godot/SystemInfoDiagnosticInvestigation/VisualStudioGenerated/Microsoft.Interop.LibraryImportGenerator/Microsoft.Interop.LibraryImportGenerator/LibraryImports.g.cs), which contains all four implementations. If those compiler errors occurred during these builds, they would fail.
+
+Your screenshot has **Build + IntelliSense** selected, which combines build diagnostics with the editor’s separate live analysis. [Microsoft documentation](https://learn.microsoft.com/en-us/visualstudio/ide/reference/error-list-window?view=vs-2022)
+
+**What my workflow can see:** compiler errors and the analyzers enabled during the build. It cannot guarantee that the running editor has no additional or stale diagnostics. My earlier validation did not check that editor state.
+
+To narrow this down, switch the Error List filter to **Build** and rebuild, then switch to **IntelliSense**. Reloading the solution is a reasonable next step if the errors occur only under IntelliSense. The exact reason its generated-code state is missing or stale remains unconfirmed.
