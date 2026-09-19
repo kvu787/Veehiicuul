@@ -39,3 +39,23 @@ These are **MSBuild properties**: settings that control how the C# project is bu
 
 The `<!-- ... -->` line is only an explanatory XML comment; it has no effect on the build.
 
+## User
+
+are any of these unnecessary?
+
+## Assistant
+
+I’ll check which settings Godot supplies by default and which ones are needed for this repository’s build rules.
+
+## Assistant
+
+**Some are optional, but I would keep all six for this project.** They serve different purposes:
+
+- **`TargetFramework`** — Required to specify the .NET target.
+- **`EnableDynamicLoading`** — Keep for Godot’s loading of your C# library. The installed Godot SDK does not supply this setting automatically.
+- **`Nullable`** — Optional for running the application, but useful for catching null-related bugs.
+- **`EnforceCodeStyleInBuild`** — Optional for running the application. Keep if you want builds to enforce your repository’s code-style rules.
+- **`GenerateDocumentationFile`** — The strongest candidate for removal **if you do not need XML documentation or build-time unused-`using` checks**. A detail missing from my earlier explanation: Roslyn’s IDE0005 check requires this setting during builds. [Roslyn source](https://source.dot.net/Microsoft.CodeAnalysis.Features/src/roslyn/src/Analyzers/Core/Analyzers/RemoveUnnecessaryImports/AbstractRemoveUnnecessaryImportsDiagnosticAnalyzer.cs.html)
+- **`UseSharedCompilation`** — Normally optional, but keep it here: the repository’s previous investigation verified that disabling shared compilation fixes the launcher waiting for the compiler server.
+
+So none is simply redundant. The nullable and style settings are quality checks, while documentation generation also supports one of those checks.
