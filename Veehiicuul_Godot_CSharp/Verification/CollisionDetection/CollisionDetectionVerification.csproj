@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <Deterministic>true</Deterministic>
+        <UseSharedCompilation>false</UseSharedCompilation>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/ColliderJson.cs" Link="Production/ColliderJson.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/CoordinateXY.cs" Link="Production/CoordinateXY.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/Guard.cs" Link="Production/Guard.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/Outline.cs" Link="Production/Outline.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs" Link="Production/TrackCollisionDetector.cs" />
+        <None Include="../../TrackData/Track001_ColliderData.json" Link="Track001_ColliderData.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+</Project>
