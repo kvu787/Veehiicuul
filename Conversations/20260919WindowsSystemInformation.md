@@ -36,3 +36,24 @@ Implemented in [DebugInfo.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_
 Call it from `_Ready()` before benchmarking; collection is synchronous.
 
 Verified: Debug/ExportRelease builds, headless and Direct3D runs, unavailable-query recovery, and x86 rejection.
+
+## User
+
+```
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
+c:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\DebugInfo.cs:22:1-22:33
+```
+
+why is this a partial class?
+
+## Assistant Commentary
+
+I’ll check which generated code requires `DebugInfo` to be partial.
+
+## Assistant
+
+I made it `partial` because its Windows API calls use **`[LibraryImport]` source generation**.
+
+For example, [PowerGetActiveScheme](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/DebugInfo.cs:330) is declared as a `partial` method without a body. During compilation, .NET generates that body in another `partial` declaration of `DebugInfo`. The compiler combines both declarations into one class. [Microsoft documentation](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke-source-generation)
+
+**Removing `partial` would break the build**, because the generator needs to extend the class to implement those methods.
