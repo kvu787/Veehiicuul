@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dsvb2rwb43u7v"]
 
-[ext_resource type="Script" path="res://Source/InputLatency.cs" id="1"]
+[ext_resource type="Script" uid="uid://bhcmktkondqjp" path="res://Source/InputLatency.cs" id="1"]
 
-[node name="InputLatency" type="Node3D"]
+[node name="InputLatency" type="Node3D" unique_id=2053269140]
 script = ExtResource("1")
