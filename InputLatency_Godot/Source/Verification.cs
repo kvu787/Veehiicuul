@@ -5,6 +5,7 @@ namespace InputLatencyGodot;
 
 internal static class Verification {
     public static int Run(InputState liveState) {
+        int checkCount = 0;
         try {
             InputState state = new();
             Check(state.SelectedGamepad == -1, "Startup without a controller");
@@ -47,24 +48,36 @@ internal static class Verification {
             ulong keyboardBefore = liveState.Keyboard.Count;
             key.Pressed = true;
             Input.ParseInputEvent(key);
+            Check(Input.IsPhysicalKeyPressed(Key.Space), "Godot reports Space held after a press");
             key.Pressed = false;
             Input.ParseInputEvent(key);
+            Check(!Input.IsPhysicalKeyPressed(Key.Space), "Godot clears Space held state after release");
             Check(liveState.Keyboard.Count == keyboardBefore + 2, "Godot delivers key press and release to the scene");
             ulong mouseBefore = liveState.Mouse.Count;
             Input.ParseInputEvent(motion);
             Input.ParseInputEvent(wheel);
             Check(liveState.Mouse.Count == mouseBefore + 2, "Godot delivers mouse motion and wheel events to the scene");
-            GD.Print("PASS: 15 input verification checks. Synthetic events; physical hotplug and latency are not measured.");
+            mouseBefore = liveState.Mouse.Count;
+            using InputEventMouseButton button = new() { ButtonIndex = MouseButton.Left, Pressed = true };
+            Input.ParseInputEvent(button);
+            Check(Input.IsMouseButtonPressed(MouseButton.Left), "Godot reports the left mouse button held after a press");
+            button.Pressed = false;
+            Input.ParseInputEvent(button);
+            Check(!Input.IsMouseButtonPressed(MouseButton.Left), "Godot clears the left mouse button held state after release");
+            Check(liveState.Mouse.Count == mouseBefore + 2, "Godot delivers mouse button press and release to the scene");
+            GD.Print($"PASS: {checkCount} input verification checks. Synthetic events; physical hotplug and latency are not measured.");
             return 0;
         } catch (Exception exception) {
             GD.PushError(exception.ToString());
             return 1;
         }
-    }
 
-    private static void Check(bool condition, string description) {
-        if (!condition) {
-            throw new InvalidOperationException(description);
+        void Check(bool condition, string description) {
+            if (!condition) {
+                throw new InvalidOperationException(description);
+            }
+
+            checkCount++;
         }
     }
 }

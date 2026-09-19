@@ -6,6 +6,8 @@ Double-click **Run.cmd** to build a standalone release export and launch it. Clo
 
 The solution is `InputLatencyGodot.slnx`, with `Debug`, `ExportDebug`, and `ExportRelease` configurations. The launcher builds the `ExportRelease` configuration through this solution.
 
+The project disables shared C# compilation so Godot's Windows console wrapper can exit after exporting. Otherwise, the wrapper can wait for an idle compiler server and delay launching the application.
+
 The launcher uses the installed Godot .NET editor and matching .NET export templates under `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`. The project targets the installed **.NET 10 SDK**. Godot packages come from that installation; the first release export may download .NET runtime packages from NuGet. The exported executable and its supporting files stay together in `Build`.
 
 ## Input display
@@ -56,9 +58,9 @@ Each launcher invocation creates `MyLogOutput\yyyy-MM-dd_HH-mm-ss`, containing l
 .\Run.ps1 -VisualTest
 ```
 
-`-Test` builds and runs 15 synthetic checks in the exported headless application: absent devices, arbitrary controller IDs, stable selection, filtering, disconnect/failover/reconnect, bounded event history, and Godot event dispatch into the scene. `-VisualTest` runs the same checks using D3D12 and saves its own rendered viewport as `Verification.png`, then exits. Verification injects synthetic Godot events; do not use those sessions for latency measurements. Headless metadata describes configured rendering settings, not an active D3D12 window.
+`-Test` builds and runs synthetic checks in the exported headless application: absent devices, arbitrary controller IDs, stable selection, filtering, disconnect/failover/reconnect, bounded event history, held key/button state, and Godot event dispatch into the scene. The success message reports the number of checks completed. `-VisualTest` runs the same checks using D3D12 and saves its own rendered viewport as `Verification.png`, then exits. Verification injects synthetic Godot events; do not use those sessions for latency measurements. Headless metadata describes configured rendering settings, not an active D3D12 window.
 
-On September 16, 2026, the release build/export and D3D12 visual verification passed with zero build warnings/errors; the resulting 1280 x 720 image was inspected. A standalone launch also detected a connected gamepad. Physical unplug/replug and multiple-controller hardware behavior still need a manual check; automated checks exercise the selection logic without changing the user's devices.
+On September 18, 2026, `Run.cmd -Test` and `Run.cmd -VisualTest` both completed without intervention after disabling shared compilation. Each passed 19 checks, and both release builds had zero warnings/errors. The D3D12 run used the expected rendering settings, and its 1280 x 720 image was inspected. No physical gamepad was connected during these runs. Physical unplug/replug and multiple-controller hardware behavior still need a manual check; automated checks exercise the selection logic without changing the user's devices.
 
 For a manual check: launch with any devices absent, attach a controller, move its right stick, attach a second controller, disconnect the selected controller, and reconnect it. Check that selection stays stable until disconnection, the remaining pad takes over, and the display returns to zero when none remain. Type, move/click/scroll, and reconnect keyboard/mouse devices to check the Windows/Godot event path.
 

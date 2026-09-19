@@ -5,5 +5,7 @@
         <Nullable>enable</Nullable>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <!-- Godot's console wrapper waits for child processes, including an idle compiler server. -->
+        <UseSharedCompilation>false</UseSharedCompilation>
     </PropertyGroup>
 </Project>
