@@ -112,3 +112,37 @@ I’ll add a troubleshooting note for future reference and save your confirmatio
 Recorded in [AGENTS.md](C:/Users/k/Repository/Veehiicuul/AGENTS.md): restarting Visual Studio cleared the source-generation errors despite builds already passing.
 
 Your confirmation and screenshot are also saved in the conversation log. Both updates are committed.
+
+## User
+
+why is does the system info output look "double-spaced" in the godot output window
+
+Attached image: `C:/Users/k/AppData/Local/Temp/codex-clipboard-76c5ea69-02ad-4c79-b041-464246bafb17.png`
+
+![System information with extra line spacing in Godot](Attachments/20260919GodotSystemInformationLineSpacing.png)
+
+## Assistant Commentary
+
+I’ll check how the report’s line endings pass through Godot’s Output panel to find what’s adding the extra spacing.
+
+## Assistant Commentary
+
+I reproduced the extra spacing. `AppendLine()` adds Windows-style `\r\n` endings, but Godot’s Output panel splits on `\n` and leaves the `\r` behind. Its text renderer treats that leftover character as another line break.
+
+## Assistant
+
+It’s a **line-ending mismatch caused by my use of `StringBuilder.AppendLine()`**.
+
+- On Windows, `AppendLine()` adds `\r\n` (carriage return + line feed). [Microsoft documentation](https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder.appendline)
+- Godot’s Output panel splits the text on `\n`, leaving the `\r` attached to each line.
+- The text renderer interprets that leftover `\r` as another line break, producing the extra spacing.
+
+I reproduced this behavior in Godot 4.7.2.
+
+The fix is to normalize the report to `\n` before printing:
+
+```csharp
+GD.Print(report.ToString().ReplaceLineEndings("\n").TrimEnd('\n'));
+```
+
+This also removes the trailing newline that `GD.Print` already supplies, while preserving intentional blank lines between sections.
