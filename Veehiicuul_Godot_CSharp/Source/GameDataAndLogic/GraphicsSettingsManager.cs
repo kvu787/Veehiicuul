@@ -18,7 +18,7 @@ public sealed class GraphicsSettingsManager {
         // Forward+ uses HDR internally for 3D. Unity's supportsHDR and maxQueuedFrames have
         // no equivalent per-session switches; see project.godot for presentation settings.
         // There is no URP asset to clone or restore: these settings belong to the live viewport.
-        viewport.Scaling3DMode = Godot.Viewport.Scaling3DModeEnum.Bilinear;
+        viewport.Scaling3DMode = Viewport.Scaling3DModeEnum.Bilinear;
     }
 
     public GraphicsSettingsManager(Viewport viewport, InputManager inputManager) {
@@ -58,7 +58,7 @@ public sealed class GraphicsSettingsManager {
         if (this.MsaaEnabled && this.TaaEnabled) {
             throw new InvalidOperationException("Cannot enable MSAA and TAA simultaneously.");
         }
-        this.Viewport.Msaa3D = this.MsaaEnabled ? Godot.Viewport.Msaa.Msaa8X : Godot.Viewport.Msaa.Disabled;
+        this.Viewport.Msaa3D = this.MsaaEnabled ? Viewport.Msaa.Msaa8X : Viewport.Msaa.Disabled;
         this.Viewport.UseTaa = this.TaaEnabled;
         this.Viewport.Scaling3DScale = RenderScales[this.RenderScaleIndex];
         DisplayServer.WindowSetVsyncMode(this.VsyncEnabled ? DisplayServer.VSyncMode.Enabled : DisplayServer.VSyncMode.Disabled);
