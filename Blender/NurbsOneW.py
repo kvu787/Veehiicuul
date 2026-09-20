@@ -1,6 +1,7 @@
 """Blender 4.5.x: set selected NURBS control-point W coordinates to 1.
 
 Run from Blender's Text Editor (Alt+P).
+Undo from the 3D Viewport (Ctrl+Z).
 Object Mode: all NURBS points in selected Curve/Surface objects.
 Edit Mode: only selected NURBS points, across all objects being edited.
 Bezier and Poly splines, XYZ coordinates, radius and tilt are unchanged.
@@ -46,5 +47,8 @@ def set_nurbs_w_to_one(context):
 
 
 if __name__ == '__main__':
+    # Text Editor execution does not automatically record data changes for undo.
+    bpy.ops.ed.undo_push(message='Before Set NURBS W to 1')
     count = set_nurbs_w_to_one(bpy.context)
+    bpy.ops.ed.undo_push(message='Set NURBS W to 1')
     print(f'Set W to 1 on {count} NURBS control point(s)')
