@@ -45,30 +45,6 @@ def set_nurbs_w_to_one(context):
     return changed
 
 
-class CURVE_OT_set_selected_nurbs_w_to_one(bpy.types.Operator):
-    bl_idname = 'curve.set_selected_nurbs_w_to_one'
-    bl_label = 'Set Selected NURBS W to 1'
-    bl_description = 'Set NURBS control-point W to exactly 1 in the selection'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.mode in {'OBJECT', 'EDIT_CURVE', 'EDIT_SURFACE'}
-
-    def execute(self, context):
-        count = set_nurbs_w_to_one(context)
-        self.report({'INFO'}, f'Set W to 1 on {count} NURBS control point(s)')
-        return {'FINISHED'}
-
-
-def register():
-    # Allow running this text repeatedly during the same Blender session.
-    old_class = getattr(bpy.types, 'CURVE_OT_set_selected_nurbs_w_to_one', None)
-    if old_class is not None:
-        bpy.utils.unregister_class(old_class)
-    bpy.utils.register_class(CURVE_OT_set_selected_nurbs_w_to_one)
-
-
 if __name__ == '__main__':
-    register()
-    bpy.ops.curve.set_selected_nurbs_w_to_one()
+    count = set_nurbs_w_to_one(bpy.context)
+    print(f'Set W to 1 on {count} NURBS control point(s)')
