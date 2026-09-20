@@ -62,3 +62,25 @@ Yes. The **NURBS editing behavior is unchanged**, but these Blender integration 
 The mode check remains inside the editing function, and you can still run the script repeatedly.
 
 **Undo support is the main practical loss.** I should have made that tradeoff clearer before removing the operator.
+
+## User
+
+add back undo support
+
+## Assistant
+
+I’ll restore the Blender operator wrapper needed to give the script its own undo step. You’ll still run it with Alt+P.
+
+## Assistant
+
+The undo wrapper is restored. I also found Blender installed locally, so I’m checking that undo restores the original weights in both Object Mode and Edit Mode.
+
+## Assistant
+
+Testing showed that an operator wrapper alone did not create an undo step when run from the Text Editor. I kept the script simple and added explicit undo snapshots instead. In Blender 4.5.14, undo now restores the original weights in both Object Mode and Edit Mode.
+
+## Assistant
+
+Added undo support to [NurbsOneW.py](C:/Users/k/Repository/Veehiicuul/Blender/NurbsOneW.py), keeping it a simple script without an operator wrapper.
+
+Run with **Alt+P**, then **Ctrl+Z in the 3D Viewport** to undo. Verified in Blender 4.5.14 in both Object Mode and Edit Mode.
