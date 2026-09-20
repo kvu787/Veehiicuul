@@ -84,3 +84,71 @@ Testing showed that an operator wrapper alone did not create an undo step when r
 Added undo support to [NurbsOneW.py](C:/Users/k/Repository/Veehiicuul/Blender/NurbsOneW.py), keeping it a simple script without an operator wrapper.
 
 Run with **Alt+P**, then **Ctrl+Z in the 3D Viewport** to undo. Verified in Blender 4.5.14 in both Object Mode and Edit Mode.
+
+## User
+
+when creating a simple blender script like this, explain what is needed (if anything) to get proper undo support. cite trustworthy online or documentation sources and actual blender source code at C:\Users\k\Repository\External\blender
+
+## Assistant
+
+I’ll trace how Blender runs Text Editor scripts and records undo, then compare that with the documentation and the approach now used in your script.
+
+## Assistant
+
+The source reveals an important correction: Blender’s Text Editor “Run Script” command already has undo enabled. My earlier test called that command from Python with undo disabled by default, so it did not accurately reproduce Alt+P. I’m rerunning the checks with undo enabled on the outer call.
+
+## Assistant
+
+With the corrected test, the script works without either manual undo call: one undo restores the weights, and redo reapplies them, in both Object Mode and Edit Mode. I’m checking the current version once more to see whether the extra snapshots introduce redundant undo steps.
+
+## Assistant
+
+**For this script, run using Alt+P in Blender’s Text Editor, no additional undo code is needed with normal undo settings.** Blender’s “Run Script” command already supplies it. My earlier explanation—and the test I used to justify adding manual snapshots—was wrong.
+
+The distinction is **how the script is launched**:
+
+1. **A plain script run through the Text Editor**
+
+   Blender defines `TEXT_OT_run_script` with:
+
+   ```cpp
+   ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
+   ```
+
+   Its execution callback runs your Python text. Afterward, Blender’s operator machinery records an undo step for the completed outer operation. Therefore, direct data assignments made during the script can be included without defining your own operator. See [Run Script’s implementation](C:/Users/k/Repository/External/blender/source/blender/editors/space_text/text_ops.cc:895) and [the automatic undo push](C:/Users/k/Repository/External/blender/source/blender/windowmanager/intern/wm_event_system.cc:1300).
+
+   For your intended workflow, the script’s ending only needs:
+
+   ```python
+   if __name__ == '__main__':
+       count = set_nurbs_w_to_one(bpy.context)
+       print(f'Set W to 1 on {count} NURBS control point(s)')
+   ```
+
+2. **A custom command launched from Blender’s interface**
+
+   If you choose to create an operator, give it `bl_options = {'REGISTER', 'UNDO'}` and return `{'FINISHED'}` after making changes. The `UNDO` flag enables the automatic undo step; `REGISTER` concerns operator registration/history. This is the standard pattern in [Blender’s operator documentation](https://docs.blender.org/api/5.2/bpy.types.Operator.html#modifying-blender-data-undo).
+
+   You do not need this extra wrapper merely to make an Alt+P script undoable: “Run Script” is already that outer operator.
+
+3. **An operator called directly from Python**
+
+   Python operator calls default to suppressing their automatic undo recording. To enable it for a top-level call, use:
+
+   ```python
+   bpy.ops.some_category.some_operator('EXEC_DEFAULT', True)
+   ```
+
+   This applies to operators that support undo. It does not independently record arbitrary Python assignments, and nested operators normally leave undo recording to the outer operator. See [the documented undo argument](https://docs.blender.org/api/5.3/bpy.ops.html#undo), [its default of false](C:/Users/k/Repository/External/blender/source/blender/python/intern/bpy_operator_function.cc:115), and [Blender’s suppression logic](C:/Users/k/Repository/External/blender/source/blender/windowmanager/intern/wm_event_system.cc:1999).
+
+4. **Manual `bpy.ops.ed.undo_push()` calls**
+
+   These explicitly save undo states. They are an advanced tool for situations where automatic recording is insufficient—not a standard requirement for every script. Blender’s documentation specifically mentions mode switching as a case that needs care, and labels `undo_push` for internal use. See [the operator guidance](https://docs.blender.org/api/5.2/bpy.types.Operator.html#modifying-blender-data-undo), [the API description](https://docs.blender.org/api/main/bpy.ops.ed.html#bpy.ops.ed.undo_push), and [its implementation](C:/Users/k/Repository/External/blender/source/blender/editors/undo/ed_undo.cc:727).
+
+**What the corrected tests showed:** In Blender 4.5.14, your script without manual pushes passed undo and redo checks in both Object Mode and Curve Edit Mode, including its temporary mode changes. With the current manual pushes, the first undo left the weights unchanged; the second restored them. **Those two calls are redundant for the intended Alt+P workflow and should be removed.**
+
+My earlier test used `bpy.ops.text.run_script()`, which suppressed the outer command’s undo recording. The corrected test used `bpy.ops.text.run_script('EXEC_DEFAULT', True)` to preserve that recording. That testing mistake caused my incorrect conclusion.
+
+Keep **Global Undo enabled** and **Undo Steps above zero**. These settings govern whether Blender can retain the relevant states; see the [Blender manual](https://docs.blender.org/manual/en/4.4/editors/preferences/system.html#memory-limits) and [the Global Undo check in source](C:/Users/k/Repository/External/blender/source/blender/editors/undo/memfile_undo.cc:58).
+
+The local source links refer to checkout `95bb6e2d328`. I also checked the `v4.5.14` source tag: its “Run Script” command has the same undo flag.
