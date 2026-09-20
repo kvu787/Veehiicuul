@@ -152,3 +152,17 @@ My earlier test used `bpy.ops.text.run_script()`, which suppressed the outer com
 Keep **Global Undo enabled** and **Undo Steps above zero**. These settings govern whether Blender can retain the relevant states; see the [Blender manual](https://docs.blender.org/manual/en/4.4/editors/preferences/system.html#memory-limits) and [the Global Undo check in source](C:/Users/k/Repository/External/blender/source/blender/editors/undo/memfile_undo.cc:58).
 
 The local source links refer to checkout `95bb6e2d328`. I also checked the `v4.5.14` source tag: its “Run Script” command has the same undo flag.
+
+## User
+
+okay, so is the current C:\Users\k\Repository\Veehiicuul\Blender\NurbsOneW.py sufficient? i don't want to add any unnecessary complexity or plumbing
+
+## Assistant
+
+The current script has two unnecessary undo calls. I’ll remove them so Alt+P uses Blender’s built-in undo support, keeping the script simple.
+
+## Assistant
+
+**Yes—the current file is sufficient.** I checked it: the unnecessary undo calls are already gone, contrary to my initial update. No further changes are needed.
+
+Run it with **Alt+P in Blender’s Text Editor**, then **Ctrl+Z in the 3D Viewport** to undo, with Global Undo enabled. No custom operator or registration plumbing is needed. This version’s editing logic passed the earlier undo/redo tests in Blender 4.5.14.
