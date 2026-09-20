@@ -42,3 +42,23 @@ Done. [NurbsOneW.py](C:/Users/k/Repository/Veehiicuul/Blender/NurbsOneW.py) now 
 The point-editing logic is unchanged. It prints the changed-point count to the console and no longer requests its own operator undo step.
 
 Python syntax checked; not run inside Blender.
+
+## User
+
+was there any functionality lost after your change?
+
+## Assistant
+
+I’ll compare the change to distinguish the editing behavior from the Blender command features that were removed.
+
+## Assistant
+
+Yes. The **NURBS editing behavior is unchanged**, but these Blender integration features were removed:
+
+- **Explicit undo support:** the script no longer requests an undo step for its changes. You should not assume Ctrl+Z will undo the script reliably; I haven’t tested that in Blender.
+- **On-screen completion message:** the changed-point count now goes to the console instead.
+- **Registered command:** the script no longer registers `bpy.ops.curve.set_selected_nurbs_w_to_one()`, or participates in operator history through `REGISTER`.
+
+The mode check remains inside the editing function, and you can still run the script repeatedly.
+
+**Undo support is the main practical loss.** I should have made that tradeoff clearer before removing the operator.
