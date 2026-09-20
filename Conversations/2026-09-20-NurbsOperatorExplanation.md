@@ -26,3 +26,19 @@ That section wraps the actual NURBS-editing function in a **Blender command**, w
 - **Lines 64–69 — Install the command into Blender.** `getattr(..., None)` looks for a previously registered version of the class, returning `None` if none exists. If one exists, it is unregistered first. The current class is then registered. This lets you run the script repeatedly in the same Blender session without duplicate-registration errors.
 
 **Registering the command does not execute it.** The lines immediately below your selection do both: line 73 registers it, then line 74 runs it.
+
+## User
+
+can C:\Users\k\Repository\Veehiicuul\Blender\NurbsOneW.py be simplified to run as a simple script without that stuff
+
+## Assistant
+
+I’ll remove the operator and registration code so running the script directly calls the NURBS-editing function.
+
+## Assistant
+
+Done. [NurbsOneW.py](C:/Users/k/Repository/Veehiicuul/Blender/NurbsOneW.py) now runs directly with **Alt+P in Blender’s Text Editor**, without the operator class or registration code.
+
+The point-editing logic is unchanged. It prints the changed-point count to the console and no longer requests its own operator undo step.
+
+Python syntax checked; not run inside Blender.
