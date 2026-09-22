@@ -41,45 +41,51 @@ fatal log, forced process termination, or fail-fast fallback.
 
 ## Build and run
 
-On Windows x64, install .NET 10 and the Godot 4.7.2 .NET editor with its matching
-export templates. `Run.ps1` uses the editor under
+Windows 11 x64 is the only development and target platform. Install .NET 10 and
+the portable Godot 4.7.2 .NET editor with its matching export templates.
+`Build.ps1` requires the self-contained editor under
 `%UserProfile%/Program/Godot_v4.7.2-stable_mono_win64`.
 
-Double-click **Run.cmd** to build and export the Windows application, launch it,
-and observe its intentional startup exit. Each launcher session writes its
-build, import, export, engine, and exception logs under
-`MyLogOutput/yyyy-MM-dd_HH-mm-ss`. Generated logs and `Build` are ignored by Git.
+Double-click **Build.cmd** to compile the optimized `ExportRelease` configuration
+and export the Windows x64 executable through Godot's command line. Then
+double-click **Run.cmd** to launch the existing export and observe its intentional
+startup exit. Run.cmd exits with an error if the build is missing or incomplete;
+rebuild after changing the project. Both .cmd files wrap their PowerShell scripts.
+Running the export does not require the editor, export templates, or SDK.
+
+Each build or launcher invocation writes its logs under
+`MyLogOutput/yyyy-MM-dd_HH-mm-ss`. Builds write `Build.log`, `Import.log`, and
+`Export.log`; runs write `Launcher.log`, `Godot.log`, `Console.log`, and
+`ConsoleError.log`. Generated logs and `Build` are ignored by Git.
 
 ```powershell
 # Build/export without launching.
-.\Run.cmd -BuildOnly
+.\Build.cmd
 
-# Build/export and assert the intended startup failure. Success returns 0.
+# Check the existing export's intended startup failure. Success returns 0.
 .\Run.cmd -VerifyStartupFailure
 
 # Compile only, with warnings treated as errors.
-dotnet build Veehiicuul_Godot_CSharp.slnx --configuration Debug -warnaserror
+dotnet build Veehiicuul_Godot_CSharp.slnx --configuration ExportRelease -warnaserror
 ```
 
-The runtime port uses portable Godot/.NET APIs. The launcher/export preset and
-the actual runtime verification target Windows x64. Linux/macOS exports have not
-been tested. The existing Windows-only system report is not invoked.
+The existing Windows system report is not invoked.
 
 ## Unity to Godot reading guide
 
 | Unity concept                  | Godot code in this project                                      |
-| ------------------------------ | -------------------------------------------------------------- |
-| `MonoBehaviour.Awake/Start`     | Explicit initialization under `Main._Ready`                     |
+| ------------------------------ | --------------------------------------------------------------- |
+| `MonoBehaviour.Awake/Start`    | Explicit initialization under `Main._Ready`                     |
 | Awaitable frame loop           | One call to `Main._Process(delta)` per rendered frame           |
-| `GameObject` and `Transform`    | `Node3D`, `GlobalPosition`, `GlobalBasis`, and `Transform3D`       |
-| `Instantiate` and active state | `Node.Duplicate`, `AddChild`, and `Node3D.Visible`                |
-| Additive scene loading         | Synchronous `PackedScene` loading, instantiation, and parenting  |
-| Unity input system             | One snapshot using `Godot.Input` key/button/axis polling         |
+| `GameObject` and `Transform`   | `Node3D`, `GlobalPosition`, `GlobalBasis`, and `Transform3D`    |
+| `Instantiate` and active state | `Node.Duplicate`, `AddChild`, and `Node3D.Visible`              |
+| Additive scene loading         | Synchronous `PackedScene` loading, instantiation, and parenting |
+| Unity input system             | One snapshot using `Godot.Input` key/button/axis polling        |
 | `Time.deltaTime`               | The `delta` parameter passed into `TimeManager.Update`          |
-| TMP text                       | `Label.Text`                                                   |
-| URP graphics settings          | Live `Viewport`, `DisplayServer`, and `Engine` settings          |
-| `JsonUtility`/StreamingAssets   | `System.Text.Json`, Godot `FileAccess`, and `res://TrackData`      |
-| Unity exception log hook       | Explicit callback catches and normal Godot shutdown            |
+| TMP text                       | `Label.Text`                                                    |
+| URP graphics settings          | Live `Viewport`, `DisplayServer`, and `Engine` settings         |
+| `JsonUtility`/StreamingAssets  | `System.Text.Json`, Godot `FileAccess`, and `res://TrackData`   |
+| Unity exception log hook       | Explicit callback catches and normal Godot shutdown             |
 
 Unity vectors `(x, y, z)` map to Godot `(x, y, -z)`. Vehicle forward is Godot `-Z`.
 The driving code retains clockwise yaw in degrees; native quaternion yaw uses

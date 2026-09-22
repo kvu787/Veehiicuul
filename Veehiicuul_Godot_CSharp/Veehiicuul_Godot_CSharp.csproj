@@ -31,6 +31,10 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)' == 'ExportRelease'">
+        <Optimize>true</Optimize>
+    </PropertyGroup>
+
     <ItemGroup>
         <Compile Remove="Verification/**/*.cs" />
         <PackageReference Include="System.Management" Version="10.0.12" />

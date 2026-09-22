@@ -1,7 +1,6 @@
 ## Platform compatibility
 
-This Godot Engine application must run on Windows, Linux, and MacOS.
-It only needs to support development on Windows x64 desktop pc.
+Support Windows 11 x64 as the only development and target platform.
 
 # Application-specific
 

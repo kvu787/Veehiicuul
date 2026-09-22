@@ -38,7 +38,7 @@ Count: 40 source files. Paths on the right are relative to this Godot applicatio
 | GameDataAndLogic/TrackSwitcher.cs                                | Source/GameDataAndLogic/TrackSwitcher.cs                                |
 | GameDataAndLogic/UiManager.cs                                    | Source/GameDataAndLogic/UiManager.cs                                    |
 | Main.cs                                                          | Main.cs                                                                 |
-| UnityEngineModification/QuitOnException.cs                       | Main.cs callback catch blocks                                         |
+| UnityEngineModification/QuitOnException.cs                       | Main.cs callback catch blocks                                           |
 | Utility/AwaitableUtility.cs                                      | Source/Utility/SceneLoadingUtility.cs                                   |
 | Utility/DateTimeUtility.cs                                       | Source/Utility/DateTimeUtility.cs                                       |
 | Utility/GarbageCollectionUtility.cs                              | Source/Utility/GarbageCollectionUtility.cs                              |
