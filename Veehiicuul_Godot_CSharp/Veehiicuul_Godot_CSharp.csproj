@@ -1,12 +1,18 @@
 <Project Sdk="Godot.NET.Sdk/4.7.2">
     <PropertyGroup>
+        <!-- Targets .NET 10 to select the project's runtime APIs and compatible dependencies. -->
         <TargetFramework>net10.0</TargetFramework>
+        <!-- Prepares the C# library and its dependencies for dynamic loading by Godot. -->
         <EnableDynamicLoading>true</EnableDynamicLoading>
+        <!-- Enables nullable reference annotations and warnings to catch potential null errors. -->
         <Nullable>enable</Nullable>
+        <!-- Enforces the repository's configured code-style rules during builds. -->
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <!-- Enables the build-time IDE0005 check for unused using directives by generating XML documentation. -->
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <!-- Prevents an idle compiler server from keeping Godot's Windows console wrapper waiting after export. -->
         <UseSharedCompilation>false</UseSharedCompilation>
-        <!-- Required by source-generated Windows API interop in DebugInfo. -->
+        <!-- Allows the unsafe code required by source-generated Windows API interop in DebugInfo. -->
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
     <ItemGroup>
