@@ -1,8 +1,8 @@
 # Base template
 
-## Platform compatibility
+## Development platform compatibility
 
-Assume that everything is running on Windows 11 x64 and only targets Windows 11 x64.
+Assume that the only development platform that is supported is Windows 11 x64.
 
 ## Folder and file naming
 
@@ -33,9 +33,11 @@ Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must di
 
 ### Running
 
-If you create a runnable application, create a `Run.cmd` file that builds and launches the application when Run.cmd is double-clicked from File Explorer.
-Run.cmd must be located at the root of the application's folder in the git repo.
-Run.cmd must be a simple wrapper for a PowerShell script named `Run.ps1` that contains the actual logic to minimize the amount of batch code written.
+If you create a runnable application, create files called `Build.cmd` and `Run.cmd` that respectively build and run the application when double-clicked from File Explorer.
+These must be located at the root of the application's folder in the Git repo.
+These must be simple wrappers for PowerShell scripts named `Build.ps1` and `Run.ps1` which contain the actual logic to minimize the amount of batch code written.
+Run.cmd must exit if it doesn't discover a build of the application at the place that Build.cmd outputs to.
+If the application doesn't need to be "built" for it to be run (such as a PowerShell script), then omit Build.cmd and Build.ps1.
 
 ### Logging
 
@@ -62,3 +64,7 @@ If I attach images to prompts, save and record these in the conversation logs.
 ## Application compatibility
 
 Do not attempt to maintain any sort of application compatibility between different commits of the repo. This creates unwanted complexity.
+
+## Target platform compatibility
+
+Assume that the only target platform that is supported is Windows 11 x64.
