@@ -2,7 +2,7 @@
 
 ## Development platform compatibility
 
-Assume that the only development platform that is supported is Windows 11 x64.
+Support Windows 11 x64 as the only development platform.
 
 ## Folder and file naming
 
@@ -67,4 +67,4 @@ Do not attempt to maintain any sort of application compatibility between differe
 
 ## Target platform compatibility
 
-Assume that the only target platform that is supported is Windows 11 x64.
+Support Windows 11 x64 as the only target platform.
