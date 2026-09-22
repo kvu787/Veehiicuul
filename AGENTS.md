@@ -29,6 +29,48 @@ Tables in Markdown must be padded and aligned in a way to make them easy to read
 
 Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must display properly in VSCode's Markdown previewer, GitHub.com's Markdown displayer, and the markdown viewer in the Windows 11 ChatGPT app.
 
+## Godot
+
+When creating a Godot application:
+
+- Use Godot 4.7.2 .NET
+- Use C#
+- Don't use GDScript
+- Halt if you don't find a portable/self-contained install of Godot 4.7.2 .NET at `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`
+
+The Godot csproj must include this:
+
+```xml
+<PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+
+    <!-- Enables nullable reference annotations and warnings to catch potential null errors. -->
+    <Nullable>enable</Nullable>
+
+    <!-- Enforces the repository's configured code-style rules during builds. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!--
+        Required for IDE0005 to work.
+        Enables the build-time IDE0005 check for unused using directives by generating XML documentation.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!--
+        Required in Godot .NET/C# projects.
+        Prepares the C# library and its dependencies for dynamic loading by Godot.
+    -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+
+    <!--
+        Required to properly export a Godot .NET/C# project using the command-line (instead of the Godot Editor export GUI).
+        Prevents an idle compiler server from keeping Godot's Windows console wrapper waiting after export.
+        See https://github.com/godotengine/godot/issues/110101 for more information.
+    -->
+    <UseSharedCompilation>false</UseSharedCompilation>
+<PropertyGroup>
+```
+
 ## Applications
 
 ### Running
