@@ -2,13 +2,13 @@
 
 Minimal Windows 11 x64 application using Godot **4.7.2 .NET**, C#, and two 3D spheres with an event display.
 
-Double-click **Run.cmd** to build a standalone release export and launch it. Close the game using its window close button. The launcher prints the game process ID for PresentMon.
+Double-click **Build.cmd** to build a standalone release export, then double-click **Run.cmd** to launch it. Run.cmd exits with an error if the build is missing or incomplete; rebuild after changing the project. Close the game using its window close button. The launcher prints the game process ID for PresentMon.
 
-The solution is `InputLatencyGodot.slnx`, with `Debug`, `ExportDebug`, and `ExportRelease` configurations. The launcher builds the `ExportRelease` configuration through this solution.
+The solution is `InputLatencyGodot.slnx`, with `Debug`, `ExportDebug`, and `ExportRelease` configurations. Build.ps1 builds the `ExportRelease` configuration through this solution. Both .cmd files are simple wrappers for their corresponding PowerShell scripts.
 
 The project disables shared C# compilation so Godot's Windows console wrapper can exit after exporting. Otherwise, the wrapper can wait for an idle compiler server and delay launching the application.
 
-The launcher uses the installed Godot .NET editor and matching .NET export templates under `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`. The project targets the installed **.NET 10 SDK**. Godot packages come from that installation; the first release export may download .NET runtime packages from NuGet. The exported executable and its supporting files stay together in `Build`.
+The build script uses the installed Godot .NET editor and matching .NET export templates under `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`. The project targets the installed **.NET 10 SDK**. Godot packages come from that installation; the first release export may download .NET runtime packages from NuGet. The exported executable and its supporting files stay together in `Build`. Running an existing export does not require the editor, export templates, or SDK.
 
 ## Input display
 
@@ -33,7 +33,7 @@ The only application update is the main-thread `_Process` callback:
 | Setting                    | Value                          |
 | -------------------------- | ------------------------------ |
 | Rendering                  | D3D12, Forward+                |
-| Window                     | 1780 x 720, fixed size          |
+| Window                     | 1780 x 720, fixed size         |
 | VSync                      | Disabled                       |
 | Application FPS limit      | None                           |
 | Render thread mode         | Safe (1)                       |
@@ -50,15 +50,16 @@ The live text display has a rendering/allocation cost. This app does not establi
 
 ## Logs and verification
 
-Each launcher invocation creates `MyLogOutput\yyyy-MM-dd_HH-mm-ss`, containing launcher/import/export logs and, when run, the game log plus `Session.json`. The session records the engine version, executable, process ID, renderer, and relevant settings. `Build`, `.godot`, and `MyLogOutput` are gitignored. Use the launcher for experiment runs so startup diagnostics go into the session folder.
+Each build or launcher invocation creates `MyLogOutput\yyyy-MM-dd_HH-mm-ss`. Builds write `Build.log`, `Import.log`, and `Export.log`; runs write `Launcher.log`, the game log, and `Session.json`. The session records the engine version, executable, process ID, renderer, and relevant settings. `Build`, `.godot`, and `MyLogOutput` are gitignored. Use the launcher for experiment runs so startup diagnostics go into the session folder.
 
 ```powershell
-.\Run.ps1 -BuildOnly
-.\Run.ps1 -Test
-.\Run.ps1 -VisualTest
+.\Build.cmd
+.\Run.cmd
+.\Run.cmd -Test
+.\Run.cmd -VisualTest
 ```
 
-`-Test` builds and runs synthetic checks in the exported headless application: absent devices, arbitrary controller IDs, stable selection, filtering, disconnect/failover/reconnect, bounded event history, held key/button state, and Godot event dispatch into the scene. The success message reports the number of checks completed. `-VisualTest` runs the same checks using D3D12 and saves its own rendered viewport as `Verification.png`, then exits. Verification injects synthetic Godot events; do not use those sessions for latency measurements. Headless metadata describes configured rendering settings, not an active D3D12 window.
+After building, `-Test` runs synthetic checks in the existing exported headless application: absent devices, arbitrary controller IDs, stable selection, filtering, disconnect/failover/reconnect, bounded event history, held key/button state, and Godot event dispatch into the scene. The success message reports the number of checks completed. `-VisualTest` runs the same checks using D3D12 and saves its own rendered viewport as `Verification.png`, then exits. Neither option rebuilds. Verification injects synthetic Godot events; do not use those sessions for latency measurements. Headless metadata describes configured rendering settings, not an active D3D12 window.
 
 On September 18, 2026, `Run.cmd -Test` and `Run.cmd -VisualTest` both completed without intervention after disabling shared compilation. Each passed 19 checks, and both release builds had zero warnings/errors. The D3D12 run used the expected rendering settings, and its 1280 x 720 image was inspected. No physical gamepad was connected during these runs. Physical unplug/replug and multiple-controller hardware behavior still need a manual check; automated checks exercise the selection logic without changing the user's devices.
 
