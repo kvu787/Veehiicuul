@@ -52,3 +52,28 @@ Godot’s [console wrapper](C:/Users/k/Repository/External/Godot_4-7-2/platform/
 [Veehiicuul’s launcher](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Run.ps1:42) also performs a Godot `--export-release`. If that export starts a compiler server, the server becomes a descendant that can keep the wrapper waiting. Disabling shared compilation prevents that situation.
 
 **My earlier explanation was too broad:** using Godot’s console wrapper alone does not require `UseSharedCompilation=false`. The relevant condition is starting a persistent compiler server *under that wrapper*. Automatou can leave shared compilation enabled with its current launch process.
+
+## User
+
+The complication here is Godot’s Windows console wrapper can wait for the compiler server to exit, even after exporting has finished.
+
+is this a known issue that has been reported to the godot team in any way?
+
+## Assistant Commentary
+
+I’ll search Godot’s issue tracker for reports of the console wrapper waiting on the C# compiler server after export.
+
+## Assistant
+
+**Yes—this exact problem has been reported in Godot’s official issue tracker:**
+
+[Issue #110101: “Godot console hangs forever when exporting project due to dotnet build server”](https://github.com/godotengine/godot/issues/110101), opened **August 29, 2025**.
+
+The report describes the same mechanism:
+
+- Godot’s Windows console wrapper waits for its entire child-process tree.
+- Export starts a persistent `VBCSCompiler` process, which keeps the wrapper waiting after export finishes.
+- It may not reproduce when a compiler server is already running.
+- The reporter explicitly lists `<UseSharedCompilation>false</UseSharedCompilation>` as a workaround.
+
+**When checked today, the issue is still open**, labeled `bug` and `topic:dotnet`, with no assignee, milestone, or linked pull request. It was originally reproduced with **Godot 4.5 beta 6 on Windows 11**. [Issue details and status](https://github.com/godotengine/godot/issues/110101)
