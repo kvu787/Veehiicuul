@@ -37,6 +37,8 @@ When creating a Godot application:
 - Use C#
 - Don't use GDScript
 - Halt if you don't find a portable/self-contained install of Godot 4.7.2 .NET at `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`
+- Halt if that install of Godot doesn't have export templates installed
+- Build.cmd must do all building/exporting using release configuration with optimizations fully enabled and use Godot's export via the command-line to create an EXE
 
 The Godot csproj must include this:
 
