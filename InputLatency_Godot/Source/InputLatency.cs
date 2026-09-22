@@ -19,6 +19,7 @@ public partial class InputLatency : Node3D {
 
     public override void _Ready() {
         this._verify = Array.IndexOf(OS.GetCmdlineUserArgs(), "--self-test") >= 0;
+        this.ConfigureWindow();
         Input.UseAccumulatedInput = false;
         Input.MouseMode = Input.MouseModeEnum.Visible;
         this.GetTree().AutoAcceptQuit = false;
@@ -81,6 +82,23 @@ public partial class InputLatency : Node3D {
         return sphere;
     }
 
+    private void ConfigureWindow() {
+        Window window = this.GetWindow();
+        if (DisplayServer.GetName() == "headless" || window.Mode != Window.ModeEnum.Windowed
+            || Array.IndexOf(System.Environment.GetCommandLineArgs(), "--resolution") >= 0) {
+            return;
+        }
+
+        // Windows reports effective monitor DPI: 144 DPI means 150% display scaling.
+        // Canvas-items stretching scales the UI and renders 3D at the physical resolution.
+        Rect2I workArea = DisplayServer.ScreenGetUsableRect(window.CurrentScreen);
+        Vector2I designSize = window.ContentScaleSize;
+        float scale = DisplayServer.ScreenGetDpi(window.CurrentScreen) / 96.0f;
+        scale = Mathf.Min(scale, Mathf.Min(workArea.Size.X * 0.9f / designSize.X, workArea.Size.Y * 0.9f / designSize.Y));
+        window.Size = new Vector2I(Mathf.RoundToInt(designSize.X * scale), Mathf.RoundToInt(designSize.Y * scale));
+        window.Position = workArea.Position + ((workArea.Size - window.Size) / 2);
+    }
+
     private void OnGamepadConnectionChanged(long device, bool connected) {
         this._state.SetConnection((int)device, connected);
         this._state.Gamepad.Add($"#{device}  {(connected ? "CONNECTED" : "DISCONNECTED")}");
@@ -113,6 +131,10 @@ public partial class InputLatency : Node3D {
             RenderingMethod = RenderingServer.GetCurrentRenderingMethod(),
             RenderingDriver = RenderingServer.GetCurrentRenderingDriverName(),
             WindowSize = DisplayServer.WindowGetSize().ToString(),
+            ScreenDpi = DisplayServer.ScreenGetDpi(this.GetWindow().CurrentScreen),
+            ContentScaleSize = this.GetWindow().ContentScaleSize.ToString(),
+            ContentScaleMode = this.GetWindow().ContentScaleMode.ToString(),
+            ContentScaleAspect = this.GetWindow().ContentScaleAspect.ToString(),
             VSync = DisplayServer.WindowGetVsyncMode().ToString(),
             MaximumFramesPerSecond = Engine.MaxFps,
             SwapchainImages = ProjectSettings.GetSetting("rendering/rendering_device/vsync/swapchain_image_count").AsInt32(),
@@ -139,6 +161,7 @@ public partial class InputLatency : Node3D {
                     _ = await this.ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
                 }
 
+                Verification.CheckDisplay(this._state, this._leftSphere, this._rightSphere);
                 using Image image = this.GetViewport().GetTexture().GetImage();
                 string path = Path.Combine(this._logDirectory, "Verification.png");
                 if (image.SavePng(path) != Error.Ok) {

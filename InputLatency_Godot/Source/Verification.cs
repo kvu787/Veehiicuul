@@ -4,6 +4,27 @@ using System;
 namespace InputLatencyGodot;
 
 internal static class Verification {
+    public static void CheckDisplay(InputState state, MeshInstance3D leftSphere, MeshInstance3D rightSphere) {
+        Viewport viewport = leftSphere.GetViewport();
+        Camera3D camera = viewport.GetCamera3D();
+        Vector2 logicalSize = viewport.GetVisibleRect().Size;
+        if (!logicalSize.IsEqualApprox(new Vector2(1780, 720))) {
+            throw new InvalidOperationException($"The display's logical size changed to {logicalSize}.");
+        }
+
+        CheckMarker(leftSphere, new Vector2(255, 370) + (state.LeftStick * 150));
+        CheckMarker(rightSphere, new Vector2(755, 370) + (state.RightStick * 150));
+        GD.Print($"PASS: Display alignment at window size {viewport.GetWindow().Size}; logical size {logicalSize}.");
+
+        void CheckMarker(MeshInstance3D sphere, Vector2 expected) {
+            Vector2 actual = camera.UnprojectPosition(sphere.GlobalPosition);
+            // The physical viewport can round down by one pixel during letterboxing.
+            if (actual.DistanceTo(expected) > 1) {
+                throw new InvalidOperationException($"Stick marker projects to {actual}; expected {expected}.");
+            }
+        }
+    }
+
     public static int Run(InputState liveState) {
         int checkCount = 0;
         try {
