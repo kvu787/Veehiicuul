@@ -17,25 +17,9 @@ public partial class InputDisplay : Control {
     public override void _Draw() {
         this.Text(28, 40, "INPUT LATENCY / GODOT", 25, Ink);
         this.Text(28, 67, "4.7.2 .NET   /   3D   /   D3D12   /   VSync off   /   No application FPS cap", 15, Muted);
-        this.Text(1030, 40, this.Focused ? "WINDOW FOCUSED" : "WINDOW UNFOCUSED", 16, this.Focused ? Accent : Muted);
-        this.Text(28, 116, "RIGHT STICK", 20, Ink);
-        this.Text(28, 145, this.GamepadDescription, 18, Accent, 465);
-        this.Text(28, 169, this.GamepadMapping, 15, Muted, 465);
-
-        Vector2 center = new(255, 370);
-        this.DrawArc(center, 150, 0, Mathf.Tau, 96, new Color("35465b"), 1.5f, true);
-        this.DrawLine(center - new Vector2(150, 0), center + new Vector2(150, 0), new Color("28364a"));
-        this.DrawLine(center - new Vector2(0, 150), center + new Vector2(0, 150), new Color("28364a"));
-        this.Text(247, 211, "-Y", 14, Muted);
-        this.Text(242, 545, "+Y", 14, Muted);
-        this.Text(77, 375, "-X", 14, Muted);
-        this.Text(414, 375, "+X", 14, Muted);
-        if (this.State.SelectedGamepad < 0) {
-            this.Text(157, 400, "Waiting for a gamepad", 17, Muted);
-        }
-
-        this.Text(104, 579, $"X  {this.State.RightStick.X:+0.0000;-0.0000;0.0000}      Y  {this.State.RightStick.Y:+0.0000;-0.0000;0.0000}", 22, Ink);
-        this.Text(83, 604, "No added deadzone or smoothing", 16, Muted);
+        this.Text(1530, 40, this.Focused ? "WINDOW FOCUSED" : "WINDOW UNFOCUSED", 16, this.Focused ? Accent : Muted);
+        this.Stick(0, "LEFT STICK", this.State.LeftStick);
+        this.Stick(500, "RIGHT STICK", this.State.RightStick);
 
         this.Indicator(28, 635, "SPACE", this.SpacePressed);
         this.Indicator(255, 635, "LEFT MOUSE", this.LeftMousePressed);
@@ -52,17 +36,40 @@ public partial class InputDisplay : Control {
         }
     }
 
+    private void Stick(float left, string title, Vector2 position) {
+        this.DrawSetTransform(new Vector2(left, 0));
+        this.Text(28, 116, title, 20, Ink);
+        this.Text(28, 145, this.GamepadDescription, 18, Accent, 465);
+        this.Text(28, 169, this.GamepadMapping, 15, Muted, 465);
+
+        Vector2 center = new(255, 370);
+        this.DrawArc(center, 150, 0, Mathf.Tau, 96, new Color("35465b"), 1.5f, true);
+        this.DrawLine(center - new Vector2(150, 0), center + new Vector2(150, 0), new Color("28364a"));
+        this.DrawLine(center - new Vector2(0, 150), center + new Vector2(0, 150), new Color("28364a"));
+        this.Text(247, 211, "-Y", 14, Muted);
+        this.Text(242, 545, "+Y", 14, Muted);
+        this.Text(77, 375, "-X", 14, Muted);
+        this.Text(414, 375, "+X", 14, Muted);
+        if (this.State.SelectedGamepad < 0) {
+            this.Text(157, 400, "Waiting for a gamepad", 17, Muted);
+        }
+
+        this.Text(104, 579, $"X  {position.X:+0.0000;-0.0000;0.0000}      Y  {position.Y:+0.0000;-0.0000;0.0000}", 22, Ink);
+        this.Text(83, 604, "No added deadzone or smoothing", 16, Muted);
+        this.DrawSetTransform(Vector2.Zero);
+    }
+
     private void Stream(float top, string title, string description, InputEventHistory stream) {
-        this.DrawRect(new Rect2(525, top, 727, 176), new Color("101c2d"));
-        this.Text(541, top + 25, title, 18, Ink);
-        this.Text(663, top + 25, $"{description}   /   {stream.Count} received", 14, Muted, 573);
+        this.DrawRect(new Rect2(1025, top, 727, 176), new Color("101c2d"));
+        this.Text(1041, top + 25, title, 18, Ink);
+        this.Text(1163, top + 25, $"{description}   /   {stream.Count} received", 14, Muted, 573);
         float y = top + 49;
         if (stream.Count == 0) {
-            this.Text(541, y, "Waiting for events...", 15, Muted);
+            this.Text(1041, y, "Waiting for events...", 15, Muted);
         }
 
         foreach (string line in stream.Lines) {
-            this.Text(541, y, line, 15, Ink, 695);
+            this.Text(1041, y, line, 15, Ink, 695);
             y += 18;
         }
     }

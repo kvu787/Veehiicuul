@@ -19,9 +19,10 @@ internal static class Verification {
             Check(state.Gamepad.Count == 0, "Other controller input is ignored");
             state.Record(selected);
             Check(state.Gamepad.Count == 1, "Selected controller input is shown");
+            state.LeftStick = -Vector2.One;
             state.RightStick = Vector2.One;
             state.SetConnection(6, false);
-            Check(state.SelectedGamepad == 2 && state.RightStick == Vector2.Zero, "Disconnect selects the remaining controller and clears axes");
+            Check(state.SelectedGamepad == 2 && state.LeftStick == Vector2.Zero && state.RightStick == Vector2.Zero, "Disconnect selects the remaining controller and clears axes");
             state.SetConnection(2, false);
             Check(state.SelectedGamepad == -1, "Removing the last controller is safe");
             state.SetConnection(6, true);

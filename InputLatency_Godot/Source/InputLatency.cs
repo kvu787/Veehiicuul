@@ -9,7 +9,8 @@ namespace InputLatencyGodot;
 public partial class InputLatency : Node3D {
     private static readonly JsonSerializerOptions SessionSerializerOptions = new() { WriteIndented = true };
     private readonly InputState _state = new();
-    private MeshInstance3D _sphere = null!;
+    private MeshInstance3D _leftSphere = null!;
+    private MeshInstance3D _rightSphere = null!;
     private readonly StandardMaterial3D _sphereMaterial = new() { Roughness = 0.65f };
     private InputDisplay _display = null!;
     private string _logDirectory = "";
@@ -30,11 +31,8 @@ public partial class InputLatency : Node3D {
         Camera3D camera = new() { Projection = Camera3D.ProjectionType.Orthogonal, Size = 7.2f, Position = new Vector3(0, 0, 10), Current = true };
         this.AddChild(camera);
         this.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-25, -30, 0), LightEnergy = 1.2f, ShadowEnabled = false });
-        this._sphere = new MeshInstance3D {
-            Mesh = new SphereMesh { Radius = 0.14f, Height = 0.28f, RadialSegments = 24, Rings = 12 },
-            MaterialOverride = this._sphereMaterial
-        };
-        this.AddChild(this._sphere);
+        this._leftSphere = this.CreateSphere();
+        this._rightSphere = this.CreateSphere();
         CanvasLayer canvas = new();
         this.AddChild(canvas);
         this._display = new InputDisplay { State = this._state, MouseFilter = Control.MouseFilterEnum.Ignore };
@@ -55,10 +53,13 @@ public partial class InputLatency : Node3D {
         }
 
         int device = this._state.SelectedGamepad;
+        this._state.LeftStick = device < 0 ? Vector2.Zero : new Vector2(
+            Input.GetJoyAxis(device, JoyAxis.LeftX), Input.GetJoyAxis(device, JoyAxis.LeftY));
         this._state.RightStick = device < 0 ? Vector2.Zero : new Vector2(
             Input.GetJoyAxis(device, JoyAxis.RightX), Input.GetJoyAxis(device, JoyAxis.RightY));
         // 100 pixels per world unit; positive stick Y points down, as in Godot.
-        this._sphere.Position = new Vector3(-3.85f + (this._state.RightStick.X * 1.5f), -0.1f - (this._state.RightStick.Y * 1.5f), 0);
+        this._leftSphere.Position = new Vector3(-6.35f + (this._state.LeftStick.X * 1.5f), -0.1f - (this._state.LeftStick.Y * 1.5f), 0);
+        this._rightSphere.Position = new Vector3(-1.35f + (this._state.RightStick.X * 1.5f), -0.1f - (this._state.RightStick.Y * 1.5f), 0);
         this._display.Focused = this.GetWindow().HasFocus();
         this._display.MousePosition = this.GetViewport().GetMousePosition();
         this._display.SpacePressed = Input.IsPhysicalKeyPressed(Key.Space);
@@ -69,6 +70,15 @@ public partial class InputLatency : Node3D {
             this._verify = false;
             this.FinishVerification();
         }
+    }
+
+    private MeshInstance3D CreateSphere() {
+        MeshInstance3D sphere = new() {
+            Mesh = new SphereMesh { Radius = 0.14f, Height = 0.28f, RadialSegments = 24, Rings = 12 },
+            MaterialOverride = this._sphereMaterial
+        };
+        this.AddChild(sphere);
+        return sphere;
     }
 
     private void OnGamepadConnectionChanged(long device, bool connected) {

@@ -1,6 +1,6 @@
 # Godot input latency experiment
 
-Minimal Windows 11 x64 application using Godot **4.7.2 .NET**, C#, and a 3D sphere with an event display.
+Minimal Windows 11 x64 application using Godot **4.7.2 .NET**, C#, and two 3D spheres with an event display.
 
 Double-click **Run.cmd** to build a standalone release export and launch it. Close the game using its window close button. The launcher prints the game process ID for PresentMon.
 
@@ -12,8 +12,8 @@ The launcher uses the installed Godot .NET editor and matching .NET export templ
 
 ## Input display
 
-- The sphere and numbers show the selected gamepad's right stick. Positive X is right; positive Y is down. There is no application deadzone, interpolation, or smoothing. Godot's controller mapping and device processing still apply.
-- The application keeps the first selected gamepad while it remains connected. Other gamepads' axis/button events are ignored. When the selected pad disconnects, its stick position resets and another connected pad is selected, or the display waits at zero. All controller connection changes appear in the gamepad feed.
+- The spheres and numbers show the selected gamepad's left and right sticks side-by-side, with the left stick on the left. Positive X is right; positive Y is down. There is no application deadzone, interpolation, or smoothing. Godot's controller mapping and device processing still apply.
+- The application keeps the first selected gamepad while it remains connected. Other gamepads' axis/button events are ignored. When the selected pad disconnects, both stick positions reset and another connected pad is selected, or the display waits at zero. All controller connection changes appear in the gamepad feed.
 - As agreed, stock Godot combines physical keyboards into one logical keyboard and mice into one logical mouse. There is no physical keyboard/mouse selection, connection enumeration, or per-device connection notification. Missing devices require no initialization; the feeds accept events whenever Windows/Godot supplies them, including after reconnection. No keyboard or mouse is required to start the application.
 - Three independent feeds show key down/up/repeat, mouse motion/buttons/wheel, and selected gamepad axes/buttons. Each retains the latest seven events and counts all received events. Newest events appear at the bottom. Fast streams can replace entries before they are displayed; this is not a complete event recorder.
 - Space and left mouse button have held-state indicators. A game-rendered crosshair follows the sampled mouse position. The ordinary Windows cursor remains visible and uncaptured. Click the window to focus keyboard/mouse input.
@@ -26,14 +26,14 @@ The only application update is the main-thread `_Process` callback:
 
 1. `DisplayServer.ProcessEvents()` refreshes Godot's available Windows input.
 2. Read the selected controller axes, mouse position, and button/key state.
-3. Update the 3D sphere and event display for rendering.
+3. Update the 3D spheres and event display for rendering.
 
 `_Input` only records events, and connection callbacks maintain controller selection. There is no `_PhysicsProcess`, timer-driven game update, or application polling thread. Disabling accumulated input preserves more Godot-delivered events; it does not bypass Windows event coalescing or poll physical hardware directly.
 
 | Setting                    | Value                          |
 | -------------------------- | ------------------------------ |
 | Rendering                  | D3D12, Forward+                |
-| Window                     | 1280 x 720, fixed size          |
+| Window                     | 1780 x 720, fixed size          |
 | VSync                      | Disabled                       |
 | Application FPS limit      | None                           |
 | Render thread mode         | Safe (1)                       |
@@ -62,6 +62,6 @@ Each launcher invocation creates `MyLogOutput\yyyy-MM-dd_HH-mm-ss`, containing l
 
 On September 18, 2026, `Run.cmd -Test` and `Run.cmd -VisualTest` both completed without intervention after disabling shared compilation. Each passed 19 checks, and both release builds had zero warnings/errors. The D3D12 run used the expected rendering settings, and its 1280 x 720 image was inspected. No physical gamepad was connected during these runs. Physical unplug/replug and multiple-controller hardware behavior still need a manual check; automated checks exercise the selection logic without changing the user's devices.
 
-For a manual check: launch with any devices absent, attach a controller, move its right stick, attach a second controller, disconnect the selected controller, and reconnect it. Check that selection stays stable until disconnection, the remaining pad takes over, and the display returns to zero when none remain. Type, move/click/scroll, and reconnect keyboard/mouse devices to check the Windows/Godot event path.
+For a manual check: launch with any devices absent, attach a controller, move each stick independently, attach a second controller, disconnect the selected controller, and reconnect it. Check that selection stays stable until disconnection, the remaining pad takes over, and the display returns to zero when none remain. Type, move/click/scroll, and reconnect keyboard/mouse devices to check the Windows/Godot event path.
 
 API references: [Input](https://docs.godotengine.org/en/4.7/classes/class_input.html), [DisplayServer.ProcessEvents](https://docs.godotengine.org/en/4.7/classes/class_displayserver.html#class-displayserver-method-process-events), [InputEvent device IDs](https://docs.godotengine.org/en/4.7/classes/class_inputevent.html).

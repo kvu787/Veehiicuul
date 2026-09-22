@@ -25,6 +25,7 @@ public sealed class InputState {
     public InputEventHistory Keyboard { get; } = new();
     public InputEventHistory Mouse { get; } = new();
     public InputEventHistory Gamepad { get; } = new();
+    public Vector2 LeftStick { get; set; }
     public Vector2 RightStick { get; set; }
 
     public void SetConnection(int device, bool connected) {
@@ -39,6 +40,7 @@ public sealed class InputState {
         }
 
         this.SelectedGamepad = this._gamepads.Count == 0 ? -1 : this._gamepads.Min;
+        this.LeftStick = Vector2.Zero;
         this.RightStick = Vector2.Zero;
     }
 
