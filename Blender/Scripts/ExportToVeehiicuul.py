@@ -170,14 +170,6 @@ def main() -> None:
     folder_path = Path("C:/") / "Users" / "k" / "Repository" / "Veehiicuul" / "Veehiicuul_Godot_CSharp" / "Testyo"
     export_collider_data(folder_path / f"{track_name}_ColliderData.json")
 
-    # filepath = Path("C:/") / "Users" / "k" / "Repository" / "Veehiicuul" / "Veehiicuul_Godot_CSharp" / f"{track_name}.fbx"
-    # filepath.parent.mkdir(parents=True, exist_ok=True)
-
-    # OUTPUT = "//export.glb"
-
-    # output = Path(bpy.path.abspath(OUTPUT))
-    # output.parent.mkdir(parents=True, exist_ok=True)
-
     result = bpy.ops.export_scene.gltf(
         filepath=str(folder_path / f"{track_name}.glb"),
         export_format="GLB",
