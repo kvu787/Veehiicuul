@@ -320,3 +320,74 @@ There are three limitations:
 - **The repeated settings remain on disk.** Godot writes every import option into each asset’s `[params]` section. Each file also contains asset-specific identifiers and paths, so copying the entire file between assets is inappropriate. [Serialization](C:/Users/k/Repository/External/Godot_4-7-2/editor/file_system/editor_file_system.cpp:3025).
 
 For your repository, I’d use **Scene import defaults** initially. If you want “change one policy and automatically update every GLB,” a small synchronization script could apply one shared settings dictionary to each file’s `[params]`, preserving its identifiers and paths, before reimporting. That would eliminate manual maintenance of duplicated settings, although Godot’s per-asset files would remain.
+
+## User
+
+what syntax/language does C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Testyo\Track009_MiniComb4.glb.import use? is there a good library to use that can work with that format, or does godot provide one?
+
+## Assistant
+
+I’ll check Godot’s parser and C# API to identify the format and the best way to read and update it.
+
+## Assistant
+
+It uses **Godot’s INI-style configuration format**, with **Godot Variant syntax for the values**.
+
+For example:
+
+```ini
+[params]
+meshes/create_shadow_meshes=true
+nodes/root_scale=1.0
+nodes/root_script=null
+_subresources={}
+```
+
+Here, `params` is a section, and `meshes/create_shadow_meshes` is a literal key containing a slash. Values can be typed booleans, numbers, strings, arrays, dictionaries, and Godot-specific types. Consequently, an ordinary INI parser is not sufficient to interpret every possible value correctly.
+
+**Godot provides `ConfigFile`, and that is what I recommend.** It is the same class Godot’s editor uses to read `.import` files. Internally, it uses `VariantParser` and `VariantWriter` to handle the values. [Editor usage](C:/Users/k/Repository/External/Godot_4-7-2/editor/file_system/editor_file_system.cpp:2840), [parser implementation](C:/Users/k/Repository/External/Godot_4-7-2/core/io/config_file.cpp:274).
+
+In a C# script running inside Godot, you can do this:
+
+```csharp
+using Godot;
+using System;
+
+// Run inside your Godot tool's method.
+const string path = "res://Testyo/Track009_MiniComb4.glb.import";
+
+using ConfigFile configuration = new();
+
+Error error = configuration.Load(path);
+if (error != Error.Ok) {
+    throw new InvalidOperationException($"Could not load {path}: {error}");
+}
+
+configuration.SetValue("params", "meshes/generate_lods", false);
+configuration.SetValue("params", "meshes/create_shadow_meshes", true);
+configuration.SetValue("params", "meshes/force_disable_compression", true);
+
+error = configuration.Save(path);
+if (error != Error.Ok) {
+    throw new InvalidOperationException($"Could not save {path}: {error}");
+}
+```
+
+This lets you modify the import parameters while retaining the asset-specific UID and paths.
+
+Useful methods include:
+
+| Method                         | Purpose                          |
+| ------------------------------ | -------------------------------- |
+| `Load()` / `Save()`            | Read/write a file                |
+| `Parse()` / `EncodeToText()`   | Read/write configuration strings |
+| `GetValue()` / `SetValue()`    | Read/change typed values         |
+| `GetSections()`                | Enumerate sections               |
+| `GetSectionKeys()`             | Enumerate keys within a section  |
+
+Two practical details:
+
+- **It requires the Godot runtime.** For a command-line synchronization tool, run C# through headless Godot. Referencing `GodotSharp.dll` alone in an ordinary .NET console application does not initialize the native engine.
+- **It preserves configuration data, not original text formatting.** Saving rewrites the file and discards comments. Also, saving import settings does not itself regenerate the imported mesh; reimport afterward. [ConfigFile documentation in your checkout](C:/Users/k/Repository/External/Godot_4-7-2/doc/classes/ConfigFile.xml:87).
+
+For the shared-import-settings tool we discussed, **`Godot.ConfigFile` avoids the need for a third-party parser or custom text manipulation.**
