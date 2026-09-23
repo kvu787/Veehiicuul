@@ -227,3 +227,49 @@ material.use_backface_culling = True
 ```
 
 You can leave `material.use_backface_culling_shadow` unchanged unless you also want to adjust shadows rendered inside Blender.
+
+## User
+
+review the recent commits and check to see that godot shadow mesh generation is working as expected now
+
+## Assistant
+
+I’ll review the recent material and import changes, then inspect the imported Godot meshes to verify that shadow meshes were generated and are eligible for the depth pass.
+
+## Assistant
+
+The commits enable backface culling and shadow-mesh generation while keeping LODs and compression disabled. I’ll now check the cached import in Godot itself, including whether the shadow meshes preserve every triangle’s positions.
+
+## Assistant
+
+Godot’s cached import has shadow meshes for all 81 meshes and all 110 surfaces. The exact triangle-position comparison passed: both versions contain 100,634 triangles, with shadow vertices reduced from 73,128 to 51,627. All 39 imported materials are opaque and use backface culling. The re-export changed only material sidedness; the geometry is unchanged.
+
+## Assistant
+
+**Yes—Godot shadow-mesh generation is working as expected. I found no blocking issues in the recent commits.**
+
+I checked the Blender changes, re-exported GLB, import settings, and—using Godot 4.7.2 .NET—the actual cached imported meshes.
+
+| Check                     | Result                                         |
+| ------------------------- | ---------------------------------------------- |
+| Meshes with shadow meshes | **81 / 81**                                    |
+| Surfaces covered          | **110 / 110**                                  |
+| Original vertices         | **73,128**                                     |
+| Shadow-mesh vertices      | **51,627 — 29.4% fewer**                        |
+| Triangle count            | **100,634 in both versions**                    |
+| Exact triangle geometry   | **Matches, including winding and multiplicity** |
+| Shadow-mesh attributes    | **Positions and indices only**                 |
+| LODs / mesh compression   | **Disabled in both versions**                  |
+
+The other relevant checks passed:
+
+- All **39 exported/imported materials** are opaque and use **backface culling**.
+- Comparing the old and new GLBs showed **identical geometry data**; the only JSON changes were material sidedness.
+- The Blender scene passes your updated validator, and its three external script references point into this repository.
+- The depth prepass is enabled. The imported materials have no relevant features such as vertex growth, billboarding, fading, or stencil use that would block the shared depth/shadow-material path.
+
+Consequently, these meshes are eligible for the **Forward+ depth-only optimization**, despite your game not using shadows. The additional `use_backface_culling_shadow=True` setting affects Blender only and does not interfere.
+
+[Detailed Godot inspection results](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/MyLogOutput/2026-09-23_10-04-46/ShadowMeshInspection.json)
+
+This verifies generated resources and eligibility, without measuring GPU performance. I removed the temporary inspection script and rebuilt the normal project successfully: **0 warnings, 0 errors**.
