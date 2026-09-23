@@ -23,8 +23,6 @@ file_logging/enable_file_logging.pc=false
 window/size/viewport_width=1780
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
-window/dpi/allow_hidpi=true
 window/vsync/vsync_mode=0
 
 [dotnet]
