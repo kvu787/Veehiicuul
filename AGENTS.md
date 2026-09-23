@@ -117,6 +117,7 @@ Record verbatim and commit all conversations in a folder named `Conversations` l
 Use one file per conversation.
 Prefix these commits with `[cnv]`.
 If I attach images to prompts, save and record these in the conversation logs.
+If the conversation begins with `/dnr`, then do not record the conversation.
 
 ## Application compatibility
 
