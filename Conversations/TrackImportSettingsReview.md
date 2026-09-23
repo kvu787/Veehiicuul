@@ -391,3 +391,105 @@ Two practical details:
 - **It preserves configuration data, not original text formatting.** Saving rewrites the file and discards comments. Also, saving import settings does not itself regenerate the imported mesh; reimport afterward. [ConfigFile documentation in your checkout](C:/Users/k/Repository/External/Godot_4-7-2/doc/classes/ConfigFile.xml:87).
 
 For the shared-import-settings tool we discussed, **`Godot.ConfigFile` avoids the need for a third-party parser or custom text manipulation.**
+
+## User
+
+if you were to add a build-time validation that ensures that all glb files in a specified folder had the below import params, how would you do that?
+
+[params]
+
+nodes/root_type=""
+nodes/root_name=""
+nodes/root_script=null
+mesh_library/use_node_names_as_mesh_names=false
+array_mesh/deduplicate_surfaces=true
+nodes/apply_root_scale=true
+nodes/root_scale=1.0
+nodes/import_as_skeleton_bones=false
+nodes/use_name_suffixes=true
+nodes/use_node_type_suffixes=true
+meshes/ensure_tangents=true
+meshes/generate_lods=false
+meshes/create_shadow_meshes=true
+meshes/light_baking=0
+meshes/lightmap_texel_size=0.2
+meshes/force_disable_compression=true
+skins/use_named_skins=true
+animation/import=false
+animation/fps=30
+animation/trimming=false
+animation/remove_immutable_tracks=true
+animation/import_rest_as_RESET=false
+import_script/path=""
+materials/extract=0
+materials/extract_format=0
+materials/extract_path=""
+_subresources={}
+gltf/naming_version=2
+gltf/embedded_image_handling=1
+gltf/texture_map_mode=1
+
+## Assistant
+
+I’ll check how this fits into your build sequence, including how `ConfigFile` handles `null` and how to catch incorrect settings before Godot’s importer fills in defaults.
+
+## Assistant
+
+There’s one important edge case: `ConfigFile` discards keys whose value is `null`, including `nodes/root_script=null`. I’d handle that explicitly so the validator can distinguish a missing assignment from the required null value. I’d keep validation read-only and make any mismatch stop the build.
+
+## Assistant
+
+I would use **one required-settings file and a read-only C# validator running through headless Godot**, with the validator invoked by your existing build script.
+
+1. **Store your exact block as the policy.**  
+   For example, a proposed `Verification/GlbImportSettings/RequiredImportParameters.cfg` would contain the complete `[params]` section you provided. The validator would read this file, so the requirements would not also be duplicated as C# constants.
+
+2. **Pass the target folder explicitly.**  
+   Enumerate its `.glb` files, recursively by default, and validate each adjacent `.glb.import` file. Fail if the specified folder does not exist or contains no GLBs, preventing an accidentally empty scan from passing.
+
+3. **Require the parameters to match exactly as typed data.**  
+   Use `Godot.ConfigFile` to parse the policy and import files. Report:
+
+   - Missing or unreadable `.import` files.
+   - Malformed configuration.
+   - Missing, unexpected, or duplicate keys in `[params]`.
+   - Incorrect value types or values.
+   - A nonempty `_subresources` dictionary.
+
+   Whitespace, key order, and comments would not matter. For example, `0.20` and `0.2` would match, but `"false"` would not match `false`. I would compare these parsed configuration numbers directly, without a floating-point tolerance.
+
+   Asset-specific `[remap]` and `[deps]` values would remain outside this parameter comparison.
+
+4. **Handle explicit `null` carefully.**  
+   There is a qualification to my earlier `ConfigFile` recommendation: loading `nodes/root_script=null` removes that key from the in-memory configuration. Godot’s parser calls `SetValue`, which treats a null Variant as key deletion. [Implementation](C:/Users/k/Repository/External/Godot_4-7-2/core/io/config_file.cpp:38).
+
+   To enforce your exact list, I would supplement `ConfigFile` with an assignment-presence check that understands sections, quoted strings, comments, and nested values. It would require `nodes/root_script` to be explicitly assigned null and detect duplicate assignments. Comparing two `ConfigFile` objects alone would miss a deleted `nodes/root_script=null` line.
+
+5. **Report every mismatch, then fail the build.**  
+   Example output:
+
+   ```text
+   Testyo/Track010.glb.import
+     meshes/generate_lods:
+       expected false (Bool), found true (Bool)
+     _subresources:
+       expected an empty Dictionary, found 2 entries
+
+   FAILED: 1 of 12 GLBs has invalid import settings.
+   ```
+
+   Return exit code `1` for failure and `0` for success. Your existing `Invoke-Checked` function already turns a nonzero exit code into a failed build. Save the validation output in the build’s timestamped `MyLogOutput` folder.
+
+I would integrate it into [Build.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Build.ps1) in this order:
+
+```text
+Build the independent validation helper
+Validate the existing GLB import files
+Run Godot's import step
+Validate again after import
+Build and export the game
+```
+
+The first check catches missing files and parameters before Godot fills in defaults. The second checks the files Godot actually produced before export. The helper would have its own minimal Godot C# project, so validation would not depend on starting or building the game first.
+
+**The validator would never change settings or repair files.** It would identify all violations and stop the build. I would test it against temporary fixtures covering a valid file, missing files/keys, wrong types/values, malformed syntax, explicit-null handling, and nonempty subresource overrides.
