@@ -197,3 +197,33 @@ The benefit also depends on the depth pass:
 [Default prepass setting](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/rendering_server.cpp:3715), [pass selection](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/forward_clustered/render_forward_clustered.cpp:1925).
 
 **I cannot give a reliable FPS percentage without an A/B measurement.** The improvement could be negligible if the depth pass is cheap or the game is CPU-limited. Compare `true` and `false` with the same single-sided materials and camera, measuring GPU frame time and “Render Depth Pre-Pass” time. The counts above establish an optimization opportunity; they do not establish its frame-time impact.
+
+## User
+
+does material.use_backface_culling_shadow have any relevance to all this?
+
+## Assistant
+
+I’ll check whether Blender’s glTF exporter reads that property and what Blender uses it for.
+
+## Assistant
+
+**No—it has no effect on the GLB → Godot behavior we’ve been discussing.**
+
+`material.use_backface_culling_shadow` controls whether **Blender’s Eevee renderer culls back-facing triangles when rendering shadow maps**. It selects single-sided versus double-sided shadow rendering inside Blender; it does not disable shadow casting altogether. [Blender implementation](C:/Users/k/Repository/External/blender/source/blender/draw/engines/eevee/eevee_pipeline.cc:266).
+
+Your installed Blender glTF exporter reads **`material.use_backface_culling`**, and does not read `use_backface_culling_shadow`. Therefore, changing the shadow property:
+
+- Does not make the exported GLB single-sided.
+- Does not change Godot’s material culling.
+- Does not affect Godot’s `meshes/create_shadow_meshes` optimization.
+
+[Exporter implementation](C:/Users/k/Program/blender-4.5.14-windows-x64/4.5/scripts/addons_core/io_scene_gltf2/blender/exp/material/materials.py:242).
+
+For your workflow, set:
+
+```python
+material.use_backface_culling = True
+```
+
+You can leave `material.use_backface_culling_shadow` unchanged unless you also want to adjust shadows rendered inside Blender.
