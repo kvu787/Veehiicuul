@@ -130,3 +130,70 @@ The memory tradeoff for the attribute combinations in your GLB is:
 These are per-vertex buffer sizes, excluding triangle indices, materials, and other overhead. Compression reduces memory use and vertex-fetch bandwidth; its actual frame-time effect depends on the rendering workload. [Buffer layout](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/rendering_server.cpp:1082).
 
 For your requirement, keep **`force_disable_compression=true`**. It avoids this additional loss of position precision; ordinary floating-point rounding during transforms and rendering still applies.
+
+## User
+
+However, this GLB’s materials are all double-sided
+^i dont think any of my models visually require double-sided rendering. so, how do i make them single-sided? also, how much a perf difference would there be if they are single-sided and i set meshes/create_shadow_meshes to true vs false?
+
+## Assistant
+
+I’ll check the Blender export code for the setting that makes these materials double-sided, then trace what single-sided materials would change in Godot’s depth pass.
+
+## Assistant
+
+Blender’s exporter uses each material’s “Backface Culling → Camera” setting to control sidedness in the GLB. I also counted the geometry: a shadow mesh could reduce this asset’s depth-pass vertex set from 73,128 entries to about 51,627 by sharing identical positions. That’s a 29% reduction in vertex entries, not a measured FPS gain.
+
+## Assistant
+
+**Make the materials single-sided in Blender, then re-export the GLBs.** This keeps the setting in the source assets.
+
+In Blender 4.5’s Eevee material UI, enable **Material Properties → Settings → Surface → Backface Culling → Camera** for each material. The glTF exporter reads that exact property. With it enabled, the exporter omits `doubleSided`, whose default is single-sided. [Blender UI source](C:/Users/k/Program/blender-4.5.14-windows-x64/4.5/scripts/startup/bl_ui/properties_material.py:256), [exporter source](C:/Users/k/Program/blender-4.5.14-windows-x64/4.5/scripts/addons_core/io_scene_gltf2/blender/exp/material/materials.py:242).
+
+To apply it to **all materials in the currently open .blend file**, run this in Blender’s Text Editor:
+
+```python
+import bpy
+
+for material in bpy.data.materials:
+    material.use_backface_culling = True
+```
+
+Save the .blend and run your export script again. If this becomes a requirement for every model, that loop can go immediately before the exporter call in [ExportToVeehiicuul.py](C:/Users/k/Repository/Veehiicuul/Blender/Scripts/ExportToVeehiicuul.py:173).
+
+Godot’s resulting material should have **Cull Mode = Back**. Check that all intended visible surfaces still appear; a surface with reversed face winding may have been relying on double-sided rendering.
+
+**Once the materials are single-sided, I would enable `meshes/create_shadow_meshes=true` for your current Forward+ setup**, while retaining:
+
+```text
+meshes/generate_lods=false
+meshes/force_disable_compression=true
+```
+
+The generated mesh preserves the triangle geometry. It shares vertices that have **identical positions**, omits shading attributes, and remaps the same triangle indices to those shared positions. With compression disabled, this does not introduce position quantization or simplify the model. [Generation implementation](C:/Users/k/Repository/External/Godot_4-7-2/scene/resources/3d/importer_mesh.cpp:974).
+
+As for performance, there are two separate changes:
+
+- **Double-sided → single-sided:** backface culling avoids rasterizing back-facing triangles. This can save rasterization and fragment work, but does not halve the model’s vertex count or guarantee anything like twice the FPS.
+- **Single-sided with shadow meshes `false` → `true`:** eligible depth-only passes can use the mesh with shared positions. The normal color pass still uses the original mesh. This does not reduce triangle count or draw calls. [Depth-pass selection](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/forward_clustered/render_forward_clustered.cpp:360), [shadow-mesh selection](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/forward_clustered/render_forward_clustered.cpp:4224).
+
+I counted the positions directly in your GLB:
+
+| Measurement                                      | Count   |
+| ------------------------------------------------ | ------- |
+| Source vertex entries across all surfaces        | 73,128  |
+| Distinct positions, deduplicated within surfaces  | 51,627  |
+| Potential reduction in depth-mesh vertex entries  | 29.4%   |
+| Triangles, unchanged                             | 100,634 |
+
+That **29.4% is a structural reduction, not a measured reduction in GPU time or an FPS improvement**. Actual vertex-shader work depends on visibility, indexing, and the GPU’s vertex cache. Generating these meshes would also add approximately **1.17 MiB of position/index buffers**, plus overhead, under your current no-LOD/no-compression settings.
+
+The benefit also depends on the depth pass:
+
+- Your current test scene has a simple direct-light setup, and Godot enables the depth prepass by default. Single-sided materials should make this optimization usable there.
+- If you disable the depth prepass and use no shadows, these extra meshes provide no benefit.
+- Features such as SSAO or SSR can change the prepass into one that also writes normals and roughness. That pass uses the original mesh, so this depth-only optimization does not apply.
+
+[Default prepass setting](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/rendering_server.cpp:3715), [pass selection](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/forward_clustered/render_forward_clustered.cpp:1925).
+
+**I cannot give a reliable FPS percentage without an A/B measurement.** The improvement could be negligible if the depth pass is cheap or the game is CPU-limited. Compare `true` and `false` with the same single-sided materials and camera, measuring GPU frame time and “Render Depth Pre-Pass” time. The counts above establish an optimization opportunity; they do not establish its frame-time impact.
