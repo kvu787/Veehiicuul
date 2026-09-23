@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://c1ql4vwvp0c02"]
+
+[ext_resource type="PackedScene" uid="uid://pw1e0n8jfpnk" path="res://Testyo/Track009_MiniComb4.glb" id="1_f05og"]
+
+[node name="TestYo" type="Node3D" unique_id=28359778]
+
+[node name="Track009_MiniComb4" parent="." unique_id=35973529 instance=ExtResource("1_f05og")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=194024725]
+transform = Transform3D(0.49999997, -0.663414, 0.5566704, 0, 0.64278764, 0.76604444, -0.86602545, -0.3830222, 0.3213938, 0, 50, 0)
+light_energy = 1.5
+light_bake_mode = 0
+sky_mode = 1
