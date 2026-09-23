@@ -29,6 +29,13 @@ Tables in Markdown must be padded and aligned in a way to make them easy to read
 
 Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must display properly in VSCode's Markdown previewer, GitHub.com's Markdown displayer, and the markdown viewer in the Windows 11 ChatGPT app.
 
+## PowerShell
+
+All PowerShell scripts must use:
+
+- Set-StrictMode -Version Latest
+- $ErrorActionPreference = 'Stop'
+
 ## Godot
 
 When creating a Godot application:
@@ -39,6 +46,11 @@ When creating a Godot application:
 - Halt if you don't find a portable/self-contained install of Godot 4.7.2 .NET at `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`
 - Halt if that install of Godot doesn't have export templates installed
 - Build.cmd must do all building/exporting using release configuration with optimizations fully enabled and use Godot's export via the command-line to create an EXE
+- Use DirectX 12
+- Keep off vsync
+- Keep max fps limiter off
+- Set rendering_device/fallback_to_vulkan=false
+- Set rendering_device/fallback_to_opengl3=false
 
 The Godot csproj must include this:
 
