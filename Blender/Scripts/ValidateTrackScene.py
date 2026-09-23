@@ -168,8 +168,8 @@ def Main():
 
     # Check material backface culling
     for material in bpy.data.materials:
-        assert not material.use_backface_culling
-        assert not material.use_backface_culling_shadow
+        assert material.use_backface_culling
+        assert material.use_backface_culling_shadow
         assert material.use_backface_culling_lightprobe_volume
 
     # Print out subd levels
