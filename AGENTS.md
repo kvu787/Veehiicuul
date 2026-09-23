@@ -51,6 +51,7 @@ When creating a Godot application:
 - Keep max fps limiter off
 - Set rendering_device/fallback_to_vulkan=false
 - Set rendering_device/fallback_to_opengl3=false
+- Use Forward+ renderer
 
 The Godot csproj must include this:
 
