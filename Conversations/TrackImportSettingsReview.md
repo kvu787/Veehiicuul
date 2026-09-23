@@ -273,3 +273,50 @@ Consequently, these meshes are eligible for the **Forward+ depth-only optimizati
 [Detailed Godot inspection results](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/MyLogOutput/2026-09-23_10-04-46/ShadowMeshInspection.json)
 
 This verifies generated resources and eligibility, without measuring GPU performance. I removed the temporary inspection script and rebuilt the normal project successfully: **0 warnings, 0 errors**.
+
+## User
+
+is there a way to "template-tize" C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Testyo\Track009_MiniComb4.glb.import so that identical import settings can be applied to many different GLBs without duplicating the whole import file for each GLB?
+
+## Assistant
+
+I’ll check how Godot applies import defaults and presets, and whether it supports shared settings for existing GLBs.
+
+## Assistant
+
+Godot supports project-wide import defaults, but they aren’t a live template. New GLBs receive them automatically; existing GLBs keep their saved settings until you apply the defaults again. Godot still writes a complete `.import` file for each asset.
+
+## Assistant
+
+**You can centralize the settings, but Godot will still generate a separate `.import` file for every GLB.** Godot 4.7.2 does not support these files inheriting from a shared template.
+
+The built-in approach is **project-wide import defaults**:
+
+1. Select `Track009_MiniComb4.glb` in Godot’s FileSystem dock.
+2. In the **Import** dock, choose **Preset → Set as Default for 'Scene'**.
+3. New scene assets will receive those settings automatically.
+4. For existing GLBs, select them together, choose **Preset → Load Default**, then **Reimport**.
+
+Godot saves the shared defaults in [project.godot](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/project.godot). Your main policy settings could be represented as:
+
+```ini
+[importer_defaults]
+
+scene={
+"animation/import": false,
+"meshes/create_shadow_meshes": true,
+"meshes/force_disable_compression": true,
+"meshes/generate_lods": false,
+"meshes/light_baking": 0
+}
+```
+
+The preset command saves the current import settings; the example above shows the important subset. You can also edit defaults through **Project → Project Settings → Import Defaults → Scene**. [Preset implementation](C:/Users/k/Repository/External/Godot_4-7-2/editor/docks/import_dock.cpp:435).
+
+There are three limitations:
+
+- **Defaults do not propagate automatically to existing assets.** Reimporting an existing GLB normally retains its saved parameters. Changing the defaults requires another **Load Default → Reimport** for those assets. [Import logic](C:/Users/k/Repository/External/Godot_4-7-2/editor/file_system/editor_file_system.cpp:2840).
+- **The defaults apply to the Scene importer**, including other supported scene formats, rather than exclusively to GLBs or one folder.
+- **The repeated settings remain on disk.** Godot writes every import option into each asset’s `[params]` section. Each file also contains asset-specific identifiers and paths, so copying the entire file between assets is inappropriate. [Serialization](C:/Users/k/Repository/External/Godot_4-7-2/editor/file_system/editor_file_system.cpp:3025).
+
+For your repository, I’d use **Scene import defaults** initially. If you want “change one policy and automatically update every GLB,” a small synchronization script could apply one shared settings dictionary to each file’s `[params]`, preserving its identifiers and paths, before reimporting. That would eliminate manual maintenance of duplicated settings, although Godot’s per-asset files would remain.
