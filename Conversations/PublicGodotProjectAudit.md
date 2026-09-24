@@ -319,3 +319,25 @@ GetWorld3D().Environment = GD.Load<Godot.Environment>("res://Environment.tres");
 You then manage replacement and cleanup yourself. [World3D reference](https://docs.godotengine.org/en/stable/classes/class_world3d.html#class-world3d-property-environment)
 
 So it isn't an additional collection of visual settings you need to configure. It's the editor-friendly scene object that assigns those settings to the world. If your application already manages that assignment in code, you may have no need for it.
+
+## User
+
+if i want to apply an Environment node's settings to a specified scene using the GUI editor, do i have to use WorldEnvironment?
+
+## Assistant
+
+The GUI offers two places to assign it: a `WorldEnvironment` for the world’s default, or a `Camera3D` for that camera’s view.
+
+## Assistant
+
+**Yes, for the scene’s default environment through the GUI, use `WorldEnvironment`.**
+
+1. Open the scene and add a **WorldEnvironment** node.
+2. Select it in the scene tree.
+3. In the Inspector, assign your existing `Environment` resource to its **Environment** property—or create a new one there.
+
+The GUI alternative is to assign the resource to a **Camera3D → Environment** property. That applies it to that camera’s view and overrides the world’s default. [Godot documentation](https://docs.godotengine.org/en/stable/classes/class_worldenvironment.html)
+
+One important detail: **a saved scene is not an isolated environment boundary.** If you instantiate that scene inside another scene sharing the same 3D world, its `WorldEnvironment` affects that shared world, not just objects belonging to the instantiated scene.
+
+And a terminology correction: `Environment` is a **resource**, not a node; `WorldEnvironment` is the node you add to the scene tree.
