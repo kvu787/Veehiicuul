@@ -19,3 +19,10 @@ sky_mode = 1
 environment = ExtResource("2_7ilae")
 camera_attributes = ExtResource("3_2fins")
 compositor = ExtResource("4_jo3qq")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=77174542]
+transform = Transform3D(0.95136523, -0.24767798, 0.18319327, 0.043506075, 0.69671655, 0.71602607, -0.30497766, -0.6732323, 0.67360735, 9.469092, 49.666286, 43.02516)
+projection = 1
+size = 100.0
+near = 10.0
+far = 1000.0
