@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://c1ql4vwvp0c02"]
 
 [ext_resource type="PackedScene" uid="uid://pw1e0n8jfpnk" path="res://Testyo/Track009_MiniComb4.glb" id="1_f05og"]
+[ext_resource type="Environment" uid="uid://dtayw57htymn6" path="res://Resources/Environment.tres" id="2_7ilae"]
+[ext_resource type="CameraAttributesPractical" uid="uid://ccmi3voa5m4p5" path="res://Resources/CameraAttributesPractical.tres" id="3_2fins"]
+[ext_resource type="Compositor" uid="uid://bvdqusir3gt1o" path="res://Resources/Compositor.tres" id="4_jo3qq"]
 
 [node name="TestYo" type="Node3D" unique_id=28359778]
 
@@ -11,3 +14,8 @@ transform = Transform3D(0.49999997, -0.663414, 0.5566704, 0, 0.64278764, 0.76604
 light_energy = 1.5
 light_bake_mode = 0
 sky_mode = 1
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=812477861]
+environment = ExtResource("2_7ilae")
+camera_attributes = ExtResource("3_2fins")
+compositor = ExtResource("4_jo3qq")
