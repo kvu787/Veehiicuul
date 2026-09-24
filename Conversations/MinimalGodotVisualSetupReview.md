@@ -104,3 +104,41 @@ driver/depth_prepass/enable=false
 Run `TestYo.tscn` with the same camera, resolution, and other settings in both cases. Disable VSync and any FPS cap, let shader compilation settle, and compare **total GPU frame time** over repeated runs. The prepass disappearing from the profiler alone proves nothing—the color pass may become more expensive. If CPU work limits FPS, GPU time can improve without an obvious FPS increase.
 
 For your current opaque scene, the intended visible result is the same. The choice is about how much work the GPU does to produce it.
+
+## User
+
+re-review the project
+
+## Assistant Commentary
+
+I’ll re-check the Godot project for changes since the last review and look for anything still adding unnecessary rendering work.
+
+## Assistant Commentary
+
+The three settings you changed are now correctly disabled: VSync, depth prepass, and the roughness limiter. One consequence is that generated shadow meshes now have no rendering use in this scene, since both shadows and the depth prepass are off. I’m checking the remaining material defaults for simpler lighting options.
+
+## Assistant Commentary
+
+I found one more enabled default: specular occlusion, which has no visual purpose here with indirect reflections disabled. The materials also still use Burley diffuse lighting and Schlick-GGX specular highlights; Lambert lighting with specular disabled is a simpler option if you want to keep the directional light.
+
+## Assistant
+
+**Your three changes are correct:** VSync, depth prepass, and the screen-space roughness limiter are now disabled in [project.godot](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/project.godot:22). I re-checked the Godot visual setup against the local engine source.
+
+The remaining simplifications are:
+
+1. **Materials still use the default lighting models.** All 39 GLB materials remain shaded per pixel, using **Burley diffuse** and **Schlick-GGX specular**. For simpler lighting while keeping your directional light, use **Diffuse Mode → Lambert** and **Specular Mode → Disabled**. Lambert can also be forced project-wide with `rendering/shading/overrides/force_lambert_over_burley=true`. These change the appearance. For the absolute minimum, use **Unshaded** materials and remove the light. [Lambert setting](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-rendering-shading-overrides-force-lambert-over-burley), [material modes](https://docs.godotengine.org/en/stable/classes/class_basematerial3d.html#enum-basematerial3d-specularmode)
+
+2. **Specular occlusion is another enabled default I missed earlier.** Set `rendering/reflections/specular_occlusion/enabled=false`. It darkens indirect reflections according to ambient lighting; your scene has no indirect reflections to benefit from it. Disabling it omits the corresponding shader code. Treat this as shader simplification; any FPS benefit needs measurement. Restart the running scene after changing it. [Engine implementation](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/forward_clustered/render_forward_clustered.cpp:5122)
+
+3. **Generated shadow meshes are now unnecessary for this scene.** [The GLB import settings](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Testyo/Track009_MiniComb4.glb.import:28) still have `meshes/create_shadow_meshes=true`. These meshes serve shadow rendering and the depth prepass, both now disabled. You can turn this off and reimport to avoid generating and storing the extra geometry. This primarily reduces asset/memory overhead; those meshes aren’t currently being drawn. Reconsider it if you enable the prepass again. [Shadow mesh documentation](https://docs.godotengine.org/en/stable/classes/class_arraymesh.html#class-arraymesh-property-shadow-mesh)
+
+4. **The empty compositor and default camera attributes remain assigned.** Clear those two properties on [WorldEnvironment](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Testyo/TestYo.tscn:18) if you want fewer resources. They currently enable no effects, so this is organizational cleanup.
+
+5. **The C# graphics manager still defaults to 8× MSAA.** [GraphicsSettingsManager.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Source/GameDataAndLogic/GraphicsSettingsManager.cs:9) has `MsaaEnabled = true`. This remains inactive when running `TestYo.tscn` directly, but would override the minimal project settings once that manager is initialized.
+
+Everything else previously checked remains appropriately minimal: shadows and environment effects off; MSAA, TAA, screen-space AA, and debanding off for the standalone scene; native render scale; unlimited FPS; DirectX 12 with Forward+ and both fallbacks disabled. The GLB remains opaque, single-sided, and texture-free.
+
+One testing reminder: **Run Project still launches `Main.tscn`**, whose [startup deliberately throws](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Main.cs:33). Continue using **Run Current Scene** for `TestYo.tscn` when comparing rendering settings.
+
+No application files changed. This was a static review, without a performance benchmark.
