@@ -49,6 +49,7 @@ When creating a Godot application:
 - Use DirectX 12
 - Keep vsync off
 - Keep max fps limiter off
+- Set rendering_device/vsync/swapchain_image_count=2
 - Set rendering_device/fallback_to_vulkan=false
 - Set rendering_device/fallback_to_opengl3=false
 - Use Forward+ renderer
