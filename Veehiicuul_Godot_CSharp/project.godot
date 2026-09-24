@@ -36,3 +36,4 @@ rendering_device/driver.windows="d3d12"
 rendering_device/fallback_to_vulkan=false
 rendering_device/fallback_to_opengl3=false
 driver/depth_prepass/enable=false
+anti_aliasing/screen_space_roughness_limiter/enabled=false
