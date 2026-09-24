@@ -108,3 +108,48 @@ Unshaded explicitly bypasses lighting; setting Specular to zero does not. [Godot
 If the bands disappear, the original material’s lighting is implicated. If they remain, please send a screenshot showing the bands so we can distinguish color steps from geometry or editor overlays.
 
 One qualification to “exact same pixel color”: **unshaded bypasses lighting, but it does not bypass the whole rendering pipeline**. Fog and post-processing can still affect the image. With a constant albedo, fog disabled, and no spatially varying effects, the interior of the plane should be uniform as you change the viewing angle.
+
+## User
+
+is it possible to configure from the blender side a simple material that literally shows just one exact color from all angles and have that import properly into godot via glb
+
+## Assistant
+
+I’ll check which Blender material setup exports the unlit flag that Godot recognizes.
+
+## Assistant
+
+A two-node material works: RGB connected directly to Material Output’s Surface input. I tested it with your installed Blender 4.5.14, and the exported GLB contains `KHR_materials_unlit`, which Godot maps to Unshaded.
+
+## Assistant
+
+**Yes. In your Blender version, a simple two-node material exports correctly as unlit and Godot recognizes it.** I tested this with your installed Blender 4.5.14.
+
+In Blender:
+
+1. Select the grass object and open its material in the **Shader Editor**.
+2. Remove the **Principled BSDF** node.
+3. Add an **RGB** node using **Shift+A → Input → RGB**.
+4. Set its color.
+5. Connect its **Color** output directly to **Material Output → Surface**.
+
+```text
+RGB                         Material Output
+  Color ──────────────────►   Surface
+```
+
+Blender permits that color-to-surface connection, and its glTF exporter recognizes it as an unlit material.
+
+Export as **glTF 2.0 → GLB**, with material export enabled. My test produced:
+
+```json
+"extensions": {
+  "KHR_materials_unlit": {}
+}
+```
+
+Godot’s importer maps that flag to **StandardMaterial3D → Shading → Shading Mode → Unshaded** automatically. After reimporting, inspect the grass material to verify that setting. Any material override you added in Godot must be cleared if you want to see the newly imported material. [Godot importer source](C:/Users/k/Repository/External/Godot_4-7-2/modules/gltf/gltf_document.cpp:2968), [Blender exporter documentation](https://github.com/KhronosGroup/glTF-Blender-IO/blob/main/docs/blender_docs/scene_gltf2.rst#exporting-a-shadeless-unlit-material).
+
+**This gives you a constant color unaffected by lighting or viewing angle.** Guaranteeing an exact final screen RGB value also requires controlling Godot’s fog, exposure, tone mapping, glow, and color adjustments; those are outside the GLB material’s control. Likewise, Blender’s color-management settings can make its preview look different from Godot’s.
+
+For your grass, **RGB → Surface is the minimal material setup you want**.
