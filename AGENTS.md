@@ -47,7 +47,7 @@ When creating a Godot application:
 - Halt if that install of Godot doesn't have export templates installed
 - Build.cmd must do all building/exporting using release configuration with optimizations fully enabled and use Godot's export via the command-line to create an EXE
 - Use DirectX 12
-- Keep off vsync
+- Keep vsync off
 - Keep max fps limiter off
 - Set rendering_device/fallback_to_vulkan=false
 - Set rendering_device/fallback_to_opengl3=false
