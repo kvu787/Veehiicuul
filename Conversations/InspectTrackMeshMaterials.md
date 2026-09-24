@@ -153,3 +153,73 @@ Godot’s importer maps that flag to **StandardMaterial3D → Shading → Shadin
 **This gives you a constant color unaffected by lighting or viewing angle.** Guaranteeing an exact final screen RGB value also requires controlling Godot’s fog, exposure, tone mapping, glow, and color adjustments; those are outside the GLB material’s control. Likewise, Blender’s color-management settings can make its preview look different from Godot’s.
 
 For your grass, **RGB → Surface is the minimal material setup you want**.
+
+## User
+
+in general, explain what kinds of blender materials/shaders smoothly export to glb and import into godot and what kinds don't
+
+## Assistant
+
+I’ll compare Blender’s exporter with your Godot importer and separate the reliable material features from those that need baking or rebuilding in Godot.
+
+## Assistant
+
+The main limit is that GLB carries a standardized material description, not Blender’s shader node graph. Basic colors, textures, metallic/roughness, normals, emission, and unlit materials have a good path through both tools. Several advanced Principled settings do export from Blender, but your Godot importer does not read their extensions.
+
+## Assistant
+
+**The most reliable Blender → GLB → Godot materials are simple unlit materials and basic Principled materials built from colors and image textures.**
+
+The key is what actually travels between the programs:
+
+```text
+Blender nodes → recognized material properties in GLB → Godot StandardMaterial3D
+```
+
+**Blender’s shader node graph does not travel with the model.** The exporter recognizes certain node arrangements and writes standardized properties such as base color, roughness, and texture references. Godot builds its own material from those properties. It does not execute Blender’s shader. [glTF material specification](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#materials).
+
+The details below reflect your installed **Blender 4.5.14** exporter and the local **Godot 4.7.2** importer source.
+
+**These features generally transfer well:**
+
+| Blender material feature                                            | What to expect in Godot                                                                            |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Principled **Base Color**: constant color or image texture          | Reliable; becomes albedo.                                                                          |
+| Principled **Metallic** and **Roughness**: values or image textures | Reliable; controls metalness and surface roughness.                                                |
+| Image texture → **Normal Map** → Principled Normal                  | Reliable with a tangent-space normal map.                                                          |
+| Principled **Emission** color, texture, and strength                | Supported; glow and illumination of nearby objects depend on Godot settings.                       |
+| **RGB → Material Output Surface**                                   | Exports unlit; becomes Unshaded, as we tested.                                                     |
+| Image color → Material Output Surface                               | Can export as an unlit textured material.                                                          |
+| Opaque, alpha cutout, and alpha-blended materials                   | Supported when exported as the corresponding glTF alpha mode; blending can have sorting artifacts. |
+| Backface culling / double-sided surfaces                            | Supported.                                                                                         |
+| Baked ambient occlusion texture                                     | Supported with Blender’s exporter-specific Occlusion hookup.                                       |
+
+For the normal map, use **Tangent Space** and mark the image **Non-Color**. Roughness and metallic images should also be **Non-Color**. Baked AO uses the **Occlusion** input of the exporter’s **glTF Material Output** node group. [Blender export documentation](https://github.com/KhronosGroup/glTF-Blender-IO/blob/blender-v4.5-release/docs/blender_docs/scene_gltf2.rst), [Godot material import implementation](C:/Users/k/Repository/External/Godot_4-7-2/modules/gltf/gltf_document.cpp:2946).
+
+“Transfers well” means the material properties survive. Different lighting, reflections, tone mapping, and rendering algorithms can still make Blender and Godot look different.
+
+**Some advanced properties export into GLB successfully but are not handled by your Godot importer.**
+
+In the source I checked, that includes the material extensions for:
+
+- **Specular IOR Level / Specular Tint**.
+- **Coat / clearcoat**.
+- **Sheen**.
+- **Anisotropy**.
+- **Transmission, IOR, and volume absorption** used for glass-like materials.
+
+Blender can write these extensions, but the built-in Godot glTF importer in your checkout does not implement them. Consequently, **using Principled BSDF does not guarantee that every slider survives import**. Your grass’s zero-specular setting was an example of this. You may need to configure a Godot material or shader to reproduce these effects. [Blender extension export code](C:/Users/k/Program/blender-4.5.14-windows-x64/4.5/scripts/addons_core/io_scene_gltf2/blender/exp/material/materials.py:261), [Godot supported-extension registration](C:/Users/k/Repository/External/Godot_4-7-2/modules/gltf/gltf_document.cpp:6967).
+
+**Arbitrary Blender shader effects generally need baking or rebuilding.** Common examples are:
+
+- **Procedural textures:** Noise, Voronoi, Wave, procedural Checker, and combinations with Color Ramps.
+- **Complex shader mixtures:** layered Mix Shader/Add Shader networks, custom node groups, and custom OSL shaders. A few recognized arrangements are exceptions, including the unlit setup.
+- **View- or scene-dependent effects:** custom Fresnel/Layer Weight effects, Shader to RGB toon shading, and most Light Path tricks.
+- **Procedural bump and shader displacement:** the actual bump/displacement calculation is not transferred as shader code.
+- **Blender-specific shaders:** arbitrary Glass, Toon, Hair, and volumetric node networks do not become equivalent Godot shaders automatically.
+
+For example, **Noise → Color Ramp → Base Color** should be baked to an image, then connected as **Image Texture → Principled Base Color**. Baking records the evaluated result into texture pixels. Bake surface detail to a normal map when appropriate; apply geometry displacement before export if it must change the silhouette. Effects that must react to the camera, time, or gameplay usually need a Godot shader.
+
+**Texture coordinates are another source of surprises.** A shared UV map for base color, roughness, metallic, and normals is the safest setup. Your Godot importer has restrictions on different UV maps for those channels. Its material texture-transform helper also reads offset and scale but not rotation, so applying transformations to the mesh’s UV coordinates is safer than relying on complex Mapping nodes. [UV handling](C:/Users/k/Repository/External/Godot_4-7-2/modules/gltf/gltf_document.cpp:3102), [texture-transform handling](C:/Users/k/Repository/External/Godot_4-7-2/modules/gltf/gltf_document.cpp:3223).
+
+For your track, use **RGB → Surface** for flat colors that ignore lighting, **basic Principled materials** for surfaces that should respond to light, and **baked textures or Godot shaders** for more elaborate effects.
