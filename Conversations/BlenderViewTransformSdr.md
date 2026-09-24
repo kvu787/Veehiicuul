@@ -50,3 +50,46 @@ Understood—I’ll treat that file as an example of the appearance you want, ra
 AgX deliberately changes contrast and saturation to accommodate a wider range of scene brightness. That can be useful, but its appearance isn’t a requirement for correct rendering. [Blender’s view-transform documentation](https://docs.blender.org/manual/en/latest/render/color_management.html?highlight=filmic)
 
 Your reason for choosing Standard is **the color appearance you want**. The PA278QGV being in SDR mode doesn’t require either choice.
+
+## User
+
+okay, do i need to do anything to "C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Testyo\TestYo.tscn" to ensure that the imported GLB looks pretty much the same as it does in blender
+
+## Assistant
+
+I’ll compare the Godot scene’s lighting, tone mapping, and imported materials with the Blender preview settings, then check which differences need adjusting.
+
+## User
+
+also, is there any agx vs standard view transform setting in godot?
+
+## Assistant
+
+Yes. In Godot, it’s **WorldEnvironment → Environment → Tonemap → Mode**. **Linear** corresponds to Blender’s Standard approach, and your Godot version also has **AgX**. Your environment already defaults to Linear; I’m checking lighting and material import for the remaining differences.
+
+## Assistant
+
+The tone mapping is already suitable. The main mismatch is lighting: Blender uses `forest.exr`, while this Godot scene uses a directional light plus plain ambient lighting. I also found a material-import difference: the GLB records your zero-specular settings, but Godot’s built-in importer doesn’t read that extension.
+
+## Assistant
+
+**Yes—Godot has that setting, and your scene already uses the appropriate choice for Blender’s Standard appearance.**
+
+Select **WorldEnvironment → Environment → Tonemap → Mode**:
+
+| Blender view transform | Godot tone mapper                   |
+| ---------------------- | ----------------------------------- |
+| Standard with sRGB     | **Linear**                          |
+| AgX                    | **AgX**, though results can differ   |
+
+Godot’s Linear mode still applies the display’s color conversion; it simply skips the photographic tone-mapping curve. [Godot documentation](https://docs.godotengine.org/en/4.6/classes/class_environment.html#enum-environment-tonemapper)
+
+[TestYo.tscn](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Testyo/TestYo.tscn:4) references [Environment.tres](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Resources/Environment.tres), which currently contains only defaults: **Linear, Exposure 1, color adjustments disabled**. Godot exposure **1** is neutral, corresponding to Blender exposure **0**.
+
+For a closer match, two other differences matter:
+
+1. **Lighting.** Blender’s saved Material Preview uses `forest.exr`. Godot currently uses a directional light at energy **1.5**, plus ambient light derived from the background. The GLB does not carry Blender’s preview environment. To reproduce that preview more closely, use the same `forest.exr` in a **PanoramaSkyMaterial**, set ambient and reflected light sources to **Sky**, and initially disable the directional light. Adjust sky rotation and brightness while comparing. [Sky setup documentation](https://docs.godotengine.org/en/4.2/tutorials/3d/environment_and_post_processing.html)
+
+2. **Specular settings.** Your GLB correctly records the zero-specular settings for materials such as `BarrierRed`, `Road`, and the colored car bodies. However, Godot 4.7.2’s built-in importer ignores their `KHR_materials_specular` extension, leaving Godot’s default specular value of **0.5**. For closer matching, set those imported materials’ **Specular to 0** through persistent material overrides or import processing. [Importer source](C:/Users/k/Repository/External/Godot_4-7-2/modules/gltf/gltf_document.cpp:2945), [material default](C:/Users/k/Repository/External/Godot_4-7-2/scene/resources/material.cpp:3913).
+
+I compared all **38 Principled materials** against the GLB: their base colors, metallic values, and roughness values match. The remaining work is matching lighting and specular response.
