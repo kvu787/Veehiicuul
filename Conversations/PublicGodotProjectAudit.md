@@ -238,3 +238,52 @@ If you remember **shadow settings**, inspect [the older .NET stutter test](https
 No custom glow, tonemapping, fog enablement, SSAO, SSIL, SSR, SDFGI, depth-of-field, auto-exposure, or custom screen-space post-processing shader was found in the inspected source. The paint shaders are material shaders.
 
 Saved the [full audit with exact settings, source links, and all 41 repository snapshots](C:/Users/k/Repository/Veehiicuul/Documentation/PublicGodotProjectAudit.md).
+
+## User
+
+explain how WorldEnvironment and Environment work
+
+## Assistant
+
+I’ll check Godot’s documentation for how environments are assigned and which one takes priority.
+
+## Assistant
+
+**`Environment` stores the settings. `WorldEnvironment` is the scene node that makes those settings the default for your 3D world.**
+
+| Type               | What it does                                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------- |
+| `Environment`      | A resource containing background, ambient lighting, reflections, fog, and post-processing settings. |
+| `WorldEnvironment` | A node with an **Environment** property pointing to that resource.                              |
+
+An `Environment` can be embedded in a `.tscn` scene or saved separately as a reusable `.tres` file. Merely having that file in your project does not activate it; something must reference it. [Godot environment guide](https://docs.godotengine.org/en/stable/tutorials/3d/environment_and_post_processing.html)
+
+For example, your scene could look like this:
+
+```text
+Main
+├── WorldEnvironment
+│   └── Environment property → Environment.tres
+├── DirectionalLight3D
+├── Camera3D
+└── Track
+```
+
+Here, the resource supplies the world's environment settings. The arrow represents a resource assignment, not a child node.
+
+**The node's location in the scene tree does not restrict its effect to its children.** It sets the environment for the shared 3D world. It has no position, radius, or volume; putting it under a room node does not make its fog apply only inside that room. Normally, use one active `WorldEnvironment` per world. [WorldEnvironment reference](https://docs.godotengine.org/en/stable/classes/class_worldenvironment.html)
+
+**A camera can override it.** If the active `Camera3D` has its own Environment resource, that resource takes priority. Otherwise, it uses the world's environment. The camera selects a whole environment; it does not merge just its changed settings into the world's resource. This lets two cameras render the same scene with different environmental appearances. [Godot environment guide](https://docs.godotengine.org/en/stable/tutorials/3d/environment_and_post_processing.html)
+
+The settings are split across several places:
+
+- **Environment:** background/sky, ambient and reflected light, tonemapping, glow, fog, SSAO, SSIL, SSR, and SDFGI.
+- **Light nodes:** individual light color, energy, direction, and shadow settings.
+- **CameraAttributes:** exposure and depth of field; these can also be assigned through `WorldEnvironment` or a camera.
+- **Project/viewport settings:** renderer, MSAA/TAA, rendering resolution, shadow-map resolution, and similar rendering controls.
+
+Available effects depend on the renderer. [Godot environment and post-processing guide](https://docs.godotengine.org/en/stable/tutorials/3d/environment_and_post_processing.html)
+
+In your **SimplePaintShaders** projects, the `WorldEnvironment` points to an `Environment.tres` that disables ambient and reflected light. It does not itself disable directional lights, their shadows, or every post-processing effect. Your custom shaders separately use settings such as `unshaded` and `shadows_disabled`.
+
+To recreate that setup in the editor: **add a WorldEnvironment → Inspector → Environment → New Environment → click the resource to edit its settings.** You can then save that resource as a `.tres` file for reuse.
