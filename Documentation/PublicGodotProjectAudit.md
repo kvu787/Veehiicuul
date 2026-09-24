@@ -96,3 +96,23 @@ Audited repository snapshots:
 - [Worlds](https://github.com/kvu787/Worlds/tree/594baafc5203d9ec87c2ef4bf4b382448f7a8156): `594baafc5203d9ec87c2ef4bf4b382448f7a8156`; 0 Godot projects.
 - [ZoomTracks](https://github.com/kvu787/ZoomTracks/tree/9fc72ce7acdc22efe05d4415d9d6a9391cd05f66): `9fc72ce7acdc22efe05d4415d9d6a9391cd05f66`; 0 Godot projects.
 - [zsa_qmk_firmware](https://github.com/kvu787/zsa_qmk_firmware/tree/eba78af8b5fefb50a6f0bef3d9f3cae1a4707e51): `eba78af8b5fefb50a6f0bef3d9f3cae1a4707e51`; 0 Godot projects.
+
+Post-processing findings by project (AA and resolution scaling are also recorded in the main table):
+
+| Project                                       | Custom/non-default post-processing                                                       |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Automatou / SimplePaint3DShell                | None found.                                                                              |
+| Automatou / Automatou2                        | None found.                                                                              |
+| Automatou / RectangularGridMotion             | None found.                                                                              |
+| CurveModeler                                  | None found.                                                                              |
+| LowFpsInvestigation / Godot_Minimal3dScene    | None found.                                                                              |
+| ShaderTest / ShaderTest                       | None found; custom shaders are material shaders.                                         |
+| SimplePaintShaders / FixPerspectiveProjection | None found; custom shaders are material shaders.                                         |
+| SimplePaintShaders / ShaderTest               | Screen-space roughness limiter disabled; no custom Environment effects.                  |
+| UST / UST                                     | None found.                                                                              |
+| Veehiicuul / InputLatency_Godot               | None found.                                                                              |
+| Veehiicuul / Veehiicuul_Godot_CSharp          | TAA toggle implemented (initially off), but current startup stops before initialization. |
+| VsyncStutterTest / Godot                      | None found.                                                                              |
+| VsyncStutterTest-Godot-4_4_1-Dotnet           | Debanding enabled; screen-space roughness limiter disabled.                              |
+
+No custom compositor/screen-texture post-processing shader, depth-of-field, auto-exposure, color-adjustment, or SSR configuration was found in the inspected source either.
