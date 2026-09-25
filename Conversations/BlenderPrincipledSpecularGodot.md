@@ -148,3 +148,33 @@ Then open the project; its first asset import can use the compiled callback.
 **If you already opened it before compiling:** use Godot’s **Build C# Project** button, then select the GLB and click **Reimport**. The editor’s normal `Debug` build also includes the import script. Compiling alone does not guarantee that an already-imported GLB gets processed again.
 
 After that, changing colors and overwriting the GLB triggers normal automatic reimport using the existing DLL. You only need another C# build when the script changes or its compiled output is missing.
+
+## User
+
+I tested that exact situation using an isolated copy containing only tracked files. Godot imported the track without compiling C#, and all 39 materials retained specular 0.5. The zero-specular adjustment was not applied.
+
+^why does godot do this? if it knows that it should run a c# import script but that script isn't compiled, then shouldn't it at least report an error
+
+## Assistant Commentary
+
+I’ll trace how Godot reports that failure and check whether my headless test missed an error shown only in the editor.
+
+## Assistant
+
+**Yes. And I need to clarify my earlier explanation: Godot does queue an error, but it does not treat this particular error as an import failure.** My test ran headless, which concealed the editor-dialog part of the behavior.
+
+In your Godot 4.7.2 source, the sequence is:
+
+1. Godot loads the `.cs` script resource.
+2. It checks whether its class derives from `EditorScenePostImport`. Without the compiled class, it cannot establish that inheritance.
+3. It queues this misleading error:
+
+   > Script is not a subtype of EditorScenePostImport:
+
+4. **That branch does not return a failure.** Godot continues importing and saves the scene without running the callback. [Import code](C:/Users/k/Repository/External/Godot_4-7-2/editor/import/3d/resource_importer_scene.cpp:3404)
+
+The reporting function, `EditorNode::add_io_error()`, adds the message to the editor’s **Load Errors** dialog. It does not print it to the console through the normal error logger. Based on that code, the graphical editor should show a dialog; I have verified the source path, not the visible dialog itself. [Error-dialog code](C:/Users/k/Repository/External/Godot_4-7-2/editor/editor_node.cpp:5523)
+
+That explains why my headless test showed an apparently successful import, exit code **0**, and unchanged specular values.
+
+**I would consider this a failure-handling bug:** an explicitly configured import step could not execute, yet Godot saved the result as successful. A clearer diagnostic would identify the missing compiled C# class, and the import should fail—or explicitly remain incomplete—until the callback can run. Compiling first avoids this path, but does not fix Godot’s underlying reporting behavior.
