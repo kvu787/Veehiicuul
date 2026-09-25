@@ -78,3 +78,30 @@ This clears **both** the renderer’s shadow-mesh link and the resource’s refe
 Both still omit shadow-mesh clearing in `reset_state()`.
 
 The earlier experiment verified that clearing these references removes your errors. **This C++ patch has not yet been compiled and tested in a rebuilt engine.**
+
+## User
+
+check the godot engine github to see if there any existing issues or in progress fixes for this
+
+## Assistant Commentary
+
+I’ll search Godot’s GitHub issues and pull requests for this shadow-mesh reload bug, including open fixes and related reports.
+
+## Assistant Commentary
+
+I found an open, confirmed issue reporting the same surface-count error: #94705. I’m checking its discussion and nearby fixes to see whether anyone has identified the reimport cause we reproduced.
+
+## Assistant Commentary
+
+I found a stronger match: open PR #123055 changes cache replacement to clear properties that disappear on reimport—the mechanism behind our shadow-mesh bug. It’s ready for review and unmerged. Its tests cover materials, so its effect on this GLB is still an inference from the code.
+
+## Assistant
+
+**Yes—there’s a relevant fix in progress and an existing report of the same error.**
+
+- **[PR #123055: Use copy_from to overwrite resources in cache](https://github.com/godotengine/godot/pull/123055)** addresses the underlying problem: properties omitted from a reimported resource retain their old cached values. It replaces that behavior by copying the complete state of a freshly loaded resource. **Open, ready for review, and not merged**; milestone is **4.x**, with no specific 4.8 commitment.
+- **[Issue #94705: shadow-mesh surface-count mismatch](https://github.com/godotengine/godot/issues/94705)** reports the same out-of-bounds errors. It is **open and confirmed**, with no assignee or linked fix. One [comment](https://github.com/godotengine/godot/issues/94705#issuecomment-2732175805) says clearing the cache resolved the same message, but doesn’t identify our precise reimport trigger.
+
+**PR #123055 is the strongest match.** Based on its code, it should also clear the stale `shadow_mesh` reference we found. That remains a source-level assessment: its tests cover materials, and I haven’t tested the PR against your GLB.
+
+I found no dedicated report or patch explicitly describing the `create_shadow_meshes=true → false` case. The broader pending PR explains why a fix can be in progress while still absent from current 4.8 sources.
