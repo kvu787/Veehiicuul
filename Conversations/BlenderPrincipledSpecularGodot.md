@@ -178,3 +178,33 @@ The reporting function, `EditorNode::add_io_error()`, adds the message to the ed
 That explains why my headless test showed an apparently successful import, exit code **0**, and unchanged specular values.
 
 **I would consider this a failure-handling bug:** an explicitly configured import step could not execute, yet Godot saved the result as successful. A clearer diagnostic would identify the missing compiled C# class, and the import should fail—or explicitly remain incomplete—until the callback can run. Compiling first avoids this path, but does not fix Godot’s underlying reporting behavior.
+
+## User
+
+A Godot import script can apply this automatically on every import, so your ongoing workflow can still be just changing colors in Blender and exporting.
+
+^if this feature was rewritten in gdscript, could we avoid the compilation step and make the overall process smoother?
+
+## Assistant Commentary
+
+I’ll check whether a GDScript import callback would run on the first import without a separate build.
+
+## Assistant
+
+**Yes. A self-contained GDScript import script would remove the need to build C# before importing assets.** Godot loads and compiles GDScript automatically; there would be no separate compilation command for you to run.
+
+On a fresh clone, the workflow would become:
+
+1. Open the project in Godot.
+2. Godot loads the `.gd` import script, marked `@tool` and extending `EditorScenePostImport`.
+3. During the first GLB import, it runs the script and saves the materials with specular set to zero. [Godot import-script documentation](https://docs.godotengine.org/en/stable/classes/class_editorscenepostimport.html)
+
+For our implementation, that would let us remove:
+
+- The custom `ImportRelease` build configuration.
+- Its explicit `GodotSharpEditor` package reference.
+- The extra C# build before asset import.
+
+Your game code would remain C# and would still need compilation to run or export. The import script would operate independently of that code, with no additional work during gameplay.
+
+**For this small editor-only task, GDScript would make setup simpler.** It would be an exception to your repository’s current “Don’t use GDScript” rule. I haven’t changed the implementation.
