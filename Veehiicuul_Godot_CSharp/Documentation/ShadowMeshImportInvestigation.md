@@ -84,3 +84,29 @@ The fix is absent from both:
 - [Current master source](https://github.com/godotengine/godot/blob/30caae98b79ec7e75e5f893290a51b4048eaa141/scene/resources/mesh.cpp#L1755), verified against the live GitHub API; HEAD is `30caae98b79ec7e75e5f893290a51b4048eaa141`, dated September 24, and `version.py` identifies it as 4.8 development.
 
 Both still reset surfaces, blend shapes, and bounding boxes without clearing the shadow mesh. The current master binary resource loader still calls this reset during cache replacement, and Forward+ still looks up the regular surface index in the shadow mesh. This is a source inspection of 4.8; no 4.8 executable was built or run.
+
+## Existing GitHub reports and work in progress
+
+Checked the live GitHub API on 2026-09-24, searching issues and pull requests for the error identifier, import option, shadow meshes, resource reload, and `reset_state`. The most relevant pending work is broader than the mesh-specific patch above.
+
+### Open PR 123055: resource cache replacement
+
+[Use copy_from to overwrite resources in cache](https://github.com/godotengine/godot/pull/123055) addresses the same underlying failure: `CACHE_MODE_REPLACE` reuses cached resources, calls `reset_state()`, and reapplies only properties present in the new file. Properties omitted because they returned to their default can retain their previous values.
+
+The PR loads a fresh resource and copies its complete stored-property state into the cached resource with `copy_from()`. Its binary-loader changes cover imported `.scn` subresources. Inference from the diff and `Resource::copy_from()`: this should also overwrite a stale `ArrayMesh.shadow_mesh` with the fresh resource's null reference. This PR was not compiled or tested against the track GLB; its included regression tests cover materials, not this shadow-mesh reproduction.
+
+Verified status: **open, not draft, not merged**, ready for review, milestone **4.x**, no submitted reviews. Last updated September 1, 2026; inspected head `0bc75b87ec4c3cf56407f9163929f7ba3549c51a`. Its linked issues are #104937, #119131, and #105474, concerning stale imported material properties. No specific 4.8 release commitment was found.
+
+### Open issue 94705: matching renderer error
+
+[Unhelpful error message when ArrayMesh has a shadow_mesh with a different number of surfaces](https://github.com/godotengine/godot/issues/94705) reports the same out-of-bounds surface errors. It is open and labeled `bug`, `confirmed`, and `topic:rendering`, with no assignee, milestone, or linked implementation PR. Its timeline references the general error-message tracker #42719.
+
+A [March 18, 2025 comment](https://github.com/godotengine/godot/issues/94705#issuecomment-2732175805) reports that clearing the cache resolved the same message from another cause. A [May 9, 2025 comment](https://github.com/godotengine/godot/issues/94705#issuecomment-2865933509) confirms reproduction on 4.4.1. Neither establishes the exact shadow-import-option transition and incomplete reset diagnosed here.
+
+### Other examined fixes
+
+- [PR 95961](https://github.com/godotengine/godot/pull/95961), merged September 3, 2024, prevents a mesh from being assigned as its own shadow mesh. It does not clear stale references during reload.
+- [PR 96880](https://github.com/godotengine/godot/pull/96880), merged September 12, 2024, fixes shadow-mesh generation for non-triangle surfaces. It does not address resource-cache replacement.
+- [PR 96894](https://github.com/godotengine/godot/pull/96894), open, clears blend-shape bookkeeping when a `MeshInstance3D` changes meshes. Its diff does not address shadow meshes.
+
+No dedicated issue or PR explicitly identifying this exact `meshes/create_shadow_meshes=true` to `false` reload defect was found. PR 123055 is a plausible general fix already in progress; issue 94705 records the matching symptom. These findings refine the upstream picture without changing the prior observation that the fix is absent from published 4.8-dev6 and the inspected master commit.
