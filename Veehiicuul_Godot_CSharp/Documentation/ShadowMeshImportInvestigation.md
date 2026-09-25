@@ -54,3 +54,33 @@ Save any scene edits, set `meshes/create_shadow_meshes=false`, reimport, and the
 At investigation time, the application's saved `.glb.import` had `meshes/create_shadow_meshes=true`; it was left unchanged.
 
 This import option controls generation of an optimized mesh for shadow rendering. It does not itself turn off light shadows; those are controlled by the lights' `ShadowEnabled` properties.
+
+## Proposed 4.7.2 source fix
+
+Clear both the rendering-server shadow link and the resource reference at the start of `ArrayMesh::reset_state()` in `scene/resources/mesh.cpp`:
+
+```diff
+ void ArrayMesh::reset_state() {
++	if (mesh.is_valid()) {
++		RS::get_singleton()->mesh_set_shadow_mesh(mesh, RID());
++	}
++	shadow_mesh.unref();
++
+ 	clear_surfaces();
+ 	clear_blend_shapes();
+```
+
+The validity check handles empty meshes, whose rendering-server handles are allocated lazily. Calling the existing `set_shadow_mesh(Ref<ArrayMesh>())` unconditionally would lack that protection. Removing only the resource reference could leave the rendering-server link active if something else still owns the old shadow mesh.
+
+This is a proposed C++ patch, not a compiled engine change. The earlier diagnostic verified that explicitly clearing the shadow references through the setter on already initialized meshes removes the reported errors. A patch regression test should cover cached scene replacement from enabled to disabled shadow meshes, resetting an empty mesh, and subsequent replacement with shadow meshes enabled again.
+
+## Godot 4.8 status
+
+Checked upstream on 2026-09-24. The [official archive](https://godotengine.org/download/archive/) identifies **4.8-dev6**, published September 15, as the latest 4.8 release. Its [release notes](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-6/) identify source commit `8898c2b3db32adf6f92c694ffb6dac19af672e5f`.
+
+The fix is absent from both:
+
+- [4.8-dev6 source](https://github.com/godotengine/godot/blob/8898c2b3db32adf6f92c694ffb6dac19af672e5f/scene/resources/mesh.cpp#L1755).
+- [Current master source](https://github.com/godotengine/godot/blob/30caae98b79ec7e75e5f893290a51b4048eaa141/scene/resources/mesh.cpp#L1755), verified against the live GitHub API; HEAD is `30caae98b79ec7e75e5f893290a51b4048eaa141`, dated September 24, and `version.py` identifies it as 4.8 development.
+
+Both still reset surfaces, blend shapes, and bounding boxes without clearing the shadow mesh. The current master binary resource loader still calls this reset during cache replacement, and Forward+ still looks up the regular surface index in the shadow mesh. This is a source inspection of 4.8; no 4.8 executable was built or run.
