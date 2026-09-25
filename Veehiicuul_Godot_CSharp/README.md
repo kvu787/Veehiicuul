@@ -71,10 +71,6 @@ Each build or launcher invocation writes its logs under
 `Veehiicuul/Build/Veehiicuul_Godot_CSharp.exe`. Generated logs and
 `Veehiicuul/Build` are ignored by Git.
 
-Builds temporarily set aside the saved editor layout to avoid restoring scene
-tabs in Godot's headless import/export processes. The layout is restored even
-when a build fails, and `EditorLayout.cfg` in the build log folder retains a backup.
-
 Run these commands from this outer folder:
 
 ```powershell
