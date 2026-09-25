@@ -25,6 +25,12 @@ window/vsync/vsync_mode=0
 
 project/assembly_name="Veehiicuul_Godot_CSharp"
 
+[importer_defaults]
+
+scene={
+"import_script/path": "res://Source/Editor/DisableSpecularImport.cs"
+}
+
 [physics]
 
 2d/physics_engine="Dummy"

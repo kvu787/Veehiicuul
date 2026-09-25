@@ -33,7 +33,8 @@ try {
 
     New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'Build') -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $PSScriptRoot 'Build\.gdignore') -Value ''
-    # Import first so the exporter knows about C# scripts and scene resources.
+    # Import callbacks must be compiled before Godot loads any source scenes.
+    Invoke-Checked 'dotnet' @('build', 'Veehiicuul_Godot_CSharp.slnx', '--configuration', 'ImportRelease', '--nologo', '-warnaserror')
     Invoke-Checked $godot @('--headless', '--editor', '--path', $PSScriptRoot, '--import', '--log-file', (Join-Path $logFolderPath 'Import.log'))
     if (Select-String -LiteralPath (Join-Path $logFolderPath 'Import.log') -Pattern '^ERROR:' -Quiet) {
         throw 'Godot reported an import error. See Import.log.'

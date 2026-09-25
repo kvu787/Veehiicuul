@@ -35,6 +35,25 @@
         <Optimize>true</Optimize>
     </PropertyGroup>
 
+    <!--
+        Compile the import script before headless import, using an optimized release
+        configuration with editor APIs. Godot loads editor assemblies from bin/Debug.
+        Normal editor builds still use the SDK's standard Debug configuration.
+    -->
+    <PropertyGroup>
+        <Configurations>$(Configurations);ImportRelease</Configurations>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)' == 'ImportRelease'">
+        <Optimize>true</Optimize>
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
+        <DefineConstants>$(DefineConstants);TOOLS</DefineConstants>
+        <OutputPath>$(BaseOutputPath)Debug/</OutputPath>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(Configuration)' == 'ImportRelease'">
+        <PackageReference Include="GodotSharpEditor" Version="4.7.2" />
+    </ItemGroup>
+
     <ItemGroup>
         <Compile Remove="Verification/**/*.cs" />
         <PackageReference Include="System.Management" Version="10.0.12" />
