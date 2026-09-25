@@ -105,3 +105,46 @@ I found a stronger match: open PR #123055 changes cache replacement to clear pro
 **PR #123055 is the strongest match.** Based on its code, it should also clear the stale `shadow_mesh` reference we found. That remains a source-level assessment: its tests cover materials, and I haven’t tested the PR against your GLB.
 
 I found no dedicated report or patch explicitly describing the `create_shadow_meshes=true → false` case. The broader pending PR explains why a fix can be in progress while still absent from current 4.8 sources.
+
+## User
+
+as an alternative workaround, can i clear the cache manually with this:
+Clear Godot editor settings:
+C:\Users\k\AppData\Local\Godot
+%LOCALAPPDATA%\Godot
+C:\Users\k\AppData\Roaming\Godot
+%APPDATA%\Godot
+ProjectRoot\.godot
+
+## Assistant Commentary
+
+I’ll check which of those folders contains the relevant cache, including the paths used by your portable Godot install.
+
+## Assistant
+
+**Yes, you can rebuild the project’s import cache. For this particular bug, restarting Godot after reimporting should already be sufficient**, because the stale references are in memory.
+
+For a manual cache rebuild:
+
+1. Set `meshes/create_shadow_meshes=false`, click **Reimport**, save your scene, and close Godot completely.
+2. Delete only this folder:
+
+   ```text
+   C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\.godot\imported
+   ```
+
+3. Reopen the project. Godot regenerates the imported assets. Keep `Track009_MiniComb4.glb.import` beside the GLB—it stores your import settings. [Import documentation](https://docs.godotengine.org/en/stable/tutorials/assets_pipeline/import_process.html#files-generated)
+
+Regarding your other paths:
+
+- **`%LOCALAPPDATA%\Godot`**: the normal global editor cache in 4.7.2; unnecessary for this problem.
+- **`%APPDATA%\Godot`**: can contain editor settings, export templates, and games’ saved data under `app_userdata`. **Don’t delete this whole folder for this workaround.** [Data-path documentation](https://docs.godotengine.org/en/stable/tutorials/io/data_paths.html)
+- **`ProjectRoot\.godot`**: deleting the whole folder is a broader reset, including local editor state and C# build output. Clearing only `imported` is more targeted.
+
+Your Godot installation has `_sc_` enabled, so its editor settings and global cache actually reside under:
+
+```text
+C:\Users\k\Program\Godot_v4.7.2-stable_mono_win64\editor_data
+```
+
+Leave that folder intact; it also contains your installed export templates. Clearing caches does not prevent the bug from recurring if you toggle the option again in an already loaded scene.
