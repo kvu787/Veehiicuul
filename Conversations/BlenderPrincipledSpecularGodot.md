@@ -66,3 +66,45 @@ material.MetallicSpecular = 0.0f;
 This assumes **Metallic = 0** and **Coat Weight = 0**, as discussed above. Base Color continues to come from Blender.
 
 **The simplest script would enforce zero specular on every material in the assigned GLB**, regardless of Blender’s specular slider. It could also filter by material name if you want some materials to remain shiny. Multiple GLBs can share the same script.
+
+## User
+
+A Godot import script can apply this automatically on every import, so your ongoing workflow can still be just changing colors in Blender and exporting.
+
+^implement this feature for C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp
+
+## Assistant Commentary
+
+I’ll add the C# import script, connect it to the project’s GLB, and verify that reimporting preserves the colors and sets specular to zero.
+
+## Assistant Commentary
+
+The project has one GLB to connect. I’ll also set the script as the default for newly imported 3D scenes. The build needs one extra step: compile the editor script before importing assets, then export the game as usual.
+
+## Assistant Commentary
+
+The optimized build and Windows export passed, and Godot ran the import callback for the track. I’m now checking the saved material values and testing a changed color in a disposable GLB to confirm the full re-export workflow.
+
+## User
+
+i closed godot editor in the middle of this, so do another verification pass after your receive this prompt
+
+## Assistant Commentary
+
+I’ll run another verification pass with the editor closed, including a fresh build/import and a check of the saved materials.
+
+## Assistant Commentary
+
+The pass with the editor closed succeeded. All 39 materials across 110 surfaces have zero specular, and every other saved material property is unchanged. A changed-color reimport also passed. The release build and startup check passed; I’m finishing the review and commits.
+
+## Assistant
+
+Implemented and committed as `fec8946`.
+
+- Added [DisableSpecularImport.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Source/Editor/DisableSpecularImport.cs), which sets material specular to zero during import.
+- Connected the existing track and made it the default for new 3D scene imports.
+- Updated `Build.cmd`’s build process to compile the import script before importing assets.
+
+**Verified again after you closed Godot:** all 39 materials across 110 surfaces have zero specular; other material properties are preserved. Changing a GLB color and reimporting works. Release build, export, and startup verification passed.
+
+You can now change colors in Blender and overwrite the GLB. Keep materials internal, with Blender’s **Metallic = 0** and **Coat Weight = 0**.
