@@ -61,13 +61,13 @@ Clear both the rendering-server shadow link and the resource reference at the st
 
 ```diff
  void ArrayMesh::reset_state() {
-+	if (mesh.is_valid()) {
-+		RS::get_singleton()->mesh_set_shadow_mesh(mesh, RID());
-+	}
-+	shadow_mesh.unref();
++    if (mesh.is_valid()) {
++        RS::get_singleton()->mesh_set_shadow_mesh(mesh, RID());
++    }
++    shadow_mesh.unref();
 +
- 	clear_surfaces();
- 	clear_blend_shapes();
+     clear_surfaces();
+     clear_blend_shapes();
 ```
 
 The validity check handles empty meshes, whose rendering-server handles are allocated lazily. Calling the existing `set_shadow_mesh(Ref<ArrayMesh>())` unconditionally would lack that protection. Removing only the resource reference could leave the rendering-server link active if something else still owns the old shadow mesh.
