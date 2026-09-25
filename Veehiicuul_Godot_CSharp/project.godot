@@ -28,7 +28,7 @@ project/assembly_name="Veehiicuul_Godot_CSharp"
 [importer_defaults]
 
 scene={
-"import_script/path": "res://Source/Editor/DisableSpecularImport.cs"
+"import_script/path": "res://Source/Editor/DisableSpecularImport.gd"
 }
 
 [physics]

@@ -33,16 +33,15 @@ try {
 
     New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'Build') -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $PSScriptRoot 'Build\.gdignore') -Value ''
-    # Import callbacks must be compiled before Godot loads any source scenes.
-    Invoke-Checked 'dotnet' @('build', 'Veehiicuul_Godot_CSharp.slnx', '--configuration', 'ImportRelease', '--nologo', '-warnaserror')
+    # The GDScript import callback runs without a prior C# build.
     Invoke-Checked $godot @('--headless', '--editor', '--path', $PSScriptRoot, '--import', '--log-file', (Join-Path $logFolderPath 'Import.log'))
-    if (Select-String -LiteralPath (Join-Path $logFolderPath 'Import.log') -Pattern '^ERROR:' -Quiet) {
+    if (Select-String -LiteralPath (Join-Path $logFolderPath 'Import.log') -Pattern '^(?:SCRIPT )?ERROR:' -Quiet) {
         throw 'Godot reported an import error. See Import.log.'
     }
     Invoke-Checked 'dotnet' @('build', 'Veehiicuul_Godot_CSharp.slnx', '--configuration', 'ExportRelease', '--nologo', '-warnaserror')
     Invoke-Checked $godot @('--headless', '--path', $PSScriptRoot, '--export-release', 'Windows Desktop', '--log-file', (Join-Path $logFolderPath 'Export.log'))
     # Some export-plugin failures are logged even when Godot returns success.
-    if (Select-String -LiteralPath (Join-Path $logFolderPath 'Export.log') -Pattern '^ERROR:' -Quiet) {
+    if (Select-String -LiteralPath (Join-Path $logFolderPath 'Export.log') -Pattern '^(?:SCRIPT )?ERROR:' -Quiet) {
         throw 'Godot reported an export error. See Export.log.'
     }
     foreach ($relativePath in @('Build\Veehiicuul_Godot_CSharp.exe', 'Build\Veehiicuul_Godot_CSharp.pck', 'Build\data_Veehiicuul_Godot_CSharp_windows_x86_64\Veehiicuul_Godot_CSharp.dll')) {

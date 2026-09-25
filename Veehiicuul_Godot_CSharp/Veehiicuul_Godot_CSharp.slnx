@@ -3,7 +3,6 @@
         <BuildType Name="Debug" />
         <BuildType Name="ExportDebug" />
         <BuildType Name="ExportRelease" />
-        <BuildType Name="ImportRelease" />
     </Configurations>
     <Project Path="Veehiicuul_Godot_CSharp.csproj" />
 </Solution>

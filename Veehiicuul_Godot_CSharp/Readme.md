@@ -46,9 +46,8 @@ the portable Godot 4.7.2 .NET editor with its matching export templates.
 `Build.ps1` requires the self-contained editor under
 `%UserProfile%/Program/Godot_v4.7.2-stable_mono_win64`.
 
-Double-click **Build.cmd** to compile optimized `ImportRelease` editor tools,
-import assets, compile the optimized `ExportRelease` application, and export the
-Windows x64 executable through Godot's command line. Then
+Double-click **Build.cmd** to import assets, compile the optimized `ExportRelease`
+application, and export the Windows x64 executable through Godot's command line. Then
 double-click **Run.cmd** to launch the existing export and observe its intentional
 startup exit. Run.cmd exits with an error if the build is missing or incomplete;
 rebuild after changing the project. Both .cmd files wrap their PowerShell scripts.
@@ -74,7 +73,7 @@ The existing Windows system report is not invoked.
 
 ## Blender material import
 
-`Source/Editor/DisableSpecularImport.cs` sets `MetallicSpecular = 0` on the
+`Source/Editor/DisableSpecularImport.gd` sets `metallic_specular = 0` on the
 embedded mesh materials of imported scenes. Base colors, roughness, and diffuse
 lighting remain as authored. Keep Blender's Metallic and Coat Weight at zero for
 the intended nonmetallic material without specular reflections. This rule applies
@@ -85,18 +84,18 @@ The existing `Testyo/Track009_MiniComb4.glb` uses this script. The project also
 sets it as the default for new 3D scene imports, including GLBs. Other existing
 assets retain their own import settings: select an asset in the FileSystem dock,
 set **Import > Import Script > Path** to
-`res://Source/Editor/DisableSpecularImport.cs`, then click **Reimport**. Keep
+`res://Source/Editor/DisableSpecularImport.gd`, then click **Reimport**. Keep
 materials internal so the adjusted values are saved with the imported scene.
 
 After initial setup, overwrite the GLB from Blender and let Godot reimport it.
 Colors update and specular is disabled again automatically. The callback runs
-only during import and is excluded from exported application assemblies.
+only during import and adds no material-processing work during gameplay.
 
-Run `Build.cmd` once before opening a fresh checkout in the editor so the C#
-import callback is compiled. After editing the script in the editor, build C#
-and reimport the affected assets. `ImportRelease` is an optimized editor build
-stored in Godot's required `.godot/mono/temp/bin/Debug` directory; the exported
-game still uses `ExportRelease`.
+Open a fresh checkout directly in Godot 4.7.2 .NET: Godot loads this self-contained
+GDScript callback automatically during the first asset import, without a C# build.
+This editor-only callback is the project's explicit exception to the C#-only
+rule. The application still uses C# and must be built to run or export.
+After editing the import script, reimport the affected assets to apply the change.
 
 ## Unity to Godot reading guide
 
