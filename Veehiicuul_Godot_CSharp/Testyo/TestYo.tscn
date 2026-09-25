@@ -11,7 +11,10 @@
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=194024725]
 transform = Transform3D(0.49999997, -0.663414, 0.5566704, 0, 0.64278764, 0.76604444, -0.86602545, -0.3830222, 0.3213938, 0, 50, 0)
-light_energy = 1.5
+light_energy = 1.6
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.0
+light_specular = 0.0
 light_bake_mode = 0
 sky_mode = 1
 
@@ -21,7 +24,7 @@ camera_attributes = ExtResource("3_2fins")
 compositor = ExtResource("4_jo3qq")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=77174542]
-transform = Transform3D(0.95136523, -0.24767798, 0.18319327, 0.043506075, 0.69671655, 0.71602607, -0.30497766, -0.6732323, 0.67360735, 9.469092, 49.666286, 43.02516)
+transform = Transform3D(0.9165294, -0.28638706, 0.27920666, 1.4378903e-08, 0.69807357, 0.71602607, -0.39996737, -0.65625894, 0.63980496, 16.211159, 49.666286, 43.940693)
 projection = 1
 size = 100.0
 near = 10.0
