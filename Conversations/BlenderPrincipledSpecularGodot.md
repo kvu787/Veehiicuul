@@ -208,3 +208,29 @@ For our implementation, that would let us remove:
 Your game code would remain C# and would still need compilation to run or export. The import script would operate independently of that code, with no additional work during gameplay.
 
 **For this small editor-only task, GDScript would make setup simpler.** It would be an exception to your repository’s current “Don’t use GDScript” rule. I haven’t changed the implementation.
+
+## User
+
+okay, rewrite the feature using gdscript instead of c#
+
+## Assistant Commentary
+
+I’ll replace the C# import callback with GDScript, remove the extra build configuration, and verify that a fresh clone imports the materials correctly without compiling C# first.
+
+## Assistant Commentary
+
+The GDScript callback is in place, and the custom `ImportRelease` setup is removed. I’m testing a copy with no compiled C# files, including both the existing track and a new GLB that uses the project’s default import settings.
+
+## Assistant Commentary
+
+The first-import test passed with no C# assemblies present: all 39 materials across 110 surfaces had zero specular. Color changes also survived reimport, and the release build, export, and startup check passed. I’m finishing the review and commits.
+
+## Assistant
+
+Rewritten in [DisableSpecularImport.gd](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Source/Editor/DisableSpecularImport.gd) and committed as `9cdfdfa`.
+
+- Removed the C# callback, `ImportRelease` configuration, and extra build step.
+- Verified first import with **no compiled C# assemblies**: all 39 materials have zero specular.
+- Verified color changes survive reimport, plus release build, export, and startup checks.
+
+**You can now clone the repo and open the project directly in Godot.** Material importing needs no preliminary C# build.
