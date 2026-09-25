@@ -5,7 +5,7 @@ test harness. It compiles the ported production detector directly and exercises
 the committed Track001 collision data. It is excluded from the Godot application
 build, so it does not add an application startup path or update callback.
 
-From the Godot application's folder:
+From the Godot project root (`Veehiicuul_Godot_CSharp/Veehiicuul`):
 
 ```powershell
 dotnet run --project Verification/CollisionDetection/CollisionDetectionVerification.csproj --configuration Release

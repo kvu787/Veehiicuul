@@ -6,9 +6,19 @@ Unity scenes, meshes, materials, shaders, and editor tools are outside this code
 port. Removing the startup exception does **not** produce a playable game: the
 required Godot scenes still need to be authored.
 
-Start reading [Main.cs](Main.cs), then follow its calls into `Source`. The source
+Start reading [Main.cs](Veehiicuul/Source/Main.cs), then follow its calls into
+[`Veehiicuul/Source`](Veehiicuul/Source). The source
 snapshot was ZoomTracks commit `b58ac18a28ee3f72712cdaf79d6d4ac9752e29d5`.
-The 13 original StreamingAssets JSON files are included unchanged in `TrackData`.
+The 13 original StreamingAssets JSON files are included unchanged in
+`Veehiicuul/TrackData`.
+
+## Project layout
+
+`Build.cmd`, `Run.cmd`, and this readme stay in this outer folder alongside
+`Documentation`. The Godot project root is the nested `Veehiicuul` folder:
+open [Veehiicuul/project.godot](Veehiicuul/project.godot) in the editor.
+Godot's `res://` paths are relative to that nested folder. The startup scene is
+`Veehiicuul/Scenes/Main.tscn`, and its script is `Veehiicuul/Source/Main.cs`.
 
 ## Execution and intentional failure
 
@@ -43,20 +53,29 @@ fatal log, forced process termination, or fail-fast fallback.
 
 Windows 11 x64 is the only development and target platform. Install .NET 10 and
 the portable Godot 4.7.2 .NET editor with its matching export templates.
-`Build.ps1` requires the self-contained editor under
+`Veehiicuul/Build.ps1` requires the self-contained editor under
 `%UserProfile%/Program/Godot_v4.7.2-stable_mono_win64`.
 
 Double-click **Build.cmd** to import assets, compile the optimized `ExportRelease`
 application, and export the Windows x64 executable through Godot's command line. Then
 double-click **Run.cmd** to launch the existing export and observe its intentional
 startup exit. Run.cmd exits with an error if the build is missing or incomplete;
-rebuild after changing the project. Both .cmd files wrap their PowerShell scripts.
+rebuild after changing the project. Both .cmd files wrap their PowerShell scripts
+inside `Veehiicuul` and work regardless of the caller's working directory.
 Running the export does not require the editor, export templates, or SDK.
 
 Each build or launcher invocation writes its logs under
-`MyLogOutput/yyyy-MM-dd_HH-mm-ss`. Builds write `Build.log`, `Import.log`, and
+`Veehiicuul/MyLogOutput/yyyy-MM-dd_HH-mm-ss`. Builds write `Build.log`, `Import.log`, and
 `Export.log`; runs write `Launcher.log`, `Godot.log`, `Console.log`, and
-`ConsoleError.log`. Generated logs and `Build` are ignored by Git.
+`ConsoleError.log`. The exported executable is
+`Veehiicuul/Build/Veehiicuul_Godot_CSharp.exe`. Generated logs and
+`Veehiicuul/Build` are ignored by Git.
+
+Builds temporarily set aside the saved editor layout to avoid restoring scene
+tabs in Godot's headless import/export processes. The layout is restored even
+when a build fails, and `EditorLayout.cfg` in the build log folder retains a backup.
+
+Run these commands from this outer folder:
 
 ```powershell
 # Build/export without launching.
@@ -66,23 +85,23 @@ Each build or launcher invocation writes its logs under
 .\Run.cmd -VerifyStartupFailure
 
 # Compile only, with warnings treated as errors.
-dotnet build Veehiicuul_Godot_CSharp.slnx --configuration ExportRelease -warnaserror
+dotnet build Veehiicuul/Veehiicuul_Godot_CSharp.slnx --configuration ExportRelease -warnaserror
 ```
 
 The existing Windows system report is not invoked.
 
 ## Blender material import
 
-`Source/Editor/DisableSpecularImport.gd` sets `metallic_specular = 0` on the
+`Veehiicuul/Source/Editor/DisableSpecularImport.gd` sets `metallic_specular = 0` on the
 embedded mesh materials of imported scenes. Base colors, roughness, and diffuse
 lighting remain as authored. Keep Blender's Metallic and Coat Weight at zero for
 the intended nonmetallic material without specular reflections. This rule applies
 to every standard material in the scene, regardless of Blender's specular slider;
 it does not implement the glTF specular extension or modify custom shaders.
 
-The existing `Testyo/Track009_MiniComb4.glb` uses this script. The project also
-sets it as the default for new 3D scene imports, including GLBs. Other existing
-assets retain their own import settings: select an asset in the FileSystem dock,
+The existing `Veehiicuul/Testyo/Track009_MiniComb4.glb` uses this script. The project
+does not set a default import script. To apply it to another asset, select that
+asset in the FileSystem dock,
 set **Import > Import Script > Path** to
 `res://Source/Editor/DisableSpecularImport.gd`, then click **Reimport**. Keep
 materials internal so the adjusted values are saved with the imported scene.
@@ -135,6 +154,7 @@ The `-refreshRate` user argument is retained for future fixed-timestep experimen
 
 ## Scene contracts for later exploration
 
+The paths in this section are relative to the Godot project root, `Veehiicuul`.
 The code expects `Scenes/Ui.tscn` with direct `Label` children `ClockText`,
 `CameraSizeText`, `DisplayModeText`, and `FpsText`.
 
@@ -165,11 +185,12 @@ both headless and with Direct3D 12. `Run.cmd -VerifyStartupFailure` checks the e
 status and exception origin; the startup throw is never disabled by a test flag.
 
 These separate console programs are excluded from the Godot app and its resource
-scanner, so their entry points are not application callbacks:
+scanner, so their entry points are not application callbacks. Run from this outer
+folder:
 
 ```powershell
-dotnet run --project Verification/CollisionDetection/CollisionDetectionVerification.csproj --configuration Release
-dotnet run --project Verification/PlanarCoordinates/PlanarCoordinatesVerification.csproj --configuration Release
+dotnet run --project Veehiicuul/Verification/CollisionDetection/CollisionDetectionVerification.csproj --configuration Release
+dotnet run --project Veehiicuul/Verification/PlanarCoordinates/PlanarCoordinatesVerification.csproj --configuration Release
 ```
 
 Collision verification checks 12,160 queries against the linear oracle, all 1,984

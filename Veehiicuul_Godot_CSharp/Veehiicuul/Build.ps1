@@ -9,6 +9,8 @@ function Invoke-Checked {
 }
 
 $transcriptStarted = $false
+$editorLayoutPath = Join-Path $PSScriptRoot '.godot\editor\editor_layout.cfg'
+$editorLayoutBackupPath = $null
 try {
     $logFolderPath = Join-Path $PSScriptRoot ('MyLogOutput\' + (Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'))
     New-Item -ItemType Directory -Path $logFolderPath -Force | Out-Null
@@ -33,6 +35,14 @@ try {
 
     New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'Build') -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $PSScriptRoot 'Build\.gdignore') -Value ''
+    # Restoring interactive scene tabs in the headless editor can report transform
+    # errors during shutdown. Preserve the layout while importing and exporting
+    # without those tabs; retain a backup in the build log folder for recovery.
+    if (Test-Path -LiteralPath $editorLayoutPath -PathType Leaf) {
+        $editorLayoutBackupPath = Join-Path $logFolderPath 'EditorLayout.cfg'
+        Copy-Item -LiteralPath $editorLayoutPath -Destination $editorLayoutBackupPath
+        Remove-Item -LiteralPath $editorLayoutPath
+    }
     # The GDScript import callback runs without a prior C# build.
     Invoke-Checked $godot @('--headless', '--editor', '--path', $PSScriptRoot, '--import', '--log-file', (Join-Path $logFolderPath 'Import.log'))
     if (Select-String -LiteralPath (Join-Path $logFolderPath 'Import.log') -Pattern '^(?:SCRIPT )?ERROR:' -Quiet) {
@@ -56,5 +66,8 @@ catch {
     exit 1
 }
 finally {
+    if ($null -ne $editorLayoutBackupPath -and (Test-Path -LiteralPath $editorLayoutBackupPath -PathType Leaf)) {
+        Copy-Item -LiteralPath $editorLayoutBackupPath -Destination $editorLayoutPath -Force
+    }
     if ($transcriptStarted) { Stop-Transcript | Out-Null }
 }
