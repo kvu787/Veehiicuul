@@ -108,3 +108,43 @@ Implemented and committed as `fec8946`.
 **Verified again after you closed Godot:** all 39 materials across 110 surfaces have zero specular; other material properties are preserved. Changing a GLB color and reimporting works. Release build, export, and startup verification passed.
 
 You can now change colors in Blender and overwrite the GLB. Keep materials internal, with Blender’s **Metallic = 0** and **Coat Weight = 0**.
+
+## User
+
+explain how the compilation for the import script works. for example, if i clone this repo on a new pc and open the project for the first time in godot editor, what happens?
+
+## Assistant Commentary
+
+I’ll check the build setup and Godot’s first-import behavior so I can explain what happens on a fresh clone.
+
+## Assistant Commentary
+
+I reproduced a first open with no compiled files. Godot imported the track, but the callback did not run: all 39 materials retained specular 0.5. The current setup requires a build before the first import, or an explicit reimport after building.
+
+## Assistant
+
+**With the current implementation, cloning and immediately opening the project is not sufficient.** The C# project must be compiled before the import script can run.
+
+I tested that exact situation using an isolated copy containing only tracked files. Godot imported the track without compiling C#, and **all 39 materials retained specular 0.5**. The zero-specular adjustment was not applied.
+
+The import script is compiled into the **same project DLL as the other C# code**. It is not compiled separately whenever a GLB changes. `[Tool]` permits execution inside the editor; it does not trigger compilation.
+
+The [build process](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Build.ps1:36) now has this order:
+
+1. **Compile `ImportRelease`.** This optimized configuration includes Godot’s editor API and defines `TOOLS`, so the code inside `#if TOOLS` is included. Its output goes into the editor’s expected `Debug` output directory, despite being optimized.
+2. **Import assets.** Godot loads that DLL, runs the import callback, and saves the modified scene materials.
+3. **Compile and export `ExportRelease`.** This configuration excludes the import script. The game uses the already-processed materials.
+
+On a new PC, install the required .NET 10 SDK and portable Godot 4.7.2 .NET setup, then **run Build.cmd before opening the project**. The full build also requires the matching export templates.
+
+If you only want to prepare the editor without building an executable, run this from the application folder **before first opening Godot**:
+
+```powershell
+dotnet build Veehiicuul_Godot_CSharp.slnx --configuration ImportRelease
+```
+
+Then open the project; its first asset import can use the compiled callback.
+
+**If you already opened it before compiling:** use Godot’s **Build C# Project** button, then select the GLB and click **Reimport**. The editor’s normal `Debug` build also includes the import script. Compiling alone does not guarantee that an already-imported GLB gets processed again.
+
+After that, changing colors and overwriting the GLB triggers normal automatic reimport using the existing DLL. You only need another C# build when the script changes or its compiled output is missing.
