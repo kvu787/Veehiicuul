@@ -40,3 +40,41 @@ The cause is `ArrayMesh::reset_state()` failing to clear the old shadow-mesh ref
 **Workaround:** Save your scene, reimport with `meshes/create_shadow_meshes=false`, then fully close and reopen the project in Godot.
 
 [Detailed findings and verification](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Documentation/ShadowMeshImportInvestigation.md).
+
+## User
+
+what would be the source code fix for this for godot 4.7.2? has this fix already been implemented in the latest godot 4.8?
+
+## Assistant Commentary
+
+I’ll identify the fix in 4.7.2 and check the latest Godot 4.8 source to see whether it’s already included.
+
+## Assistant Commentary
+
+The current 4.8 development branch still has the same omission. I also found one detail to handle in the proposed fix: resetting an empty `ArrayMesh` must avoid calling the rendering server with an invalid mesh handle.
+
+## Assistant
+
+For **Godot 4.7.2**, add this at the start of `ArrayMesh::reset_state()` in [mesh.cpp](C:/Users/k/Repository/External/Godot_4-7-2/scene/resources/mesh.cpp:1745):
+
+```diff
+ void ArrayMesh::reset_state() {
++    if (mesh.is_valid()) {
++        RS::get_singleton()->mesh_set_shadow_mesh(mesh, RID());
++    }
++    shadow_mesh.unref();
++
+     clear_surfaces();
+     clear_blend_shapes();
+```
+
+This clears **both** the renderer’s shadow-mesh link and the resource’s reference before loading replacement data. The validity check handles empty meshes, whose rendering handles are created lazily.
+
+**No—the fix is not present in the latest 4.8 sources I checked:**
+
+- **4.8-dev6**, the latest published 4.8 build, released September 15, 2026: [source](https://github.com/godotengine/godot/blob/8898c2b3db32adf6f92c694ffb6dac19af672e5f/scene/resources/mesh.cpp#L1755), [release archive](https://godotengine.org/download/archive/).
+- **Current development branch**, commit `30caae98b7` from September 24: [source](https://github.com/godotengine/godot/blob/30caae98b79ec7e75e5f893290a51b4048eaa141/scene/resources/mesh.cpp#L1755).
+
+Both still omit shadow-mesh clearing in `reset_state()`.
+
+The earlier experiment verified that clearing these references removes your errors. **This C++ patch has not yet been compiled and tested in a rebuilt engine.**
