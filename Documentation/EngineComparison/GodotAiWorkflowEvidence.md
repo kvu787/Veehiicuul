@@ -1,0 +1,106 @@
+# Godot: evidence for AI assistance and autonomous development workflows
+
+Assessed September 24, 2026. This note supports the separate AI-workflow comparison. It distinguishes documented Godot capabilities, inspected project behavior, and engineering recommendations. Official documentation is pinned to Godot 4.7 where available; the local engine checkout is 4.8-dev and is cited only as supplementary source evidence. No applications, builds, tests, exports, editor plugins, or debuggers were run or installed for this note. No source repository was modified.
+
+## Main finding
+
+**Godot supplies enough command-line, source-file, editor-extension, and runtime-diagnostic interfaces to support extensive AI-assisted work without controlling every operation through mouse clicks.** Your Automatou project already demonstrates a useful implementation of this approach: standalone domain tests, explicit interface verification, screenshots, logs, and machine-readable success/failure exit codes. This is evidence about available feedback loops, not proof that an AI can complete arbitrary game work unattended.
+
+The strongest caveats for your C# preference are that the built-in script editor is limited for C#, the built-in script profiler does not profile C# scripts, editor tool changes require rebuilding, and scene/editor semantics still have to be respected. Ordinary source-edit/build access does not automatically provide live editor control, managed debugger access, or a physical Android device.
+
+## Documented automation surfaces
+
+### 1. Build, import, launch, and export
+
+The official command-line interface provides `--path`, `--headless`, `--import`, `--build-solutions`, scene launch, `--log-file`, `--quit-after`, and release/debug export. `--build-solutions` builds scripting solutions and implies editor mode. `--import` waits for resource import before exiting. Headless mode selects the headless display driver and Dummy audio. `--script` is documented for a GDScript inheriting `SceneTree` or `MainLoop`; it should not be described as a universal command for running an arbitrary C# editor script. The `--test` engine option requires a tests-enabled engine build and is not a discovery runner for all game tests. Unknown arguments may be ignored, so scripts must validate expected outputs and versions. [Godot command-line documentation](https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html).
+
+Export automation requires an editor binary, the required export templates/platform tooling, and a configured preset. `export_presets.cfg` stores normal export settings; sensitive options belong in `.godot/export_credentials.cfg`. Exporting a PCK/ZIP data pack alone does not produce a complete playable executable. Thus “the command succeeded” must be paired with checking the intended artifact and later running it. [Exporting projects](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_projects.html).
+
+For C#, the .NET-enabled Godot build and separately installed .NET SDK are prerequisites. The official external-editor example uses `dotnet build` and a managed debugger launching Godot. New exported properties/signals and changed C# tool scripts require rebuilt assemblies. The documentation notes limitations to state preservation during C# hot reload; do not promise arbitrary hot-reloaded game state survives. Its version-history remarks are not a substitute for the current platform-support page. [C# basics and workflow](https://docs.godotengine.org/en/4.7/tutorials/scripting/c_sharp/c_sharp_basics.html).
+
+**Engineering implication:** a shell-capable AI agent can run a controlled edit → import/build → domain-test → launch/export loop. Give that loop explicit timeouts, output locations, expected test counts, and error summaries. A compiler result answers a narrower question than a successful scene launch, and a scene launch answers a narrower question than a playable, correctly packaged game.
+
+### 2. Scenes and resources can be inspected as data
+
+TSCN is a documented text representation of scene trees, with external/internal resources, nodes, and connections. It is mostly human-readable and suitable for version control. It still encodes ownership, paths, resource identifiers, and instancing semantics. Current 4.x formats differ from earlier Godot versions, so assistants should inspect an existing project example instead of constructing a scene from vaguely remembered syntax. Editor saves can normalize text and discard comments/default properties. [TSCN format](https://docs.godotengine.org/en/4.7/engine_details/file_formats/tscn.html).
+
+`ResourceSaver` supports text formats such as `.tres`/`.tscn` as well as binary resource formats. `PackedScene.Pack` includes owned nodes. Creating resources through supported APIs can avoid some hand-authored serialization mistakes, but it still requires correct ownership and validation after saving/reloading. [ResourceSaver](https://docs.godotengine.org/en/4.7/classes/class_resourcesaver.html), [local PackedScene reference](C:/Users/k/Repository/External/godot/doc/classes/PackedScene.xml:102).
+
+**Engineering implication:** text scenes make changes reviewable and allow file-based automation. They do not make large blind rewrites safe. For an AI agent, small edits, generated-content boundaries, reload validation, and reference checks are stronger evidence than a syntactically plausible scene file. Imported art also still needs the actual importer and render path checked.
+
+### 3. Editor scripts and plugins provide structured mutation
+
+Godot supports `EditorScript` for one-off editor operations and `[Tool]` C# scripts for editor execution. C# EditorScripts are run from the FileSystem dock or appropriate command-palette entry, rather than the GDScript script editor. EditorScripts do not automatically provide undo/redo. Added nodes need the correct `Owner` to persist; scene modifications need an explicit unsaved marker or suitable undo handling. Tools execute inside the editor and can invalidate its state if implemented carelessly. [Running code in the editor](https://docs.godotengine.org/en/4.7/tutorials/plugins/running_code_in_the_editor.html).
+
+Editor plugins can add custom nodes/docks and other tooling without rebuilding the engine. Their configuration and source live in the project, commonly under `addons`. A C# plugin must be compiled before enabling it. Initialization/cleanup are part of the plugin lifecycle. [Making plugins](https://docs.godotengine.org/en/4.7/tutorials/plugins/editor/making_plugins.html).
+
+`EditorInterface` exposes operations including obtaining the edited scene, saving scenes, starting/stopping project playback, accessing editor subsystems, and changing selection/plugin state. Those are building blocks for a project-specific automation bridge; their existence does not mean an external AI has already been connected to them. [EditorInterface](https://docs.godotengine.org/en/4.7/classes/class_editorinterface.html).
+
+**Engineering implication:** extensive autonomy can use small validated editor operations instead of fragile coordinate clicks. However, implementing and maintaining a bridge is real work. Do not score Godot as though a third-party MCP connector or AI plugin is installed, secure, current, and capable of every editor operation. None was verified here.
+
+### 4. Inspection and diagnostics are useful but have language boundaries
+
+The editor supports inspecting/changing live node parameters through the Remote scene dock, remote-device debugging, diagnostic overlays, and a debug server that can remain open for independently started sessions. These features help expose the running engine state. They do not automatically expose arbitrary fields inside your plain C# simulation objects. [Debugging overview](https://docs.godotengine.org/en/4.7/tutorials/scripting/debug/overview_of_debugging_tools.html).
+
+`EditorDebuggerPlugin` can register an editor-side debugger extension and exchange project-specific messages with `EngineDebugger` on the game side. `EditorDebuggerSession` provides session state, message sending, and profiler toggles. These are documented channels for custom observability, not a ready-made universal external control protocol. [EditorDebuggerPlugin](https://docs.godotengine.org/en/4.7/classes/class_editordebuggerplugin.html), [EditorDebuggerSession](https://docs.godotengine.org/en/4.7/classes/class_editordebuggersession.html).
+
+**Important C# limitation:** the official Profiler page explicitly says its script profiler does not support C# scripts. It points to Rider/dotTrace with Godot support as an alternative. Those tools were not verified as installed. A managed performance workflow should therefore include explicit domain timing/allocation measurements or a separately configured .NET profiler. [Profiler documentation](https://docs.godotengine.org/en/4.7/tutorials/scripting/debug/the_profiler.html).
+
+The Visual Profiler measures rendering work on CPU/GPU; it excludes general scripting and physics CPU time. The built-in stack/evaluator examples concern GDScript, and the documentation says tool-script breakpoints are not supported through that debugger. These features should not be presented as automatic managed-code debugging/profiling coverage. [Debugger panel](https://docs.godotengine.org/en/4.7/tutorials/scripting/debug/debugger_panel.html).
+
+Custom performance monitors can expose project-specific counters in the monitor UI. That offers another way to surface live unit counts, route expansions, or simulation timings, although an unattended agent still needs a way to capture and interpret those results. [Custom performance monitors](https://docs.godotengine.org/en/4.7/tutorials/scripting/debug/custom_performance_monitors.html).
+
+## What your repository already makes possible
+
+These are inspected source facts, not a fresh successful execution report.
+
+| Existing mechanism                    | Concrete local evidence                                                                                                                                                                                                                                                | Value and limit for AI autonomy                                                                                                                                   |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Standalone simulation verification    | [SimulationTests.csproj](C:/Users/k/Repository/Automatou/Automatou2/Tests/SimulationTests.csproj:1) source-links simulation and references the program assembly without Godot.                                                                                         | Domain changes can receive fast, engine-independent feedback. Rendering and platform integration are outside this test.                                           |
+| Explicit pass/fail output             | [Test result handling](C:/Users/k/Repository/Automatou/Automatou2/Tests/Program.cs:561) prints a summary, sets a nonzero failure exit code, and optionally writes a report.                                                                                            | An agent can distinguish completed verification from a process that simply stopped. Test completeness still depends on the chosen assertions.                     |
+| Bounded automaton API                 | [Program contract](C:/Users/k/Repository/Automatou/Automatou2/Source/AutomatonContract/SystemCalls.cs:55) provides a sense/remember/think/act loop over observations; programs have their own assembly.                                                                | A well-scoped new behavior can be developed and tested without rewriting engine integration. It is not a security sandbox for untrusted code.                     |
+| Scripted build and launch             | [Run.ps1](C:/Users/k/Repository/Automatou/Automatou2/Run.ps1:20) checks engine version, restores from local Godot packages, builds, optionally verifies, and propagates failure.                                                                                       | Reduces undocumented manual steps. The application build is currently Debug, so this is not a release-export/performance certification.                           |
+| Dedicated interface verification mode | [Startup dispatch](C:/Users/k/Repository/Automatou/Automatou2/Source/Interface/MainInterface.cs:69) accepts `--verify-interface`; [verification](C:/Users/k/Repository/Automatou/Automatou2/Source/Interface/InterfaceVerification.cs:7) exercises handlers and state. | AI can invoke repeatable game-specific workflows once execution is authorized. Direct handler calls do not prove all OS input/focus/touch paths behave correctly. |
+| Rendered screenshot artifacts         | [Capture method](C:/Users/k/Repository/Automatou/Automatou2/Source/Interface/InterfaceVerification.cs:449) waits for a process frame and `FramePostDraw`, reads the viewport image, and saves PNG.                                                                     | Provides real visual evidence when run with the required rendering path. Saving an image does not itself inspect it or establish layout correctness.              |
+| Verification exits                    | [Interface outcome](C:/Users/k/Repository/Automatou/Automatou2/Source/Interface/InterfaceVerification.cs:256) logs success and quits, or emits an error and quits with code 1.                                                                                         | Suitable for a bounded unattended check; artifacts and exit status can be collected.                                                                              |
+| Small text entry scene                | [Main.tscn](C:/Users/k/Repository/Automatou/Automatou2/Main.tscn:1) is a small `Control` scene referencing the C# interface.                                                                                                                                           | Much of this particular interface is source-authored; its low scene-authoring overhead is a project property, not representative of every Godot project.          |
+| Inspectable decision logs             | [Per-turn logging](C:/Users/k/Repository/Automatou/Automatou2/Source/Interface/MainInterface.cs:209) records sensing, resolution, and decisions.                                                                                                                       | Useful debugging evidence for an agent. High-volume synchronous logging changes timings and should be separated from performance runs.                            |
+
+The present 36 simulation test cases and scripted interface checks make Automatou a stronger candidate for bounded autonomous changes than an equivalent project with only a “press Play and inspect manually” workflow. They do not prove every feature is covered or justify ignoring failures outside their assertions.
+
+## A practical verification ladder
+
+The following is a proposed workflow, not a claim that these stages passed during this research.
+
+1. **Compile and import:** resolve syntax/API/reference/import errors. Fail if expected outputs or test entry points are absent; avoid equating an ignored argument with a successful check.
+2. **Domain tests:** run the smallest relevant deterministic scenarios, then the required simulation regression set. Compare state, action results, and replay continuation.
+3. **Engine integration:** launch a bounded scene/verification mode and inspect logs/exit status. Validate resources, node wiring, scene transitions, and real handler behavior.
+4. **Rendered verification:** run a GPU-backed build, capture fixed scenarios, inspect screenshots and short interactions. Check intended size/aspect, clipping, color, camera framing, and overlays.
+5. **Input/playability:** exercise actual user input and representative gameplay. A direct signal emission bypasses parts of event routing, focus, timing, and device input.
+6. **Export/device:** test the exported Windows player and an actual ARM64 Android device with packaged assets, save paths, pause/resume, controls, and sustained behavior.
+
+Headless checks are valuable for stages 1–3 where their exercised code permits it. **They are not substitutes for stages 4–6.** In the local engine source, the `--headless` branch is explicitly the no-audio/no-rendering mode. Automatou's existing screenshot verification waits for `FramePostDraw`, so it should not be relabeled a headless graphics test. [Headless implementation context](C:/Users/k/Repository/External/godot/main/main.cpp:1453), [screenshot synchronization](C:/Users/k/Repository/Automatou/Automatou2/Source/Interface/InterfaceVerification.cs:449).
+
+For performance work, the agent also needs repeatable workloads and correctly configured profilers. A movie or deterministic visual capture can verify appearance; it is not a real-time latency measurement. A release-export command tests packaging; only running the resulting build reveals runtime/device failures.
+
+## Expected usefulness at different assistance levels
+
+These are engineering judgments about workflow, not measured AI success rates or claims about any model's training data.
+
+| Assistance level              | Where Godot helps                                                                                                                          | What still limits effectiveness                                                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Occasional advice/completion  | API documentation, examples, small readable scripts/resources, existing engine tools.                                                      | Human still integrates and tests; language-specific API differences matter.                                                                                                       |
+| Human-directed implementation | AI can edit a bounded feature, build, run domain tests, and return a reviewable diff plus artifacts.                                       | Acceptance criteria and visual/gameplay review remain essential.                                                                                                                  |
+| Agent owns a complete feature | Scriptable import/export, project verification modes, editor operations, and diagnostic state can close much of the feedback loop.         | Requires reliable execution access, render capture, environment setup, failure handling, and project-specific tests.                                                              |
+| Long autonomous work periods  | Repeatable builds and scenarios allow incremental repair and regression checks. Source availability can resolve ambiguous engine behavior. | Self-authored tests can share the implementation's misconception; release/device coverage, visual judgment, uncontrolled editor state, and tool failures become limiting factors. |
+
+For this repository, improving the existing verification loop is likely more valuable than choosing an engine based on a claim that one language is intrinsically easier for AI. Treat the durable investment as explicit project commands, small domain interfaces, structured diagnostics, reference scenarios, and access to representative rendered/device outcomes. Godot can support those investments; they must still be built and maintained.
+
+## Constraints for the main comparison
+
+- Do not state that Godot is automatically better at autonomous coding than Unity without a matched workflow experiment. The demonstrated advantage here is accessible interfaces plus an existing project harness.
+- Do not state that C# provides the same built-in editor/debug/profiler experience as GDScript.
+- Do not assume installed MCP plugins, remote editor adapters, IDE extensions, profiler licenses, Android SDKs/devices, or a GPU-capable automation host.
+- Do not confuse the engine's native unit-test switch with game-test automation.
+- Do not count compilation, headless launch, screenshot generation, or successful export as a completed game feature on their own.
+- Keep an AI-authored custom engine accountable to the same gameplay/render/device evidence; removing an editor removes neither verification work nor the need for observability.
