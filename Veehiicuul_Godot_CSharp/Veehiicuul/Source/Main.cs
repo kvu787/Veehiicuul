@@ -7,7 +7,6 @@ namespace Veehiicuul_Godot_CSharp;
 public partial class Main : Node {
     private const string StartupStopMessage = "Intentional startup stop: the ZoomTracks learning port is not initialized.";
     private const double CarControlTimeoutSeconds = 0.35;
-    private StutterLogger StutterLogger = null!;
     private TimeManager TimeManager = null!;
     private InputManager InputManager = null!;
     private TrackSwitcher TrackSwitcher = null!;
@@ -58,7 +57,6 @@ public partial class Main : Node {
         PrintInfoUtility.PrintDisplayInfo(this.GetViewport());
         PrintInfoUtility.PrintGraphicsInfo();
         this.TimeManager = CreateTimeManager();
-        this.StutterLogger = new StutterLogger(SessionLog.CreateDirectory(), this.TimeManager);
         this.InputManager = new InputManager();
         this.UiRoot = SceneLoadingUtility.LoadAndAttach<Node>(this, "res://Scenes/Ui.tscn");
         string[] trackNames = ["Basic", "Track001", "Track002", "Track003", "Track004", "Track005"];
@@ -87,18 +85,13 @@ public partial class Main : Node {
 
     // Ordinary synchronous method, called only by _Process; no second engine callback.
     private void UpdateGame(double delta) {
-        this.StutterLogger.Update();
         this.TimeManager.Update(delta);
         this.InputManager.UpdateInputs();
         this.CarControlTimeoutRemaining = Math.Max(0.0, this.CarControlTimeoutRemaining - delta);
         if (this.InputManager.QuitGame) {
-            this.StutterLogger.Dispose();
             this.GetTree().Quit();
             this.SetProcess(false);
             return;
-        }
-        if (this.InputManager.InsertStutterLogSpacer) {
-            this.StutterLogger.InsertSpacer();
         }
         if (this.InputManager.ToggleBetweenBorderlessAndExclusiveFullScreen) {
             DisplayServer.WindowMode mode = DisplayServer.WindowGetMode();
