@@ -95,12 +95,16 @@ disable specular by setting `Surface > Specular > IOR Level = 0.0`.
 - The GenerateBarrier modifier was formerly used to generate straight lengths track barrier, but
   it has been superseded by TrackBuilder.
 
+# Outliner selection disabling
+
+TODO
+
 # Transform locking
 
 * Lock entire transform for Camera object
 * Lock Location.Z, Rotation.XY, Scale.XYZ for CameraPivot
 
-TODO...
+TODO
 
 # Usage instructions
 
