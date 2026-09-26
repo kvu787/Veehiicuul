@@ -183,3 +183,63 @@ These cases follow Blender’s [constant and multiplier extraction](C:/Users/k/R
 **A roughness texture affects the rendered roughness separately from that numeric property.** Godot imports the packed texture’s green channel and [multiplies its sampled value by `roughness`](C:/Users/k/Repository/External/Godot_4-7-2/scene/resources/material.cpp:1693). Thus, an Inspector value of `1.0` can still produce smooth regions through the texture.
 
 **Export-option exception:** choosing **Materials → Viewport** makes Blender export **Material Properties → Viewport Display → Roughness** instead of the Principled input. The [viewport exporter](C:/Users/k/Repository/External/blender/scripts/addons_core/io_scene_gltf2/blender/exp/material/material_viewport.py:8) reads `blender_material.roughness` directly.
+
+## User
+
+provide a blender python script run from a blender text editor pane that prints out every material's name, its type (ie principled bsdf), and the roughness value if the type is principled bsdf
+
+
+## Assistant (commentary)
+
+I’ll write a script you can paste into Blender’s Text Editor that lists every material and the roughness inputs on its Principled BSDF nodes.
+
+## Assistant
+
+Paste this into Blender’s **Text Editor** and press **Alt+P**. View the output through **Window → Toggle System Console**.
+
+A material can contain multiple shader types, so this lists every shader node, including disconnected nodes and nodes inside groups.
+
+```python
+import bpy
+
+
+def find_shader_nodes(node_tree, prefix=""):
+    for node in node_tree.nodes:
+        node_path = prefix + node.name
+
+        if node.type == "GROUP" and node.node_tree is not None:
+            yield from find_shader_nodes(node.node_tree, node_path + " / ")
+        elif any(socket.type == "SHADER" for socket in node.outputs):
+            yield node_path, node
+
+
+for material in sorted(bpy.data.materials, key=lambda item: item.name.casefold()):
+    print(f"\nMaterial: {material.name}")
+
+    if not material.use_nodes or material.node_tree is None:
+        print("  Type: No node shader")
+        continue
+
+    shader_nodes = list(find_shader_nodes(material.node_tree))
+
+    if not shader_nodes:
+        print("  Type: No shader nodes found")
+        continue
+
+    for node_path, node in shader_nodes:
+        print(f"  Type: {node.bl_label} | Node: {node_path}")
+
+        if node.type == "BSDF_PRINCIPLED":
+            roughness = node.inputs["Roughness"]
+
+            if roughness.is_linked:
+                print(
+                    f"    Roughness: LINKED "
+                    f"(stored slider value: {roughness.default_value:.6g}; "
+                    "connected nodes are not evaluated)"
+                )
+            else:
+                print(f"    Roughness: {roughness.default_value:.6g}")
+```
+
+**Linked inputs are flagged** because their stored slider value does not necessarily represent the roughness supplied by the connected nodes.
