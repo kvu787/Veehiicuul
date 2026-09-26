@@ -117,3 +117,44 @@ internal rather than separately configured to use external resources.
 
 This investigation changes documentation and records the conversation. It does
 not change the application's importer, its import settings, or engine source.
+
+## Follow-up: Keep Internal exceptions and preview behavior
+
+With the track's current `materials/extract=0` and `_subresources={}`, all 39
+distinct materials survive a fresh-process load at zero specular. The extraction
+persistence problem does not occur in that configuration. The following related
+cases were checked after the user asked about other impactful issues.
+
+**Per-material Use External overrides still apply.** The
+[`use_external/enabled` branch](C:/Users/k/Repository/External/Godot_4-7-2/editor/import/3d/resource_importer_scene.cpp:1676)
+runs independently of the automatic material extraction setting. A disposable
+copy with Keep Internal and only `CheckeredLineWhite` redirected to an external
+material at specular 0.5 finished the callback with all 39 materials at 0.0,
+but a fresh process loaded 38 at 0.0 and that external material at 0.5.
+
+**A separately saved mesh has the same save-order problem.**
+[`_generate_meshes()` saves external mesh files](C:/Users/k/Repository/External/Godot_4-7-2/editor/import/3d/resource_importer_scene.cpp:2857)
+before the post-import script runs. Materials embedded in that mesh file are
+saved too early, even though automatic material extraction is Keep Internal.
+In a disposable copy, enabling Save to File only for
+`Track009_MiniComb4_Plane_005` produced an external mesh containing the two
+checkered-line materials. The callback set all 39 materials to 0.0, but a fresh
+scene load found 37 at 0.0 and those two at 0.5. The source GLB was unchanged.
+The current track enables neither this setting nor per-material external paths.
+
+The earlier proposed fix of saving external materials after modification covers
+the two automatic material extraction modes. To cover an externally saved mesh
+with built-in materials as well, the owning mesh file must also be saved after
+the change, or the modification must move to an earlier import hook.
+
+**The Advanced Import Settings preview does not run this script.** The dialog
+[calls `pre_import()`](C:/Users/k/Repository/External/Godot_4-7-2/editor/import/3d/scene_import_settings.cpp:803),
+whose [implementation](C:/Users/k/Repository/External/Godot_4-7-2/editor/import/3d/resource_importer_scene.cpp:3092)
+performs the format import and early fixups, then returns without invoking
+`EditorScenePostImport`. The preview can therefore show the original specular
+even when the saved imported scene is correct. This is a source-confirmed preview
+limitation; the graphical dialog was not automated in these tests.
+
+No additional persistence failure was found for the current configuration with
+both meshes and materials kept inside the imported scene. This statement concerns
+the investigated material-import workflow, not all Godot functionality.
