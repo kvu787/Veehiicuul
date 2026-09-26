@@ -64,12 +64,8 @@ TrackBuilder/
 
 # Materials
 
-All materials should be Principled BSDF with default parameters.
-
-Exception:
-If you want a simple solid color with just shading and no specular, use these parameters:
-1. Base color > Surface > Roughness = 1.0
-2. Base color > Surface > Specular > IOR Level = 0.0
+All materials should be Principled BSDF with default parameters, except that you should also
+disable specular by setting `Surface > Specular > IOR Level = 0.0`.
 
 # Track objects
 
