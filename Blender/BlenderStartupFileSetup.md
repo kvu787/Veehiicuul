@@ -92,7 +92,7 @@ disable specular by setting `Surface > Specular > IOR Level = 0.0`.
 | Material `CheckeredLineBlack`          | Black checker material, including its shader nodes         |
 | Material `CheckeredLineWhite`          | White checker material, including its shader nodes         |
 
-- The GenerateBarrier modifier was formerly used to generate straight lengths track barrier, but
+- The GenerateBarrier modifier was formerly used to generate straight track barriers, but
   it has been superseded by TrackBuilder.
 
 # Outliner selection disabling
