@@ -204,3 +204,30 @@ The two extraction options affect what persists:
 The smallest fix is to **explicitly save each distinct external material after setting specular**. I tested this in both modes: all 39 then remained `0.0` after a fresh reload. That would also enforce zero on manually edited external materials, including under Extract Once.
 
 I left the application unchanged and recorded the [source trace and test results](C:/Users/k/Repository/Veehiicuul/Documentation/GodotMaterialExtraction.md).
+
+## User
+
+does this bug or any other impactful issues manifest with "extract = keep internal"
+
+## Assistant Commentary
+
+I’ll check the Keep Internal path for this persistence bug and for cases where the script might miss a material or change it too late to be saved.
+
+## Assistant Commentary
+
+Your current Keep Internal setup still looks sound, but I confirmed two exceptions: a material’s “Use External” setting can retain the bug, and a mesh’s “Save to File” setting can lose the specular changes even when its materials are internal. Neither is enabled in your track. I also found that the Advanced Import Settings preview bypasses your post-import script, so it can look different from the saved scene.
+
+## Assistant
+
+**With your current settings, this bug does not occur.** Keep Internal preserves all 39 materials at `metallic_specular = 0.0`, including after loading the scene in a fresh process.
+
+However, I confirmed two settings that can reintroduce it even with **Keep Internal** selected:
+
+- **A material’s “Use External” override.** This operates independently of the extraction dropdown. Testing one external material produced 38 correct materials and one reverting to `0.5`.
+- **A mesh’s “Save to File” option.** Godot saves that mesh—including its embedded materials—before your script runs. Testing this on the checkered-line mesh produced 37 correct materials and two reverting to `0.5`. [Mesh-saving code](C:/Users/k/Repository/External/Godot_4-7-2/editor/import/3d/resource_importer_scene.cpp:2857)
+
+**Neither exception is enabled in your current track:** its `_subresources={}` contains no such overrides.
+
+There is also a **preview limitation**: the Advanced Import Settings dialog uses a preliminary import that does **not** execute your post-import script. Its preview can therefore show specular even when the saved scene correctly has zero. [Preview import code](C:/Users/k/Repository/External/Godot_4-7-2/editor/import/3d/resource_importer_scene.cpp:3092)
+
+I found no additional persistence issue affecting your current material-import setup. I added these findings to the [investigation report](C:/Users/k/Repository/Veehiicuul/Documentation/GodotMaterialExtraction.md).
