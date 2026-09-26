@@ -231,3 +231,66 @@ These findings remain:
 [Updated review and evidence](C:/Users/k/.codex/visualizations/2026/09/26/01a0ddad-ce29-7152-a8e6-2ce6f19a5b17/TrackTemplateRereview/TrackTemplateRereview.md)
 
 The source file was left unchanged.
+
+## User
+
+i provided the wrong file path.
+
+do a comprehensive analysis of this blender scene file and list any "issues": "C:\Users\k\Repository\Veehiicuul\Blender\TrackTemplate.blend"
+use "C:\Users\k\Program\blender-4.5.14-windows-x64" as necessary
+
+## Assistant (commentary)
+
+I’ll analyze `Veehiicuul\Blender\TrackTemplate.blend` from scratch and check it against this repository’s workflow. I’ll leave the file unchanged.
+
+## Assistant (commentary)
+
+This file has important differences from the ZoomTracks copy: its TrackBuilder parameters match the very thin saved barriers, and it exports GLB for Godot. I also found that its embedded validator still points to ZoomTracks and checks the opposite backface-culling settings from this repository’s validator. I’m checking the actual GLB and collision JSON output next.
+
+## Assistant (commentary)
+
+I confirmed two problems with the collision export: the current C# detector rejects its JSON because `FormatVersion` and `CoordinateSystem` are missing, and after adding those fields in memory, the detector’s coordinate conversion puts collisions on the opposite side of the origin from the GLB track. The exporter also targets a folder outside the current Godot project root.
+
+## Assistant (commentary)
+
+The geometry checks passed: the saved track rebuilds exactly, all 61 meshes pass Blender validation, and the generated surfaces have no detected area overlaps. I’m finishing the report with the confirmed export/runtime problems separated from template setup requirements and optional optimizations.
+
+## Assistant (commentary)
+
+The report is ready. It identifies four confirmed integration inconsistencies, an export-selection weakness, and two optional geometry optimizations. I also verified that this file’s thin barriers match its builder settings, and that the original `.blend` file remains unchanged.
+
+## Assistant (commentary)
+
+The repository validator changed during the review: its culling rules now agree with the scene. I’m rechecking that change and updating the report. The embedded script’s ZoomTracks filepath and its dependence on the active editor still need attention.
+
+## Assistant (commentary)
+
+The validator changed again before the recheck. The latest version on disk once more requires culling on, and the template check reproduces the original failure. I’ve recorded that tested version in the report so the finding is tied to a specific file state.
+
+## Assistant
+
+I analyzed the corrected **Veehiicuul** file with Blender 4.5.14, including geometry checks, rebuilding, actual GLB export/reimport, and tests against the current C# collision detector.
+
+[Comprehensive report and evidence](C:/Users/k/.codex/visualizations/2026/09/26/01a0ddad-ce29-7152-a8e6-2ce6f19a5b17/VeehiicuulTrackTemplateAnalysis/VeehiicuulTrackTemplateAnalysis.md)
+
+The main issues are:
+
+1. **Exported collision JSON is rejected by the current runtime.** It omits `FormatVersion` and `CoordinateSystem`. Feeding the actual export into the production detector throws “Unsupported collider-data format version 0; expected 1.” Adding the required metadata in memory allows it to load.
+
+2. **Collision geometry disagrees with the GLB’s coordinates.** After supplying that metadata, the detector negates both outline coordinates, placing collisions 180° around the origin from an unrotated GLB. The visible road’s X range is approximately **38.21–74.52**, while its collision boundary is **−74.52–−38.21**. A production collision query confirmed the mismatch.
+
+3. **The exporter targets the wrong directory.** Its destination is `Veehiicuul_Godot_CSharp/Testyo`, while the actual Godot project is inside `Veehiicuul_Godot_CSharp/Veehiicuul`. It would create files outside the project. Gameplay collision data also needs deliberate placement under the runtime’s `TrackData` directory.
+
+4. **The embedded validator still belongs to ZoomTracks.** Its filepath points there, and its rules contradict Veehiicuul’s validator: the embedded version requires backface culling off; the repository version requires it on. All **34 materials** have it off. Consequently, the embedded template check passes while the current repository check fails. Template detection also depends unnecessarily on running from Blender’s Text Editor.
+
+5. **Export preflight permits example assets.** Satisfying its enforced exclusions still exports **14 additional example objects**, including color blocks, cones, and a checkpoint. Excluding their collections reduces the tested GLB from **48,974 to 26,328 triangles**. Visible examples are appropriate in the template, but export eligibility needs a clearer policy.
+
+6. **Subdivision is an optimization opportunity.** `VehicleRoad` actually exports with **7,168 triangles**, versus **448** at its render subdivision level. The complete BigCone has **22,528 triangles** at viewport settings. These are measured geometry costs, not demonstrated performance problems.
+
+7. **The checker line has redundant internal faces.** Its 27 blocks contain **42 coincident face pairs**, accounting for 168 of its 324 triangles. Appearance and export are correct; cleanup is optional.
+
+**The underlying geometry passed the checks.** All 61 meshes passed Blender validation, all 32 barriers are closed, generated regions had no detected area overlaps, and both TrackBuilder versions reproduced the saved output. All materials have correctly connected shaders.
+
+The barriers are only **0.00390625 units tall—about 3.9 mm at the saved scale—but this matches the builder settings**. The earlier wrong-file finding about a failing builder does not apply. This remains an authoring template: a playable Godot track still needs the required tire markers and camera hierarchy.
+
+The `.blend` and source code are unchanged. Full Godot gameplay, final lighting, and frame times were not tested.
