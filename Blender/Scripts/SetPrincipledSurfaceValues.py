@@ -1,6 +1,7 @@
 """Run in Blender 4.5.x's Text Editor to update all materials in the file.
 
-Includes nested node groups and removes links feeding the two target inputs.
+Includes nested node groups and raises an exception for linked target inputs.
+Values processed before the exception remain changed.
 The file is not automatically saved.
 """
 
@@ -24,8 +25,10 @@ def SetSurfaceValues(NodeTree, Visited):
                 ('Specular IOR Level', 0.0),
             ):
                 Socket = Node.inputs[InputName]
-                for Link in list(Socket.links):
-                    NodeTree.links.remove(Link)
+                if Socket.is_linked:
+                    raise RuntimeError(
+                        f"Linked input: {NodeTree.name} / {Node.name} / {InputName}"
+                    )
                 Socket.default_value = Value
             Updated += 1
         elif Node.type == 'GROUP' and Node.node_tree is not None:
