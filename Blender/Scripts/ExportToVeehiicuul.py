@@ -13,8 +13,8 @@ REQUIRED_EXCLUDED_COLLECTION_PATHS = (
     "Collection/TrackBuilder/Input/Outlines",
     "Collection/TrackBuilder/Output/OutlineMeshes",
 )
-
-OUTPUT_FOLDER_PATH = Path(R"C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\Testyo")
+COLLIDER_DATA_FOLDER_PATH = Path(R"C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\ColliderData")
+GLB_FOLDER_PATH = Path(R"C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\GLB")
 
 
 def _require_collections_excluded_from_view_layer() -> None:
@@ -170,10 +170,10 @@ def main() -> None:
 
     track_name = Path(bpy.data.filepath).stem
 
-    export_collider_data(OUTPUT_FOLDER_PATH / f"{track_name}_ColliderData.json")
+    export_collider_data(COLLIDER_DATA_FOLDER_PATH / f"{track_name}_ColliderData.json")
 
     result = bpy.ops.export_scene.gltf(
-        filepath=str(OUTPUT_FOLDER_PATH / f"{track_name}.glb"),
+        filepath=str(GLB_FOLDER_PATH / f"{track_name}.glb"),
         export_format="GLB",
         export_copyright="",
         will_save_settings=False,
