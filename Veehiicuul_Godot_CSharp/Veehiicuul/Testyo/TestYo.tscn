@@ -4,6 +4,12 @@
 [ext_resource type="Environment" uid="uid://dtayw57htymn6" path="res://Resources/Environment.tres" id="2_7ilae"]
 [ext_resource type="CameraAttributesPractical" uid="uid://ccmi3voa5m4p5" path="res://Resources/CameraAttributesPractical.tres" id="3_2fins"]
 [ext_resource type="Compositor" uid="uid://bvdqusir3gt1o" path="res://Resources/Compositor.tres" id="4_jo3qq"]
+[ext_resource type="Material" uid="uid://bsfjhgmp6wsi0" path="res://Testyo/Testyo.tres" id="5_q8dtn"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_ph518"]
+material = ExtResource("5_q8dtn")
+radial_segments = 256
+rings = 128
 
 [node name="TestYo" type="Node3D" unique_id=28359778]
 
@@ -29,3 +35,7 @@ projection = 1
 size = 100.0
 near = 10.0
 far = 1000.0
+
+[node name="TestyoSphere" type="MeshInstance3D" parent="." unique_id=869356973]
+transform = Transform3D(25.87, 0, 0, 0, 25.87, 0, 0, 0, 25.87, 0, 19.327492, 70.57261)
+mesh = SubResource("SphereMesh_ph518")
