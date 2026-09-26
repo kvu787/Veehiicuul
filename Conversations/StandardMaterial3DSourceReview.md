@@ -192,3 +192,35 @@ Completed using your local Godot 4.7.2 source:
 **Your configuration is sensible for matte, diffuse lighting.** The main further simplification to consider is Lambert instead of the default Burley. Empty texture slots still generate fallback samples, and disabling shadow reception does not disable casting.
 
 Material unchanged. Performance conclusions are source-based, not benchmark results. Review and conversation committed separately.
+
+
+## User
+
+compare the performance of burley, lambert, and lambert wrap for StandardMaterial3D.diffuse_mode
+
+## Assistant Commentary
+
+I’ll compare their shader calculations in your local Godot source, including how your disabled-specular setting affects the difference.
+
+## Assistant
+
+**For your current per-pixel material, Lambert has the lowest expected shader cost, followed by Lambert Wrap, then Burley.** This comparison comes from your local Godot 4.7.2 implementation.
+
+| Mode         | Work for each evaluated pixel/light pair                                                | Relative arithmetic cost |
+| ------------ | --------------------------------------------------------------------------------------- | ------------------------ |
+| Lambert      | Clamped normal–light dot product, multiplied by a constant.                             | Lowest                   |
+| Lambert Wrap | Adds roughness offsets, a squared denominator and a division to broaden the lit region. | Somewhat higher          |
+| Burley       | Adds view-dependent terms, two Fresnel evaluations, and additional multiplications.     | Highest of these three   |
+
+[Actual diffuse calculations](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/shaders/scene_forward_lights_inc.glsl:223).
+
+**Your disabled specular makes the Burley difference more significant.** With specular and clearcoat disabled, Burley alone still requires `normalize(V + L)` and another dot product for its diffuse calculation. Switching to either Lambert mode removes that requirement. With GGX specular or clearcoat enabled, that work is shared, so switching diffuse models saves less. Burley’s Fresnel evaluations use multiplication chains—not expensive general-purpose `pow()` calls. [Shared calculations](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/shaders/scene_forward_lights_inc.glsl:201), [Fresnel implementation](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/shaders/scene_forward_lights_inc.glsl:76).
+
+These choices do **not inherently add draw calls, rendering passes or texture samples**. They select compiled shader variants. The savings accumulate with shaded pixels and lights; whole-frame improvement can be negligible if another workload dominates. Source inspection cannot establish an FPS percentage or timing ratio.
+
+Two exceptions matter:
+
+- **Per-vertex shading:** Burley uses the same Lambert diffuse calculation; Wrap retains its extra arithmetic. [Source](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/shaders/scene_forward_vertex_lights_inc.glsl:18).
+- **Area lights:** these three choices share the area-light diffuse evaluation, so the table’s distinction applies to directional, omni and spot lights. [Source](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/shaders/scene_forward_lights_inc.glsl:1273).
+
+**For your material, choose Lambert if its appearance suits you.** Choose Wrap for softer lighting around the terminator, or retain Burley for its view- and roughness-dependent appearance. None was benchmarked here.
