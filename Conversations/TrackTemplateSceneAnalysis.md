@@ -197,3 +197,37 @@ The underlying geometry is generally healthy: all 61 stored meshes passed Blende
 
 The report also covers materials, normals, UVs, transforms, dependencies, collection structure, and intentional template characteristics. Missing lights, open ground surfaces, and visible example collections are consistent with this project’s documented workflow. Unity gameplay and frame times were not tested.
 
+
+## User
+
+rereview it
+
+## Assistant (commentary)
+
+I’ll re-open the current file and independently verify the previous findings, with particular attention to anything that may have been overstated or missed.
+
+## Assistant (commentary)
+
+The file has changed since the first review. The 18 disconnected shader nodes have been removed. I’m checking that the connected material values stayed intact and rerunning the geometry, script, and export checks on this version.
+
+## Assistant (commentary)
+
+The material cleanup preserved the connected colors, roughness, and specular values. I found no new geometry or material defects in this pass. The embedded TrackBuilder still fails, while the other outstanding items remain workflow limitations or optional optimizations; the documented export workflow still succeeds.
+
+## Assistant
+
+Re-reviewed the **updated file** with Blender 4.5.14. **The disconnected-shader issue is resolved:** all 18 unused nodes are gone, and the connected colors, roughness, and specular values are unchanged.
+
+These findings remain:
+
+1. **Embedded TrackBuilder still fails.** Its minimum dimension is `0.1`, but it requests barrier height `0.00390625`. The saved barriers are height `1.0`, so the invocation also disagrees with the existing geometry.
+2. **Export preflight remains incomplete.** Its required exclusions permit 14 example/helper objects through. Following all documented exclusions exports correctly.
+3. **Validation still depends on editor context.** Background execution misidentifies the template and rejects visible `ColorBlocks`; the template-validation branch passes.
+4. **Subdivision remains an optimization opportunity.** `VehicleRoad` actually exports at **7,168 triangles**, versus **448** at its render subdivision level. BigCone remains **22,528 triangles** at viewport settings. Neither is a demonstrated performance problem.
+5. **Checker geometry still has redundant internal faces.** The 42 coincident face pairs remain; appearance and export are correct.
+
+**No new geometry or material defects were found.** All 61 meshes passed validation, the generated regions passed overlap checks, and rebuilding with barrier height 1 reproduced the saved output. Prepared FBX export/reimport and collision JSON export succeeded.
+
+[Updated review and evidence](C:/Users/k/.codex/visualizations/2026/09/26/01a0ddad-ce29-7152-a8e6-2ce6f19a5b17/TrackTemplateRereview/TrackTemplateRereview.md)
+
+The source file was left unchanged.
