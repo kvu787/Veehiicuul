@@ -231,3 +231,32 @@ However, I confirmed two settings that can reintroduce it even with **Keep Inter
 There is also a **preview limitation**: the Advanced Import Settings dialog uses a preliminary import that does **not** execute your post-import script. Its preview can therefore show specular even when the saved scene correctly has zero. [Preview import code](C:/Users/k/Repository/External/Godot_4-7-2/editor/import/3d/resource_importer_scene.cpp:3092)
 
 I found no additional persistence issue affecting your current material-import setup. I added these findings to the [investigation report](C:/Users/k/Repository/Veehiicuul/Documentation/GodotMaterialExtraction.md).
+
+## User
+
+check to see if this issue is known to the godot team and if there are any in-progress fixes
+
+## Assistant Commentary
+
+I’ll search Godot’s issue tracker and pull requests for the extraction/save-order problem, including the external-mesh variant, and check the status of any matching fixes.
+
+## Assistant Commentary
+
+I found related material-import fixes, but no confirmed match for this save-order problem yet. I’m checking the PR that introduced automatic extraction and its linked discussions to distinguish a fix for this issue from other extraction fixes.
+
+## Assistant Commentary
+
+I found an open report describing the same save-before-script problem for extracted animations. I haven’t found a matching fix for extracted materials, and current upstream code still has the ordering we reproduced. Separately, Blender’s ignored specular value has a proposed fix, but that PR remains unmerged.
+
+## Assistant
+
+**The save-order problem is reported upstream in a closely related form, but I found no in-progress fix for your exact material-extraction case.**
+
+- **[Issue #85738](https://github.com/godotengine/godot/issues/85738)** describes the same behavior for extracted **animations**: post-import changes appear in the editor, then disappear after restarting or running the game. Its discussion identifies saving before the script runs as the cause. It remains **open**, with no assignee, milestone, or linked fix PR.
+- **Material extraction ordering was discussed in [PR #107211](https://github.com/godotengine/godot/pull/107211#issuecomment-2954268617).** Extraction was moved after an earlier material-processing plugin hook, but it still happens before the `EditorScenePostImport` callback your script uses. That change was merged in June 2025.
+
+I also checked **current upstream `master`**, dated September 25, 2026. It still saves extracted materials and meshes before running the custom script, so the relevant ordering remains unchanged. [Current source](https://github.com/godotengine/godot/blob/46173009dc4ab6e582cf978e2d68b0ddfeb1e934/editor/import/3d/resource_importer_scene.cpp#L3498)
+
+There **is** a separate proposed fix for Blender’s specular value being ignored: **[PR #89344](https://github.com/godotengine/godot/pull/89344)**, addressing [issue #83320](https://github.com/godotengine/godot/issues/83320). It remains **open and unmerged**, with review changes requested and no specific release target. It could address the need for a specular-correction script, but would not fix this resource-saving problem.
+
+I recorded the links and status in the [investigation report](C:/Users/k/Repository/Veehiicuul/Documentation/GodotMaterialExtraction.md).
