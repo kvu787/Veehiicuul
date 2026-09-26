@@ -39,6 +39,7 @@ def PrintParentedUnparentedObjects():
 
 def Main():
     # TODO: Check for unintentionally duplicated materials
+    # TODO: Check for materials that have unused shader nodes
 
     print(f"{Path(__file__).name} started at {datetime.now()}")
 
