@@ -4,14 +4,16 @@ from pathlib import Path
 from collections.abc import Iterable
 import math
 
-def IsTrackTemplateFile():
+def EnsureEnvironment():
     area = bpy.context.area
-    if area is not None and area.type == "TEXT_EDITOR":
-        if bpy.data.filepath:
-            blend_name = Path(bpy.data.filepath).name
-            if blend_name == "TrackTemplate.blend":
-                return True
-    return False
+    if area is None or area.type != "TEXT_EDITOR":
+        raise RuntimeError("Run this script from Blender's Text Editor.")
+
+    if not bpy.data.filepath:
+        raise RuntimeError("Save the .blend file before running this script.")
+
+def IsTrackTemplateFile():
+    return Path(bpy.data.filepath).name == "TrackTemplate.blend"
 
 def FindLayerCollection(layerCollection: bpy.types.LayerCollection, collection: bpy.types.Collection) -> bpy.types.LayerCollection | None:
     if layerCollection.collection == collection:
@@ -40,6 +42,8 @@ def PrintParentedUnparentedObjects():
 def Main():
     # TODO: Check for unintentionally duplicated materials
     # TODO: Check for materials that have unused shader nodes
+
+    EnsureEnvironment()
 
     print(f"{Path(__file__).name} started at {datetime.now()}")
 
