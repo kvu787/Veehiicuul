@@ -157,3 +157,17 @@ Created [SetPrincipledSurfaceValues.py](/C:/Users/k/Repository/Veehiicuul/Blende
 Sets **Roughness = 0.5** and **Specular IOR Level = 0.0** across all editable material node trees, including nested groups. Disconnects links feeding these inputs.
 
 Verified execution in Blender **4.5.14**. Save your blend file afterward to retain the changes.
+
+## User
+
+simplify the script by having it throw an exception if there are any links feeding into the target inputs
+
+## Assistant
+
+I’ll replace link removal with an exception that identifies the connected input.
+
+## Assistant
+
+Updated [SetPrincipledSurfaceValues.py](/C:/Users/k/Repository/Veehiicuul/Blender/Scripts/SetPrincipledSurfaceValues.py) to throw `RuntimeError` when either target input has a link, identifying the node tree, node, and input.
+
+Verified both inputs in Blender 4.5.14. Earlier changes remain applied if an exception occurs.
