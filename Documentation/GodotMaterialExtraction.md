@@ -158,3 +158,75 @@ limitation; the graphical dialog was not automated in these tests.
 No additional persistence failure was found for the current configuration with
 both meshes and materials kept inside the imported scene. This statement concerns
 the investigated material-import workflow, not all Godot functionality.
+
+## Upstream reports and fixes
+
+Checked September 25, 2026 (Pacific time) using GitHub's public API, issue and
+pull-request discussions, and current upstream source. Searches covered the
+Godot engine, proposals, and documentation repositories, including
+`EditorScenePostImport`, post-import scripts, material extraction, external
+resources, and mesh saving. A search cannot prove that no other report exists.
+
+The closest report for the save-order problem is
+[Godot issue #85738](https://github.com/godotengine/godot/issues/85738), opened
+December 4, 2023. It describes animation changes made by `EditorScenePostImport`
+appearing in the editor but disappearing when running or reopening the project
+if Save to File is enabled. The reporter's
+[source analysis](https://github.com/godotengine/godot/issues/85738#issuecomment-1925774082)
+identifies saving the animation before the script runs. This is the same ordering
+mechanism we found for materials, but the upstream reproduction concerns
+animations. Its status is **open**, labeled `bug` and `needs testing`, with no
+assignee, milestone, or linked development PR at the time of checking. Later
+comments describe explicitly saving the resource or using an earlier import
+plugin hook as workarounds.
+
+No exact material-specific report or active fix was identified in the searches.
+This does not establish that maintainers have acknowledged the material variant.
+It would be inaccurate to treat the animation report as a confirmed reproduction
+of the user's particular material workflow.
+
+Current upstream `master` was checked at commit
+`46173009dc4ab6e582cf978e2d68b0ddfeb1e934` (September 25, 2026). It still:
+
+- [Saves extracted materials during node processing, line 1679](https://github.com/godotengine/godot/blob/46173009dc4ab6e582cf978e2d68b0ddfeb1e934/editor/import/3d/resource_importer_scene.cpp#L1679).
+- [Saves separately exported meshes during mesh generation, line 2921](https://github.com/godotengine/godot/blob/46173009dc4ab6e582cf978e2d68b0ddfeb1e934/editor/import/3d/resource_importer_scene.cpp#L2921).
+- [Invokes the custom post-import script afterward, line 3498](https://github.com/godotengine/godot/blob/46173009dc4ab6e582cf978e2d68b0ddfeb1e934/editor/import/3d/resource_importer_scene.cpp#L3498).
+
+This was source-reviewed, not rebuilt or runtime-tested. It confirms that the
+relevant ordering has not changed in the current development branch.
+
+### Related changes that must not be mistaken for a fix
+
+- [PR #107211](https://github.com/godotengine/godot/pull/107211), merged June 10,
+  2025, introduced the automatic material extraction options. Its discussion
+  [explicitly moved extraction after the material plugin callback](https://github.com/godotengine/godot/pull/107211#issuecomment-2954268617).
+  That callback is `EditorScenePostImportPlugin`'s material processing hook;
+  it is not the later `EditorScenePostImport._post_import()` used here.
+- [PR #120870](https://github.com/godotengine/godot/pull/120870), merged July 3,
+  2026, fixes missing extraction when no per-material settings exist. It does not
+  move material saving after the custom script. The supplied local source already
+  contains the corresponding handling of absent per-material settings.
+- [Issue #79779](https://github.com/godotengine/godot/issues/79779) remains open
+  and describes material overrides disappearing when external meshes are
+  reimported. It is a separate refresh/override-loss report, not an established
+  duplicate of this specular-persistence failure.
+- [Issue #86751](https://github.com/godotengine/godot/issues/86751) remains open
+  for an Advanced Import Settings preview that fails to show an external
+  material correctly. It is related to the preview discrepancy, but specifically
+  concerns external material display, not execution of our custom script.
+
+### Separate Blender/glTF specular import fix
+
+[Issue #83320](https://github.com/godotengine/godot/issues/83320) explicitly tracks
+Blender/glTF specular being ignored and defaulting to 0.5. It remains open.
+[PR #89344](https://github.com/godotengine/godot/pull/89344) proposes importing
+`KHR_materials_specular` and remains **open and unmerged**. It has requested
+changes in its review history, and its milestone is the unspecified `4.x`, not
+a committed release. The latest maintainer follow-up in the PR discussion is
+[March 28, 2025](https://github.com/godotengine/godot/pull/89344#issuecomment-2762123192),
+asking the author to address review comments. An open proposal exists, but that
+does not demonstrate active development or an imminent release.
+
+That PR targets the reason a Godot-side specular correction is needed for Blender
+materials. It does not fix saving extracted resources before post-import scripts.
+No issues, comments, or pull requests were posted during this investigation.
