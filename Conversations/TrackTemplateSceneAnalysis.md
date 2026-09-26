@@ -333,3 +333,43 @@ Optional optimization remains: BigCone has **22,528 triangles**, VehicleRoad sti
 [Updated review and evidence](C:/Users/k/.codex/visualizations/2026/09/26/01a0ddad-ce29-7152-a8e6-2ce6f19a5b17/VeehiicuulTrackTemplateRereview/VeehiicuulTrackTemplateRereview.md)
 
 The scene and source code were left unchanged. Full Godot gameplay and frame times were not tested.
+
+## User
+
+rereview
+
+## Assistant (commentary)
+
+I’ll rereview the latest saved scene and scripts, verify what changed, and retest the outstanding findings.
+
+## User
+
+rereview
+
+## Assistant (commentary)
+
+I’ll continue the rereview of the latest saved file and retest the outstanding issues.
+
+## Assistant (commentary)
+
+The material-culling issue is resolved: all 34 materials now enable backface and shadow culling, both template-validation checks pass, and the exported GLB materials are single-sided. I’m checking for visible regressions from that change; the collision and export-path problems still reproduce.
+
+## Assistant
+
+**The material-culling issue is fixed.** All 34 materials now enable backface and shadow culling, both template-validation checks pass, and fresh GLB exports contain no double-sided materials. I found no obvious visual regression in diagnostic views with culling enabled.
+
+The remaining main issues are in export/runtime integration:
+
+1. **Collision JSON still lacks required metadata.** The production detector rejects the fresh export because `FormatVersion` and `CoordinateSystem` are missing.
+2. **Collision coordinates still disagree with the GLB.** After supplying metadata in memory, collision boundaries remain opposite the visible track about the origin under the current unrotated import convention.
+3. **The export destination still omits the inner `Veehiicuul` directory**, placing output outside the actual Godot project.
+
+Two workflow limitations remain: preflight permits **14 example objects**, and background validation misidentifies the template because detection depends on the active editor.
+
+Optional optimization is unchanged: VehicleRoad exports **1,792 triangles**, BigCone has **22,528**, and the checker retains **42 coincident internal face pairs**.
+
+**No new geometry defects were found.** All 61 meshes passed validation, all 32 barriers remain closed, overlap checks passed, and both builders reproduced the saved track. Prepared GLB export/reimport succeeded with **20,952 triangles**.
+
+[Updated review and evidence](C:/Users/k/.codex/visualizations/2026/09/26/01a0ddad-ce29-7152-a8e6-2ce6f19a5b17/VeehiicuulTrackTemplateSecondRereview/VeehiicuulTrackTemplateSecondRereview.md)
+
+The scene and source code were left unchanged. Full Godot gameplay and frame times were not tested.
