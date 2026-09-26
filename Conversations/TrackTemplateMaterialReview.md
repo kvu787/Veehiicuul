@@ -184,3 +184,39 @@ Optional cleanup: VehicleRoad exports **1,792 triangles** versus **448** at its 
 All **61 meshes** passed validation, all **32 barriers** are closed, and rebuilding reproduces the saved track.
 
 [Full review and evidence](C:/Users/k/.codex/visualizations/2026/09/26/01a0df35-83f3-7103-9b88-4b3d79bb1e87/TrackTemplateReview/TrackTemplateReview.md), including the separate Godot import handling needed for zero specular.
+
+
+## User
+
+Template validation depends on the current editor
+
+^how do i throw an exception if the script isn't running from a text editor in a file with a name
+
+## Assistant (commentary)
+
+I’ll check the validator and Blender’s context API for the guard you need.
+
+## Assistant
+
+Put these checks at the beginning of `Main()`:
+
+```python
+def Main():
+    area = bpy.context.area
+    if area is None or area.type != "TEXT_EDITOR":
+        raise RuntimeError("Run this script from Blender's Text Editor.")
+
+    if not bpy.data.filepath:
+        raise RuntimeError("Save the .blend file before running this script.")
+
+    # Rest of your validation...
+```
+
+Then simplify the filename check:
+
+```python
+def IsTrackTemplateFile():
+    return Path(bpy.data.filepath).name == "TrackTemplate.blend"
+```
+
+`bpy.data.filepath` checks whether the current **.blend file has a saved filename**. It does not require saving every subsequent edit.
