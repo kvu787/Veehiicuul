@@ -294,3 +294,42 @@ The main issues are:
 The barriers are only **0.00390625 units tall—about 3.9 mm at the saved scale—but this matches the builder settings**. The earlier wrong-file finding about a failing builder does not apply. This remains an authoring template: a playable Godot track still needs the required tire markers and camera hierarchy.
 
 The `.blend` and source code are unchanged. Full Godot gameplay, final lighting, and frame times were not tested.
+
+## User
+
+rereview
+
+## Assistant (commentary)
+
+I’ll rereview the current Veehiicuul file and repository scripts, checking which findings still apply and looking for new issues.
+
+## Assistant (commentary)
+
+The embedded validator now points to Veehiicuul and matches the repository script. That fixes the stale-script issue, but both validators now reject the scene because all 34 materials still have backface culling disabled. The track rebuild and geometry checks continue to pass.
+
+## Assistant (commentary)
+
+`VehicleRoad` now exports at 1,792 triangles, down 75% from 7,168. The fresh export still reproduces the collision JSON rejection and coordinate mismatch, and the export destination remains outside the Godot project. I found no new geometry defects.
+
+## Assistant
+
+Re-reviewed the latest file with Blender 4.5.14. **Two changes are confirmed:**
+
+- **The stale validator is fixed:** its embedded contents and filepath now match Veehiicuul’s repository script.
+- **VehicleRoad is lighter:** exported triangles dropped from **7,168 to 1,792**, a **75% reduction**.
+
+These issues remain:
+
+1. **Collision JSON fails to load.** It still omits `FormatVersion` and `CoordinateSystem`; the production detector rejects the fresh export.
+2. **Collision coordinates disagree with the GLB.** After adding metadata in memory, collision queries still place the boundaries opposite the visible track about the origin, under the current unrotated import convention.
+3. **The export destination is outside the Godot project.** It still omits the inner `Veehiicuul` directory.
+4. **Materials fail validation.** All **34 materials** still disable backface and shadow culling, while the synchronized validators require them enabled. **Both validators now fail** on this mismatch. Background validation also still misidentifies the template because detection depends on the active editor.
+5. **Export preflight permits 14 example objects.** The minimal-exclusion GLB contains **43,598 triangles**; excluding those example collections reduces it to **20,952**.
+
+Optional optimization remains: BigCone has **22,528 triangles**, VehicleRoad still exports at four times its render-level triangle count, and the checker line retains **42 coincident internal face pairs**. None is a demonstrated performance problem.
+
+**No new geometry defects were found.** All 61 meshes passed validation, all 32 barriers remain closed, overlap checks passed, and both builders reproduced the saved track. GLB export/reimport also succeeded. The thin barriers still match the builder settings.
+
+[Updated review and evidence](C:/Users/k/.codex/visualizations/2026/09/26/01a0ddad-ce29-7152-a8e6-2ce6f19a5b17/VeehiicuulTrackTemplateRereview/VeehiicuulTrackTemplateRereview.md)
+
+The scene and source code were left unchanged. Full Godot gameplay and frame times were not tested.
