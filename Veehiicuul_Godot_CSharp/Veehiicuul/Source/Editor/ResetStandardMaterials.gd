@@ -57,8 +57,8 @@ func _reset_material(material: StandardMaterial3D) -> void:
     for metadata_name in material.get_meta_list():
         material.remove_meta(metadata_name)
 
-    material.diffuse_mode = 1
-    material.specular_mode = 2
+    material.diffuse_mode = BaseMaterial3D.DIFFUSE_LAMBERT
+    material.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
     material.disable_fog = true
     material.disable_specular_occlusion = true
     material.albedo_color = Color(0.15155911, 0.5057727, 0.8741714, 1)
