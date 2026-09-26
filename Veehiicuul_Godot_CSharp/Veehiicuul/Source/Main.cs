@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Threading;
 
 namespace Veehiicuul_Godot_CSharp;
 
@@ -28,28 +29,31 @@ public partial class Main : Node {
     }
 
     public override void _Ready() {
-        try {
-            throw new InvalidOperationException(StartupStopMessage);
+        GD.Print($"_Ready {DateTimeOffset.Now}");
+        //        try {
+        //            throw new InvalidOperationException(StartupStopMessage);
 
-            // Deliberately unreachable for this learning port. Remove the throw above
-            // when you want to step through initialization (scenes/assets are still needed).
-#pragma warning disable CS0162 // The requested startup stop deliberately precedes all initialization.
-            this.InitializeGame();
-#pragma warning restore CS0162
-        } catch (Exception exception) {
-            this.LogExceptionAndQuit(exception);
-        }
+        //            // Deliberately unreachable for this learning port. Remove the throw above
+        //            // when you want to step through initialization (scenes/assets are still needed).
+        //#pragma warning disable CS0162 // The requested startup stop deliberately precedes all initialization.
+        //            this.InitializeGame();
+        //#pragma warning restore CS0162
+        //        } catch (Exception exception) {
+        //            this.LogExceptionAndQuit(exception);
+        //        }
     }
 
     public override void _Process(double delta) {
-        try {
-            if (!this.Initialized) {
-                throw new InvalidOperationException("A frame ran before initialization completed.");
-            }
-            this.UpdateGame(delta);
-        } catch (Exception exception) {
-            this.LogExceptionAndQuit(exception);
-        }
+        Thread.Sleep(1000);
+        throw new NotImplementedException($"_Process {DateTimeOffset.Now}");
+        //try {
+        //    if (!this.Initialized) {
+        //        throw new InvalidOperationException("A frame ran before initialization completed.");
+        //    }
+        //    this.UpdateGame(delta);
+        //} catch (Exception exception) {
+        //    this.LogExceptionAndQuit(exception);
+        //}
     }
 
     private void InitializeGame() {
