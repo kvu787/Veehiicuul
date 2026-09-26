@@ -38,6 +38,8 @@ def PrintParentedUnparentedObjects():
     print()
 
 def Main():
+    # TODO: Check for unintentionally duplicated materials
+
     print(f"{Path(__file__).name} started at {datetime.now()}")
 
     # Verify scene count
