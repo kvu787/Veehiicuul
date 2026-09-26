@@ -88,6 +88,19 @@ The existing Windows system report is not invoked.
 
 ## Blender material import
 
+### Reset saved standard materials
+
+Open `res://Source/Editor/ResetStandardMaterials.gd` in Godot's Script editor and
+choose **File > Run** (**Ctrl+Shift+X**). It recursively finds `.tres` files whose
+resource type is `StandardMaterial3D` in the editor's FileSystem, resets all stored
+properties to a new material's defaults, clears metadata, and applies the seven
+settings listed at the end of the script. This includes clearing textures and
+other previous material customization. It saves each material immediately at its
+existing path and reports results in Output. Other resource types and embedded
+materials are unaffected; folders ignored by Godot are excluded.
+
+### Imported scene materials
+
 `Veehiicuul/Source/Editor/DisableSpecularImport.gd` sets `metallic_specular = 0` on the
 embedded mesh materials of imported scenes. Base colors, roughness, and diffuse
 lighting remain as authored. Keep Blender's Metallic and Coat Weight at zero for
