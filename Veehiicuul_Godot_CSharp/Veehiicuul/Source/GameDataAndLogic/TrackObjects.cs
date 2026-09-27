@@ -1,32 +1,16 @@
 using Godot;
 using System;
-using System.Linq;
 
 namespace Veehiicuul_Godot_CSharp;
 
 public sealed class TrackObjects {
     public Node3D PlaceholderCarTransform { get; }
-    public Node3D[] TireGroundContactPoints { get; }
-    public Node3D[] Obstacles { get; }
 
     public TrackObjects(Node3D trackScene) {
-        this.PlaceholderCarTransform = RequireNode<Node3D>(trackScene, "SlopeCarPlaceholder");
+        this.PlaceholderCarTransform = trackScene.FindChild("SlopeCarPlaceholder", true, false) as Node3D
+            ?? throw new InvalidOperationException("The track needs a SlopeCarPlaceholder Node3D.");
         ValidatePlaceholderCar(this.PlaceholderCarTransform);
         this.PlaceholderCarTransform.Visible = false;
-        this.TireGroundContactPoints = [
-            RequireNode<Node3D>(this.PlaceholderCarTransform, "CarFL"),
-            RequireNode<Node3D>(this.PlaceholderCarTransform, "CarFR"),
-            RequireNode<Node3D>(this.PlaceholderCarTransform, "CarRL"),
-            RequireNode<Node3D>(this.PlaceholderCarTransform, "CarRR"),
-        ];
-        // Optional legacy collision group; the active detector reads collider JSON instead.
-        Node3D? obstacleGroup = trackScene.GetNodeOrNull<Node3D>("ObstacleGroup");
-        this.Obstacles = obstacleGroup is null ? [] : obstacleGroup.GetChildren().OfType<Node3D>().ToArray();
-    }
-
-    public static T RequireNode<T>(Node parent, string relativePath) where T : Node {
-        return parent.GetNodeOrNull<T>(relativePath)
-            ?? throw new InvalidOperationException($"Scene '{parent.Name}' requires a {typeof(T).Name} at '{relativePath}'. Scene assets have not been ported automatically.");
     }
 
     private static void ValidatePlaceholderCar(Node3D placeholderCar) {

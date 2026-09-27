@@ -1,24 +1,19 @@
 using Godot;
 using System;
-using System.Threading;
 
 namespace Veehiicuul_Godot_CSharp;
 
 /// <summary>The application's only startup entry point and frame callback.</summary>
 public partial class Main : Node {
-    private const string StartupStopMessage = "Intentional startup stop: the ZoomTracks learning port is not initialized.";
     private const double CarControlTimeoutSeconds = 0.35;
     private TimeManager TimeManager = null!;
     private InputManager InputManager = null!;
     private TrackSwitcher TrackSwitcher = null!;
     private CameraController CameraController = null!;
-    private GraphicsSettingsManager GraphicsSettingsManager = null!;
     private CarSwitcher CarSwitcher = null!;
     private CarState CarState = null!;
-    private CollisionManager2 CollisionManager = null!;
+    private CollisionManager CollisionManager = null!;
     private CameraPivotManager CameraPivotManager = null!;
-    private UiManager UiManager = null!;
-    private Node UiRoot = null!;
     private double CarControlTimeoutRemaining;
     private bool Initialized;
 
@@ -29,42 +24,31 @@ public partial class Main : Node {
     }
 
     public override void _Ready() {
-        GD.Print($"_Ready {DateTimeOffset.Now}");
-        //        try {
-        //            throw new InvalidOperationException(StartupStopMessage);
-
-        //            // Deliberately unreachable for this learning port. Remove the throw above
-        //            // when you want to step through initialization (scenes/assets are still needed).
-        //#pragma warning disable CS0162 // The requested startup stop deliberately precedes all initialization.
-        //            this.InitializeGame();
-        //#pragma warning restore CS0162
-        //        } catch (Exception exception) {
-        //            this.LogExceptionAndQuit(exception);
-        //        }
+        try {
+            this.InitializeGame();
+        } catch (Exception exception) {
+            this.LogExceptionAndQuit(exception);
+        }
     }
 
     public override void _Process(double delta) {
-        Thread.Sleep(1000);
-        throw new NotImplementedException($"_Process {DateTimeOffset.Now}");
-        //try {
-        //    if (!this.Initialized) {
-        //        throw new InvalidOperationException("A frame ran before initialization completed.");
-        //    }
-        //    this.UpdateGame(delta);
-        //} catch (Exception exception) {
-        //    this.LogExceptionAndQuit(exception);
-        //}
+        try {
+            if (!this.Initialized) {
+                throw new InvalidOperationException("A frame ran before initialization completed.");
+            }
+            this.UpdateGame(delta);
+        } catch (Exception exception) {
+            this.LogExceptionAndQuit(exception);
+        }
     }
 
     private void InitializeGame() {
-        GraphicsSettingsManager.ConfigureSessionGraphicsSettings(this.GetViewport());
         PrintInfoUtility.PrintDisplayInfo(this.GetViewport());
         PrintInfoUtility.PrintGraphicsInfo();
         this.TimeManager = CreateTimeManager();
         this.InputManager = new InputManager();
-        this.UiRoot = SceneLoadingUtility.LoadAndAttach<Node>(this, "res://Scenes/Ui.tscn");
-        string[] trackNames = ["Basic", "Track001", "Track002", "Track003", "Track004", "Track005"];
-        this.TrackSwitcher = new TrackSwitcher(this, this.InputManager, trackNames, 5);
+        string[] trackNames = ["Ribeye"];
+        this.TrackSwitcher = new TrackSwitcher(this, this.InputManager, trackNames, 0);
         this.InitializeTrack();
         this.Initialized = true;
         GD.Print("Game initialization completed.");
@@ -75,7 +59,6 @@ public partial class Main : Node {
         TrackObjects trackObjects = new(this.TrackSwitcher.CurrentTrackScene);
         this.CameraController = new CameraController(this.TrackSwitcher.CurrentTrackScene, followSettings,
             this.TrackSwitcher.CurrentTrackJson, this.InputManager, this.TimeManager);
-        this.GraphicsSettingsManager = new GraphicsSettingsManager(this.GetViewport(), this.InputManager);
         this.CarSwitcher = new CarSwitcher(this.TrackSwitcher.CurrentTrackScene,
             this.TrackSwitcher.CurrentTrackJson, this.InputManager);
         this.CarState = new CarState(trackObjects.PlaceholderCarTransform, this.CarSwitcher,
@@ -83,8 +66,7 @@ public partial class Main : Node {
         this.CarState.ApplyStateToGameObject();
         this.CameraPivotManager = new CameraPivotManager(this.TrackSwitcher.CurrentTrackScene, followSettings,
             this.CameraController, this.CarState, this.InputManager);
-        this.CollisionManager = new CollisionManager2(this.TrackSwitcher.CurrentTrackName, this.CarSwitcher);
-        this.UiManager = new UiManager(this.UiRoot, this.CameraController, this.TimeManager);
+        this.CollisionManager = new CollisionManager(this.TrackSwitcher.CurrentTrackName, this.CarSwitcher);
     }
 
     // Ordinary synchronous method, called only by _Process; no second engine callback.
@@ -97,15 +79,10 @@ public partial class Main : Node {
             this.SetProcess(false);
             return;
         }
-        if (this.InputManager.ToggleBetweenBorderlessAndExclusiveFullScreen) {
-            DisplayServer.WindowMode mode = DisplayServer.WindowGetMode();
-            DisplayServer.WindowSetMode(mode switch {
-                DisplayServer.WindowMode.Fullscreen => DisplayServer.WindowMode.ExclusiveFullscreen,
-                DisplayServer.WindowMode.ExclusiveFullscreen => DisplayServer.WindowMode.Fullscreen,
-                DisplayServer.WindowMode.Windowed or DisplayServer.WindowMode.Minimized or
-                    DisplayServer.WindowMode.Maximized => throw new InvalidOperationException($"Cannot toggle fullscreen from {mode}."),
-                _ => throw new InvalidOperationException($"Cannot toggle fullscreen from {mode}.")
-            });
+        if (this.InputManager.ToggleFullscreen) {
+            Window window = this.GetWindow();
+            window.Mode = window.Mode == Window.ModeEnum.Fullscreen
+                ? Window.ModeEnum.Windowed : Window.ModeEnum.Fullscreen;
         }
         bool switchedTrack = this.TrackSwitcher.ReadInputAndSwitchTracks();
         if (switchedTrack) {
@@ -119,7 +96,6 @@ public partial class Main : Node {
             }
             this.CameraController.ReadInputAndChangeCameraSettings();
             this.CameraPivotManager.ReadInputAndToggle();
-            this.GraphicsSettingsManager.ReadInputAndUpdate();
             if (this.CarSwitcher.ReadInputAndSwitchCar()) {
                 this.CarState.Reset_PositionRotationVelocity();
                 this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
@@ -130,7 +106,6 @@ public partial class Main : Node {
         this.CarState.ApplyStateToGameObject();
         this.CameraController.Update();
         this.CameraPivotManager.UpdateCameraPivot();
-        this.UiManager.UpdateUi();
         if (switchedTrack) {
             GarbageCollectionUtility.ForceGarbageCollection();
         }

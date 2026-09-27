@@ -31,7 +31,7 @@ public static class SceneLoadingUtility {
         if (node.GetScript().VariantType != Variant.Type.Nil) {
             throw new InvalidOperationException($"Scene '{resourcePath}' contains a script on '{node.Name}'. Main is the only scripted Godot node in this port.");
         }
-        // Every imported scene is passive data. Main controls camera/car/UI changes explicitly.
+        // Every imported scene is passive data. Main controls camera and car changes explicitly.
         node.ProcessMode = Node.ProcessModeEnum.Disabled;
         for (int index = 0; index < node.GetChildCount(); index++) {
             ValidatePassiveScene(node.GetChild(index), resourcePath);

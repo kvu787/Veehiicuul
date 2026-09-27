@@ -112,7 +112,8 @@ public sealed class CameraController {
         Require(this.CameraPanOffsetAndPitch.Position.IsEqualApprox(Vector3.Zero), "CameraPanOffsetAndPitch position must be zero.");
         Require(this.CameraPanOffsetAndPitch.RotationDegrees.IsEqualApprox(new Vector3(-45f, 0f, 0f)), "CameraPanOffsetAndPitch must have -45 degrees X pitch.");
         Require(this.CameraPanOffsetAndPitch.Scale.IsEqualApprox(Vector3.One), "CameraPanOffsetAndPitch scale must be one.");
-        Require(this.Camera.Position.IsEqualApprox(new Vector3(0f, 0f, 500f)), "Camera local position must be (0, 0, 500).");
+        Require(Mathf.IsZeroApprox(this.Camera.Position.X) && Mathf.IsZeroApprox(this.Camera.Position.Y)
+            && this.Camera.Position.Z > 0f, "Camera local position must be on the positive Z axis.");
         Require(this.Camera.Rotation.IsEqualApprox(Vector3.Zero), "Camera local rotation must be zero.");
         Require(this.Camera.Scale.IsEqualApprox(Vector3.One), "Camera scale must be one.");
         Require(this.Camera.Projection == Camera3D.ProjectionType.Orthogonal, "Camera projection must be orthogonal.");
@@ -120,13 +121,8 @@ public sealed class CameraController {
         Require(IsValidSize(this.DefaultFixedCameraSize), "The fixed camera half-height is out of range.");
         Require(IsValidSize(this.DefaultFollowCameraSize), "FollowCameraSize is out of range.");
         Require(IsValidSize(this.OrthographicCameraSize), "The selected camera half-height is out of range.");
-        Require(Mathf.IsEqualApprox(this.Camera.Near, 1f), "Camera Near must be 1.");
-        Require(Mathf.IsEqualApprox(this.Camera.Far, 1000f), "Camera Far must be 1000.");
-
-        Godot.Environment environment = this.Camera.Environment ?? this.Camera.GetWorld3D().Environment
-            ?? throw new InvalidOperationException("The camera requires an Environment with a solid #404040 background.");
-        Require(environment.BackgroundMode == Godot.Environment.BGMode.Color, "Environment background must use a solid color.");
-        Require(environment.BackgroundColor.ToHtml(false).Equals("404040", StringComparison.OrdinalIgnoreCase), "Environment background color must be #404040.");
+        Require(this.Camera.Near > 0f && this.Camera.Far > this.Camera.Near,
+            "Camera clipping planes must have 0 < Near < Far.");
     }
 
     private static bool IsValidSize(float size) {

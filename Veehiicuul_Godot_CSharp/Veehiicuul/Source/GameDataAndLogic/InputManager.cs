@@ -9,6 +9,7 @@ public sealed class InputManager {
     private readonly bool[] PressedButtons = new bool[(int)JoyButton.Max];
     private int PreviousGamepad = -1;
     private bool PreviousEscape;
+    private bool PreviousFullscreenShortcut;
     private DateTime LastLogTime = DateTime.MinValue;
 
     public bool HasGamepad { get; private set; }
@@ -24,11 +25,7 @@ public sealed class InputManager {
     public bool PreviousCar { get; private set; }
     public bool NextCar { get; private set; }
     public bool ToggleBetweenFixedAndFollowCamera { get; private set; }
-    public bool ToggleBetweenBorderlessAndExclusiveFullScreen { get; private set; }
-    public bool NextMsaaMode { get; private set; }
-    public bool NextTaaMode { get; private set; }
-    public bool NextVsyncMode { get; private set; }
-    public bool NextRenderScale { get; private set; }
+    public bool ToggleFullscreen { get; private set; }
     public bool ResetCar { get; private set; }
     public bool InsertStutterLogSpacer { get; private set; }
 
@@ -50,23 +47,21 @@ public sealed class InputManager {
         bool escape = Input.IsPhysicalKeyPressed(Key.Escape);
         this.QuitGame = (escape && !this.PreviousEscape) || this.WasPressed(JoyButton.Start);
         this.PreviousEscape = escape;
+        bool fullscreenShortcut = Input.IsPhysicalKeyPressed(Key.Alt)
+            && (Input.IsPhysicalKeyPressed(Key.Enter) || Input.IsPhysicalKeyPressed(Key.KpEnter));
+        this.ToggleFullscreen = fullscreenShortcut && !this.PreviousFullscreenShortcut;
+        this.PreviousFullscreenShortcut = fullscreenShortcut;
         this.PreviousTrack = this.WasPressed(JoyButton.DpadDown);
         this.NextTrack = this.WasPressed(JoyButton.DpadUp);
         this.PreviousCar = this.WasPressed(JoyButton.DpadLeft);
         this.NextCar = this.WasPressed(JoyButton.DpadRight);
         this.ToggleBetweenFixedAndFollowCamera = this.WasPressed(JoyButton.Back);
 
-        bool leftShoulder = this.PreviousButtons[(int)JoyButton.LeftShoulder];
         this.RightShoulderPressed = this.PreviousButtons[(int)JoyButton.RightShoulder];
-        this.NextMsaaMode = leftShoulder && this.WasPressed(JoyButton.A);
-        this.NextTaaMode = leftShoulder && this.WasPressed(JoyButton.B);
-        this.NextVsyncMode = leftShoulder && this.WasPressed(JoyButton.X);
-        this.NextRenderScale = leftShoulder && this.WasPressed(JoyButton.Y);
-        this.ResetCar = !leftShoulder && this.WasPressed(JoyButton.X);
+        this.ResetCar = this.WasPressed(JoyButton.X);
         this.ResetCameraZoom = this.WasPressed(JoyButton.Y);
 
-        // These actions were deliberately unbound in ZoomTracks.
-        this.ToggleBetweenBorderlessAndExclusiveFullScreen = false;
+        // This action was deliberately unbound in ZoomTracks.
         this.InsertStutterLogSpacer = false;
 
         this.Brake = this.HasGamepad ? Input.GetJoyAxis(gamepad, JoyAxis.TriggerLeft) : 0f;

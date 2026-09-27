@@ -1,7 +1,3 @@
-param(
-    [switch] $VerifyStartupFailure
-)
-
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
@@ -25,7 +21,6 @@ try {
     }
     $executable = Join-Path $PSScriptRoot 'Build\Veehiicuul_Godot_CSharp.exe'
     $arguments = @('--log-file', ('"' + (Join-Path $logFolderPath 'Godot.log') + '"'))
-    if ($VerifyStartupFailure) { $arguments = @('--headless') + $arguments }
     # Own the process handle from creation. Windows PowerShell's Start-Process can
     # lose ExitCode for an application that terminates this quickly.
     $applicationProcess = New-Object System.Diagnostics.Process
@@ -40,32 +35,12 @@ try {
     if (-not $applicationProcess.Start()) { throw 'Could not launch the exported application.' }
     $standardOutput = $applicationProcess.StandardOutput.ReadToEndAsync()
     $standardError = $applicationProcess.StandardError.ReadToEndAsync()
-    if ($VerifyStartupFailure) {
-        if (-not $applicationProcess.WaitForExit(20000)) {
-            $applicationProcess.Kill()
-            throw 'Startup failure verification timed out: the app did not close.'
-        }
-    } else {
-        $applicationProcess.WaitForExit()
-    }
+    $applicationProcess.WaitForExit()
     $resultCode = $applicationProcess.ExitCode
     Set-Content -LiteralPath (Join-Path $logFolderPath 'Console.log') -Value $standardOutput.Result
     Set-Content -LiteralPath (Join-Path $logFolderPath 'ConsoleError.log') -Value $standardError.Result
     $applicationProcess.Dispose()
-    if ($VerifyStartupFailure) {
-        if ($resultCode -ne 1) { throw "Expected application failure exit code 1, got $resultCode." }
-        $exceptionLog = Get-Content -LiteralPath (Join-Path $logFolderPath 'Godot.log') -Raw
-        if ($exceptionLog -notmatch 'Intentional startup stop:' -or $exceptionLog -notmatch 'Main\._Ready') {
-            throw 'Godot.log does not identify the intentional Main._Ready exception.'
-        }
-        if (Select-String -LiteralPath (Join-Path $logFolderPath 'Godot.log') -Pattern 'Game initialization completed|A frame ran before' -Quiet) {
-            throw 'Game initialization or processing occurred after the startup exception.'
-        }
-        Write-Host 'PASS: the exported app stopped in Main._Ready and quit through Godot (exit code 1).'
-        $resultCode = 0
-    } else {
-        Write-Host "Application exited with code $resultCode. The intentional startup exception is recorded in Godot.log."
-    }
+    Write-Host "Application exited with code $resultCode."
 } catch {
     Write-Host $_.Exception.Message -ForegroundColor Red
     $resultCode = 1

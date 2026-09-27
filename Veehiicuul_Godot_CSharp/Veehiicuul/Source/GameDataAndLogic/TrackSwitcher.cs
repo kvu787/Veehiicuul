@@ -25,8 +25,8 @@ public sealed class TrackSwitcher {
         this.InputManager = inputManager;
         this.TrackNames = trackNames;
         this.CurrentTrackIndex = currentTrackIndex;
-        this.CurrentTrackJson = JsonUtility.Deserialize<TrackJson>($"{this.CurrentTrackName}.json");
-        this.CurrentTrackScene = SceneLoadingUtility.LoadAndAttach<Node3D>(host, $"res://Tracks/{this.CurrentTrackName}.tscn");
+        this.CurrentTrackJson = JsonUtility.Deserialize<TrackJson>($"res://TrackData/{this.CurrentTrackName}.json");
+        this.CurrentTrackScene = SceneLoadingUtility.LoadAndAttach<Node3D>(host, $"res://Scenes/{this.CurrentTrackName}.tscn");
     }
 
     public bool ReadInputAndSwitchTracks() {
@@ -35,15 +35,18 @@ public sealed class TrackSwitcher {
         }
         int direction = this.InputManager.PreviousTrack ? -1 : 1;
         int nextIndex = (this.CurrentTrackIndex + direction + this.TrackNames.Count) % this.TrackNames.Count;
+        if (nextIndex == this.CurrentTrackIndex) {
+            return false;
+        }
         string nextName = this.TrackNames[nextIndex];
-        TrackJson nextTrackJson = JsonUtility.Deserialize<TrackJson>($"{nextName}.json");
+        TrackJson nextTrackJson = JsonUtility.Deserialize<TrackJson>($"res://TrackData/{nextName}.json");
 
         GD.Print($"Unload track '{this.CurrentTrackName}'...");
         // Immediate destruction is safe because these scenes have no executing scripts. Main
         // rebuilds its track-dependent managers before reading any old node reference again.
         this.Host.RemoveChild(this.CurrentTrackScene);
         this.CurrentTrackScene.Free();
-        this.CurrentTrackScene = SceneLoadingUtility.LoadAndAttach<Node3D>(this.Host, $"res://Tracks/{nextName}.tscn");
+        this.CurrentTrackScene = SceneLoadingUtility.LoadAndAttach<Node3D>(this.Host, $"res://Scenes/{nextName}.tscn");
         this.CurrentTrackIndex = nextIndex;
         this.CurrentTrackJson = nextTrackJson;
         return true;
