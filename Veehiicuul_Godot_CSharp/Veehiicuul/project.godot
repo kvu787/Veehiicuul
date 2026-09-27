@@ -12,7 +12,6 @@ config_version=5
 
 config/name="Veehiicuul_Godot_CSharp"
 run/main_scene="res://Scenes/Main.tscn"
-run/max_fps=0
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -24,7 +23,6 @@ window/size/mode=3
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="viewport"
-window/stretch/aspect="keep"
 window/vsync/vsync_mode=0
 
 [dotnet]
@@ -38,12 +36,6 @@ project/assembly_name="Veehiicuul_Godot_CSharp"
 
 [rendering]
 
-renderer/rendering_method="forward_plus"
-scaling_3d/mode=0
-scaling_3d/scale=1.0
-viewport/hdr_2d=false
-anti_aliasing/quality/msaa_3d=3
-anti_aliasing/quality/use_taa=false
 rendering_device/vsync/swapchain_image_count=2
 rendering_device/driver.windows="d3d12"
 rendering_device/fallback_to_vulkan=false
