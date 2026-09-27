@@ -15,8 +15,7 @@ internal static class Program {
     private const int BenchmarkQueryCount = 4096;
     private const int BenchmarkRepetitions = 4;
 
-    // The preserved collision-plane Y equals negative Godot local Z, so Blender
-    // [-3.157522, 3.0] becomes collision-plane Y [-3.0, 3.157522].
+    // Representative vehicle bounds in the forward-positive collision plane.
     private static readonly RectangleLocalBounds Track001CarBounds = new(
         -1.5f,
         -3.0f,
@@ -48,6 +47,7 @@ internal static class Program {
         ValidateSparseGrid();
         ValidateBothAxisConversion();
         ValidateTrack001KnownEndpoint(detector, colliderJson);
+        ValidateRibeyeData();
 
         BuildTrack001Queries(
             colliderJson,
@@ -59,27 +59,29 @@ internal static class Program {
         RunComparativeBenchmark(detector, randomQueries);
     }
 
+    private static void ValidateRibeyeData() {
+        string path = Path.Combine(AppContext.BaseDirectory, "Ribeye_ColliderData.json");
+        ColliderJson colliderJson = LoadColliderJson(path);
+        RectangleLocalBounds carBounds = new(-1.5f, -3f, 1.5f, 3.157522f - 0.165f);
+        TrackCollisionDetector detector = new(colliderJson, carBounds);
+        Require(detector.EdgeCount == 800, "Ribeye must load all 800 outline edges without format metadata.");
+        // Ribeye.glb's authored placeholder pose, converted from Godot X/Z and yaw.
+        AssertQuery(detector, carBounds, new RectanglePose(117.841125f, 61.20298f, 102.75199f),
+            false, "Ribeye spawn must be clear of the barriers");
+        CoordinateXY vertex = colliderJson.Outlines[0].Vertices[0];
+        AssertQuery(detector, carBounds, new RectanglePose(vertex.X, vertex.Y, 0f),
+            true, "Ribeye exported outline must collide at its original Blender coordinates");
+    }
+
     private static ColliderJson LoadColliderJson(string path) {
-        Require(File.Exists(path), $"Track001 collider JSON is missing at '{path}'.");
+        Require(File.Exists(path), $"Collider JSON is missing at '{path}'.");
         string contents = File.ReadAllText(path);
         ColliderJson colliderJson = JsonSerializer.Deserialize<ColliderJson>(contents)
-            ?? throw new InvalidOperationException("Track001 collider JSON deserialized to null.");
-        Require(colliderJson != null, "Track001 collider JSON deserialized to null.");
+            ?? throw new InvalidOperationException("Collider JSON deserialized to null.");
         return colliderJson;
     }
 
     private static void ValidateTrack001SchemaAndShape(ColliderJson colliderJson) {
-        Require(
-            colliderJson.FormatVersion == ColliderJson.CurrentFormatVersion,
-            $"Expected FormatVersion {ColliderJson.CurrentFormatVersion}, found "
-            + $"{colliderJson.FormatVersion}.");
-        Require(
-            string.Equals(
-                colliderJson.CoordinateSystem,
-                ColliderJson.BlenderWorldXYCoordinateSystem,
-                StringComparison.Ordinal),
-            $"Expected CoordinateSystem '{ColliderJson.BlenderWorldXYCoordinateSystem}', "
-            + $"found '{colliderJson.CoordinateSystem ?? "<null>"}'.");
         Require(colliderJson.Outlines != null, "Track001 outlines are null.");
         Require(
             colliderJson.Outlines.Count == ExpectedTrack001OutlineCount,
@@ -105,21 +107,21 @@ internal static class Program {
 
     private static RuntimeBounds ValidateTrack001CoordinateMapping(ColliderJson colliderJson) {
         RuntimeBounds bounds = ComputeRuntimeBounds(colliderJson);
-        RequireNear(bounds.MinX, -94.7042007446289f, 0.00001f, "runtime minimum X");
-        RequireNear(bounds.MinY, -61.13170623779297f, 0.00001f, "runtime minimum Y/Z");
-        RequireNear(bounds.MaxX, 59.99061965942383f, 0.00001f, "runtime maximum X");
-        RequireNear(bounds.MaxY, 72.60057067871094f, 0.00001f, "runtime maximum Y/Z");
+        RequireNear(bounds.MinX, -59.99061965942383f, 0.00001f, "runtime minimum X");
+        RequireNear(bounds.MinY, -72.60057067871094f, 0.00001f, "runtime minimum Y/Z");
+        RequireNear(bounds.MaxX, 94.7042007446289f, 0.00001f, "runtime maximum X");
+        RequireNear(bounds.MaxY, 61.13170623779297f, 0.00001f, "runtime maximum Y/Z");
 
         CoordinateXY firstRaw = colliderJson.Outlines[0].Vertices[0];
         RuntimePoint firstRuntime = ToRuntime(firstRaw);
         Require(
             firstRaw.X < 0f
                 && firstRaw.Y < 0f
-                && firstRuntime.X > 0f
-                && firstRuntime.Y > 0f,
-            "The first Track001 vertex did not demonstrate both required sign flips.");
-        Require(firstRuntime.X == -firstRaw.X, "Track001 X conversion is not -Blender X.");
-        Require(firstRuntime.Y == -firstRaw.Y, "Track001 Y/Z conversion is not -Blender Y.");
+                && firstRuntime.X < 0f
+                && firstRuntime.Y < 0f,
+            "The first Track001 vertex must preserve both Blender coordinate signs.");
+        Require(firstRuntime.X == firstRaw.X, "Track001 collision X must equal Blender X.");
+        Require(firstRuntime.Y == firstRaw.Y, "Track001 collision Y must equal Blender Y (negative Godot Z).");
         return bounds;
     }
 
@@ -150,8 +152,8 @@ internal static class Program {
             "Expected a 52x45 Track001 logical grid, found "
             + $"{detector.GridColumnCount}x{detector.GridRowCount}.");
         Require(
-            detector.OccupiedGridCellCount == 340,
-            $"Expected 340 occupied Track001 cells, found "
+            detector.OccupiedGridCellCount == 342,
+            $"Expected 342 occupied Track001 cells, found "
             + $"{detector.OccupiedGridCellCount}.");
         Require(detector.UsesDenseGrid, "Track001 should use the dense grid layout.");
 
@@ -265,18 +267,18 @@ internal static class Program {
             new RuntimePoint(-10f, -20f),
             new RuntimePoint(-12f, -20f));
         Require(
-            colliderJson.Outlines[0].Vertices[0].X == 12f
-                && colliderJson.Outlines[0].Vertices[0].Y == 22f,
-            "Synthetic mapping fixture did not store raw positive Blender coordinates.");
+            colliderJson.Outlines[0].Vertices[0].X == -12f
+                && colliderJson.Outlines[0].Vertices[0].Y == -22f,
+            "Synthetic mapping fixture did not preserve raw Blender coordinates.");
 
         TrackCollisionDetector detector = new(
             colliderJson,
             new RectangleLocalBounds(-0.5f, -0.5f, 0.5f, 0.5f));
         RectangleLocalBounds crossingBounds = new(0f, -0.25f, 1f, 0.25f);
         AssertQuery(detector, crossingBounds, new RectanglePose(-10.5f, -21f, 0f),
-            true, "both-axis converted location");
+            true, "glTF-aligned Blender location");
         AssertQuery(detector, crossingBounds, new RectanglePose(10.5f, 21f, 0f),
-            false, "unconverted Blender location");
+            false, "obsolete FBX both-axis sign flip");
         AssertQuery(detector, crossingBounds, new RectanglePose(-10.5f, 21f, 0f),
             false, "X-only converted location");
         AssertQuery(detector, crossingBounds, new RectanglePose(10.5f, -21f, 0f),
@@ -545,15 +547,13 @@ internal static class Program {
         foreach (RuntimePoint[] runtimeLoop in runtimeLoops) {
             List<CoordinateXY> vertices = new(runtimeLoop.Length);
             foreach (RuntimePoint point in runtimeLoop) {
-                vertices.Add(new CoordinateXY(-point.X, -point.Y));
+                vertices.Add(new CoordinateXY(point.X, point.Y));
             }
 
             outlines.Add(new Outline { Vertices = vertices });
         }
 
         return new ColliderJson {
-            FormatVersion = ColliderJson.CurrentFormatVersion,
-            CoordinateSystem = ColliderJson.BlenderWorldXYCoordinateSystem,
             Outlines = outlines,
         };
     }
@@ -586,7 +586,7 @@ internal static class Program {
     }
 
     private static RuntimePoint ToRuntime(CoordinateXY rawPoint) {
-        return new RuntimePoint(-rawPoint.X, -rawPoint.Y);
+        return new RuntimePoint(rawPoint.X, rawPoint.Y);
     }
 
     private static RectanglePose PlaceLocalPointAtWorld(

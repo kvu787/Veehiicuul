@@ -14,10 +14,12 @@ dotnet run --project Verification/CollisionDetection/CollisionDetectionVerificat
 The checks cover the expected 1,984 track edges, coordinate mapping, exact contact
 semantics, arbitrary outline counts, sparse grids, oversized-edge BVH fallback,
 every-edge neighborhoods, deterministic random queries versus the linear oracle,
-and zero allocations during ordinary steady-state queries. Comparative timings
+and zero allocations during ordinary steady-state queries. Ribeye's unmodified
+JSON also checks metadata-free loading, its clear spawn, and contact with an
+exported outline. Comparative timings
 are reported without machine-dependent performance thresholds.
 
-The detector retains the original two-dimensional collision plane. Its Y is
-negative Godot Z, and clockwise vehicle yaw is negative Godot Y rotation. Godot
-mesh import and vehicle scene integration require separate validation after the
-assets are ported; this program checks the collision algorithm and track data.
+The detector uses Blender world X/Y directly, matching glTF's conversion to Godot
+X/negative Z. Clockwise vehicle yaw is negative Godot Y rotation. This program
+checks the collision algorithm and track data; the exported game's Ribeye scene
+also needs a startup check to verify mesh import and vehicle integration.

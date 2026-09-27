@@ -15,5 +15,6 @@
         <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/Outline.cs" Link="Production/Outline.cs" />
         <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs" Link="Production/TrackCollisionDetector.cs" />
         <None Include="../../TrackData/Track001_ColliderData.json" Link="Track001_ColliderData.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="../../ColliderData/Ribeye_ColliderData.json" Link="Ribeye_ColliderData.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 </Project>

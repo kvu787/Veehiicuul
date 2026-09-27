@@ -94,7 +94,7 @@ public sealed class TrackCollisionDetector {
                 nameof(representativeVehicleBounds));
         }
 
-        ValidateFormat(colliderJson);
+        ValidateOutlines(colliderJson);
         this._edges = CreateEdges(colliderJson, out int outlineCount);
         this.OutlineCount = outlineCount;
         this.EdgeCount = this._edges.Length;
@@ -206,24 +206,7 @@ public sealed class TrackCollisionDetector {
         return this._allBounds.Overlaps(rectangle.Bounds) && this.ScanAll(rectangle);
     }
 
-    private static void ValidateFormat(ColliderJson colliderJson) {
-        if (colliderJson.FormatVersion != ColliderJson.CurrentFormatVersion) {
-            throw new ArgumentException(
-                $"Unsupported collider-data format version {colliderJson.FormatVersion}; "
-                + $"expected {ColliderJson.CurrentFormatVersion}.",
-                nameof(colliderJson));
-        }
-
-        if (!string.Equals(
-                colliderJson.CoordinateSystem,
-                ColliderJson.BlenderWorldXYCoordinateSystem,
-                StringComparison.Ordinal)) {
-            throw new ArgumentException(
-                $"Unsupported collider-data coordinate system "
-                + $"'{colliderJson.CoordinateSystem ?? "<null>"}'.",
-                nameof(colliderJson));
-        }
-
+    private static void ValidateOutlines(ColliderJson colliderJson) {
         if (colliderJson.Outlines == null) {
             throw new ArgumentException("Collider outlines must not be null.", nameof(colliderJson));
         }
@@ -273,11 +256,10 @@ public sealed class TrackCollisionDetector {
                         nameof(colliderJson));
                 }
 
-                // Format 1 retains raw Blender world X/Y. The original FBX axis
-                // conversion maps these to (-X, -Y) in the collision plane.
-                // Collision-plane Y is negative Godot Z, so Godot receives (-X, Y).
-                PointF a = new(-rawA.X, -rawA.Y);
-                PointF b = new(-rawB.X, -rawB.Y);
+                // glTF maps Blender (X, Y, Z) to Godot (X, Z, -Y).
+                // Collision-plane Y is negative Godot Z, so retain Blender X/Y.
+                PointF a = new(rawA.X, rawA.Y);
+                PointF b = new(rawB.X, rawB.Y);
                 if (a.X == b.X && a.Y == b.Y) {
                     throw new ArgumentException(
                         $"Outline {outlineIndex} contains a zero-length segment.",
