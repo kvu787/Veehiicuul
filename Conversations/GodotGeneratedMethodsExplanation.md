@@ -196,3 +196,24 @@ That explains the details in your screenshot:
 
 **This does not create an additional startup or frame callback.** The generated branch runs only when a call for that method reaches Godot’s dispatcher. Your ordinary `this.InitializeTrack()` calls invoke the method directly.
 
+## User
+
+is there a way to avoid having this generated code show up in visual studio reference analysis
+
+## Assistant Commentary
+
+I’ll check whether Visual Studio can filter generated references, and whether that applies to the CodeLens popup in your screenshot.
+
+## Assistant
+
+**For the CodeLens popup in your screenshot, I couldn’t find a built-in option to exclude only generated references.**
+
+The practical workarounds are:
+
+- **Use Find All References (`Shift+F12`) with a narrower scope.** Choose **Current Document**, or **Open Documents** with only your handwritten files open. That can exclude the generated wrapper, but also hides references outside the selected scope. It does not change CodeLens’s reference count. [Microsoft documentation](https://learn.microsoft.com/en-us/visualstudio/ide/finding-references)
+- **Disable CodeLens entirely** under **Tools → Options → Text Editor → All Languages → CodeLens**. This removes the inline reference indicators, including the useful ones. [CodeLens settings](https://learn.microsoft.com/en-us/visualstudio/ide/find-code-changes-and-other-history-with-codelens)
+
+Adding `generated_code = true` to `.editorconfig` is **not a reference filter**: it controls analyzer diagnostics. Likewise, Visual Studio’s file-search exclusions apply to text searches, rather than the CodeLens popup. [Analyzer configuration](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/configuration-options), [Search exclusions](https://learn.microsoft.com/en-us/visualstudio/releases/2026/release-notes)
+
+For your example, **`Shift+F12` scoped to `Main.cs`** is the closest built-in workaround for seeing just the two calls you wrote.
+
