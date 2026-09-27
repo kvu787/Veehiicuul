@@ -47,8 +47,7 @@ public sealed class InputManager {
         bool escape = Input.IsPhysicalKeyPressed(Key.Escape);
         this.QuitGame = (escape && !this.PreviousEscape) || this.WasPressed(JoyButton.Start);
         this.PreviousEscape = escape;
-        bool fullscreenShortcut = Input.IsPhysicalKeyPressed(Key.Alt)
-            && (Input.IsPhysicalKeyPressed(Key.Enter) || Input.IsPhysicalKeyPressed(Key.KpEnter));
+        bool fullscreenShortcut = Input.IsPhysicalKeyPressed(Key.F11);
         this.ToggleFullscreen = fullscreenShortcut && !this.PreviousFullscreenShortcut;
         this.PreviousFullscreenShortcut = fullscreenShortcut;
         this.PreviousTrack = this.WasPressed(JoyButton.DpadDown);
