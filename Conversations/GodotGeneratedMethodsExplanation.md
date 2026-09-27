@@ -327,3 +327,43 @@ Godot also uses the generated method-existence checks to discover that your scri
 
 Godot could be designed to generate wrappers only for engine callbacks and methods you explicitly choose to expose. That would avoid wrappers for ordinary helpers. But removing **all** wrappers requires another mechanism for the engine to discover and invoke your C# callbacks.
 
+## User
+
+i understand why wrappers for _Ready and _Process are generated and used. however, i don't understand when the wrappers for InitializeGame, InitializeTrack, and UpdateGame would ever be called. is there any situation in which the wrappers for those methods could be called?
+
+## Assistant Commentary
+
+I’ll trace how a call could reach those helper wrappers and check whether your project uses any of those routes.
+
+## Assistant
+
+**Yes—if something explicitly calls those methods through Godot’s method-by-name system. I found no such calls in your current C# code or text scene/resource files.**
+
+For example, code holding a reference to your `Main` node could make any of these calls:
+
+```csharp
+mainNode.Call("InitializeGame");
+mainNode.Call("InitializeTrack");
+mainNode.Call("UpdateGame", 0.016);
+```
+
+Each would go through Godot’s dispatcher and reach the corresponding generated wrapper. `Call` takes the method’s name and arguments, rather than compiling a direct call to that method. [Godot documentation](https://docs.godotengine.org/en/stable/classes/class_object.html#class-object-method-call)
+
+Other situations include:
+
+- **Deferred invocation:** `mainNode.CallDeferred("InitializeTrack")` uses the wrapper when the queued call executes.
+- **A callable made from a method name:** `new Callable(mainNode, "InitializeTrack")`, invoked directly or connected to a signal, uses that route too. [Callable documentation](https://docs.godotengine.org/en/stable/classes/class_callable.html)
+- **A GDScript caller:** another script could invoke the C# method through Godot’s scripting system. [Cross-language calls](https://docs.godotengine.org/en/stable/tutorials/scripting/cross_language_scripting.html#calling-methods)
+
+**This works despite `private`.** Another C# class cannot directly write `mainNode.InitializeTrack()`, but it can call the public `Call` API. The generated dispatcher belongs to `Main` itself, so it can invoke the private method.
+
+Your existing calls are ordinary C# calls:
+
+```csharp
+this.InitializeGame();
+this.InitializeTrack();
+this.UpdateGame(delta);
+```
+
+They bypass those helper wrappers entirely. Godot does not automatically call these methods because of their names. **With your current call paths, those three generated wrappers are unused.** They are generated because Godot exposes compatible script methods for possible calls by name.
+
