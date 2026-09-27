@@ -217,3 +217,31 @@ Adding `generated_code = true` to `.editorconfig` is **not a reference filter**:
 
 For your example, **`Shift+F12` scoped to `Main.cs`** is the closest built-in workaround for seeing just the two calls you wrote.
 
+## User
+
+is this a known issue? have other people noticed this issue and are there any workarounds?
+
+## Assistant Commentary
+
+I’ll look for reports about this exact Godot/Visual Studio behavior and check which workarounds people have actually confirmed.
+
+## Assistant Commentary
+
+I found a March 2025 report describing exactly your complaint. I also found a related Godot issue and JetBrains guidance on filtering generated usages. I’m checking the distinction between filtering the results list and changing the inline reference count.
+
+## Assistant
+
+**Yes—other Godot users have reported exactly this.** I found reports going back several years, but no confirmed fix that selectively removes generated references from Visual Studio’s built-in CodeLens.
+
+- **Exact Visual Studio complaint, March 2, 2025:** a Godot user asked how to hide generated-code references while keeping references from their own code. [Report](https://www.reddit.com/r/godot/comments/1j1ntjf/)
+- **Similar VS Code complaint, July 2023:** the user tried `.editorconfig`’s `generated_code = true`, file exclusions, and OmniSharp search exclusions without success. Follow-up comments continued into August 2024. This concerns a different editor, but illustrates the same frustration. [Discussion](https://www.reddit.com/r/godot/comments/14xof3c/)
+- **Related Godot issue:** [godot-csharp-visualstudio #55](https://github.com/godotengine/godot-csharp-visualstudio/issues/55), opened June 23, 2024, reports incorrect CodeLens counts and is listed as open. Its written description is too brief to establish that generated references are the cause.
+
+The workarounds I could substantiate are:
+
+1. **Narrow Visual Studio’s Find All References scope.** Use `Shift+F12` and select Current Document or Open Documents. This filters the results you inspect, but also omits other files and leaves CodeLens’s count unchanged. [Microsoft documentation](https://learn.microsoft.com/en-us/visualstudio/ide/finding-references)
+2. **Turn CodeLens off.** A Godot forum user confirmed this solved their request to remove the reference indicators. It removes all indicators, rather than selectively hiding generated calls. [Confirmed forum workaround](https://forum.godotengine.org/t/visualstudio2022-references/106221)
+3. **Use ReSharper’s Find Usages inside Visual Studio.** It groups source-generated references under a separate **Source generated files** folder, which keeps them separate from your code. This improves the results view; it does not fix Visual Studio’s native CodeLens count. [JetBrains documentation](https://blog.jetbrains.com/dotnet/2021/08/09/improved-support-for-source-generators-in-resharper-2021-2/)
+
+There is also a **code-structure workaround**: move ordinary helper methods into a C# class that does not inherit from `GodotObject`, leaving `Main` to forward engine callbacks. Based on Godot’s generator implementation, those helper methods would no longer receive these generated wrappers. That requires refactoring; I would not do it solely to tidy up reference counts. [Generator source](https://github.com/godotengine/godot/blob/master/modules/mono/editor/Godot.NET.Sdk/Godot.SourceGenerators/ScriptMethodsGenerator.cs)
+
