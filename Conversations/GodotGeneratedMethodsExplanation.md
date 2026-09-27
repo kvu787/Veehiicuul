@@ -287,3 +287,43 @@ I checked your local Godot generator: its `HasGodotCompatibleSignature` check ex
 
 Consequently, Visual Studio finds only your two ordinary C# calls, from `_Ready()` and `_Process()`. Those calls can pass an `Exception` directly because they never go through Godot’s Variant-based dispatcher.
 
+## User
+
+if godot can simply skip generating wrappers for certain methods, can it not generate wrappers at all?
+
+## Assistant Commentary
+
+I’ll check whether Godot supports disabling method wrappers and what would stop working if they were disabled.
+
+## User
+
+i.e. what is the point of generating these wrappers?
+
+## Assistant
+
+**The wrappers let Godot’s engine call your C# methods. Ordinary calls between your C# methods do not need them.**
+
+Godot’s engine is written in C++. When it wants to invoke a script method, it supplies a method name and arguments in Godot’s format. The generated C# dispatcher:
+
+1. Recognizes the requested method.
+2. Converts its arguments into the appropriate C# types.
+3. Calls your C# method.
+4. Converts the return value back, if there is one.
+
+This provides direct compiled calls instead of looking up and invoking each method through .NET reflection. [Engine-to-C# bridge](https://github.com/godotengine/godot/blob/master/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs)
+
+For your frame callback, the flow is conceptually:
+
+```text
+Godot’s C++ frame loop
+    → C# bridge and method dispatch
+        → Main._Process(delta)
+            → UpdateGame(delta)    // Ordinary C# call
+```
+
+Godot also uses the generated method-existence checks to discover that your script implements callbacks such as `_Ready` and `_Process`. Simply disabling method generation would remove support those callbacks depend on. [Binding implementation](https://github.com/godotengine/godot/blob/master/modules/mono/editor/bindings_generator.cpp)
+
+**Your intuition is correct for `InitializeTrack`: its wrapper is unnecessary for your direct `this.InitializeTrack()` calls.** It exists to make the method callable through Godot’s method-by-name system as well. The current generator includes compatible methods automatically, without checking whether your application actually uses that capability. [Script method generator](https://github.com/godotengine/godot/blob/master/modules/mono/editor/Godot.NET.Sdk/Godot.SourceGenerators/ScriptMethodsGenerator.cs)
+
+Godot could be designed to generate wrappers only for engine callbacks and methods you explicitly choose to expose. That would avoid wrappers for ordinary helpers. But removing **all** wrappers requires another mechanism for the engine to discover and invoke your C# callbacks.
+
