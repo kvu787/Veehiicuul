@@ -1,6 +1,23 @@
 Veehiicuul ------------
 
-tbd
+- Copy/paste the latest TrackBuilder.py into TrackTemplate
+- Copy/paste TrackTemplate.blend to a new file
+- In the Outliner, exclude these collections:
+  - ColorBlocks
+  - Templates
+- After finishing your input track outlines, run TrackBuilder
+- Adjust vehicle road, placeholder car, and checkered line objects as desired
+- Add decorative objects as desired
+  - Don't modify anything in the `*_Defaults` collections other than moving their positions
+  - Instead, duplicate (not copy) them into your track
+  - Exclude the `*_Defaults` collections when you're done
+- Before exporting, do this:
+  - Exclude these collections:
+    - TrackBuilder/Input
+    - `*_Defaults`
+  - Run ValidateTrackScene.py and fix any issues
+- To export, run ExportToVeehiicuul.py
+  - This should create a GLB model file and a JSON file with collision data
 
 ZoomTracks ------------
 
