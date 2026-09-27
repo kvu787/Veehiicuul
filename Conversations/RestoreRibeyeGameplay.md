@@ -255,3 +255,17 @@ I’ll check Godot 4.7.2’s input and window code for a built-in Alt+Enter hand
 **Not in Godot 4.7.2, which this project uses.** Godot provides `Window.Mode`, but your code must detect Alt+Enter and switch the mode. This block and the shortcut detection in `InputManager` are needed.
 
 **Godot 4.8 development builds add built-in handling**, enabled by default through `display/window/size/enable_toggle_fullscreen_shortcut`. It uses the `ui_toggle_fullscreen` action, bound to Alt+Enter. After upgrading to 4.8, that could replace both pieces of your code. [4.8 source](C:/Users/k/Repository/External/godot/doc/classes/ProjectSettings.xml:1027), [implemented feature proposal](https://github.com/godotengine/godot-proposals/issues/1983).
+
+## User
+
+replace alt+enter with F11 in the application for toggling window mode
+
+## Assistant
+
+I’ll change the shortcut to F11, verify the build, and record the change in the conversation log.
+
+## Assistant
+
+Changed and committed. **F11** now toggles between borderless fullscreen and windowed mode; Alt+Enter no longer toggles it.
+
+Rebuilt the release executable and verified switching in both directions and no repeated toggling while F11 is held.
