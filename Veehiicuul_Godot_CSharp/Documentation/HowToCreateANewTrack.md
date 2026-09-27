@@ -12,6 +12,7 @@ Veehiicuul ------------
   - Instead, duplicate (not copy) them into your track
   - Exclude the `*_Defaults` collections when you're done
 - Before exporting, do this:
+  - Purge unused data
   - Exclude these collections:
     - TrackBuilder/Input
     - `*_Defaults`
