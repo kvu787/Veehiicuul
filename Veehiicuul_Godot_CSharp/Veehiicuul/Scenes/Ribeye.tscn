@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://b4olp61o81mxg"]
+
+[ext_resource type="PackedScene" uid="uid://d0qn0bvgo44p4" path="res://GLB/Ribeye.glb" id="1_j71vn"]
+[ext_resource type="Environment" uid="uid://dtayw57htymn6" path="res://Resources/Environment.tres" id="2_t8c8w"]
+[ext_resource type="CameraAttributesPractical" uid="uid://ccmi3voa5m4p5" path="res://Resources/CameraAttributesPractical.tres" id="3_jcs64"]
+[ext_resource type="Compositor" uid="uid://bvdqusir3gt1o" path="res://Resources/Compositor.tres" id="4_ts2sv"]
+
+[node name="Ribeye" type="Node3D" unique_id=709550732]
+
+[node name="CameraPanAndYaw" type="Node3D" parent="." unique_id=907774600]
+transform = Transform3D(0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, 0.70710677, -6.090349, 0, -17.842361)
+
+[node name="CameraYawOffset" type="Node3D" parent="CameraPanAndYaw" unique_id=1990904686]
+
+[node name="CameraPanOffsetAndPitch" type="Node3D" parent="CameraPanAndYaw/CameraYawOffset" unique_id=457349857]
+transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 0, 0)
+
+[node name="Camera" type="Camera3D" parent="CameraPanAndYaw/CameraYawOffset/CameraPanOffsetAndPitch" unique_id=683329125]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 170.88507)
+projection = 1
+size = 190.0
+near = 10.0
+far = 1000.0
+
+[node name="Sunlight" type="DirectionalLight3D" parent="." unique_id=1543433548]
+transform = Transform3D(0.49999997, -0.663414, 0.5566704, 0, 0.64278764, 0.76604444, -0.86602545, -0.3830222, 0.3213938, 0, 50, 0)
+light_energy = 1.6
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.0
+light_specular = 0.0
+light_bake_mode = 0
+sky_mode = 1
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1196822647]
+environment = ExtResource("2_t8c8w")
+camera_attributes = ExtResource("3_jcs64")
+compositor = ExtResource("4_ts2sv")
+
+[node name="Ribeye" parent="." unique_id=1561416440 instance=ExtResource("1_j71vn")]

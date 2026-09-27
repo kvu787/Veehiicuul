@@ -1,5 +1,7 @@
 Veehiicuul ------------
 
+Blender-side
+
 - Copy/paste the latest TrackBuilder.py into TrackTemplate
 - Copy/paste TrackTemplate.blend to a new file
 - In the Outliner, exclude these collections:
@@ -19,6 +21,31 @@ Veehiicuul ------------
   - Run ValidateTrackScene.py and fix any issues
 - To export, run ExportToVeehiicuul.py
   - This should create a GLB model file and a JSON file with collision data
+
+Godot-side
+
+- Open the import settings for the GLB and set this import script: `Source\Editor\DisableSpecularImport.gd`
+- Reimport
+- Create a new scene with the same name as the track
+- Copy/paste an existing track or its nodes to get these nodes:
+  - CameraPanAndYaw
+  - Sunlight
+  - WorldEnvironment
+- Drag/drop GLB into the track scene
+  - Reset transform
+- Adjust these camera settings:
+  - Pan:
+    - CameraPanAndYaw.Position.XZ
+  - Yaw:
+    - CameraPanAndYaw.Rotation.Y
+  - Pitch:
+    - CameraPanOffsetAndPitch.Rotation.X
+    - This should probably remain -45 deg
+  - Zoom:
+    - Camera.Size
+  - Clip:
+    - Camera.Near
+    - Camera.Far
 
 ZoomTracks ------------
 
