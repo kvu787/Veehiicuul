@@ -15,7 +15,7 @@ public class Main(Node mainNode) {
     private TrackSwitcher TrackSwitcher = null!;
     private CameraController CameraController = null!;
     private CarSwitcher CarSwitcher = null!;
-    private CarState CarState = null!;
+    private CarStateManager CarStateManager = null!;
     private CollisionManager CollisionManager = null!;
     private CameraPivotManager CameraPivotManager = null!;
     private double CarControlTimeoutRemaining;
@@ -50,7 +50,7 @@ public class Main(Node mainNode) {
         this.TrackObjects = new TrackObjects(this.TrackSwitcher);
         this.CameraController = new CameraController(this.TrackObjects, this.CameraFollowSettings, this.InputManager, this.TrackSwitcher);
         this.CarSwitcher = new CarSwitcher(this.InputManager, this.TrackSwitcher);
-        this.CarState = new CarState(this.CarSwitcher, this.CameraController, this.InputManager, this.TrackObjects);
+        this.CarStateManager = new CarStateManager(this.CarSwitcher, this.CameraController, this.InputManager, this.TrackObjects);
 
         //throw new NotImplementedException();
         //this.CameraPivotManager = new CameraPivotManager(this.TrackSwitcher.CurrentTrackScene, this.CameraFollowSettings, this.CameraController, this.CarState, this.InputManager);
@@ -84,19 +84,19 @@ public class Main(Node mainNode) {
                 // As in ZoomTracks, show the collision frame, then reset and skip car input.
                 bool resetCar = this.InputManager.ResetCar || this.CollisionManager.IsCarColliding();
                 if (resetCar) {
-                    this.CarState.Reset_PositionRotationVelocity();
+                    this.CarStateManager.Reset_PositionRotationVelocity();
                     this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
                 }
                 this.CameraController.ReadInputAndChangeCameraSettings(delta);
                 this.CameraPivotManager.ReadInputAndToggle();
                 if (this.CarSwitcher.ReadInputAndSwitchCar()) {
-                    this.CarState.Reset_PositionRotationVelocity();
+                    this.CarStateManager.Reset_PositionRotationVelocity();
                     this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
                 } else if (!resetCar && this.CarControlTimeoutRemaining <= 0.0) {
-                    this.CarState.ReadInputAndUpdateState(delta);
+                    this.CarStateManager.ReadInputAndUpdateState(delta);
                 }
             }
-            this.CarState.ApplyStateToGameObject();
+            this.CarStateManager.ApplyStateToGameObject();
             this.CameraController.Update();
             this.CameraPivotManager.UpdateCameraPivot();
             if (switchedTrack) {

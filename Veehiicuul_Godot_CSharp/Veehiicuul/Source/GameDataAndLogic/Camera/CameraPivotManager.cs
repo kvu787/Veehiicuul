@@ -6,12 +6,12 @@ namespace Veehiicuul_Godot_CSharp;
 public sealed class CameraPivotManager {
     private CameraFollowSettings CameraFollowSettings { get; }
     private CameraController CameraController { get; }
-    private CarState CarState { get; }
+    private CarStateManager CarState { get; }
     private InputManager InputManager { get; }
     private Node3D CameraPanAndYaw { get; }
     private TransformStruct OriginalCameraPanAndYawTransform { get; }
 
-    public CameraPivotManager(Node trackScene, CameraFollowSettings cameraFollowSettings, CameraController cameraController, CarState carState, InputManager inputManager) {
+    public CameraPivotManager(Node trackScene, CameraFollowSettings cameraFollowSettings, CameraController cameraController, CarStateManager carState, InputManager inputManager) {
         ArgumentNullException.ThrowIfNull(trackScene);
         ArgumentNullException.ThrowIfNull(cameraFollowSettings);
         ArgumentNullException.ThrowIfNull(cameraController);

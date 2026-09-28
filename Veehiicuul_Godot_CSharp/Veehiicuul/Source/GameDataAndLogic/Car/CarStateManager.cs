@@ -4,7 +4,7 @@ using System;
 namespace Veehiicuul_Godot_CSharp;
 
 /// <summary>Integrates the source game's planar acceleration, braking, and heading.</summary>
-public sealed class CarState {
+public sealed class CarStateManager {
     // Hardware deadzones vary by controller; the source chose 0.05 to allow for
     // both controller noise and thumb precision. Apply this in car space, not
     // before rotating input: forward/reverse/left/right have different strengths.
@@ -22,7 +22,7 @@ public sealed class CarState {
 
     public Vector3 Position { get; private set; }
 
-    public CarState(CarSwitcher carSwitcher, CameraController cameraController, InputManager inputManager, TrackObjects trackObjects) {
+    public CarStateManager(CarSwitcher carSwitcher, CameraController cameraController, InputManager inputManager, TrackObjects trackObjects) {
         ArgumentNullException.ThrowIfNull(trackObjects);
         ArgumentNullException.ThrowIfNull(carSwitcher);
         ArgumentNullException.ThrowIfNull(cameraController);
