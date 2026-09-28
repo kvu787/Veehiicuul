@@ -21,18 +21,18 @@ public sealed class CameraController {
     /// <summary>Clockwise yaw from Godot forward (-Z), in degrees.</summary>
     public float CameraYaw => -Mathf.RadToDeg(this.TrackObjects.Camera.GlobalRotation.Y);
 
-    public CameraController(TrackObjects trackObjects, CameraFollowSettings cameraFollowSettings, TrackJson trackJson, InputManager inputManager) {
+    public CameraController(TrackObjects trackObjects, CameraFollowSettings cameraFollowSettings, InputManager inputManager, TrackSwitcher trackSwitcher) {
         ArgumentNullException.ThrowIfNull(trackObjects);
         ArgumentNullException.ThrowIfNull(cameraFollowSettings);
-        ArgumentNullException.ThrowIfNull(trackJson);
         ArgumentNullException.ThrowIfNull(inputManager);
+        ArgumentNullException.ThrowIfNull(trackSwitcher);
 
         this.TrackObjects = trackObjects;
         this.CameraFollowSettings = cameraFollowSettings;
         this.InputManager = inputManager;
 
         this.DefaultFixedCameraSize = this.TrackObjects.Camera.Size;
-        this.DefaultFollowCameraSize = trackJson.FollowCameraSize;
+        this.DefaultFollowCameraSize = trackSwitcher.CurrentTrackJson.FollowCameraSize;
         this.ResetZoom();
     }
 

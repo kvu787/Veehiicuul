@@ -22,16 +22,16 @@ public sealed class CarState {
 
     public Vector3 Position { get; private set; }
 
-    public CarState(Node3D placeholderCarTransform, CarSwitcher carSwitcher, CameraController cameraController, InputManager inputManager) {
-        ArgumentNullException.ThrowIfNull(placeholderCarTransform);
+    public CarState(CarSwitcher carSwitcher, CameraController cameraController, InputManager inputManager, TrackObjects trackObjects) {
+        ArgumentNullException.ThrowIfNull(trackObjects);
         ArgumentNullException.ThrowIfNull(carSwitcher);
         ArgumentNullException.ThrowIfNull(cameraController);
         ArgumentNullException.ThrowIfNull(inputManager);
         this.CarSwitcher = carSwitcher;
         this.CameraController = cameraController;
         this.InputManager = inputManager;
-        this.StartingPosition = placeholderCarTransform.Position;
-        this.StartingRotation = placeholderCarTransform.Rotation.Y;
+        this.StartingPosition = trackObjects.PlaceholderCarNode.Position;
+        this.StartingRotation = trackObjects.PlaceholderCarNode.Rotation.Y;
         this.Reset_PositionRotationVelocity();
     }
 

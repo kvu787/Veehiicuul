@@ -46,11 +46,11 @@ public class Main(Node mainNode) {
     }
 
     private void InitializeTrack() {
-        this.CameraFollowSettings = new CameraFollowSettings(this.TrackSwitcher.CurrentTrackJson);
-        this.TrackObjects = new TrackObjects(this.TrackSwitcher.CurrentTrackScene, this.TrackSwitcher.CurrentTrackJson);
-        this.CameraController = new CameraController(this.TrackObjects, this.CameraFollowSettings, this.TrackSwitcher.CurrentTrackJson, this.InputManager);
-        this.CarSwitcher = new CarSwitcher(this.TrackSwitcher.CurrentTrackScene, this.TrackSwitcher.CurrentTrackJson, this.InputManager);
-        this.CarState = new CarState(this.TrackObjects.PlaceholderCarTransform, this.CarSwitcher, this.CameraController, this.InputManager);
+        this.CameraFollowSettings = new CameraFollowSettings(this.TrackSwitcher);
+        this.TrackObjects = new TrackObjects(this.TrackSwitcher);
+        this.CameraController = new CameraController(this.TrackObjects, this.CameraFollowSettings, this.InputManager, this.TrackSwitcher);
+        this.CarSwitcher = new CarSwitcher(this.InputManager, this.TrackSwitcher);
+        this.CarState = new CarState(this.CarSwitcher, this.CameraController, this.InputManager, this.TrackObjects);
         this.CarState.ApplyStateToGameObject();
 
         //throw new NotImplementedException();

@@ -10,14 +10,14 @@ public sealed class CarSwitcher {
     private List<Car> Cars { get; }
     private Car CurrentCar => this.Cars[this.CurrentCarIndex];
 
-    public CarSwitcher(Node currentTrackScene, TrackJson currentTrackJson, InputManager inputManager) {
-        ArgumentNullException.ThrowIfNull(currentTrackScene);
-        ArgumentNullException.ThrowIfNull(currentTrackJson);
+    public CarSwitcher(InputManager inputManager, TrackSwitcher trackSwitcher) {
         ArgumentNullException.ThrowIfNull(inputManager);
+        ArgumentNullException.ThrowIfNull(trackSwitcher);
 
         this.InputManager = inputManager;
-        this.CurrentCarIndex = currentTrackJson.StartCarIndex;
-        this.Cars = currentTrackJson.Cars;
+
+        this.CurrentCarIndex = trackSwitcher.CurrentTrackJson.StartCarIndex;
+        this.Cars = trackSwitcher.CurrentTrackJson.Cars;
         this.CurrentCarNode.Visible = true;
     }
 

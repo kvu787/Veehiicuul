@@ -4,28 +4,28 @@ using System;
 namespace Veehiicuul_Godot_CSharp;
 
 public sealed class TrackObjects {
-    public Node3D PlaceholderCarTransform { get; }
+    public Node3D PlaceholderCarNode { get; }
     public Node3D CameraPanAndYaw { get; }
     public Node3D CameraYawOffset { get; }
     public Node3D CameraPanOffsetAndPitch { get; }
     public Camera3D Camera { get; }
 
-    public TrackObjects(Node trackScene, TrackJson trackJson) {
-        this.PlaceholderCarTransform = trackScene.GetNode<MeshInstance3D>("Model/SlopeCarPlaceholder") as Node3D ?? throw new InvalidOperationException();
-        ValidatePlaceholderCar(this.PlaceholderCarTransform);
-        this.PlaceholderCarTransform.Visible = false;
+    public TrackObjects(TrackSwitcher trackSwitcher) {
+        this.PlaceholderCarNode = trackSwitcher.CurrentTrackScene.GetNode<MeshInstance3D>("Model/SlopeCarPlaceholder") as Node3D ?? throw new InvalidOperationException();
+        ValidatePlaceholderCar(this.PlaceholderCarNode);
+        this.PlaceholderCarNode.Visible = false;
 
-        this.CameraPanAndYaw = trackScene.GetNode<Node3D>("CameraPanAndYaw") ?? throw new InvalidOperationException();
-        this.CameraYawOffset = trackScene.GetNode<Node3D>("CameraPanAndYaw/CameraYawOffset") ?? throw new InvalidOperationException();
-        this.CameraPanOffsetAndPitch = trackScene.GetNode<Node3D>("CameraPanAndYaw/CameraYawOffset/CameraPanOffsetAndPitch") ?? throw new InvalidOperationException();
-        this.Camera = trackScene.GetNode<Node3D>("CameraPanAndYaw/CameraYawOffset/CameraPanOffsetAndPitch/Camera") as Camera3D ?? throw new InvalidOperationException();
+        this.CameraPanAndYaw = trackSwitcher.CurrentTrackScene.GetNode<Node3D>("CameraPanAndYaw") ?? throw new InvalidOperationException();
+        this.CameraYawOffset = trackSwitcher.CurrentTrackScene.GetNode<Node3D>("CameraPanAndYaw/CameraYawOffset") ?? throw new InvalidOperationException();
+        this.CameraPanOffsetAndPitch = trackSwitcher.CurrentTrackScene.GetNode<Node3D>("CameraPanAndYaw/CameraYawOffset/CameraPanOffsetAndPitch") ?? throw new InvalidOperationException();
+        this.Camera = trackSwitcher.CurrentTrackScene.GetNode<Node3D>("CameraPanAndYaw/CameraYawOffset/CameraPanOffsetAndPitch/Camera") as Camera3D ?? throw new InvalidOperationException();
 
-        foreach (Car car in trackJson.Cars) {
-            Node3D carDecorativeNode = trackScene.FindChild(car.GameObjectName, recursive: true, owned: false) as MeshInstance3D
-                ?? throw new InvalidOperationException($"Car model MeshInstance3D name='{car.GameObjectName}' was not found in sceneName='{trackScene.Name}'");
+        foreach (Car car in trackSwitcher.CurrentTrackJson.Cars) {
+            Node3D carDecorativeNode = trackSwitcher.CurrentTrackScene.FindChild(car.GameObjectName, recursive: true, owned: false) as MeshInstance3D
+                ?? throw new InvalidOperationException($"Car model MeshInstance3D name='{car.GameObjectName}' was not found in sceneName='{trackSwitcher.CurrentTrackScene.Name}'");
             Node3D carGameNode = carDecorativeNode.Duplicate(0) as MeshInstance3D
                 ?? throw new InvalidOperationException();
-            trackScene.AddChild(carGameNode);
+            trackSwitcher.CurrentTrackScene.AddChild(carGameNode);
             carGameNode.Visible = false;
             car.Node = carGameNode;
         }
