@@ -36,4 +36,4 @@ environment = ExtResource("2_t8c8w")
 camera_attributes = ExtResource("3_jcs64")
 compositor = ExtResource("4_ts2sv")
 
-[node name="Ribeye" parent="." unique_id=1561416440 instance=ExtResource("1_j71vn")]
+[node name="Model" parent="." unique_id=1561416440 instance=ExtResource("1_j71vn")]
