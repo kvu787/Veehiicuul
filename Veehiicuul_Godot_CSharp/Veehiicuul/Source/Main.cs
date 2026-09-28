@@ -7,18 +7,19 @@ namespace Veehiicuul_Godot_CSharp;
 public class Main(Node mainNode) {
     private static readonly string[] TrackNames = ["Ribeye"];
     private const int InitialTrackIndex = 0;
-    private const double CarControlTimeoutSeconds = 0.35;
+    //private const double CarControlTimeoutSeconds = 0.35;
 
-    private CameraFollowSettings CameraFollowSettings = null!;
-    private TrackObjects TrackObjects = null!;
     private InputManager InputManager = null!;
     private TrackSwitcher TrackSwitcher = null!;
-    private CameraController CameraController = null!;
+    private CameraFollowManager CameraFollowManager = null!;
+    private TrackObjects TrackObjects = null!;
+    private CameraZoomManager CameraZoomManager = null!;
+    private CameraPanManager CameraPanManager = null!;
+    private CameraYawManager CameraYawManager = null!;
     private CarSwitcher CarSwitcher = null!;
     private CarStateManager CarStateManager = null!;
-    private CollisionManager CollisionManager = null!;
-    private CameraPivotManager CameraPivotManager = null!;
-    private double CarControlTimeoutRemaining;
+    //private readonly CollisionManager CollisionManager = null!;
+    //private double CarControlTimeoutRemaining;
     private bool _IsReadyDone;
     private readonly Node MainNode = mainNode;
 
@@ -46,14 +47,14 @@ public class Main(Node mainNode) {
     }
 
     private void InitializeTrack() {
-        this.CameraFollowSettings = new CameraFollowSettings(this.TrackSwitcher);
+        this.CameraFollowManager = new CameraFollowManager(this.InputManager, this.TrackSwitcher);
         this.TrackObjects = new TrackObjects(this.TrackSwitcher);
-        this.CameraController = new CameraController(this.TrackObjects, this.CameraFollowSettings, this.InputManager, this.TrackSwitcher);
+        this.CameraYawManager = new CameraYawManager(this.TrackObjects);
+        this.CameraZoomManager = new CameraZoomManager(this.TrackObjects, this.InputManager, this.CameraFollowManager, this.TrackSwitcher);
         this.CarSwitcher = new CarSwitcher(this.InputManager, this.TrackSwitcher);
-        this.CarStateManager = new CarStateManager(this.CarSwitcher, this.CameraController, this.InputManager, this.TrackObjects);
+        this.CarStateManager = new CarStateManager(this.CarSwitcher, this.CameraYawManager, this.InputManager, this.TrackObjects);
+        this.CameraPanManager = new CameraPanManager(this.TrackObjects, this.CameraFollowManager, this.CarStateManager);
 
-        //throw new NotImplementedException();
-        //this.CameraPivotManager = new CameraPivotManager(this.TrackSwitcher.CurrentTrackScene, this.CameraFollowSettings, this.CameraController, this.CarState, this.InputManager);
         //this.CollisionManager = new CollisionManager(this.TrackSwitcher.CurrentTrackName, this.CarSwitcher);
     }
 
@@ -62,46 +63,46 @@ public class Main(Node mainNode) {
             if (!this._IsReadyDone) {
                 throw new InvalidOperationException("A frame ran before initialization completed.");
             }
-            Thread.Sleep(TimeSpan.FromSeconds(1));
-            GD.Print(delta);
+            Thread.Sleep(TimeSpan.FromSeconds(0.1));
+            GD.Print($"{DateTimeOffset.Now}, {delta}");
             return;
 
-            this.InputManager.UpdateInputs();
-            this.CarControlTimeoutRemaining = Math.Max(0.0, this.CarControlTimeoutRemaining - delta);
-            if (this.InputManager.QuitGame) {
-                this.Quit(0);
-                return;
-            }
-            if (this.InputManager.ToggleFullscreen) {
-                Window window = this.MainNode.GetWindow();
-                window.Mode = window.Mode == Window.ModeEnum.Fullscreen
-                    ? Window.ModeEnum.Windowed : Window.ModeEnum.Fullscreen;
-            }
-            bool switchedTrack = this.TrackSwitcher.ReadInputAndSwitchTracks();
-            if (switchedTrack) {
-                this.InitializeTrack();
-            } else {
-                // As in ZoomTracks, show the collision frame, then reset and skip car input.
-                bool resetCar = this.InputManager.ResetCar || this.CollisionManager.IsCarColliding();
-                if (resetCar) {
-                    this.CarStateManager.Reset_PositionRotationVelocity();
-                    this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
-                }
-                this.CameraController.ReadInputAndChangeCameraSettings(delta);
-                this.CameraPivotManager.ReadInputAndToggle();
-                if (this.CarSwitcher.ReadInputAndSwitchCar()) {
-                    this.CarStateManager.Reset_PositionRotationVelocity();
-                    this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
-                } else if (!resetCar && this.CarControlTimeoutRemaining <= 0.0) {
-                    this.CarStateManager.ReadInputAndUpdateState(delta);
-                }
-            }
-            this.CarStateManager.ApplyStateToGameObject();
-            this.CameraController.Update();
-            this.CameraPivotManager.UpdateCameraPivot();
-            if (switchedTrack) {
-                GarbageCollectionUtility.ForceGarbageCollection();
-            }
+            //this.InputManager.UpdateInputs();
+            //this.CarControlTimeoutRemaining = Math.Max(0.0, this.CarControlTimeoutRemaining - delta);
+            //if (this.InputManager.QuitGame) {
+            //    this.Quit(0);
+            //    return;
+            //}
+            //if (this.InputManager.ToggleFullscreen) {
+            //    Window window = this.MainNode.GetWindow();
+            //    window.Mode = window.Mode == Window.ModeEnum.Fullscreen
+            //        ? Window.ModeEnum.Windowed : Window.ModeEnum.Fullscreen;
+            //}
+            //bool switchedTrack = this.TrackSwitcher.ReadInputAndSwitchTracks();
+            //if (switchedTrack) {
+            //    this.InitializeTrack();
+            //} else {
+            //    // As in ZoomTracks, show the collision frame, then reset and skip car input.
+            //    bool resetCar = this.InputManager.ResetCar || this.CollisionManager.IsCarColliding();
+            //    if (resetCar) {
+            //        this.CarStateManager.Reset_PositionRotationVelocity();
+            //        this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
+            //    }
+            //    this.CameraController.ReadInputAndChangeCameraSettings(delta);
+            //    this.CameraPivotManager.ReadInputAndToggle();
+            //    if (this.CarSwitcher.ReadInputAndSwitchCar()) {
+            //        this.CarStateManager.Reset_PositionRotationVelocity();
+            //        this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
+            //    } else if (!resetCar && this.CarControlTimeoutRemaining <= 0.0) {
+            //        this.CarStateManager.ReadInputAndUpdateState(delta);
+            //    }
+            //}
+            //this.CarStateManager.ApplyStateToGameObject();
+            //this.CameraController.Update();
+            //this.CameraPivotManager.UpdateCameraPivot();
+            //if (switchedTrack) {
+            //    GarbageCollectionUtility.ForceGarbageCollection();
+            //}
         } catch (Exception exception) {
             this.LogExceptionAndQuit(exception);
         }
