@@ -310,3 +310,21 @@ For example, with managed-only debugging you can step through `this.Main.Ready()
 One practical difference: Visual Studio’s .NET **Hot Reload is unsupported during mixed-mode debugging**. Managed-only debugging removes that particular restriction, although it does not guarantee that every edit or Godot workflow supports Hot Reload. [Microsoft’s Hot Reload documentation](https://learn.microsoft.com/en-us/visualstudio/debugger/hot-reload?view=visualstudio)
 
 **For debugging your own C# gameplay code, managed-only can be sufficient.** My earlier recommendation followed [Godot’s documented Visual Studio setup](https://docs.godotengine.org/en/4.7/tutorials/scripting/c_sharp/c_sharp_basics.html#visual-studio-windows-only); native debugging is not inherently required just because Godot hosts your C# library. I haven’t tested managed-only launching in your exact installation. If it launches and hits your `_Ready()` breakpoint, you have confirmed the C# debugger is connected.
+
+## User
+
+Create a markdown file that covers this whole conversation as a step-by-step guide with FAQ at C:\Users\k\Repository\Veehiicuul\Documentation\Howto-GodotCSharpDebug.md
+
+## Assistant Commentary
+
+I’ll create the guide at that path, including the Visual Studio 2026 settings, the `StartArguments` warning, and an FAQ on managed-only versus mixed-mode debugging.
+
+## Assistant Commentary
+
+The draft now covers the full walkthrough and FAQ, including the difference between the two debugger modes and the limits of what was verified. I’m checking the JSON example, local paths, and table formatting before committing the guide separately from the conversation record.
+
+## Assistant
+
+Created [Howto-GodotCSharpDebug.md](C:/Users/k/Repository/Veehiicuul/Documentation/Howto-GodotCSharpDebug.md).
+
+Includes the full walkthrough, launch-profile JSON, troubleshooting, and FAQ. Validated the JSON example, local links, and table formatting.
