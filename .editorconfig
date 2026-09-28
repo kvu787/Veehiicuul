@@ -144,3 +144,6 @@ dotnet_diagnostic.CS0649.severity = suggestion
 
 # Missing XML comment for publicly visible type or member 'Type_or_Member'
 dotnet_diagnostic.CS1591.severity = none
+
+# Nonnullable reference not initialized
+dotnet_diagnostic.CS8618.severity = error
