@@ -45,6 +45,21 @@ public class Main(Node mainNode) {
         }
     }
 
+    private void InitializeTrack() {
+        this.CameraFollowSettings = new CameraFollowSettings(this.TrackSwitcher.CurrentTrackJson);
+        this.TrackObjects = new TrackObjects(this.TrackSwitcher.CurrentTrackScene, this.TrackSwitcher.CurrentTrackJson);
+        GD.Print($"PlaceholderCar position: {this.TrackObjects.PlaceholderCarTransform.Position.X}, {this.TrackObjects.PlaceholderCarTransform.Position.Y}, {this.TrackObjects.PlaceholderCarTransform.Position.Z}");
+        this.CameraController = new CameraController(this.TrackObjects, this.CameraFollowSettings, this.TrackSwitcher.CurrentTrackJson, this.InputManager);
+        GD.Print($"Camera size: {this.CameraController.CameraSize}");
+        this.CarSwitcher = new CarSwitcher(this.TrackSwitcher.CurrentTrackScene, this.TrackSwitcher.CurrentTrackJson, this.InputManager);
+        this.CarState = new CarState(this.TrackObjects.PlaceholderCarTransform, this.CarSwitcher, this.CameraController, this.InputManager);
+        this.CarState.ApplyStateToGameObject();
+
+        //throw new NotImplementedException();
+        //this.CameraPivotManager = new CameraPivotManager(this.TrackSwitcher.CurrentTrackScene, this.CameraFollowSettings, this.CameraController, this.CarState, this.InputManager);
+        //this.CollisionManager = new CollisionManager(this.TrackSwitcher.CurrentTrackName, this.CarSwitcher);
+    }
+
     public void Process(double delta) {
         try {
             if (!this._IsReadyDone) {
@@ -93,20 +108,5 @@ public class Main(Node mainNode) {
         } catch (Exception exception) {
             this.LogExceptionAndQuit(exception);
         }
-    }
-
-    private void InitializeTrack() {
-        this.CameraFollowSettings = new CameraFollowSettings(this.TrackSwitcher.CurrentTrackJson);
-        this.TrackObjects = new TrackObjects(this.TrackSwitcher.CurrentTrackScene, this.TrackSwitcher.CurrentTrackJson);
-        GD.Print($"PlaceholderCar position: {this.TrackObjects.PlaceholderCarTransform.Position.X}, {this.TrackObjects.PlaceholderCarTransform.Position.Y}, {this.TrackObjects.PlaceholderCarTransform.Position.Z}");
-        this.CameraController = new CameraController(this.TrackObjects, this.CameraFollowSettings, this.TrackSwitcher.CurrentTrackJson, this.InputManager);
-        GD.Print($"Camera size: {this.CameraController.CameraSize}");
-        this.CarSwitcher = new CarSwitcher(this.TrackSwitcher.CurrentTrackScene, this.TrackSwitcher.CurrentTrackJson, this.InputManager);
-        this.CarState = new CarState(this.TrackObjects.PlaceholderCarTransform, this.CarSwitcher, this.CameraController, this.InputManager);
-        this.CarState.ApplyStateToGameObject();
-
-        //throw new NotImplementedException();
-        //this.CameraPivotManager = new CameraPivotManager(this.TrackSwitcher.CurrentTrackScene, this.CameraFollowSettings, this.CameraController, this.CarState, this.InputManager);
-        //this.CollisionManager = new CollisionManager(this.TrackSwitcher.CurrentTrackName, this.CarSwitcher);
     }
 }
