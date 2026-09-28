@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Profile 1": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\k\\Program\\Godot_v4.7.2-stable_mono_win64\\Godot_v4.7.2-stable_mono_win64.exe",
+      "commandLineArgs": "--path \".\"",
+      "workingDirectory": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul",
+      "debugEngines": "managed,native"
+    }
+  }
+}
