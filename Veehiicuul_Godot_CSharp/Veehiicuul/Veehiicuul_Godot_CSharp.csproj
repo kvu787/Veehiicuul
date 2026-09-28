@@ -20,13 +20,6 @@
         -->
         <EnableDynamicLoading>true</EnableDynamicLoading>
 
-        <!--
-            Required to properly export a Godot .NET/C# project using the command-line (instead of the Godot Editor export GUI).
-            Prevents an idle compiler server from keeping Godot's Windows console wrapper waiting after export.
-            See https://github.com/godotengine/godot/issues/110101 for more information.
-        -->
-        <UseSharedCompilation>false</UseSharedCompilation>
-
         <!-- Allows the unsafe code required by source-generated Windows API interop in DebugInfo. -->
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
