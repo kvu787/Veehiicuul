@@ -47,7 +47,7 @@ public sealed class CollisionManager {
     }
 
     private Node3D RefreshCurrentVehicleIfNeeded() {
-        Node3D currentVehicle = this._carSwitcher.CurrentCarTransform;
+        Node3D currentVehicle = this._carSwitcher.CurrentCarNode;
         if (ReferenceEquals(currentVehicle, this._currentVehicle)) {
             return currentVehicle;
         }

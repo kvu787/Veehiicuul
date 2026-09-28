@@ -13,11 +13,11 @@ public static class JsonUtility {
         // Resource paths work both in the editor and in an exported Godot package.
         using Godot.FileAccess file = Godot.FileAccess.Open(resourcePath, Godot.FileAccess.ModeFlags.Read)
             ?? throw new FileNotFoundException($"Cannot read JSON '{resourcePath}': {Godot.FileAccess.GetOpenError()}.", resourcePath);
-        string contents = file.GetAsText();
         Error error = file.GetError();
-        if (error != Error.Ok && error != Error.FileEof) {
+        if (error != Error.Ok) {
             throw new IOException($"Failed reading JSON '{resourcePath}': {error}.");
         }
+        string contents = file.GetAsText();
         return JsonSerializer.Deserialize<T>(contents, Options)
             ?? throw new JsonException($"JSON '{resourcePath}' contained null instead of {typeof(T).Name}.");
     }

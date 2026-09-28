@@ -14,7 +14,6 @@ public sealed class CarState {
     private CarSwitcher CarSwitcher { get; }
     private CameraController CameraController { get; }
     private InputManager InputManager { get; }
-    private TimeManager TimeManager { get; }
     private Vector3 StartingPosition { get; }
     private float StartingRotation { get; }
     private float? Rotation_ForMostRecentNonZeroVelocity { get; set; }
@@ -23,22 +22,20 @@ public sealed class CarState {
 
     public Vector3 Position { get; private set; }
 
-    public CarState(Node3D placeholderCarTransform, CarSwitcher carSwitcher, CameraController cameraController, InputManager inputManager, TimeManager timeManager) {
+    public CarState(Node3D placeholderCarTransform, CarSwitcher carSwitcher, CameraController cameraController, InputManager inputManager) {
         ArgumentNullException.ThrowIfNull(placeholderCarTransform);
         ArgumentNullException.ThrowIfNull(carSwitcher);
         ArgumentNullException.ThrowIfNull(cameraController);
         ArgumentNullException.ThrowIfNull(inputManager);
-        ArgumentNullException.ThrowIfNull(timeManager);
         this.CarSwitcher = carSwitcher;
         this.CameraController = cameraController;
         this.InputManager = inputManager;
-        this.TimeManager = timeManager;
-        this.StartingPosition = placeholderCarTransform.GlobalPosition;
-        this.StartingRotation = -Mathf.RadToDeg(placeholderCarTransform.GlobalRotation.Y);
+        this.StartingPosition = placeholderCarTransform.Position;
+        this.StartingRotation = placeholderCarTransform.Rotation.Y;
         this.Reset_PositionRotationVelocity();
     }
 
-    public void ReadInputAndUpdateState() {
+    public void ReadInputAndUpdateState(double delta) {
         if (!this.InputManager.HasGamepad) {
             return;
         }
@@ -64,7 +61,7 @@ public sealed class CarState {
                     0f,
                     accelerationInputCar.Z * (accelerationInputCar.Z < 0f ? carDynamic.AccelerationMap.Forward : carDynamic.AccelerationMap.Reverse));
                 Vector3 accelerationOutputWorld = accelerationOutputCar.Rotate2D(this.Rotation);
-                this.Velocity += this.TimeManager.DeltaTime * accelerationOutputWorld;
+                this.Velocity += (float)delta * accelerationOutputWorld;
             }
         } else if (this.Velocity != Vector3.Zero) {
             float velocityLengthSquared = this.Velocity.LengthSquared();
@@ -72,7 +69,7 @@ public sealed class CarState {
                 this.Velocity = Vector3.Zero;
             } else {
                 Vector3 brakeDirection = -this.Velocity.Normalized();
-                Vector3 brakeDeltaVelocity = carDynamic.AccelerationMap.Reverse * brakeInput * this.TimeManager.DeltaTime * brakeDirection;
+                Vector3 brakeDeltaVelocity = carDynamic.AccelerationMap.Reverse * brakeInput * (float)delta * brakeDirection;
                 if (brakeDeltaVelocity.LengthSquared() >= velocityLengthSquared) {
                     this.Velocity = Vector3.Zero;
                 } else {
@@ -87,12 +84,13 @@ public sealed class CarState {
         if (this.Velocity != Vector3.Zero) {
             this.Rotation_ForMostRecentNonZeroVelocity = this.Velocity.Get2DRotation();
         }
-        this.Position += this.Velocity * this.TimeManager.DeltaTime;
+        this.Position += this.Velocity * (float)delta;
     }
 
     public void ApplyStateToGameObject() {
-        this.CarSwitcher.CurrentCarTransform.SetPositionAndRotation(
-            this.Position, new Quaternion(Vector3.Up, -Mathf.DegToRad(this.Rotation)));
+        this.CarSwitcher.CurrentCarNode.SetPositionAndRotation(
+            this.Position,
+            new Quaternion(Vector3.Up, this.Rotation));
     }
 
     public void Reset_PositionRotationVelocity() {

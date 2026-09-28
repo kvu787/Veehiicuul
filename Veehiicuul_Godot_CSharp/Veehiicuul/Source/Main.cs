@@ -1,12 +1,16 @@
 using Godot;
 using System;
+using System.Threading;
 
 namespace Veehiicuul_Godot_CSharp;
 
-/// <summary>The application's only startup entry point and frame callback.</summary>
-public partial class Main : Node {
+public class Main(Node mainNode) {
+    private static readonly string[] TrackNames = ["Ribeye"];
+    private const int InitialTrackIndex = 0;
     private const double CarControlTimeoutSeconds = 0.35;
-    private TimeManager TimeManager = null!;
+
+    private CameraFollowSettings CameraFollowSettings = null!;
+    private TrackObjects TrackObjects = null!;
     private InputManager InputManager = null!;
     private TrackSwitcher TrackSwitcher = null!;
     private CameraController CameraController = null!;
@@ -16,14 +20,19 @@ public partial class Main : Node {
     private CameraPivotManager CameraPivotManager = null!;
     private double CarControlTimeoutRemaining;
     private bool Initialized;
+    private readonly Node MainNode = mainNode;
 
     private void LogExceptionAndQuit(Exception exception) {
-        GD.PushError(exception.ToString());
-        this.SetProcess(false);
-        this.GetTree().Quit(1);
+        GD.PrintErr(exception.ToString());
+        this.Quit(1);
     }
 
-    public override void _Ready() {
+    private void Quit(int exitCode) {
+        this.MainNode.SetProcess(false);
+        this.MainNode.GetTree().Quit(exitCode);
+    }
+
+    public void Ready() {
         try {
             this.InitializeGame();
         } catch (Exception exception) {
@@ -31,7 +40,7 @@ public partial class Main : Node {
         }
     }
 
-    public override void _Process(double delta) {
+    public void Process(double delta) {
         try {
             if (!this.Initialized) {
                 throw new InvalidOperationException("A frame ran before initialization completed.");
@@ -43,44 +52,42 @@ public partial class Main : Node {
     }
 
     private void InitializeGame() {
-        PrintInfoUtility.PrintDisplayInfo(this.GetViewport());
+        PrintInfoUtility.PrintDisplayInfo(this.MainNode.GetViewport());
         PrintInfoUtility.PrintGraphicsInfo();
-        this.TimeManager = CreateTimeManager();
         this.InputManager = new InputManager();
-        string[] trackNames = ["Ribeye"];
-        this.TrackSwitcher = new TrackSwitcher(this, this.InputManager, trackNames, 0);
+        this.TrackSwitcher = new TrackSwitcher(this.MainNode, this.InputManager, TrackNames, InitialTrackIndex);
         this.InitializeTrack();
         this.Initialized = true;
-        GD.Print("Game initialization completed.");
     }
 
     private void InitializeTrack() {
-        CameraFollowSettings followSettings = new(this.TrackSwitcher.CurrentTrackJson);
-        TrackObjects trackObjects = new(this.TrackSwitcher.CurrentTrackScene);
-        this.CameraController = new CameraController(this.TrackSwitcher.CurrentTrackScene, followSettings,
-            this.TrackSwitcher.CurrentTrackJson, this.InputManager, this.TimeManager);
-        this.CarSwitcher = new CarSwitcher(this.TrackSwitcher.CurrentTrackScene,
-            this.TrackSwitcher.CurrentTrackJson, this.InputManager);
-        this.CarState = new CarState(trackObjects.PlaceholderCarTransform, this.CarSwitcher,
-            this.CameraController, this.InputManager, this.TimeManager);
+        this.CameraFollowSettings = new CameraFollowSettings(this.TrackSwitcher.CurrentTrackJson);
+        this.TrackObjects = new TrackObjects(this.TrackSwitcher.CurrentTrackScene, this.TrackSwitcher.CurrentTrackJson);
+        GD.Print($"PlaceholderCar position: {this.TrackObjects.PlaceholderCarTransform.Position.X}, {this.TrackObjects.PlaceholderCarTransform.Position.Y}, {this.TrackObjects.PlaceholderCarTransform.Position.Z}");
+        this.CameraController = new CameraController(this.TrackObjects, this.CameraFollowSettings, this.TrackSwitcher.CurrentTrackJson, this.InputManager);
+        GD.Print($"Camera size: {this.CameraController.CameraSize}");
+        this.CarSwitcher = new CarSwitcher(this.TrackSwitcher.CurrentTrackScene, this.TrackSwitcher.CurrentTrackJson, this.InputManager);
+        this.CarState = new CarState(this.TrackObjects.PlaceholderCarTransform, this.CarSwitcher, this.CameraController, this.InputManager);
         this.CarState.ApplyStateToGameObject();
-        this.CameraPivotManager = new CameraPivotManager(this.TrackSwitcher.CurrentTrackScene, followSettings,
-            this.CameraController, this.CarState, this.InputManager);
-        this.CollisionManager = new CollisionManager(this.TrackSwitcher.CurrentTrackName, this.CarSwitcher);
+
+        //throw new NotImplementedException();
+        //this.CameraPivotManager = new CameraPivotManager(this.TrackSwitcher.CurrentTrackScene, this.CameraFollowSettings, this.CameraController, this.CarState, this.InputManager);
+        //this.CollisionManager = new CollisionManager(this.TrackSwitcher.CurrentTrackName, this.CarSwitcher);
     }
 
-    // Ordinary synchronous method, called only by _Process; no second engine callback.
-    private void UpdateGame(double delta) {
-        this.TimeManager.Update(delta);
+    public void UpdateGame(double delta) {
+        Thread.Sleep(TimeSpan.FromSeconds(1));
+        GD.Print(delta);
+        return;
+
         this.InputManager.UpdateInputs();
         this.CarControlTimeoutRemaining = Math.Max(0.0, this.CarControlTimeoutRemaining - delta);
         if (this.InputManager.QuitGame) {
-            this.GetTree().Quit();
-            this.SetProcess(false);
+            this.Quit(0);
             return;
         }
         if (this.InputManager.ToggleFullscreen) {
-            Window window = this.GetWindow();
+            Window window = this.MainNode.GetWindow();
             window.Mode = window.Mode == Window.ModeEnum.Fullscreen
                 ? Window.ModeEnum.Windowed : Window.ModeEnum.Fullscreen;
         }
@@ -94,13 +101,13 @@ public partial class Main : Node {
                 this.CarState.Reset_PositionRotationVelocity();
                 this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
             }
-            this.CameraController.ReadInputAndChangeCameraSettings();
+            this.CameraController.ReadInputAndChangeCameraSettings(delta);
             this.CameraPivotManager.ReadInputAndToggle();
             if (this.CarSwitcher.ReadInputAndSwitchCar()) {
                 this.CarState.Reset_PositionRotationVelocity();
                 this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
             } else if (!resetCar && this.CarControlTimeoutRemaining <= 0.0) {
-                this.CarState.ReadInputAndUpdateState();
+                this.CarState.ReadInputAndUpdateState(delta);
             }
         }
         this.CarState.ApplyStateToGameObject();
@@ -109,21 +116,5 @@ public partial class Main : Node {
         if (switchedTrack) {
             GarbageCollectionUtility.ForceGarbageCollection();
         }
-    }
-
-    private static TimeManager CreateTimeManager() {
-        string[] arguments = OS.GetCmdlineUserArgs();
-        int index = Array.IndexOf(arguments, "-refreshRate");
-        if (index < 0) {
-            return new TimeManager(null, true);
-        }
-        if (index + 1 >= arguments.Length) {
-            throw new ArgumentException("No value found for -refreshRate.");
-        }
-        float refreshRate = ParseUtility.ParseFloat(arguments[index + 1]);
-        if (!float.IsFinite(refreshRate)) {
-            throw new ArgumentException("The refresh rate must be finite.");
-        }
-        return refreshRate > 0f ? new TimeManager(refreshRate, false) : new TimeManager(null, true);
     }
 }

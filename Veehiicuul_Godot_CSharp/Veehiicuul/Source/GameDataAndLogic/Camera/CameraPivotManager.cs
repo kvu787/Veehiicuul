@@ -11,7 +11,7 @@ public sealed class CameraPivotManager {
     private Node3D CameraPanAndYaw { get; }
     private TransformStruct OriginalCameraPanAndYawTransform { get; }
 
-    public CameraPivotManager(Node3D trackScene, CameraFollowSettings cameraFollowSettings, CameraController cameraController, CarState carState, InputManager inputManager) {
+    public CameraPivotManager(Node trackScene, CameraFollowSettings cameraFollowSettings, CameraController cameraController, CarState carState, InputManager inputManager) {
         ArgumentNullException.ThrowIfNull(trackScene);
         ArgumentNullException.ThrowIfNull(cameraFollowSettings);
         ArgumentNullException.ThrowIfNull(cameraController);

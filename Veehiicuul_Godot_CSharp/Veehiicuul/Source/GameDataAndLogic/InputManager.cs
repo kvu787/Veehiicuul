@@ -16,8 +16,6 @@ public sealed class InputManager {
     public float Brake { get; private set; }
     public Vector2 AccelerationInput { get; private set; }
     public Vector2 RightStick => this.AccelerationInput;
-    public Vector2 LeftStick { get; private set; }
-    public bool RightShoulderPressed { get; private set; }
     public bool ResetCameraZoom { get; private set; }
     public bool QuitGame { get; private set; }
     public bool PreviousTrack { get; private set; }
@@ -27,54 +25,76 @@ public sealed class InputManager {
     public bool ToggleBetweenFixedAndFollowCamera { get; private set; }
     public bool ToggleFullscreen { get; private set; }
     public bool ResetCar { get; private set; }
-    public bool InsertStutterLogSpacer { get; private set; }
+
+    public float CameraZoom { get; private set; }
+
+    private static float DeadzoneFilter(float input, float innerDeadzone, float outerDeadzone) {
+        float sign = Mathf.Sign(input);
+        input = Mathf.Abs(input);
+        if (input > outerDeadzone) {
+            input = 1f;
+        } else if (input < innerDeadzone) {
+            input = 0f;
+        } else {
+            input = (input - innerDeadzone) / (outerDeadzone - innerDeadzone);
+        }
+        return sign * input;
+    }
 
     public void UpdateInputs() {
-        Godot.Collections.Array<int> gamepads = Input.GetConnectedJoypads();
-        int gamepad = gamepads.Count == 0 ? -1 : gamepads[0];
-        this.HasGamepad = gamepad >= 0;
-        if (gamepad != this.PreviousGamepad) {
-            Array.Clear(this.PreviousButtons);
-            this.PreviousGamepad = gamepad;
+        this.QuitGame = Input.IsPhysicalKeyPressed(Key.Escape);
+        this.AccelerationInput = Vector2.Zero;
+
+        if (Input.IsJoyButtonPressed(0, JoyButton.RightShoulder)) {
+            const float innerDeadzone = 0.0078125f;
+            const float outerDeadzone = 0.95f;
+            this.CameraZoom = DeadzoneFilter(Input.GetJoyAxis(0, JoyAxis.LeftY), innerDeadzone, outerDeadzone);
+        } else {
+            this.CameraZoom = 0f;
         }
 
-        for (int index = 0; index < this.PreviousButtons.Length; index++) {
-            bool down = this.HasGamepad && Input.IsJoyButtonPressed(gamepad, (JoyButton)index);
-            this.PressedButtons[index] = down && !this.PreviousButtons[index];
-            this.PreviousButtons[index] = down;
-        }
+        //Godot.Collections.Array<int> gamepads = Input.GetConnectedJoypads();
+        //int gamepad = gamepads.Count == 0 ? -1 : gamepads[0];
+        //this.HasGamepad = gamepad >= 0;
+        //if (gamepad != this.PreviousGamepad) {
+        //    Array.Clear(this.PreviousButtons);
+        //    this.PreviousGamepad = gamepad;
+        //}
 
-        bool escape = Input.IsPhysicalKeyPressed(Key.Escape);
-        this.QuitGame = (escape && !this.PreviousEscape) || this.WasPressed(JoyButton.Start);
-        this.PreviousEscape = escape;
-        bool fullscreenShortcut = Input.IsPhysicalKeyPressed(Key.F11);
-        this.ToggleFullscreen = fullscreenShortcut && !this.PreviousFullscreenShortcut;
-        this.PreviousFullscreenShortcut = fullscreenShortcut;
-        this.PreviousTrack = this.WasPressed(JoyButton.DpadDown);
-        this.NextTrack = this.WasPressed(JoyButton.DpadUp);
-        this.PreviousCar = this.WasPressed(JoyButton.DpadLeft);
-        this.NextCar = this.WasPressed(JoyButton.DpadRight);
-        this.ToggleBetweenFixedAndFollowCamera = this.WasPressed(JoyButton.Back);
+        //for (int index = 0; index < this.PreviousButtons.Length; index++) {
+        //    bool down = this.HasGamepad && Input.IsJoyButtonPressed(gamepad, (JoyButton)index);
+        //    this.PressedButtons[index] = down && !this.PreviousButtons[index];
+        //    this.PreviousButtons[index] = down;
+        //}
 
-        this.RightShoulderPressed = this.PreviousButtons[(int)JoyButton.RightShoulder];
-        this.ResetCar = this.WasPressed(JoyButton.X);
-        this.ResetCameraZoom = this.WasPressed(JoyButton.Y);
+        //bool escape = Input.IsPhysicalKeyPressed(Key.Escape);
+        //this.QuitGame = (escape && !this.PreviousEscape) || this.WasPressed(JoyButton.Start);
+        //this.PreviousEscape = escape;
+        //bool fullscreenShortcut = Input.IsPhysicalKeyPressed(Key.F11);
+        //this.ToggleFullscreen = fullscreenShortcut && !this.PreviousFullscreenShortcut;
+        //this.PreviousFullscreenShortcut = fullscreenShortcut;
+        //this.PreviousTrack = this.WasPressed(JoyButton.DpadDown);
+        //this.NextTrack = this.WasPressed(JoyButton.DpadUp);
+        //this.PreviousCar = this.WasPressed(JoyButton.DpadLeft);
+        //this.NextCar = this.WasPressed(JoyButton.DpadRight);
+        //this.ToggleBetweenFixedAndFollowCamera = this.WasPressed(JoyButton.Back);
 
-        // This action was deliberately unbound in ZoomTracks.
-        this.InsertStutterLogSpacer = false;
+        //this.RightShoulderPressed = this.PreviousButtons[(int)JoyButton.RightShoulder];
+        //this.ResetCar = this.WasPressed(JoyButton.X);
+        //this.ResetCameraZoom = this.WasPressed(JoyButton.Y);
 
-        this.Brake = this.HasGamepad ? Input.GetJoyAxis(gamepad, JoyAxis.TriggerLeft) : 0f;
-        // Godot stick Y is down-positive; the original driving/camera math expects up-positive.
-        // GetJoyAxis returns raw axes: the driving code applies its own dead zones.
-        this.AccelerationInput = this.HasGamepad
-            ? new Vector2(Input.GetJoyAxis(gamepad, JoyAxis.RightX), -Input.GetJoyAxis(gamepad, JoyAxis.RightY))
-            : Vector2.Zero;
-        Vector2 rawLeftStick = this.HasGamepad
-            ? new Vector2(Input.GetJoyAxis(gamepad, JoyAxis.LeftX), -Input.GetJoyAxis(gamepad, JoyAxis.LeftY))
-            : Vector2.Zero;
-        // Unity's camera reads the processed left stick. Preserve the source InputSystem
-        // settings' radial deadzone before CameraController applies its axial zoom filter.
-        this.LeftStick = ApplySourceStickDeadzone(rawLeftStick);
+        //this.Brake = this.HasGamepad ? Input.GetJoyAxis(gamepad, JoyAxis.TriggerLeft) : 0f;
+        //// Godot stick Y is down-positive; the original driving/camera math expects up-positive.
+        //// GetJoyAxis returns raw axes: the driving code applies its own dead zones.
+        //this.AccelerationInput = this.HasGamepad
+        //    ? new Vector2(Input.GetJoyAxis(gamepad, JoyAxis.RightX), -Input.GetJoyAxis(gamepad, JoyAxis.RightY))
+        //    : Vector2.Zero;
+        //Vector2 rawLeftStick = this.HasGamepad
+        //    ? new Vector2(Input.GetJoyAxis(gamepad, JoyAxis.LeftX), -Input.GetJoyAxis(gamepad, JoyAxis.LeftY))
+        //    : Vector2.Zero;
+        //// Unity's camera reads the processed left stick. Preserve the source InputSystem
+        //// settings' radial deadzone before CameraController applies its axial zoom filter.
+        //this.LeftStick = ApplySourceStickDeadzone(rawLeftStick);
     }
 
     /// <summary>Optional diagnostic called explicitly after polling, never on its own timer.</summary>

@@ -1,54 +1,67 @@
 using Godot;
 using System;
-using System.Collections.Generic;
 
 namespace Veehiicuul_Godot_CSharp;
 
 public sealed class TrackSwitcher {
-    private readonly Node Host;
+    private readonly Node MainNode;
     private readonly InputManager InputManager;
-    private readonly IReadOnlyList<string> TrackNames;
+    private readonly string[] TrackNames;
+
     private int CurrentTrackIndex;
-
-    public string CurrentTrackName => this.TrackNames[this.CurrentTrackIndex];
-    public Node3D CurrentTrackScene { get; private set; }
     public TrackJson CurrentTrackJson { get; private set; }
+    public Node CurrentTrackScene { get; private set; }
 
-    public TrackSwitcher(Node host, InputManager inputManager, IReadOnlyList<string> trackNames, int currentTrackIndex) {
-        ArgumentNullException.ThrowIfNull(host);
+    public TrackSwitcher(Node mainNode, InputManager inputManager, string[] trackNames, int initialTrackIndex) {
+        ArgumentNullException.ThrowIfNull(mainNode);
         ArgumentNullException.ThrowIfNull(inputManager);
         ArgumentNullException.ThrowIfNull(trackNames);
-        if (currentTrackIndex < 0 || currentTrackIndex >= trackNames.Count) {
-            throw new ArgumentOutOfRangeException(nameof(currentTrackIndex));
+        if (initialTrackIndex < 0 || initialTrackIndex >= trackNames.Length) {
+            throw new ArgumentOutOfRangeException(nameof(initialTrackIndex), "Must be a valid index for the trackNames list");
         }
-        this.Host = host;
+
+        this.MainNode = mainNode;
         this.InputManager = inputManager;
         this.TrackNames = trackNames;
-        this.CurrentTrackIndex = currentTrackIndex;
-        this.CurrentTrackJson = JsonUtility.Deserialize<TrackJson>($"res://TrackData/{this.CurrentTrackName}.json");
-        this.CurrentTrackScene = SceneLoadingUtility.LoadAndAttach<Node3D>(host, $"res://Scenes/{this.CurrentTrackName}.tscn");
+
+        this.CurrentTrackIndex = initialTrackIndex;
+        this.CurrentTrackJson = this.ReadCurrentTrackJson();
+
+        if (this.CurrentTrackJson.Cars.Count == 0) {
+            throw new InvalidOperationException("The track must define at least 1 car");
+        }
+        if (this.CurrentTrackJson.StartCarIndex < 0
+            || this.CurrentTrackJson.StartCarIndex >= this.CurrentTrackJson.Cars.Count) {
+            throw new InvalidOperationException("The track must define a valid StartCarIndex");
+        }
+
+        this.CurrentTrackScene = this.LoadCurrentTrackScene();
     }
+
+    public string CurrentTrackName => this.TrackNames[this.CurrentTrackIndex];
 
     public bool ReadInputAndSwitchTracks() {
         if (this.InputManager.PreviousTrack == this.InputManager.NextTrack) {
             return false;
-        }
-        int direction = this.InputManager.PreviousTrack ? -1 : 1;
-        int nextIndex = (this.CurrentTrackIndex + direction + this.TrackNames.Count) % this.TrackNames.Count;
-        if (nextIndex == this.CurrentTrackIndex) {
-            return false;
-        }
-        string nextName = this.TrackNames[nextIndex];
-        TrackJson nextTrackJson = JsonUtility.Deserialize<TrackJson>($"res://TrackData/{nextName}.json");
+        } else {
+            this.CurrentTrackScene.Free();
 
-        GD.Print($"Unload track '{this.CurrentTrackName}'...");
-        // Immediate destruction is safe because these scenes have no executing scripts. Main
-        // rebuilds its track-dependent managers before reading any old node reference again.
-        this.Host.RemoveChild(this.CurrentTrackScene);
-        this.CurrentTrackScene.Free();
-        this.CurrentTrackScene = SceneLoadingUtility.LoadAndAttach<Node3D>(this.Host, $"res://Scenes/{nextName}.tscn");
-        this.CurrentTrackIndex = nextIndex;
-        this.CurrentTrackJson = nextTrackJson;
-        return true;
+            if (this.InputManager.PreviousTrack) {
+                this.CurrentTrackIndex = this.CurrentTrackIndex.CyclePrev(this.TrackNames.Length);
+            } else /* if (isNextTrack) */ {
+                this.CurrentTrackIndex = this.CurrentTrackIndex.CycleNext(this.TrackNames.Length);
+            }
+            this.CurrentTrackJson = this.ReadCurrentTrackJson();
+            this.CurrentTrackScene = this.LoadCurrentTrackScene();
+            return true;
+        }
+    }
+
+    private TrackJson ReadCurrentTrackJson() {
+        return JsonUtility.Deserialize<TrackJson>($"res://Tracks/{this.CurrentTrackName}/{this.CurrentTrackName}_Settings.json");
+    }
+
+    private Node LoadCurrentTrackScene() {
+        return SceneUtility.Load(this.MainNode, $"res://Tracks/{this.CurrentTrackName}/{this.CurrentTrackName}_Scene.tscn");
     }
 }
