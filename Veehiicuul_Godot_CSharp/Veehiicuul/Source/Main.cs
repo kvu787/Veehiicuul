@@ -51,7 +51,6 @@ public class Main(Node mainNode) {
         this.CameraController = new CameraController(this.TrackObjects, this.CameraFollowSettings, this.InputManager, this.TrackSwitcher);
         this.CarSwitcher = new CarSwitcher(this.InputManager, this.TrackSwitcher);
         this.CarState = new CarState(this.CarSwitcher, this.CameraController, this.InputManager, this.TrackObjects);
-        this.CarState.ApplyStateToGameObject();
 
         //throw new NotImplementedException();
         //this.CameraPivotManager = new CameraPivotManager(this.TrackSwitcher.CurrentTrackScene, this.CameraFollowSettings, this.CameraController, this.CarState, this.InputManager);

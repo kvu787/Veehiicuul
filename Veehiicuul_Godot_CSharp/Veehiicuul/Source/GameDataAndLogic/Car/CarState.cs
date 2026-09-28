@@ -33,6 +33,7 @@ public sealed class CarState {
         this.StartingPosition = trackObjects.PlaceholderCarNode.Position;
         this.StartingRotation = trackObjects.PlaceholderCarNode.Rotation.Y;
         this.Reset_PositionRotationVelocity();
+        this.ApplyStateToGameObject();
     }
 
     public void ReadInputAndUpdateState(double delta) {
@@ -87,15 +88,15 @@ public sealed class CarState {
         this.Position += this.Velocity * (float)delta;
     }
 
-    public void ApplyStateToGameObject() {
-        this.CarSwitcher.CurrentCarNode.SetPositionAndRotation(
-            this.Position,
-            new Quaternion(Vector3.Up, this.Rotation));
-    }
-
     public void Reset_PositionRotationVelocity() {
         this.Position = this.StartingPosition;
         this.Rotation_ForMostRecentNonZeroVelocity = null;
         this.Velocity = Vector3.Zero;
+    }
+
+    public void ApplyStateToGameObject() {
+        this.CarSwitcher.CurrentCarNode.SetPositionAndRotation(
+            this.Position,
+            new Quaternion(Vector3.Up, this.Rotation));
     }
 }
