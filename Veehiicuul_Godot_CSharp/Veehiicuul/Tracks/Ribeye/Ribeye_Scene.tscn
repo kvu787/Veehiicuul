@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b4olp61o81mxg"]
 
-[ext_resource type="PackedScene" uid="uid://d0qn0bvgo44p4" path="res://Tracks/Ribeye/Ribeye.glb" id="1_j71vn"]
+[ext_resource type="PackedScene" uid="uid://d0qn0bvgo44p4" path="res://Tracks/Ribeye/Ribeye_Model.glb" id="1_j71vn"]
 [ext_resource type="Environment" uid="uid://dtayw57htymn6" path="res://Resources/Environment.tres" id="2_t8c8w"]
 [ext_resource type="CameraAttributesPractical" uid="uid://ccmi3voa5m4p5" path="res://Resources/CameraAttributesPractical.tres" id="3_jcs64"]
 [ext_resource type="Compositor" uid="uid://bvdqusir3gt1o" path="res://Resources/Compositor.tres" id="4_ts2sv"]
