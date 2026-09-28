@@ -260,3 +260,64 @@ A few related details matter when deciding whether to “fix” a transform:
 - **Correction has limits.** Orthonormalization cannot recover missing axes from a degenerate basis, undo accumulated orientation error, or fix gimbal lock. A mirrored orthonormal basis can also retain a reflection; a quaternion represents proper rotation only.
 
 For your own Godot controllers, I would keep yaw/pitch values for constrained camera motion, or a normalized quaternion for unrestricted orientation, and write the resulting rotation to the node. Use basis orthonormalization when you deliberately choose to accumulate rotation directly in the basis.
+
+
+## User
+
+C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp
+
+in this game, the rotations are essentially 2d. for the rotations that are adjusted at game runtime, i only need to set Y rotation to non-zero value. rotation.XZ is always zero. given this, how should i set rotation
+
+## Assistant Commentary
+
+I’ll check how the game currently updates rotations and identify the simplest way to set yaw from your game state.
+
+## Assistant Commentary
+
+Your camera yaw already uses the right pattern: it stores an angle and assigns `(0, yaw, 0)`. The car currently converts its angle to a quaternion and then back to Euler angles. You can set the angle directly; with the current untransformed Ribeye track root, local yaw matches world yaw.
+
+## Assistant
+
+**Keep yaw as a single `float` in your game state, then assign `Rotation` or `RotationDegrees` directly with X and Z set to zero. You do not need a quaternion or orthonormalization for this.**
+
+Your game already stores heading in **clockwise degrees**, which has the opposite sign to Godot’s positive Y rotation. Therefore:
+
+```csharp
+node.RotationDegrees = new Vector3(0f, -headingDegrees, 0f);
+```
+
+The equivalent using radians is:
+
+```csharp
+node.Rotation = new Vector3(
+    0f,
+    -Mathf.DegToRad(headingDegrees),
+    0f);
+```
+
+Use the minus sign for your game’s heading convention; an angle already expressed in Godot’s convention needs no negation. `Rotation` uses radians, while `RotationDegrees` handles the conversion for you. [Godot’s rotation properties](https://docs.godotengine.org/en/4.7/classes/class_node3d.html#class-node3d-property-rotation)
+
+For your current car, I would simplify [`ApplyStateToGameObject()`](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarState.cs:90) to:
+
+```csharp
+public void ApplyStateToGameObject() {
+    Node3D car = this.CarSwitcher.CurrentCarTransform;
+    car.GlobalPosition = this.Position;
+    car.RotationDegrees = new Vector3(0f, -this.Rotation, 0f);
+}
+```
+
+That local rotation assignment fits your current hierarchy: player cars are direct children of the untransformed Ribeye track root, so local and world yaw coincide. If you instead need a world heading under a rotated parent, use `GlobalRotationDegrees`. These properties differ in coordinate space, not angle units.
+
+Your current car code constructs a fresh yaw quaternion, and [`SetPositionAndRotation()`](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Extensions/TransformExtensions.cs:16) immediately converts it back to Euler angles. Those conversions are unnecessary for your single-angle state.
+
+**Why this avoids the orthonormalization issue:** setting local `Rotation` replaces the stored Euler angles. Godot then rebuilds the basis from those angles and the stored scale. You are not multiplying another rotation into the previous frame’s matrix, so its rotation-matrix errors do not accumulate. The local rotation setter also preserves your car’s scale. [Godot’s setter](C:/Users/k/Repository/External/Godot_4-7-2/scene/3d/node_3d.cpp:796), [basis reconstruction](C:/Users/k/Repository/External/Godot_4-7-2/scene/3d/node_3d.cpp:92)
+
+Your [camera yaw update](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Camera/CameraController.cs:50) already follows this approach. It can remain as written, or use the equivalent:
+
+```csharp
+this.CameraYawOffset.RotationDegrees =
+    new Vector3(0f, -this.RotationOffset, 0f);
+```
+
+For continuous turning, accumulate changes in your own angle variable and assign the resulting absolute angle to the node. If that angle can grow indefinitely, wrap it periodically to a bounded range to retain floating-point precision. With only Y rotation, Euler rotation order and gimbal lock are not concerns.
