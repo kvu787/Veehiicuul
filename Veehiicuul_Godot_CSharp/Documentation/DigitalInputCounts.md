@@ -9,8 +9,8 @@ int spacePresses = input.GetPhysicalKeyDownCount(Key.Space);
 int letterPresses = input.GetKeyDownCount(Key.A);
 int leftClicks = input.GetMouseButtonDownCount(MouseButton.Left);
 int wheelUpEvents = input.GetMouseButtonDownCount(MouseButton.WheelUp);
-int gamepadPresses = input.GetGamepadButtonDownCount(0, JoyButton.A);
-int touchDowns = input.GetTouchDownCount(0, 0);
+int gamepadPresses = input.GetGamepadButtonDownCount(JoyButton.A);
+int touchDowns = input.GetTouchDownCount(0);
 ```
 
 - Counts start at zero. Multiple presses between game updates accumulate, even if
@@ -19,9 +19,9 @@ int touchDowns = input.GetTouchDownCount(0, 0);
   have separate queries; a missing code in a synthetic event is not counted.
 - Mouse wheel directions count events, not scroll distance. A double-click
   normally delivers two down events and therefore counts as two presses.
-- Gamepad buttons are separated by Godot device ID, which can be obtained from
-  `Input.GetConnectedJoypads()`. Keyboards and mice use Windows' combined input.
-- Touch contacts are separated by device ID and contact index. Canceled touches,
+- Device IDs are ignored for every input type. Matching gamepad buttons share a
+  count across all gamepads: pressing A once on each of two gamepads counts as two.
+- Touch contacts are counted by contact index across all devices. Canceled touches,
   mouse motion, touch drags, analog axes, and logical input actions do not count.
 - Godot's touch/mouse emulation can generate an additional press of the other
   input type. Each delivered event counts under its own input code.

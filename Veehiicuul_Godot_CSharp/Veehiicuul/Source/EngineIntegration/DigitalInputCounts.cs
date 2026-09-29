@@ -6,6 +6,7 @@ namespace Veehiicuul_Godot_CSharp;
 
 /// <summary>
 /// Counts digital down events delivered to this node's _Input during the current game frame.
+/// Device IDs are ignored; matching input codes share a count across all devices.
 /// Query from the main thread; reads do not consume counts. Main_GodotAdapter clears them
 /// after Main.Process returns, including early returns and exceptions.
 /// </summary>
@@ -14,8 +15,8 @@ public partial class DigitalInputCounts : Node {
     private readonly Dictionary<Key, int> KeyCounts = [];
     private readonly Dictionary<Key, int> PhysicalKeyCounts = [];
     private readonly Dictionary<MouseButton, int> MouseButtonCounts = [];
-    private readonly Dictionary<(int Device, JoyButton Button), int> GamepadButtonCounts = [];
-    private readonly Dictionary<(int Device, int Index), int> TouchCounts = [];
+    private readonly Dictionary<JoyButton, int> GamepadButtonCounts = [];
+    private readonly Dictionary<int, int> TouchCounts = [];
 
     /// <summary>The autoload instance, available before the main scene enters the tree.</summary>
     public static DigitalInputCounts Instance => CurrentInstance
@@ -48,14 +49,14 @@ public partial class DigitalInputCounts : Node {
         return this.MouseButtonCounts.GetValueOrDefault(button);
     }
 
-    /// <summary>Down events for a button on the specified Godot gamepad device ID.</summary>
-    public int GetGamepadButtonDownCount(int device, JoyButton button) {
-        return this.GamepadButtonCounts.GetValueOrDefault((device, button));
+    /// <summary>Down events for a button across all gamepads.</summary>
+    public int GetGamepadButtonDownCount(JoyButton button) {
+        return this.GamepadButtonCounts.GetValueOrDefault(button);
     }
 
-    /// <summary>Touch-down events for a contact index on the specified device.</summary>
-    public int GetTouchDownCount(int device, int index) {
-        return this.TouchCounts.GetValueOrDefault((device, index));
+    /// <summary>Touch-down events for a contact index across all devices.</summary>
+    public int GetTouchDownCount(int index) {
+        return this.TouchCounts.GetValueOrDefault(index);
     }
 
     public override void _Input(InputEvent @event) {
@@ -73,10 +74,10 @@ public partial class DigitalInputCounts : Node {
             Increment(this.MouseButtonCounts, mouseButton.ButtonIndex);
             break;
         case InputEventJoypadButton { Pressed: true } gamepadButton:
-            Increment(this.GamepadButtonCounts, (gamepadButton.Device, gamepadButton.ButtonIndex));
+            Increment(this.GamepadButtonCounts, gamepadButton.ButtonIndex);
             break;
         case InputEventScreenTouch { Pressed: true, Canceled: false } touch:
-            Increment(this.TouchCounts, (touch.Device, touch.Index));
+            Increment(this.TouchCounts, touch.Index);
             break;
         default:
             break;
