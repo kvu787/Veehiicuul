@@ -30,15 +30,20 @@ try {
     if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw 'Install the .NET 10 SDK.' }
     $template = Join-Path $godotDirectory 'editor_data\export_templates\4.7.2.stable.mono\windows_release_x86_64.exe'
     if (-not (Test-Path -LiteralPath $template -PathType Leaf)) { throw "Matching .NET export templates are missing: $template" }
+    if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'export_presets.cfg') -PathType Leaf)) {
+        throw 'The Windows Desktop export preset is missing: export_presets.cfg'
+    }
 
     New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'Build') -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $PSScriptRoot 'Build\.gdignore') -Value ''
-    # The GDScript import callback runs without a prior C# build.
+    # Import before compiling so the GDScript material callback works on a fresh clone.
+    # The C# autoload uses a scene with an explicit Node type, which the editor can
+    # instantiate without a compiled script. No cached Debug assembly is required.
     Invoke-Checked $godot @('--headless', '--editor', '--path', $PSScriptRoot, '--import', '--log-file', (Join-Path $logFolderPath 'Import.log'))
     if (Select-String -LiteralPath (Join-Path $logFolderPath 'Import.log') -Pattern '^(?:SCRIPT )?ERROR:' -Quiet) {
-        throw 'Godot reported an import error. See Import.log.'
+        throw 'Godot reported errors during import. See Import.log.'
     }
-    Invoke-Checked 'dotnet' @('build', 'Veehiicuul_Godot_CSharp.slnx', '--configuration', 'ExportRelease', '--nologo', '-warnaserror')
+    Invoke-Checked 'dotnet' @('build', 'Veehiicuul_Godot_CSharp.slnx', '--configuration', 'ExportRelease', '--nologo', '-warnaserror', '-p:Optimize=true')
     Invoke-Checked $godot @('--headless', '--path', $PSScriptRoot, '--export-release', 'Windows Desktop', '--log-file', (Join-Path $logFolderPath 'Export.log'))
     # Some export-plugin failures are logged even when Godot returns success.
     if (Select-String -LiteralPath (Join-Path $logFolderPath 'Export.log') -Pattern '^(?:SCRIPT )?ERROR:' -Quiet) {

@@ -48,6 +48,11 @@ zoom reset. Analog axes and held zoom-modifier input are polled from gamepad 0;
 button-down counts include every gamepad. With no gamepad 0 connected, its analog
 axes read as zero and the car continues coasting until another input changes it.
 
+The autoload uses `Scenes/DigitalInputCounts.tscn`, a `Node` with the C# script
+attached. The explicit node type lets the editor load it during a fresh asset
+import before any C# assembly exists. The release export attaches the compiled
+script to that same node; no separate Debug build is needed for importing.
+
 Collection remains available across main-scene changes. It includes normal input,
 events sent through `Input.ParseInputEvent`, and events pushed directly into the
 root viewport with `GetTree().Root.PushInput(inputEvent)`, provided they reach

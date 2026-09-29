@@ -17,7 +17,7 @@ config/icon="res://Resources/icon.svg"
 
 [autoload]
 
-DigitalInputCounts="*res://Source/EngineIntegration/DigitalInputCounts.cs"
+DigitalInputCounts="*res://Scenes/DigitalInputCounts.tscn"
 
 [display]
 
