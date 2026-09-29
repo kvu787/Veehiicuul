@@ -287,3 +287,33 @@ The pause difference also affects the current implementation: the signal continu
 Your `EndFrame()` serves the same purpose as our `ClearFrameCounts()`; either must be called after the game update. Ours already has that call in the adapter’s `finally` block. Supporting mouse, gamepad, and touch inputs is independent of the choice of callback.
 
 I chose `WindowInput` so later scene handlers cannot hide presses from the counter. Your `_Input` version is suitable when that filtering is acceptable or you control all input handlers.
+
+## User
+
+explain what this means: Event injected directly with Viewport.PushInput
+
+## Assistant
+
+I’ll check what `Viewport.PushInput` does and show how it differs from a real keyboard event.
+
+## Assistant
+
+It means **your code manually sends an input event to a particular viewport**. For example, inside a `Node`:
+
+```csharp
+using InputEventKey press = new() {
+    PhysicalKeycode = Key.Space,
+    Pressed = true
+};
+
+GetViewport().PushInput(press);
+```
+
+This tells the viewport to process a Space-key down event, even though nobody physically pressed Space. It can be useful for automated tests, replaying recorded input, or forwarding input between viewports. [Godot documentation](https://docs.godotengine.org/en/stable/classes/class_viewport.html#class-viewport-method-push-input)
+
+The relevant difference is where the event enters the system:
+
+- **Normal keyboard input:** goes through the window’s `WindowInput` signal, then the viewport’s input handlers.
+- **Calling `PushInput` directly:** starts at the viewport’s input handlers, bypassing `WindowInput`. [Godot’s dispatch code](/C:/Users/k/Repository/External/Godot_4-7-2/scene/main/window.cpp:2020)
+
+Consequently, your `_Input` example can count that manually supplied Space press, provided the node receives it. Our current `DigitalInputCounts` would not count it because it listens at the earlier window stage.
