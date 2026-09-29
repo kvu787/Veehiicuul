@@ -182,3 +182,32 @@ Fixed several connected bugs:
 Eight regression checks, native Godot integration checks, and release compilation pass. EXE export remains blocked by the missing `export_presets.cfg`.
 
 Your staged changes are preserved; fixes remain unstaged. The conversation is committed separately.
+
+## User
+
+can these changes be made:
+- CameraYawManager uses TrackObjects.CameraPanAndYaw instead of TrackObjects.Camera
+- Use radians everywhere instead of degrees
+
+## Assistant
+
+I’ll switch the camera yaw source to `CameraPanAndYaw`, use radians throughout the driving rotation code, and update the verification checks.
+
+## Assistant
+
+I found degree-based angles in the collision code and quaternion diagnostic too. I’ll convert those so the C# application consistently uses radians. The camera yaw will come from `CameraPanAndYaw.GlobalRotation.Y`, retaining the current clockwise steering convention.
+
+## Assistant
+
+The radians conversion passes the motion checks and all 12,160 collision comparisons. Release compilation is warning-free. I’m finishing a native Godot check with an extra rotation on the camera child to verify that steering follows only `CameraPanAndYaw`.
+
+## Assistant
+
+Done:
+
+- `CameraYawManager` reads yaw from `TrackObjects.CameraPanAndYaw`.
+- Rotation math uses radians throughout the C# application, including helpers, collision poses, and verification code.
+
+Motion, collision, and native Godot checks pass; release compilation is warning-free.
+
+Changes remain unstaged, preserving your staged work.
