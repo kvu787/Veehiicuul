@@ -20,6 +20,9 @@
         -->
         <EnableDynamicLoading>true</EnableDynamicLoading>
 
+        <!-- Prevents the compiler server from keeping command-line Godot exports open. -->
+        <UseSharedCompilation>false</UseSharedCompilation>
+
         <!-- Allows the unsafe code required by source-generated Windows API interop in DebugInfo. -->
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
