@@ -300,3 +300,19 @@ I’ll set the application process priority to `High` immediately after it start
 Updated [Run.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Run.ps1:33) to set the application’s process priority to `[System.Diagnostics.ProcessPriorityClass]::High` immediately after launch.
 
 Windows PowerShell syntax check passed.
+
+## User
+
+why is it set after instead of before launch?
+
+## Assistant Commentary
+
+I’ll verify how .NET handles process priority before `Start()`.
+
+## Assistant
+
+`PriorityClass` changes an **existing Windows process**. Before `Start()`, the .NET object has no associated process, so setting that property throws an exception. [Microsoft documentation](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.priorityclass?view=netframework-4.8.1)
+
+Consequently, the application can execute briefly at its default priority before the next line changes it to `High`.
+
+To guarantee `High` **from process creation**, we would need a different launch mechanism, such as Windows `CreateProcess` with `HIGH_PRIORITY_CLASS`. The current .NET `Process.Start()` setup doesn’t expose that creation flag. [Windows documentation](https://learn.microsoft.com/en-us/windows/win32/procthread/process-creation-flags)
