@@ -152,3 +152,35 @@ Failed to create an autoload, script
 Deleting `.godot` also removed the compiled C# assembly. [Build.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Build.ps1:37) runs the editor/import step before compilation, so the editor cannot load the C# autoload from a clean cache. This message doesn’t establish a C# source compilation error.
 
 The build script needs to prepare the editor’s C# assembly before importing. **No new EXE was exported.** [Latest log](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-09-29_08-34-48/Import.log:8)
+
+## User
+
+fix the build script
+
+## Assistant Commentary
+
+I’ll make the build script work from a clean `.godot` folder, then verify the full release export.
+
+## Assistant Commentary
+
+The clean build exposes two issues: Godot tries to load the C# autoload before compilation, and the Windows export preset is missing. I’ll give the autoload a small scene wrapper so it can load during import, restore the preset, and keep compilation in optimized release mode.
+
+## User
+
+go ahead and create an export preset if necessary
+
+## Assistant Commentary
+
+I restored the Windows x64 export preset. The clean import and release compilation have passed; Godot is now exporting the EXE.
+
+## Assistant Commentary
+
+The full build from a clean cache succeeded, and the exported EXE ran for five headless frames without errors. The fix needs no Debug build: the scene wrapper lets Godot import assets before compiling the release assembly. I’m committing the changes now.
+
+## Assistant
+
+Fixed in commit `65bd2c4`. Restored the Windows x64 export preset and made the autoload importable without cached C# assemblies.
+
+The full clean, optimized release build/export passes, along with a five-frame headless startup check.
+
+[Built EXE](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Build/Veehiicuul_Godot_CSharp.exe)
