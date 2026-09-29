@@ -38,6 +38,8 @@ public sealed class InputManager {
     }
 
     public void UpdateInputs() {
+        this.PreviousCar = DigitalInputCounts.GetGamepadButtonDown(JoyButton.DpadLeft);
+        this.NextCar = DigitalInputCounts.GetGamepadButtonDown(JoyButton.DpadRight);
         this.PreviousTrack = DigitalInputCounts.GetGamepadButtonDown(JoyButton.DpadDown);
         this.NextTrack = DigitalInputCounts.GetGamepadButtonDown(JoyButton.DpadUp);
         this.QuitGame = DigitalInputCounts.GetKeyDown(Key.Escape) || DigitalInputCounts.GetGamepadButtonDown(JoyButton.Start);
