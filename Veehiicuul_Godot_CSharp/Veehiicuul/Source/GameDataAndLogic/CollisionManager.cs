@@ -7,6 +7,8 @@ namespace Veehiicuul_Godot_CSharp;
 /// Connects the active Godot vehicle to the immutable track-outline index.
 /// Track geometry is rebuilt only when a track is initialized; vehicle mesh
 /// bounds are refreshed only when the active car changes.
+///
+/// Assumes that the ancestor hierarchy of nodes all have identity transforms.
 /// </summary>
 public sealed class CollisionManager {
     // For standard-height barriers. The source's zero-height alternatives were
