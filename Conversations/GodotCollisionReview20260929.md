@@ -222,3 +222,21 @@ Godot documents `--log-file` as the override for its output/error log. [Command-
 **A simpler alternative captures messages from C# initialization onward:** add a `SessionLog` helper at the beginning of `Main.Ready()`. Reuse `VEEHIICUUL_LOG_DIRECTORY` when supplied; otherwise create a timestamped folder. Register a custom `Godot.Logger` through `OS.AddLogger()`, writing messages and errors to `Application.log` with thread-safe, flushed writes. This works with direct and IDE launches. [Logger API](https://docs.godotengine.org/en/latest/classes/class_logger.html)
 
 That alternative misses messages emitted before the helper starts. Merely setting `debug/file_logging/log_path` inside `Ready()` will not redirect the already-open built-in log. For your rule covering **all session logs**, use the launch-time approach.
+
+## User
+
+i only need run.cmd/ps1 to put logs in MyLogOutput. does that work currently?
+
+## Assistant Commentary
+
+I’ll recheck the launcher against that narrower requirement.
+
+## Assistant
+
+Yes. `Run.cmd` invokes `Run.ps1`, which creates a timestamped folder under [MyLogOutput](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput) and saves:
+
+- `Godot.log` — engine output and errors.
+- `Launcher.log` — launcher transcript.
+- `Console.log` and `ConsoleError.log` — captured output, written when the application exits.
+
+Your clarified requirement is already met. No logging changes are needed; I’m withdrawing that finding.
