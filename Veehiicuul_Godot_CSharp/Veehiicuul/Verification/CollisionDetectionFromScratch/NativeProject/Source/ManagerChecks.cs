@@ -126,8 +126,17 @@ internal static class ManagerChecks {
         report.Throws<ArgumentNullException>(() => _ = new CollisionManager("NativeCircuit", null!), "null vehicle list");
         report.Throws<InvalidOperationException>(
             () => _ = new CollisionManager("Unregistered", fixture.Cars), "track without a document");
-        report.Throws<ArgumentException>(
-            () => _ = new CollisionManager("NativeCircuit", new CarSwitcher([])), "no vehicles");
+        try {
+            _ = new CollisionManager("NativeCircuit", new CarSwitcher([]));
+            report.Check(false, "no vehicles: accepted.");
+        } catch (ArgumentException exception) {
+            report.Check(
+                exception.ParamName == "carSwitcher"
+                    && exception.Message.Contains("At least one vehicle is required.", StringComparison.Ordinal),
+                "no vehicles: error names the missing vehicle.");
+        } catch (Exception exception) {
+            report.Check(false, $"no vehicles: {exception.GetType().Name} instead of ArgumentException.");
+        }
         report.Throws<ArgumentNullException>(
             () => _ = new CollisionManager("NativeCircuit", new CarSwitcher([new Car()])), "vehicle without a node");
         report.End();

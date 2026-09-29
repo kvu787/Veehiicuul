@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace Veehiicuul_Godot_CSharp;
 
@@ -11,7 +12,9 @@ public struct CoordinateXY {
         this.Y = y;
     }
 
+    [JsonRequired]
     public float X { get; set; }
 
+    [JsonRequired]
     public float Y { get; set; }
 }

@@ -187,11 +187,13 @@ internal static class InputChecks {
     }
 
     private static void JsonText(SuiteResult result) {
+        // Match the application's JsonUtility options, including case-sensitive names.
+        JsonSerializerOptions applicationOptions = new() { IncludeFields = true };
         const string wellFormed = """
             { "Outlines": [ { "Vertices": [
                 { "X": 0, "Y": 0 }, { "X": 10.5, "Y": 0 }, { "X": 1e1, "Y": 10.25 }, { "X": -0.0, "Y": 1e1 } ] } ] }
             """;
-        ColliderJson? collider = JsonSerializer.Deserialize<ColliderJson>(wellFormed);
+        ColliderJson? collider = JsonSerializer.Deserialize<ColliderJson>(wellFormed, applicationOptions);
         result.Check(collider is not null && collider.Outlines.Count == 1, "Well-formed text yields one outline.");
         if (collider is not null && collider.Outlines.Count == 1) {
             List<CoordinateXY> vertices = collider.Outlines[0].Vertices;
@@ -207,23 +209,30 @@ internal static class InputChecks {
         ColliderJson? extraKeys = JsonSerializer.Deserialize<ColliderJson>("""
             { "FormatVersion": 3, "Note": "ignored", "Outlines": [ { "Closed": true, "Vertices": [
                 { "X": 0, "Y": 0, "Z": 5 }, { "X": 4, "Y": 0 }, { "X": 0, "Y": 4 } ] } ] }
-            """);
+            """, applicationOptions);
         result.Check(
             extraKeys is not null && extraKeys.Outlines.Count == 1 && extraKeys.Outlines[0].Vertices.Count == 3,
             "Unknown keys are ignored.");
 
-        // Property names are case sensitive by default. Misspelled names leave zeros,
-        // which the detector refuses as a zero-length edge.
-        ColliderJson? lowerCase = JsonSerializer.Deserialize<ColliderJson>("""
-            { "Outlines": [ { "Vertices": [ { "x": 0, "y": 0 }, { "x": 4, "y": 0 }, { "x": 0, "y": 4 } ] } ] }
-            """);
-        result.Check(lowerCase is not null, "Lower-case vertex keys deserialize without an exception.");
-        if (lowerCase is not null) {
-            ExpectRefused(result, "lower-case vertex keys leave every vertex at zero", () =>
-                _ = new TrackCollisionDetector(lowerCase, Unit));
+        void ExpectMissingCoordinateRefused(string name, string json) {
+            try {
+                _ = JsonSerializer.Deserialize<ColliderJson>(json, applicationOptions);
+                result.Check(false, name + ": deserialization accepted missing coordinates.");
+            } catch (JsonException exception) {
+                result.Check(
+                    exception.Message.Contains("required properties", StringComparison.OrdinalIgnoreCase),
+                    name + ": expected a missing-coordinate error, got " + exception.Message);
+            }
         }
 
-        ColliderJson? missing = JsonSerializer.Deserialize<ColliderJson>("""{ "outlines": [] }""");
+        ExpectMissingCoordinateRefused("lower-case vertex keys", """
+            { "Outlines": [ { "Vertices": [ { "x": 0, "y": 0 }, { "x": 4, "y": 0 }, { "x": 0, "y": 4 } ] } ] }
+            """);
+        ExpectMissingCoordinateRefused("missing Y coordinate", """
+            { "Outlines": [ { "Vertices": [ { "X": 0 }, { "X": 4, "Y": 0 }, { "X": 0, "Y": 4 } ] } ] }
+            """);
+
+        ColliderJson? missing = JsonSerializer.Deserialize<ColliderJson>("""{ "outlines": [] }""", applicationOptions);
         result.Check(missing is not null, "A misspelled outline key deserializes without an exception.");
         if (missing is not null) {
             ExpectRefused(result, "misspelled outline key leaves no outlines", () =>
@@ -234,7 +243,7 @@ internal static class InputChecks {
         try {
             ColliderJson? overflow = JsonSerializer.Deserialize<ColliderJson>("""
                 { "Outlines": [ { "Vertices": [ { "X": 1e39, "Y": 0 }, { "X": 4, "Y": 0 }, { "X": 0, "Y": 4 } ] } ] }
-                """);
+                """, applicationOptions);
             float parsed = overflow!.Outlines[0].Vertices[0].X;
             behavior = "deserialized as " + parsed.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
             ExpectRefused(result, "value beyond the binary32 range", () =>

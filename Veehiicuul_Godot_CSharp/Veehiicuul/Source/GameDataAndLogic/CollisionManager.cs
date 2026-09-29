@@ -23,6 +23,10 @@ public sealed class CollisionManager {
     public CollisionManager(string trackName, CarSwitcher carSwitcher) {
         ArgumentException.ThrowIfNullOrEmpty(trackName);
         ArgumentNullException.ThrowIfNull(carSwitcher);
+        if (carSwitcher.AvailableCars.Count == 0) {
+            throw new ArgumentException("At least one vehicle is required.", nameof(carSwitcher));
+        }
+
         this._carSwitcher = carSwitcher;
         this._vehicleBounds = new RectangleLocalBounds[carSwitcher.AvailableCars.Count];
         float minX = float.PositiveInfinity, minY = float.PositiveInfinity;

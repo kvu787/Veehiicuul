@@ -25,15 +25,8 @@ public sealed class TrackSwitcher {
         this.TrackNames = trackNames;
 
         this.CurrentTrackIndex = initialTrackIndex;
-        this.CurrentTrackJson = this.ReadCurrentTrackJson();
-
-        if (this.CurrentTrackJson.Cars.Count == 0) {
-            throw new InvalidOperationException("The track must define at least 1 car");
-        }
-        if (this.CurrentTrackJson.StartCarIndex < 0
-            || this.CurrentTrackJson.StartCarIndex >= this.CurrentTrackJson.Cars.Count) {
-            throw new InvalidOperationException("The track must define a valid StartCarIndex");
-        }
+        this.CurrentTrackJson = ReadTrackJson(this.CurrentTrackName);
+        ValidateTrackJson(this.CurrentTrackJson);
 
         this.CurrentTrackScene = this.LoadCurrentTrackScene();
     }
@@ -44,21 +37,31 @@ public sealed class TrackSwitcher {
         if (this.InputManager.PreviousTrack == this.InputManager.NextTrack) {
             return false;
         } else {
-            this.CurrentTrackScene.Free();
+            int nextTrackIndex = this.InputManager.PreviousTrack
+                ? this.CurrentTrackIndex.CyclePrev(this.TrackNames.Length)
+                : this.CurrentTrackIndex.CycleNext(this.TrackNames.Length);
+            TrackJson nextTrackJson = ReadTrackJson(this.TrackNames[nextTrackIndex]);
+            ValidateTrackJson(nextTrackJson);
 
-            if (this.InputManager.PreviousTrack) {
-                this.CurrentTrackIndex = this.CurrentTrackIndex.CyclePrev(this.TrackNames.Length);
-            } else /* if (isNextTrack) */ {
-                this.CurrentTrackIndex = this.CurrentTrackIndex.CycleNext(this.TrackNames.Length);
-            }
-            this.CurrentTrackJson = this.ReadCurrentTrackJson();
+            this.CurrentTrackScene.Free();
+            this.CurrentTrackIndex = nextTrackIndex;
+            this.CurrentTrackJson = nextTrackJson;
             this.CurrentTrackScene = this.LoadCurrentTrackScene();
             return true;
         }
     }
 
-    private TrackJson ReadCurrentTrackJson() {
-        return JsonUtility.Deserialize<TrackJson>($"res://Tracks/{this.CurrentTrackName}/{this.CurrentTrackName}_Settings.json");
+    private static void ValidateTrackJson(TrackJson trackJson) {
+        if (trackJson.Cars is null || trackJson.Cars.Count == 0) {
+            throw new InvalidOperationException("The track must define at least 1 car");
+        }
+        if (trackJson.StartCarIndex < 0 || trackJson.StartCarIndex >= trackJson.Cars.Count) {
+            throw new InvalidOperationException("The track must define a valid StartCarIndex");
+        }
+    }
+
+    private static TrackJson ReadTrackJson(string trackName) {
+        return JsonUtility.Deserialize<TrackJson>($"res://Tracks/{trackName}/{trackName}_Settings.json");
     }
 
     private Node LoadCurrentTrackScene() {

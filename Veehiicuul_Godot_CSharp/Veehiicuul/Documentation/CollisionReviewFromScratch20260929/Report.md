@@ -528,6 +528,12 @@ treat keys differently.
 outline whose vertices are all equal with a message that suggests checking the
 keys.
 
+**Resolution.** `CoordinateXY` now requires both `X` and `Y` in JSON, so
+misspelled coordinate keys fail during deserialization instead of appearing as
+zero-length segments. `CollisionManager` names an empty vehicle list before it
+calculates bounds. `TrackSwitcher` applies its existing vehicle-list and start
+index checks when switching tracks as well as at initial construction.
+
 ### 9. Forty percent of the detector serves the fallback
 
 | Part of the detector                      | Lines |
