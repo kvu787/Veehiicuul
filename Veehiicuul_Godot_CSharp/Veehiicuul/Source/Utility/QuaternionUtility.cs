@@ -10,18 +10,21 @@ public static class QuaternionUtility {
         float maximumMagnitudeError = 0f;
         float maximumRoundTripMagnitudeError = 0f;
 
-        for (int angle = 1; angle <= 360; angle++) {
-            Quaternion rotation = new(Vector3.Up, -Mathf.DegToRad(angle));
+        const int stepCount = 360;
+        const float stepRadians = Mathf.Tau / stepCount;
+        for (int index = 1; index <= stepCount; index++) {
+            float angleRadians = index * stepRadians;
+            Quaternion rotation = new(Vector3.Up, -angleRadians);
             Vector3 rotatedVector = rotation * vector;
             maximumVerticalError = Mathf.Max(maximumVerticalError, Mathf.Abs(rotatedVector.Y));
             maximumMagnitudeError = Mathf.Max(maximumMagnitudeError, Mathf.Abs(rotatedVector.Length() - vector.Length()));
-            Vector3 roundTripVector = new Quaternion(Vector3.Up, Mathf.DegToRad(angle)) * rotatedVector;
+            Vector3 roundTripVector = new Quaternion(Vector3.Up, angleRadians) * rotatedVector;
             maximumRoundTripMagnitudeError = Mathf.Max(maximumRoundTripMagnitudeError, (roundTripVector - vector).Length());
         }
 
         Vector3 accumulatedVector = vector;
-        Quaternion step = new(Vector3.Up, -Mathf.DegToRad(1f));
-        for (int index = 0; index < 360; index++) {
+        Quaternion step = new(Vector3.Up, -stepRadians);
+        for (int index = 0; index < stepCount; index++) {
             accumulatedVector = step * accumulatedVector;
         }
         float accumulatedDrift = (accumulatedVector - vector).Length();
@@ -31,6 +34,6 @@ public static class QuaternionUtility {
             $"Max |y| error (provably 0):                {maximumVerticalError.ToExactDecimalString()}\n" +
             $"Max magnitude error for (single rotation): {maximumMagnitudeError.ToExactDecimalString()}\n" +
             $"Max round-trip drift R(-a)*R(a)*v vs v:    {maximumRoundTripMagnitudeError.ToExactDecimalString()}\n" +
-            $"Accumulated drift after 360 x 1 deg steps: {accumulatedDrift.ToExactDecimalString()}");
+            $"Accumulated drift after {stepCount} x {stepRadians:R} rad steps: {accumulatedDrift.ToExactDecimalString()}");
     }
 }

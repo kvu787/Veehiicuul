@@ -16,7 +16,8 @@ semantics, arbitrary outline counts, sparse grids, oversized-edge BVH fallback,
 every-edge neighborhoods, deterministic random queries versus the linear oracle,
 and zero allocations during ordinary steady-state queries. Ribeye's unmodified
 JSON also checks metadata-free loading, its clear spawn, and contact with an
-exported outline. Comparative timings
+exported outline. All pose rotations and verification angles use radians.
+Comparative timings
 are reported without machine-dependent performance thresholds.
 
 The detector uses Blender world X/Y directly, matching glTF's conversion to Godot

@@ -40,7 +40,7 @@ public sealed class CollisionManager {
         RectanglePose pose = new(
             position.X,
             -position.Z,
-            -Mathf.RadToDeg(vehicle.GlobalRotation.Y));
+            -vehicle.GlobalRotation.Y);
         TrackCollisionDetector detector = this._detector
             ?? throw new InvalidOperationException("The track collision index was not initialized.");
         return detector.IsColliding(bounds, pose);

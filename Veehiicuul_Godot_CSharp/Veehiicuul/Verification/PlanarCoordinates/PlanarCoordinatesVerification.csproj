@@ -9,5 +9,10 @@
     <ItemGroup>
         <PackageReference Include="GodotSharp" Version="4.7.2" />
         <Compile Include="../../Source/Extensions/Vector3Extensions.cs" Link="Vector3Extensions.cs" />
+        <Compile Include="../../Source/Utility/InputUtility.cs" Link="InputUtility.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/Car/CarStateManager.cs" Link="CarStateManager.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/Car/CarDynamic.cs" Link="CarDynamic.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/Car/CarAccelerationMap.cs" Link="CarAccelerationMap.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/Camera/CameraYawManager.cs" Link="CameraYawManager.cs" />
     </ItemGroup>
 </Project>

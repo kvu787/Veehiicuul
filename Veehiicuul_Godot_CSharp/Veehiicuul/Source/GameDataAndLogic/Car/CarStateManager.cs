@@ -16,6 +16,7 @@ public sealed class CarStateManager {
     private readonly InputManager InputManager;
 
     private readonly Vector3 StartingPosition;
+    // All yaw angles are radians; planar helpers use the opposite sign to Godot node yaw.
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0032:Use auto property", Justification = "Readability")]
     private readonly float StartingRotation;
 
@@ -36,23 +37,19 @@ public sealed class CarStateManager {
         this.CameraYawManager = cameraYawManager;
         this.InputManager = inputManager;
 
-        this.StartingPosition = trackObjects.PlaceholderCarNode.Position;
-        this.StartingRotation = trackObjects.PlaceholderCarNode.Rotation.Y;
+        this.StartingPosition = trackObjects.PlaceholderCarNode.GlobalPosition;
+        this.StartingRotation = -trackObjects.PlaceholderCarNode.GlobalRotation.Y;
 
         this.Reset_PositionRotationVelocity();
         this.Apply();
     }
 
     public void ReadInputAndUpdateState(double delta) {
-        if (!this.InputManager.HasGamepad) {
-            return;
-        }
-
-        float brakeInput = this.InputManager.Brake;
+        // Neutral input must still integrate velocity so the car continues coasting.
         Vector2 accelerationInput = this.InputManager.AccelerationInput;
         CarDynamic carDynamic = this.CarSwitcher.CurrentCar.Dynamic;
 
-        if (brakeInput == 0f) {
+        if (this.InputManager.Brake == 0f) {
             // The input snapshot reports stick-up as +Y; world-forward is -Z.
             Vector3 accelerationInputPlanar = new(accelerationInput.X, 0f, -accelerationInput.Y);
             Vector3 accelerationInputWorld = accelerationInputPlanar.Rotate2D(this.CameraYawManager.Yaw);
@@ -76,7 +73,7 @@ public sealed class CarStateManager {
                 this.Velocity = Vector3.Zero;
             } else {
                 Vector3 brakeDirection = -this.Velocity.Normalized();
-                Vector3 brakeDeltaVelocity = carDynamic.AccelerationMap.Reverse * brakeInput * (float)delta * brakeDirection;
+                Vector3 brakeDeltaVelocity = carDynamic.AccelerationMap.Reverse * this.InputManager.Brake * (float)delta * brakeDirection;
                 if (brakeDeltaVelocity.LengthSquared() >= velocityLengthSquared) {
                     this.Velocity = Vector3.Zero;
                 } else {
@@ -101,8 +98,6 @@ public sealed class CarStateManager {
     }
 
     public void Apply() {
-        this.CarSwitcher.CurrentCar.Node!.SetPositionAndRotation(
-            this.Position,
-            new Quaternion(Vector3.Up, this.Rotation));
+        this.CarSwitcher.CurrentCar.Node!.SetPositionAndRotation(this.Position, new Quaternion(Vector3.Up, -this.Rotation));
     }
 }

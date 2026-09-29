@@ -3,7 +3,8 @@ using System;
 namespace Veehiicuul_Godot_CSharp;
 
 public sealed class CameraYawManager {
-    public float Yaw => this.TrackObjects.Camera.Rotation.Y;
+    /// <summary>Camera pivot world yaw in clockwise radians, independent of its camera children.</summary>
+    public float Yaw => -this.TrackObjects.CameraPanAndYaw.GlobalRotation.Y;
 
     private readonly TrackObjects TrackObjects;
 

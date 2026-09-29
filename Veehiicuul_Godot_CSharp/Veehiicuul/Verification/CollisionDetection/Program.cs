@@ -66,7 +66,7 @@ internal static class Program {
         TrackCollisionDetector detector = new(colliderJson, carBounds);
         Require(detector.EdgeCount == 800, "Ribeye must load all 800 outline edges without format metadata.");
         // Ribeye.glb's authored placeholder pose, converted from Godot X/Z and yaw.
-        AssertQuery(detector, carBounds, new RectanglePose(117.841125f, 61.20298f, 102.75199f),
+        AssertQuery(detector, carBounds, new RectanglePose(117.841125f, 61.20298f, 1.793361f),
             false, "Ribeye spawn must be clear of the barriers");
         CoordinateXY vertex = colliderJson.Outlines[0].Vertices[0];
         AssertQuery(detector, carBounds, new RectanglePose(vertex.X, vertex.Y, 0f),
@@ -186,10 +186,9 @@ internal static class Program {
         AssertQuery(detector, new RectangleLocalBounds(0f, -1f, 2f, 1f),
             new RectanglePose(10f, 5f, 0f), true, "collinear overlap");
 
-        const float tangentAngle = 45f;
-        double radians = tangentAngle * Math.PI / 180.0;
-        double cornerOffsetX = -Math.Cos(radians) - Math.Sin(radians);
-        double cornerOffsetY = Math.Sin(radians) - Math.Cos(radians);
+        const float tangentAngle = MathF.PI / 4f;
+        double cornerOffsetX = -Math.Cos(tangentAngle) - Math.Sin(tangentAngle);
+        double cornerOffsetY = Math.Sin(tangentAngle) - Math.Cos(tangentAngle);
         float tangentPositionX = FindPositionProducingCoordinate(10f, cornerOffsetX);
         float tangentPositionY = FindPositionProducingCoordinate(5f, cornerOffsetY);
         AssertQuery(detector, new RectangleLocalBounds(-1f, -1f, 1f, 1f),
@@ -308,7 +307,7 @@ internal static class Program {
         for (int queryIndex = 0; queryIndex < RandomQueryCount; ++queryIndex) {
             float x = NextFloat(random, runtimeBounds.MinX - margin, runtimeBounds.MaxX + margin);
             float y = NextFloat(random, runtimeBounds.MinY - margin, runtimeBounds.MaxY + margin);
-            float rotation = NextFloat(random, -720f, 720f);
+            float rotation = NextFloat(random, -2f * MathF.Tau, 2f * MathF.Tau);
             randomQueries.Add(new QueryCase(
                 Track001CarBounds,
                 new RectanglePose(x, y, rotation),
@@ -331,7 +330,7 @@ internal static class Program {
                 float edgeLength = MathF.Sqrt(dx * dx + dy * dy);
                 Require(edgeLength > 0f, $"Track001 edge {outlineIndex}:{edgeIndex} is zero.");
 
-                float rotation = MathF.Atan2(dx, dy) * (180f / MathF.PI);
+                float rotation = MathF.Atan2(dx, dy);
                 RuntimePoint midpoint = new((a.X + b.X) * 0.5f, (a.Y + b.Y) * 0.5f);
                 float localCenterY = (Track001CarBounds.MinY + Track001CarBounds.MaxY) * 0.5f;
                 RectanglePose onEdge = PlaceLocalPointAtWorld(
@@ -344,9 +343,8 @@ internal static class Program {
                     onEdge,
                     $"edge neighborhood {outlineIndex}:{edgeIndex} on-edge"));
 
-                double radians = (double)rotation * Math.PI / 180.0;
-                float normalX = (float)Math.Cos(radians);
-                float normalY = (float)-Math.Sin(radians);
+                float normalX = (float)Math.Cos(rotation);
+                float normalY = (float)-Math.Sin(rotation);
                 allQueries.Add(new QueryCase(
                     Track001CarBounds,
                     new RectanglePose(
@@ -383,7 +381,7 @@ internal static class Program {
                 throw new InvalidOperationException(
                     $"Optimized/linear mismatch for {query.Description}: expected "
                     + $"{expected}, found {actual}; pose=({query.Pose.PositionX:R}, "
-                    + $"{query.Pose.PositionY:R}, {query.Pose.RotationDegrees:R}).");
+                    + $"{query.Pose.PositionY:R}, {query.Pose.RotationRadians:R}).");
             }
 
             if (actual) {
@@ -593,16 +591,15 @@ internal static class Program {
         float localX,
         float localY,
         RuntimePoint worldPoint,
-        float rotationDegrees) {
-        double radians = (double)rotationDegrees * Math.PI / 180.0;
-        double cosine = Math.Cos(radians);
-        double sine = Math.Sin(radians);
+        float rotationRadians) {
+        double cosine = Math.Cos(rotationRadians);
+        double sine = Math.Sin(rotationRadians);
         double offsetX = (double)localX * cosine + (double)localY * sine;
         double offsetY = -(double)localX * sine + (double)localY * cosine;
         return new RectanglePose(
             (float)((double)worldPoint.X - offsetX),
             (float)((double)worldPoint.Y - offsetY),
-            rotationDegrees);
+            rotationRadians);
     }
 
     private static float FindPositionProducingCoordinate(float target, double offset) {

@@ -47,7 +47,7 @@ public sealed class CameraZoomManager {
     }
 
     public void ReadInputAndResetZoom() {
-        if (this.InputManager.ResetCameraZoom) {
+        if (this.InputManager.ResetCameraZoom || this.CameraFollowManager.FollowsCarLocationChanged) {
             this.CameraSize = this.CameraFollowManager.FollowsCarLocation ? this.DefaultFollowCameraSize : this.DefaultFixedCameraSize;
         }
     }

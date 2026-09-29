@@ -33,10 +33,11 @@ public sealed class TrackObjects {
 
     private static void ValidatePlaceholderCar(Node3D placeholderCar) {
         const float tolerance = 0.00001f;
+        const float rotationToleranceRadians = 1.7453293e-7f;
 
         if (placeholderCar.Position.Y != 0f
-            || Mathf.Abs(placeholderCar.RotationDegrees.X) >= tolerance
-            || Mathf.Abs(placeholderCar.RotationDegrees.Z) >= tolerance
+            || Mathf.Abs(placeholderCar.Rotation.X) >= rotationToleranceRadians
+            || Mathf.Abs(placeholderCar.Rotation.Z) >= rotationToleranceRadians
             || Mathf.Abs(placeholderCar.Scale.X - 1f) >= tolerance
             || Mathf.Abs(placeholderCar.Scale.Y - 1f) >= tolerance
             || Mathf.Abs(placeholderCar.Scale.Z - 1f) >= tolerance) {
@@ -51,7 +52,7 @@ public sealed class TrackObjects {
 
     //    // Reflect Unity Z and point the native Godot camera along its local -Z.
     //    Require(this.CameraPanOffsetAndPitch.Position.IsEqualApprox(Vector3.Zero), "CameraPanOffsetAndPitch position must be zero.");
-    //    Require(this.CameraPanOffsetAndPitch.RotationDegrees.IsEqualApprox(new Vector3(-45f, 0f, 0f)), "CameraPanOffsetAndPitch must have -45 degrees X pitch.");
+    //    Require(this.CameraPanOffsetAndPitch.Rotation.IsEqualApprox(new Vector3(-Mathf.Pi / 4f, 0f, 0f)), "CameraPanOffsetAndPitch must have -PI/4 radians X pitch.");
     //    Require(this.CameraPanOffsetAndPitch.Scale.IsEqualApprox(Vector3.One), "CameraPanOffsetAndPitch scale must be one.");
     //    Require(Mathf.IsZeroApprox(this.Camera.Position.X) && Mathf.IsZeroApprox(this.Camera.Position.Y)
     //        && this.Camera.Position.Z > 0f, "Camera local position must be on the positive Z axis.");

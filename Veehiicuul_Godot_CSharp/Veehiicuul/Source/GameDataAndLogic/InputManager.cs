@@ -5,11 +5,6 @@ namespace Veehiicuul_Godot_CSharp;
 
 /// <summary>One snapshot per Main._Process; no input signals or node callbacks.</summary>
 public sealed class InputManager {
-    private readonly bool[] PreviousButtons = new bool[(int)JoyButton.Max];
-    private readonly bool[] PressedButtons = new bool[(int)JoyButton.Max];
-    private int PreviousGamepad = -1;
-    private bool PreviousEscape;
-    private bool PreviousFullscreenShortcut;
     private DateTime LastLogTime = DateTime.MinValue;
 
     public bool HasGamepad { get; private set; }
@@ -42,9 +37,12 @@ public sealed class InputManager {
     }
 
     public void UpdateInputs() {
-        this.QuitGame = Input.IsPhysicalKeyPressed(Key.Escape);
-        this.AccelerationInput = Vector2.Zero;
-
+        this.QuitGame = DigitalInputCounts.GetKeyDown(Key.Escape) || DigitalInputCounts.GetGamepadButtonDown(JoyButton.Start);
+        this.ToggleBetweenFixedAndFollowCamera = DigitalInputCounts.GetGamepadButtonDown(JoyButton.Back);
+        this.ResetCar = DigitalInputCounts.GetGamepadButtonDown(JoyButton.X);
+        this.AccelerationInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX), -Input.GetJoyAxis(0, JoyAxis.RightY));
+        this.Brake = Input.GetJoyAxis(0, JoyAxis.TriggerLeft);
+        this.ResetCameraZoom = DigitalInputCounts.GetGamepadButtonDown(JoyButton.Y);
         if (Input.IsJoyButtonPressed(0, JoyButton.RightShoulder)) {
             const float innerDeadzone = 0.0078125f;
             const float outerDeadzone = 0.95f;
@@ -105,10 +103,6 @@ public sealed class InputManager {
             GD.Print($"Right stick processed: magnitude={processed.Length():R}, x={processed.X:R}, y={processed.Y:R}");
             GD.Print($"Right stick raw: magnitude={this.RightStick.Length():R}, x={this.RightStick.X:R}, y={this.RightStick.Y:R}");
         }
-    }
-
-    private bool WasPressed(JoyButton button) {
-        return this.PressedButtons[(int)button];
     }
 
     private static Vector2 ApplySourceStickDeadzone(Vector2 value) {

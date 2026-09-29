@@ -59,14 +59,30 @@ public class Main {
     }
 
     public void Process(double delta) {
-        GD.Print(delta);
         if (!this.IsReadyDone) {
             throw new InvalidOperationException("A frame ran before initialization completed.");
         }
 
-        if (DigitalInputCounts.GetKeyDownCount(Key.Escape) > 0) {
+        this.InputManager.UpdateInputs();
+
+        if (this.InputManager.QuitGame) {
             Quit(0);
         }
+
+        if (this.InputManager.ResetCar) {
+            this.CarStateManager.Reset_PositionRotationVelocity();
+        }
+
+        this.CameraFollowManager.ReadInputAndUpdateFollowSetting();
+        this.CameraZoomManager.ReadInputAndZoom(delta);
+        this.CameraZoomManager.ReadInputAndResetZoom();
+        this.CarStateManager.ReadInputAndUpdateState(delta);
+
+        this.CameraPanManager.Apply();
+        this.CameraZoomManager.Apply();
+        this.CarStateManager.Apply();
+
+        //--------------------------------------------------
 
         //this.InputManager.UpdateInputs();
         //this.CarControlTimeoutRemaining = Math.Max(0.0, this.CarControlTimeoutRemaining - delta);

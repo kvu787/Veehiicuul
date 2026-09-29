@@ -44,22 +44,22 @@ public readonly struct RectangleLocalBounds {
 }
 
 /// <summary>
-/// World-space X/negative Z position and clockwise yaw, expressed in degrees.
+/// World-space X/negative Z position and clockwise yaw, expressed in radians.
 /// Clockwise yaw is the negative of Godot's rotation about its positive Y axis.
 /// </summary>
 public readonly struct RectanglePose {
-    public RectanglePose(float positionX, float positionY, float rotationDegrees) {
+    public RectanglePose(float positionX, float positionY, float rotationRadians) {
         CollisionMath.ThrowIfNotFinite(positionX, nameof(positionX));
         CollisionMath.ThrowIfNotFinite(positionY, nameof(positionY));
-        CollisionMath.ThrowIfNotFinite(rotationDegrees, nameof(rotationDegrees));
+        CollisionMath.ThrowIfNotFinite(rotationRadians, nameof(rotationRadians));
         this.PositionX = positionX;
         this.PositionY = positionY;
-        this.RotationDegrees = rotationDegrees;
+        this.RotationRadians = rotationRadians;
     }
 
     public float PositionX { get; }
     public float PositionY { get; }
-    public float RotationDegrees { get; }
+    public float RotationRadians { get; }
 }
 
 /// <summary>
@@ -301,7 +301,7 @@ public sealed class TrackCollisionDetector {
 
         if (!CollisionMath.IsFinite(pose.PositionX)
             || !CollisionMath.IsFinite(pose.PositionY)
-            || !CollisionMath.IsFinite(pose.RotationDegrees)) {
+            || !CollisionMath.IsFinite(pose.RotationRadians)) {
             throw new ArgumentException("Vehicle pose must be finite.", nameof(pose));
         }
 
@@ -1016,14 +1016,11 @@ public sealed class TrackCollisionDetector {
     }
 
     private static class RectangleTransformer {
-        private const double DegreesToRadians = Math.PI / 180.0;
-
         internal static RectangleQuad Transform(
             RectangleLocalBounds bounds,
             RectanglePose pose) {
-            double radians = (double)pose.RotationDegrees * DegreesToRadians;
-            double cosine = Math.Cos(radians);
-            double sine = Math.Sin(radians);
+            double cosine = Math.Cos(pose.RotationRadians);
+            double sine = Math.Sin(pose.RotationRadians);
             PointF p0 = TransformPoint(bounds.MinX, bounds.MinY, pose, cosine, sine);
             PointF p1 = TransformPoint(bounds.MaxX, bounds.MinY, pose, cosine, sine);
             PointF p2 = TransformPoint(bounds.MaxX, bounds.MaxY, pose, cosine, sine);

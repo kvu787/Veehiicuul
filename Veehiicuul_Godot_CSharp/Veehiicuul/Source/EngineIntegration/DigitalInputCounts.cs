@@ -35,6 +35,10 @@ public partial class DigitalInputCounts : Node {
         return Instance.KeyCounts.GetValueOrDefault(key);
     }
 
+    public static bool GetKeyDown(Key key) {
+        return GetKeyDownCount(key) > 0;
+    }
+
     /// <summary>
     /// Down events for a mouse button, including wheel directions. Each wheel event counts
     /// once regardless of its scroll factor. Windows combines connected mice and keyboards.
@@ -43,9 +47,17 @@ public partial class DigitalInputCounts : Node {
         return Instance.MouseButtonCounts.GetValueOrDefault(button);
     }
 
+    public static bool GetMouseButtonDown(MouseButton button) {
+        return GetMouseButtonDownCount(button) > 0;
+    }
+
     /// <summary>Down events for a button across all gamepads.</summary>
     public static int GetGamepadButtonDownCount(JoyButton button) {
         return Instance.GamepadButtonCounts.GetValueOrDefault(button);
+    }
+
+    public static bool GetGamepadButtonDown(JoyButton button) {
+        return GetGamepadButtonDownCount(button) > 0;
     }
 
     /// <summary>Touch-down events for a contact index across all devices.</summary>

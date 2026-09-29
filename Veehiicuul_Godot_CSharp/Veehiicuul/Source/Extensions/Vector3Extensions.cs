@@ -5,15 +5,14 @@ namespace Veehiicuul_Godot_CSharp;
 
 public static class Vector3Extensions {
     /// <summary>
-    /// Rotates a horizontal Godot vector clockwise from forward (-Z), in degrees.
+    /// Rotates a horizontal Godot vector clockwise from forward (-Z), in radians.
     /// This preserves the source game's positive yaw convention after reflecting Z.
     /// Godot's own positive Y-axis rotation has the opposite sign.
     /// </summary>
-    public static Vector3 Rotate2D(this Vector3 vector, float rotationDegrees) {
+    public static Vector3 Rotate2D(this Vector3 vector, float rotationRadians) {
         RequireHorizontal(vector);
-        float radians = Mathf.DegToRad(rotationDegrees);
-        float cosine = Mathf.Cos(radians);
-        float sine = Mathf.Sin(radians);
+        float cosine = Mathf.Cos(rotationRadians);
+        float sine = Mathf.Sin(rotationRadians);
         return new Vector3(
             vector.X * cosine - vector.Z * sine,
             0f,
@@ -25,18 +24,18 @@ public static class Vector3Extensions {
         if (!Mathf.IsZeroApprox(rotation.X) || !Mathf.IsZeroApprox(rotation.Z)) {
             throw new ArgumentException("A planar rotation must contain only Y-axis rotation.", nameof(rotation));
         }
-        return vector.Rotate2D(-Mathf.RadToDeg(rotation.GetEuler().Y));
+        return vector.Rotate2D(-rotation.GetEuler().Y);
     }
 
-    /// <summary>Returns clockwise yaw in degrees from Godot forward (-Z); zero for a zero vector.</summary>
+    /// <summary>Returns clockwise yaw in radians from Godot forward (-Z); zero for a zero vector.</summary>
     public static float Get2DRotation(this Vector3 vector) {
         RequireHorizontal(vector);
-        return vector == Vector3.Zero ? 0f : Mathf.RadToDeg(Mathf.Atan2(vector.X, -vector.Z));
+        return vector == Vector3.Zero ? 0f : Mathf.Atan2(vector.X, -vector.Z);
     }
 
     /// <summary>Returns the native Godot yaw quaternion that points -Z along the vector.</summary>
     public static Quaternion Get2DRotationQuaternion(this Vector3 vector) {
-        return new Quaternion(Vector3.Up, -Mathf.DegToRad(vector.Get2DRotation()));
+        return new Quaternion(Vector3.Up, -vector.Get2DRotation());
     }
 
     private static void RequireHorizontal(Vector3 vector) {
