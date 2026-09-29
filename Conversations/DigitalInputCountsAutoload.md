@@ -223,3 +223,67 @@ I’ll check whether Godot recommends that setting for C# autoloads or simply en
 I included it because **Godot enables that checkbox by default** when adding an autoload. I followed that convention; this implementation doesn’t require it. [Godot documentation](https://docs.godotengine.org/en/stable/tutorials/scripting/singletons_autoload.html)
 
 It isn’t a C#-specific recommended practice. For our service, `*` provides no benefit because access comes from the static `Instance` property. Keeping it matches the editor’s default; removing it is equally valid and leaves the C# behavior unchanged.
+
+## User
+
+is there any difference between the approach that DigitaIInputCounts uses versus this approach which uses `public override void _Input(InputEvent inputEvent)`:
+using Godot;
+using System.Collections.Generic;
+
+public partial class KeyboardInput : Node
+{
+    private readonly Dictionary<Key, int> _downCounts = new();
+
+    public override void _Input(InputEvent inputEvent)
+    {
+        if (inputEvent is not InputEventKey keyEvent
+            || !keyEvent.Pressed
+            || keyEvent.Echo)
+        {
+            return;
+        }
+
+        Key key = keyEvent.PhysicalKeycode;
+
+        if (key == Key.None)
+            return;
+
+        _downCounts.TryGetValue(key, out int count);
+        _downCounts[key] = count + 1;
+    }
+
+    // Reading does not consume the count.
+    public int DownCount(Key key)
+    {
+        return _downCounts.TryGetValue(key, out int count) ? count : 0;
+    }
+
+    public void EndFrame()
+    {
+        _downCounts.Clear();
+    }
+}
+
+## Assistant
+
+I’ll compare where the two handlers run in Godot’s input pipeline and when each can miss an event.
+
+## Assistant
+
+Yes. **The counting logic is equivalent for physical keyboard events; the main difference is which events reach the collector.** Both preserve multiple presses per frame, ignore keyboard repeats, and leave counts unchanged when queried.
+
+`DigitalInputCounts` subscribes to the root window’s `WindowInput` signal. Godot emits that signal before passing the event into the viewport’s input handling. [Godot 4.7.2 source](/C:/Users/k/Repository/External/Godot_4-7-2/scene/main/window.cpp:2020)
+
+| Situation                                         | Current `WindowInput` approach  | Your `_Input` approach                |
+| ------------------------------------------------- | ------------------------------- | ------------------------------------- |
+| Another node handles the event first              | Already recorded it             | Can miss it                           |
+| Collector is paused by its process mode           | Signal handler still runs       | Callback stops                        |
+| Event injected directly with `Viewport.PushInput` | Does not observe that injection | Can receive it in the target viewport |
+
+The first difference matters for an autoload: `_Input` handlers run in reverse tree order, so scene nodes can run before the autoload. If one calls `SetInputAsHandled()`, remaining handlers do not receive that event. **Regular `_GuiInput` runs after `_Input`**, so ordinary GUI consumption alone does not prevent your example from counting it. [Input propagation documentation](https://docs.godotengine.org/en/stable/tutorials/inputs/inputevent.html)
+
+The pause difference also affects the current implementation: the signal continues collecting while the main adapter is paused, but clearing waits until `Main.Process` runs again. [Pause behavior](https://docs.godotengine.org/en/stable/tutorials/scripting/pausing_games.html). Direct viewport injection follows the viewport’s callbacks rather than the window signal. [Viewport documentation](https://docs.godotengine.org/en/stable/classes/class_viewport.html#class-viewport-method-push-input)
+
+Your `EndFrame()` serves the same purpose as our `ClearFrameCounts()`; either must be called after the game update. Ours already has that call in the adapter’s `finally` block. Supporting mouse, gamepad, and touch inputs is independent of the choice of callback.
+
+I chose `WindowInput` so later scene handlers cannot hide presses from the counter. Your `_Input` version is suitable when that filtering is acceptable or you control all input handlers.
