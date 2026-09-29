@@ -16,7 +16,7 @@ public sealed class CarStateManager {
     private readonly InputManager InputManager;
 
     private readonly Vector3 StartingPosition;
-    // Car yaw is clockwise radians from model front (+Z), opposite to Godot node yaw.
+    // Car yaw uses native Godot radians from model front (+Z), relative to the track.
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0032:Use auto property", Justification = "Readability")]
     private readonly float StartingRotation;
 
@@ -25,6 +25,7 @@ public sealed class CarStateManager {
 
     private float Rotation => this.Rotation_ForMostRecentNonZeroVelocity ?? this.StartingRotation;
 
+    /// <summary>Car position relative to the track root; Model has an identity local transform.</summary>
     public Vector3 Position { get; private set; }
 
     public CarStateManager(CarSwitcher carSwitcher, CameraYawManager cameraYawManager, InputManager inputManager, TrackObjects trackObjects) {
@@ -52,9 +53,9 @@ public sealed class CarStateManager {
         if (this.InputManager.Brake == 0f) {
             // Stick-up is +Y; the camera pivot's forward direction is local -Z.
             Vector3 accelerationInput_xzPlane = new(accelerationInput.X, 0f, -accelerationInput.Y);
-            Vector3 accelerationInput_worldSpace = accelerationInput_xzPlane.Rotated(Vector3.Up, this.CameraYawManager.Yaw);
+            Vector3 accelerationInput_trackSpace = accelerationInput_xzPlane.Rotated(Vector3.Up, this.CameraYawManager.Yaw);
 
-            Vector3 accelerationInput_carSpace = accelerationInput_worldSpace.Rotated(Vector3.Up, -1f * this.Rotation);
+            Vector3 accelerationInput_carSpace = accelerationInput_trackSpace.Rotated(Vector3.Up, -1f * this.Rotation);
             accelerationInput_carSpace.X = InputUtility.AxialDeadzone(accelerationInput_carSpace.X, AxialDeadzoneInner, AxialDeadzoneOuter);
             accelerationInput_carSpace.Y = 0f;
             accelerationInput_carSpace.Z = InputUtility.AxialDeadzone(accelerationInput_carSpace.Z, AxialDeadzoneInner, AxialDeadzoneOuter);
@@ -68,9 +69,9 @@ public sealed class CarStateManager {
                     accelerationInput_carSpace.Z * (accelerationInput_carSpace.Z < 0f ? carDynamic.AccelerationMap.Reverse : carDynamic.AccelerationMap.Forward)
                 );
 
-                Vector3 accelerationOutput_worldSpace = accelerationOutput_carSpace.Rotated(Vector3.Up, this.Rotation);
-                Vector3 deltaVelocity_worldSpace = (float)delta * accelerationOutput_worldSpace;
-                this.Velocity += deltaVelocity_worldSpace;
+                Vector3 accelerationOutput_trackSpace = accelerationOutput_carSpace.Rotated(Vector3.Up, this.Rotation);
+                Vector3 deltaVelocity_trackSpace = (float)delta * accelerationOutput_trackSpace;
+                this.Velocity += deltaVelocity_trackSpace;
             } else {
                 // Brake and acceleration are zero, so do nothing
             }

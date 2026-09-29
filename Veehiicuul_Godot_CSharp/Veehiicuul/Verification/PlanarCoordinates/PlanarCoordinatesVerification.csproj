@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <UseSharedCompilation>false</UseSharedCompilation>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="GodotSharp" Version="4.7.2" />
@@ -14,5 +15,8 @@
         <Compile Include="../../Source/GameDataAndLogic/Car/CarDynamic.cs" Link="CarDynamic.cs" />
         <Compile Include="../../Source/GameDataAndLogic/Car/CarAccelerationMap.cs" Link="CarAccelerationMap.cs" />
         <Compile Include="../../Source/GameDataAndLogic/Camera/CameraYawManager.cs" Link="CameraYawManager.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/Camera/CameraFollowManager.cs" Link="CameraFollowManager.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/Camera/CameraPanManager.cs" Link="CameraPanManager.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/Camera/CameraZoomManager.cs" Link="CameraZoomManager.cs" />
     </ItemGroup>
 </Project>

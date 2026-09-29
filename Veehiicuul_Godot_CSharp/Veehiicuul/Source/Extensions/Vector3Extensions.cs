@@ -5,18 +5,17 @@ namespace Veehiicuul_Godot_CSharp;
 
 public static class Vector3Extensions {
     /// <summary>
-    /// Rotates a horizontal Godot vector clockwise viewed from above, in radians.
-    /// This preserves the source game's positive yaw convention after reflecting Z.
-    /// Godot's own positive Y-axis rotation has the opposite sign.
+    /// Rotates a horizontal vector about Godot's positive Y axis, in radians.
+    /// Positive yaw rotates model front (+Z) toward +X (model left).
     /// </summary>
     public static Vector3 Rotate2D(this Vector3 vector, float rotationRadians) {
         RequireHorizontal(vector);
         float cosine = Mathf.Cos(rotationRadians);
         float sine = Mathf.Sin(rotationRadians);
         return new Vector3(
-            (vector.X * cosine) - (vector.Z * sine),
+            (vector.X * cosine) + (vector.Z * sine),
             0f,
-            (vector.X * sine) + (vector.Z * cosine));
+            (-vector.X * sine) + (vector.Z * cosine));
     }
 
     /// <summary>Applies a native Godot quaternion containing only yaw.</summary>
@@ -25,10 +24,10 @@ public static class Vector3Extensions {
             throw new ArgumentException("A planar rotation must contain only Y-axis rotation.", nameof(rotation));
         }
 
-        return vector.Rotate2D(-rotation.GetEuler().Y);
+        return vector.Rotate2D(rotation.GetEuler().Y);
     }
 
-    /// <summary>Returns clockwise model yaw in radians from model front (+Z); zero for a zero vector.</summary>
+    /// <summary>Returns native Godot yaw in radians from model front (+Z); zero for a zero vector.</summary>
     public static float Get2DRotation(this Vector3 vector) {
         RequireHorizontal(vector);
         return vector == Vector3.Zero ? 0f : Mathf.Atan2(vector.X, vector.Z);

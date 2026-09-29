@@ -7,6 +7,18 @@ namespace Veehiicuul_Godot_CSharp;
 public sealed class InputManager {
     public float Brake { get; set; }
     public Vector2 AccelerationInput { get; set; }
+    public float CameraZoom { get; set; }
+    public bool ResetCameraZoom { get; set; }
+    public bool ToggleBetweenFixedAndFollowCamera { get; set; }
+}
+
+public sealed class TrackSwitcher {
+    public VerificationTrackSettings CurrentTrackJson { get; } = new();
+}
+
+public sealed class VerificationTrackSettings {
+    public bool CameraFollowsCarLocation { get; set; }
+    public float FollowCameraSize { get; set; } = 60f;
 }
 
 public sealed class CarSwitcher {
@@ -31,10 +43,6 @@ public sealed class VerificationNode {
     public Vector3 GlobalPosition { get; set; }
     public Vector3 Rotation { get; set; }
     public Vector3 GlobalRotation { get; set; }
-    public Quaternion AppliedRotation { get; private set; } = Quaternion.Identity;
-
-    public void SetPositionAndRotation(Vector3 position, Quaternion rotation) {
-        this.Position = position;
-        this.AppliedRotation = rotation;
-    }
+    public Quaternion Quaternion => Basis.FromEuler(this.Rotation).GetRotationQuaternion();
+    public float Size { get; set; } = 100f;
 }

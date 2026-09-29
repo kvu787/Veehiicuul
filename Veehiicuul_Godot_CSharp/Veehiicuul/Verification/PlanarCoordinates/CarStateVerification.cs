@@ -15,7 +15,7 @@ internal static class CarStateVerification {
             ("Braking slows without reversing and preserves heading", VerifyBraking),
             ("Neutral input still enforces the speed limit", VerifySpeedLimit),
             ("Reset restores the authored pose and clears velocity", VerifyReset),
-            ("Spawn pose includes parent transforms", VerifyWorldSpawn)
+            ("Spawn, input, and reset use track space independently of world transforms", VerifyTrackSpace)
         ];
         int failures = 0;
         foreach ((string name, Action verify) in checks) {
@@ -57,7 +57,7 @@ internal static class CarStateVerification {
             input.AccelerationInput = direction;
             manager.ReadInputAndUpdateState(0.5);
             manager.Apply();
-            AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, (manager.Position - start).Normalized());
+            AssertNear(cars.CurrentCar.Node.Quaternion * Vector3.ModelFront, (manager.Position - start).Normalized());
         }
     }
 
@@ -82,14 +82,14 @@ internal static class CarStateVerification {
             foreach ((Vector3 direction, float strength) in directions) {
                 (CarStateManager manager, InputManager input, CarSwitcher cars) = Create(startingYaw, cameraYaw);
                 cars.CurrentCar.Dynamic.AccelerationMap.Right = 6f;
-                Vector3 worldDirection = new Quaternion(Vector3.Up, startingYaw) * direction;
-                Vector3 cameraDirection = new Quaternion(Vector3.Up, -cameraYaw) * worldDirection;
+                Vector3 trackDirection = new Quaternion(Vector3.Up, startingYaw) * direction;
+                Vector3 cameraDirection = new Quaternion(Vector3.Up, -cameraYaw) * trackDirection;
                 input.AccelerationInput = new Vector2(cameraDirection.X, -cameraDirection.Z);
                 Vector3 start = manager.Position;
                 manager.ReadInputAndUpdateState(0.5);
-                AssertNear(manager.Position - start, worldDirection * (strength * 0.25f));
+                AssertNear(manager.Position - start, trackDirection * (strength * 0.25f));
                 manager.Apply();
-                AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, worldDirection);
+                AssertNear(cars.CurrentCar.Node.Quaternion * Vector3.ModelFront, trackDirection);
             }
         }
     }
@@ -97,14 +97,14 @@ internal static class CarStateVerification {
     private static void VerifySuccessiveForwardAcceleration() {
         const float startingYaw = 0.7f;
         (CarStateManager manager, InputManager input, CarSwitcher cars) = Create(startingYaw);
-        Vector3 worldFront = new Quaternion(Vector3.Up, startingYaw) * Vector3.ModelFront;
-        input.AccelerationInput = new Vector2(worldFront.X, -worldFront.Z);
+        Vector3 trackFront = new Quaternion(Vector3.Up, startingYaw) * Vector3.ModelFront;
+        input.AccelerationInput = new Vector2(trackFront.X, -trackFront.Z);
         Vector3 start = manager.Position;
         manager.ReadInputAndUpdateState(0.5);
         manager.ReadInputAndUpdateState(0.5);
         manager.Apply();
-        AssertNear(manager.Position - start, worldFront * 3f);
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, worldFront);
+        AssertNear(manager.Position - start, trackFront * 3f);
+        AssertNear(cars.CurrentCar.Node.Quaternion * Vector3.ModelFront, trackFront);
     }
 
     private static void VerifyCameraYaw() {
@@ -129,7 +129,7 @@ internal static class CarStateVerification {
         manager.ReadInputAndUpdateState(0.125);
         AssertNear(manager.Position - beforeBraking, new Vector3(0.125f, 0f, 0f));
         manager.Apply();
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, Vector3.Right);
+        AssertNear(cars.CurrentCar.Node.Quaternion * Vector3.ModelFront, Vector3.Right);
         Vector3 beforeStopping = manager.Position;
         manager.ReadInputAndUpdateState(1.0);
         input.Brake = 0f;
@@ -137,7 +137,7 @@ internal static class CarStateVerification {
         manager.ReadInputAndUpdateState(1.0);
         manager.Apply();
         AssertNear(manager.Position, beforeStopping);
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, Vector3.Right);
+        AssertNear(cars.CurrentCar.Node.Quaternion * Vector3.ModelFront, Vector3.Right);
     }
 
     private static void VerifySpeedLimit() {
@@ -156,7 +156,7 @@ internal static class CarStateVerification {
         (CarStateManager manager, InputManager input, CarSwitcher cars) = Create(startingYaw);
         Vector3 start = manager.Position;
         Vector3 expectedHeading = new Quaternion(Vector3.Up, startingYaw) * Vector3.ModelFront;
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, expectedHeading);
+        AssertNear(cars.CurrentCar.Node.Quaternion * Vector3.ModelFront, expectedHeading);
         input.AccelerationInput = Vector2.Right;
         manager.ReadInputAndUpdateState(1.0);
         manager.Reset_PositionRotationVelocity();
@@ -164,17 +164,42 @@ internal static class CarStateVerification {
         manager.ReadInputAndUpdateState(1.0);
         manager.Apply();
         AssertNear(cars.CurrentCar.Node.Position, start);
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, expectedHeading);
+        AssertNear(cars.CurrentCar.Node.Quaternion * Vector3.ModelFront, expectedHeading);
     }
 
-    private static void VerifyWorldSpawn() {
+    private static void VerifyTrackSpace() {
         TrackObjects track = new();
-        track.PlaceholderCarNode.GlobalPosition = new Vector3(8f, 0f, -3f);
-        track.PlaceholderCarNode.GlobalRotation = new Vector3(0f, 0.7f, 0f);
+        const float parentYaw = 0.4f;
+        const float startingYaw = 0.7f;
+        const float cameraYaw = -0.35f;
+        Transform3D trackToWorld = new(new Basis(Vector3.Up, parentYaw), new Vector3(8f, 0f, -3f));
+        track.PlaceholderCarNode.Position = new Vector3(3f, 0f, 5f);
+        track.PlaceholderCarNode.Rotation = new Vector3(0f, startingYaw, 0f);
+        track.PlaceholderCarNode.GlobalPosition = trackToWorld * track.PlaceholderCarNode.Position;
+        track.PlaceholderCarNode.GlobalRotation = new Vector3(0f, parentYaw + startingYaw, 0f);
+        track.CameraPanAndYaw.Rotation = new Vector3(0f, cameraYaw, 0f);
+        track.CameraPanAndYaw.GlobalRotation = new Vector3(0f, parentYaw + cameraYaw, 0f);
         CarSwitcher cars = new();
-        CarStateManager manager = new(cars, new CameraYawManager(track), new InputManager(), track);
-        AssertNear(manager.Position, track.PlaceholderCarNode.GlobalPosition);
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, new Quaternion(Vector3.Up, 0.7f) * Vector3.ModelFront);
+        InputManager input = new();
+        CarStateManager manager = new(cars, new CameraYawManager(track), input, track);
+        Vector3 start = track.PlaceholderCarNode.Position;
+        Vector3 trackFront = new Quaternion(Vector3.Up, startingYaw) * Vector3.ModelFront;
+        AssertNear(manager.Position, start);
+        AssertNear(cars.CurrentCar.Node.Position, start);
+        AssertNear(cars.CurrentCar.Node.Quaternion * Vector3.ModelFront, trackFront);
+
+        Vector3 cameraDirection = new Quaternion(Vector3.Up, -cameraYaw) * trackFront;
+        input.AccelerationInput = new Vector2(cameraDirection.X, -cameraDirection.Z);
+        manager.ReadInputAndUpdateState(0.5);
+        manager.Apply();
+        AssertNear(cars.CurrentCar.Node.Position - start, trackFront);
+
+        manager.Reset_PositionRotationVelocity();
+        input.AccelerationInput = Vector2.Zero;
+        manager.ReadInputAndUpdateState(1.0);
+        manager.Apply();
+        AssertNear(cars.CurrentCar.Node.Position, start);
+        AssertNear(cars.CurrentCar.Node.Quaternion * Vector3.ModelFront, trackFront);
     }
 
     // By default, face model front (+Z) along camera forward (-Z).
@@ -185,6 +210,7 @@ internal static class CarStateVerification {
         track.PlaceholderCarNode.GlobalPosition = track.PlaceholderCarNode.Position;
         track.PlaceholderCarNode.GlobalRotation = track.PlaceholderCarNode.Rotation;
         track.CameraPanAndYaw.GlobalRotation = new Vector3(0f, cameraYaw, 0f);
+        track.CameraPanAndYaw.Rotation = track.CameraPanAndYaw.GlobalRotation;
         // Child rotations must not affect the driving reference supplied by the pivot.
         track.Camera.GlobalRotation = new Vector3(-Mathf.Pi / 4f, cameraYaw + 0.3f, 0f);
         InputManager input = new();
@@ -193,7 +219,7 @@ internal static class CarStateVerification {
     }
 
     private static void AssertNear(Vector3 actual, Vector3 expected) {
-        if ((actual - expected).Length() > 0.00001f) {
+        if (!((actual - expected).Length() <= 0.00001f)) {
             throw new InvalidOperationException($"Expected {expected}, got {actual}.");
         }
     }

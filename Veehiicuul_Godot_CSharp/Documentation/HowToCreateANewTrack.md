@@ -32,7 +32,10 @@ Godot-side
   - Sunlight
   - WorldEnvironment
 - Drag/drop GLB into the track scene
-  - Reset transform
+  - Name its root node `Model`
+  - Keep `Model` at an exact identity local transform: zero position and rotation, unit scale
+  - `TrackObjects` throws during initialization if this requirement is violated
+  - Imported cars face local +Z; their right side is local -X
 - Adjust these camera settings:
   - Pan:
     - CameraPanAndYaw.Position.XZ
@@ -40,12 +43,17 @@ Godot-side
     - CameraPanAndYaw.Rotation.Y
   - Pitch:
     - CameraPanOffsetAndPitch.Rotation.X
-    - This should probably remain -45 deg
+    - This should probably remain -PI/4 radians (-45 degrees in the Godot Inspector)
   - Zoom:
     - Camera.Size
   - Clip:
     - Camera.Near
     - Camera.Far
+
+Runtime positions and yaw used by the car and camera pivot are relative to the
+track root. All C# angles use native Godot radians; positive Y rotation turns +Z
+toward +X. The camera looks along its local -Z. See [Planar coordinates](PlanarCoordinates.md)
+for the collision coordinate conversion.
 
 ZoomTracks ------------
 
