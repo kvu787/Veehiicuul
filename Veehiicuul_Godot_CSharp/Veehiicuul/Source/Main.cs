@@ -20,7 +20,7 @@ public class Main {
     private CarStateManager CarStateManager = null!;
     //private readonly CollisionManager CollisionManager = null!;
     //private double CarControlTimeoutRemaining;
-    private bool _IsReadyDone;
+    private bool IsReadyDone;
     private static Node MainNode = null!;
 
     public Main(Node mainNode) {
@@ -44,7 +44,7 @@ public class Main {
         this.InputManager = new InputManager();
         this.TrackSwitcher = new TrackSwitcher(MainNode, this.InputManager, TrackNames, InitialTrackIndex);
         this.InitializeTrack();
-        this._IsReadyDone = true;
+        this.IsReadyDone = true;
     }
 
     private void InitializeTrack() {
@@ -60,7 +60,7 @@ public class Main {
     }
 
     public void Process(double delta) {
-        if (!this._IsReadyDone) {
+        if (!this.IsReadyDone) {
             throw new InvalidOperationException("A frame ran before initialization completed.");
         }
         Thread.Sleep(TimeSpan.FromSeconds(0.1));
