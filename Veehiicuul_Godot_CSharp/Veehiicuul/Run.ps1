@@ -30,6 +30,7 @@ try {
     $applicationProcess.StartInfo.RedirectStandardOutput = $true
     $applicationProcess.StartInfo.RedirectStandardError = $true
     if (-not $applicationProcess.Start()) { throw 'Could not launch the exported application.' }
+    $applicationProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::High
     $standardOutput = $applicationProcess.StandardOutput.ReadToEndAsync()
     $standardError = $applicationProcess.StandardError.ReadToEndAsync()
     $applicationProcess.WaitForExit()
