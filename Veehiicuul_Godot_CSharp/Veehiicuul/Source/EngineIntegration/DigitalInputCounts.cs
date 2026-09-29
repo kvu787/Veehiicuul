@@ -13,7 +13,6 @@ namespace Veehiicuul_Godot_CSharp;
 public partial class DigitalInputCounts : Node {
     private static DigitalInputCounts? CurrentInstance { get; set; }
     private readonly Dictionary<Key, int> KeyCounts = [];
-    private readonly Dictionary<Key, int> PhysicalKeyCounts = [];
     private readonly Dictionary<MouseButton, int> MouseButtonCounts = [];
     private readonly Dictionary<JoyButton, int> GamepadButtonCounts = [];
     private readonly Dictionary<int, int> TouchCounts = [];
@@ -34,11 +33,6 @@ public partial class DigitalInputCounts : Node {
     /// <summary>Down events for a layout-dependent key code, excluding keyboard auto-repeat.</summary>
     public static int GetKeyDownCount(Key key) {
         return Instance.KeyCounts.GetValueOrDefault(key);
-    }
-
-    /// <summary>Down events for a physical key position, excluding keyboard auto-repeat.</summary>
-    public static int GetPhysicalKeyDownCount(Key key) {
-        return Instance.PhysicalKeyCounts.GetValueOrDefault(key);
     }
 
     /// <summary>
@@ -66,9 +60,6 @@ public partial class DigitalInputCounts : Node {
             if (key.Keycode != Key.None) {
                 Increment(this.KeyCounts, key.Keycode);
             }
-            if (key.PhysicalKeycode != Key.None) {
-                Increment(this.PhysicalKeyCounts, key.PhysicalKeycode);
-            }
             break;
         case InputEventMouseButton { Pressed: true } mouseButton:
             Increment(this.MouseButtonCounts, mouseButton.ButtonIndex);
@@ -95,7 +86,6 @@ public partial class DigitalInputCounts : Node {
 
     private void ClearCounts() {
         this.KeyCounts.Clear();
-        this.PhysicalKeyCounts.Clear();
         this.MouseButtonCounts.Clear();
         this.GamepadButtonCounts.Clear();
         this.TouchCounts.Clear();
