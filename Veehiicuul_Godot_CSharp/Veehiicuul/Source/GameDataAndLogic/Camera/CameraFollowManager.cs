@@ -15,6 +15,7 @@ public sealed class CameraFollowManager {
 
         this.InputManager = inputManager;
         this.FollowsCarLocation = trackSwitcher.CurrentTrackJson.CameraFollowsCarLocation;
+        this.FollowsCarLocationChanged = false;
     }
 
     public void ReadInputAndUpdateFollowSetting() {

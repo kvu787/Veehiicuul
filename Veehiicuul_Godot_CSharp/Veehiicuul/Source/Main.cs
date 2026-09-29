@@ -70,20 +70,29 @@ public class Main {
             return;
         }
 
-        if (this.InputManager.ResetCar) {
-            this.CarStateManager.Reset_PositionRotationVelocity();
+        bool wasTrackSwitched = this.TrackSwitcher.ReadInputAndSwitchTracks();
+        if (wasTrackSwitched) {
+            this.InitializeTrack();
+        } else {
+            if (this.InputManager.ResetCar) {
+                this.CarStateManager.Reset_PositionRotationVelocity();
+            }
+
+            this.CameraFollowManager.ReadInputAndUpdateFollowSetting();
+            this.CameraZoomManager.ReadInputAndZoom(delta);
+            this.CameraZoomManager.ReadInputAndResetZoom();
+            this.CarStateManager.ReadInputAndUpdateState(delta);
+
+            this.CameraPanManager.Apply();
+            this.CameraZoomManager.Apply();
+            this.CarStateManager.Apply();
+
+            this.CameraFollowManager.EndFrame();
         }
 
-        this.CameraFollowManager.ReadInputAndUpdateFollowSetting();
-        this.CameraZoomManager.ReadInputAndZoom(delta);
-        this.CameraZoomManager.ReadInputAndResetZoom();
-        this.CarStateManager.ReadInputAndUpdateState(delta);
-
-        this.CameraPanManager.Apply();
-        this.CameraZoomManager.Apply();
-        this.CarStateManager.Apply();
-
-        this.CameraFollowManager.EndFrame();
+        if (wasTrackSwitched) {
+            GarbageCollectionUtility.ForceGarbageCollection();
+        }
 
         //--------------------------------------------------
 
