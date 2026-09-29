@@ -209,3 +209,17 @@ The `*` marks the autoload as a **globally named singleton**. Godot removes it b
 - **Without `*`:** Godot still loads the node at `/root/DigitalInputCounts`, but doesn’t expose that global name.
 
 It corresponds to the **Enable** checkbox in the Autoload settings. That checkbox has no effect on C# access: our `DigitalInputCounts.Instance` property provides that access independently, so it works either way. [Godot documentation](https://docs.godotengine.org/en/stable/tutorials/scripting/singletons_autoload.html)
+
+## User
+
+if that checkbox has no effect on C# access, then why did you add the asterisk? is it recommended practice for things like this?
+
+## Assistant
+
+I’ll check whether Godot recommends that setting for C# autoloads or simply enables it by default.
+
+## Assistant
+
+I included it because **Godot enables that checkbox by default** when adding an autoload. I followed that convention; this implementation doesn’t require it. [Godot documentation](https://docs.godotengine.org/en/stable/tutorials/scripting/singletons_autoload.html)
+
+It isn’t a C#-specific recommended practice. For our service, `*` provides no benefit because access comes from the static `Instance` property. Keeping it matches the editor’s default; removing it is equally valid and leaves the C# behavior unchanged.
