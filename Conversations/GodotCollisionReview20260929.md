@@ -240,3 +240,25 @@ Yes. `Run.cmd` invokes `Run.ps1`, which creates a timestamped folder under [MyLo
 - `Console.log` and `ConsoleError.log` — captured output, written when the application exits.
 
 Your clarified requirement is already met. No logging changes are needed; I’m withdrawing that finding.
+
+## User
+
+what is the VEEHIICUUL_LOG_DIRECTORY stuff in run.ps1?
+
+## Assistant Commentary
+
+I’ll check where that environment variable is read.
+
+## Assistant
+
+It’s an environment variable intended to tell the launched application where its session logs belong.
+
+[Run.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Run.ps1:6) does three things:
+
+1. Saves its previous value.
+2. Sets it to the new session folder, so the launched application inherits it.
+3. Restores the previous value when the launcher finishes.
+
+**Nothing in the current application reads it.** Logging works through `--log-file` and the explicit file paths in `Run.ps1`.
+
+You can remove the three lines referencing `VEEHIICUUL_LOG_DIRECTORY`—including `$previousLogDirectory`—without affecting current logging.
