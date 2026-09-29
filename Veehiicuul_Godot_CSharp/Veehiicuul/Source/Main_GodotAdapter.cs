@@ -1,4 +1,5 @@
 using Godot;
+using System;
 
 namespace Veehiicuul_Godot_CSharp;
 
@@ -7,15 +8,20 @@ public partial class Main_GodotAdapter : Node {
     private Main Main = null!;
 
     public override void _Ready() {
-        this.Main = new Main(mainNode: this);
-        this.Main.Ready();
+        try {
+            this.Main = new Main(mainNode: this);
+            this.Main.Ready();
+        } catch (Exception exception) {
+            Main.LogExceptionAndQuit(exception);
+        }
     }
 
     public override void _Process(double delta) {
         try {
             this.Main.Process(delta);
-        } finally {
             DigitalInputCounts.ClearFrameCounts();
+        } catch (Exception exception) {
+            Main.LogExceptionAndQuit(exception);
         }
     }
 }
