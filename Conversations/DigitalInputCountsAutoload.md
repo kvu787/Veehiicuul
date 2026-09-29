@@ -415,3 +415,19 @@ input.GetTouchDownCount(0); // Contact index
 ```
 
 All 78 runtime checks passed. Release build succeeds with three existing `InputManager` warnings.
+
+## User
+
+can `public override void _Input(InputEvent @event) {` be changed to non-public so that other game logic classes don't mistakenly call it?
+
+## Assistant
+
+I’ll check Godot’s method declaration and C#’s override rules to see whether its visibility can be reduced.
+
+## Assistant
+
+**No.** Godot declares `Node._Input` as `public virtual`, so your override must remain `public`. Changing it to `private`, `protected`, or `internal` would fail compilation. [C# override rules](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override)
+
+To prevent accidental calls through `DigitalInputCounts.Instance`, we could expose that property as an **interface containing only the count-query methods**. Game logic using that interface would not see `_Input`, while Godot would still invoke the public override normally.
+
+The callback would remain accessible through a reference to the underlying `Node`; the interface would keep it out of the normal game-facing API.
