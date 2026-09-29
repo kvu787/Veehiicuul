@@ -431,3 +431,29 @@ I’ll check Godot’s method declaration and C#’s override rules to see wheth
 To prevent accidental calls through `DigitalInputCounts.Instance`, we could expose that property as an **interface containing only the count-query methods**. Game logic using that interface would not see `_Input`, while Godot would still invoke the public override normally.
 
 The callback would remain accessible through a reference to the underlying `Node`; the interface would keep it out of the normal game-facing API.
+
+## User
+
+okay, that's fine.
+
+change the interface for DigitalInputCounts so that the game logic uses it via `DigitalInputCounts.GetKeyDownCount`, `DigitalInputCounts.GetGamepadButtonDownCount`, etc
+
+## Assistant
+
+I’ll make the count queries static so game logic can call `DigitalInputCounts.GetKeyDownCount(...)` directly, and remove the public `Instance` property.
+
+## Assistant
+
+All five count queries are now static, and the autoload instance is private. The release build and 79 runtime checks passed; the build still reports the three existing `InputManager` warnings.
+
+## Assistant
+
+Updated [DigitalInputCounts.cs](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/EngineIntegration/DigitalInputCounts.cs). All count queries now use static calls:
+
+```csharp
+DigitalInputCounts.GetKeyDownCount(Key.Space);
+DigitalInputCounts.GetMouseButtonDownCount(MouseButton.Left);
+DigitalInputCounts.GetGamepadButtonDownCount(JoyButton.A);
+```
+
+The autoload instance is private. All 79 runtime checks passed, and the release build succeeds with three existing `InputManager` warnings.
