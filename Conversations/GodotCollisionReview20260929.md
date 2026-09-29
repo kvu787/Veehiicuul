@@ -286,3 +286,17 @@ Cleaned up [Run.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Ve
 Verified logging, paths containing spaces, exit codes, and failure handling under Windows PowerShell.
 
 Committed as `6e364f7`; conversation recorded separately.
+
+## User
+
+change run.ps1 to set [System.Diagnostics.ProcessPriorityClass]::High
+
+## Assistant Commentary
+
+I’ll set the application process priority to `High` immediately after it starts.
+
+## Assistant
+
+Updated [Run.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Run.ps1:33) to set the application’s process priority to `[System.Diagnostics.ProcessPriorityClass]::High` immediately after launch.
+
+Windows PowerShell syntax check passed.
