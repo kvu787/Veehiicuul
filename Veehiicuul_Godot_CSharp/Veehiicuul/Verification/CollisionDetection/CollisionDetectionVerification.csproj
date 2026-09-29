@@ -9,11 +9,13 @@
         <UseSharedCompilation>false</UseSharedCompilation>
     </PropertyGroup>
     <ItemGroup>
+        <Compile Remove="MyLogOutput/**/*.cs" />
         <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/ColliderJson.cs" Link="Production/ColliderJson.cs" />
         <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/CoordinateXY.cs" Link="Production/CoordinateXY.cs" />
         <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/Guard.cs" Link="Production/Guard.cs" />
         <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/Outline.cs" Link="Production/Outline.cs" />
         <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs" Link="Production/TrackCollisionDetector.cs" />
+        <Compile Include="../../Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.ExpandedGrid.cs" Link="Production/TrackCollisionDetector.ExpandedGrid.cs" />
         <None Include="../../Tracks/TrackData/Track001_ColliderData.json" Link="Track001_ColliderData.json" CopyToOutputDirectory="PreserveNewest" />
         <None Include="../../Tracks/Ribeye/Ribeye_ColliderData.json" Link="Ribeye_ColliderData.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>

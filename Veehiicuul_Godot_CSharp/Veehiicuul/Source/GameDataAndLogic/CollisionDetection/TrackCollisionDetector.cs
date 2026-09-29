@@ -65,12 +65,12 @@ public readonly struct RectanglePose {
 /// <summary>
 /// Exact vehicle-perimeter versus track-outline collision detector.
 ///
-/// Ordinary edges are stored once, by AABB center, in a vehicle-scale grid.
-/// Edges larger than that scale use a small scan or an immutable AABB BVH.
+/// Compact tracks precompute vehicle-expanded edge references per grid cell.
+/// Large coordinate spans retain a center grid and an oversized-edge AABB tree.
 /// All broad phases are conservative; the final no-epsilon segment predicate
 /// is exact for the binary32 coordinates supplied to it.
 /// </summary>
-public sealed class TrackCollisionDetector {
+public sealed partial class TrackCollisionDetector {
     private const int DenseGridMinimumCellLimit = 4096;
     private const int DenseGridCellsPerEdgeLimit = 4;
     private const int DenseGridAbsoluteCellLimit = 1_048_576;
@@ -82,10 +82,18 @@ public sealed class TrackCollisionDetector {
     private readonly AabbF _allBounds;
     private readonly CenterGrid _grid;
     private readonly OutlierIndex _outliers;
+    private readonly ExpandedGrid? _expandedGrid;
 
     public TrackCollisionDetector(
         ColliderJson colliderJson,
-        RectangleLocalBounds representativeVehicleBounds) {
+        RectangleLocalBounds representativeVehicleBounds)
+        : this(colliderJson, representativeVehicleBounds, 0.5) {
+    }
+
+    // Allows the verification harness to tune cell size independently of the
+    // physical footprint. Runtime callers use the measured default above.
+    internal TrackCollisionDetector(ColliderJson colliderJson,
+        RectangleLocalBounds representativeVehicleBounds, double cellSizeScale) {
         ArgumentNullException.ThrowIfNull(colliderJson);
 
         if (!representativeVehicleBounds.IsValid) {
@@ -104,11 +112,23 @@ public sealed class TrackCollisionDetector {
             - representativeVehicleBounds.MinX;
         double height = (double)representativeVehicleBounds.MaxY
             - representativeVehicleBounds.MinY;
-        double cellSize = Math.Min(width, height);
+        double cellSize = Math.Min(width, height) * cellSizeScale;
         if (!(cellSize > 0.0) || double.IsInfinity(cellSize) || double.IsNaN(cellSize)) {
             throw new ArgumentException(
                 "Representative vehicle bounds do not define a usable grid scale.",
                 nameof(representativeVehicleBounds));
+        }
+
+        if (ExpandedGrid.TryCreate(this._edges, this._allBounds, representativeVehicleBounds, cellSize, out this._expandedGrid)) {
+            this._grid = CenterGrid.CreateEmpty(cellSize);
+            this._outliers = new OutlierIndex(this._edges, []);
+            this.OrdinaryEdgeCount = this.EdgeCount;
+            this.CellSize = cellSize;
+            this.GridColumnCount = this._expandedGrid.ColumnCount;
+            this.GridRowCount = this._expandedGrid.RowCount;
+            this.OccupiedGridCellCount = this._expandedGrid.OccupiedCellCount;
+            this.UsesDenseGrid = true;
+            return;
         }
 
         List<int> ordinaryEdgeIds = new(this.EdgeCount);
@@ -163,13 +183,48 @@ public sealed class TrackCollisionDetector {
     public long GridCellCount => (long)this.GridColumnCount * this.GridRowCount;
     public int OccupiedCellCount => this.OccupiedGridCellCount;
     public bool UsesDenseGrid { get; }
-    public int StoredGridEdgeReferenceCount => this._grid.EdgeIds.Length;
+    public int StoredGridEdgeReferenceCount => this._expandedGrid?.EdgeIds.Length ?? this._grid.EdgeIds.Length;
+    public bool UsesExpandedGrid => this._expandedGrid is not null;
     public int OutlierBvhNodeCount { get; }
     public int OversizedEdgeCount => this.OutlierEdgeCount;
     public int BroadQueryCellThreshold { get; }
 
     public bool IsColliding(RectangleLocalBounds localBounds, RectanglePose pose) {
+        if (this._expandedGrid is not null && this._expandedGrid.Supports(localBounds, pose)) {
+            CellRange range = this._expandedGrid.GetRange(pose.PositionX, pose.PositionY);
+            if (range.Count == 0) {
+                return false;
+            }
+
+            RectangleQuad expandedRectangle = RectangleTransformer.Transform(localBounds, pose);
+            int end = range.Offset + range.Count;
+            for (int index = range.Offset; index < end; ++index) {
+                if (this.EdgeIntersectsRectangle(this._expandedGrid.EdgeIds[index], expandedRectangle)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         RectangleQuad rectangle = CreateRectangle(localBounds, pose);
+        if (this._expandedGrid is not null) {
+            if (this._expandedGrid.SupportsCentered(localBounds, pose)) {
+                CellRange range = this._expandedGrid.GetRange(
+                    ((double)rectangle.P0.X + rectangle.P2.X) * 0.5,
+                    ((double)rectangle.P0.Y + rectangle.P2.Y) * 0.5);
+                int end = range.Offset + range.Count;
+                for (int index = range.Offset; index < end; ++index) {
+                    if (this.EdgeIntersectsRectangle(this._expandedGrid.EdgeIds[index], rectangle)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return this._allBounds.Overlaps(rectangle.Bounds) && this.ScanAll(rectangle);
+        }
         if (!this._allBounds.Overlaps(rectangle.Bounds)) {
             return false;
         }
@@ -1019,8 +1074,7 @@ public sealed class TrackCollisionDetector {
         internal static RectangleQuad Transform(
             RectangleLocalBounds bounds,
             RectanglePose pose) {
-            double cosine = Math.Cos(pose.RotationRadians);
-            double sine = Math.Sin(pose.RotationRadians);
+            (double sine, double cosine) = Math.SinCos(pose.RotationRadians);
             PointF p0 = TransformPoint(bounds.MinX, bounds.MinY, pose, cosine, sine);
             PointF p1 = TransformPoint(bounds.MaxX, bounds.MinY, pose, cosine, sine);
             PointF p2 = TransformPoint(bounds.MaxX, bounds.MaxY, pose, cosine, sine);
@@ -1070,8 +1124,9 @@ public sealed class TrackCollisionDetector {
 
             int abc = OrientationSign(a, b, c);
             int abd = OrientationSign(a, b, d);
-            int cda = OrientationSign(c, d, a);
-            int cdb = OrientationSign(c, d, b);
+            if (abc != 0 && abc == abd) {
+                return false;
+            }
             if (abc == 0 && IsOnClosedSegment(a, b, c)) {
                 return true;
             }
@@ -1080,6 +1135,8 @@ public sealed class TrackCollisionDetector {
                 return true;
             }
 
+            int cda = OrientationSign(c, d, a);
+            int cdb = OrientationSign(c, d, b);
             if (cda == 0 && IsOnClosedSegment(c, d, a)) {
                 return true;
             }
@@ -1187,6 +1244,20 @@ public sealed class TrackCollisionDetector {
                 return 0;
             }
 
+            // At most 61 magnitude bits per coordinate and 62 per difference:
+            // the exact signed determinant fits in 128 bits without allocating.
+            // Retain BigInteger for the full binary32 exponent range.
+            if (ax.TryGetBoundedInteger(commonExponent, out long axl)
+                && ay.TryGetBoundedInteger(commonExponent, out long ayl)
+                && bx.TryGetBoundedInteger(commonExponent, out long bxl)
+                && by.TryGetBoundedInteger(commonExponent, out long byl)
+                && cx.TryGetBoundedInteger(commonExponent, out long cxl)
+                && cy.TryGetBoundedInteger(commonExponent, out long cyl)) {
+                Int128 exact = ((Int128)bxl - axl) * ((Int128)cyl - ayl)
+                    - ((Int128)byl - ayl) * ((Int128)cxl - axl);
+                return exact > 0 ? 1 : exact < 0 ? -1 : 0;
+            }
+
             BigInteger axi = ax.ToIntegerAtExponent(commonExponent);
             BigInteger ayi = ay.ToIntegerAtExponent(commonExponent);
             BigInteger bxi = bx.ToIntegerAtExponent(commonExponent);
@@ -1212,6 +1283,22 @@ public sealed class TrackCollisionDetector {
 
             internal int Significand { get; }
             internal int Exponent { get; }
+
+            internal bool TryGetBoundedInteger(int commonExponent, out long value) {
+                if (this.Significand == 0) {
+                    value = 0;
+                    return true;
+                }
+
+                int shift = this.Exponent - commonExponent;
+                if (shift > 37) {
+                    value = 0;
+                    return false;
+                }
+
+                value = (long)this.Significand << shift;
+                return true;
+            }
 
             internal BigInteger ToIntegerAtExponent(int commonExponent) {
                 if (this.Significand == 0) {

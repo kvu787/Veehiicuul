@@ -8,7 +8,7 @@ using Veehiicuul_Godot_CSharp;
 namespace VeehiicuulCollisionVerification;
 
 /// <summary>Reproducible kernel measurements, separate from Godot and rendering.</summary>
-internal static class PerformanceAnalysis {
+internal static partial class PerformanceAnalysis {
     private const int SampleCount = 15;
     private static readonly RectangleLocalBounds CarBounds = new(-1.5f, -2.992522f, 1.5f, 3f);
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
@@ -19,12 +19,14 @@ internal static class PerformanceAnalysis {
     internal static void Run(string[] arguments) {
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         Console.WriteLine($"Environment: {RuntimeInformation.FrameworkDescription}; {RuntimeInformation.OSDescription}; {RuntimeInformation.ProcessArchitecture}; logical processors={Environment.ProcessorCount}; stopwatch={Stopwatch.Frequency}; tiered={Environment.GetEnvironmentVariable("DOTNET_TieredCompilation") ?? "default"}");
-        foreach (string name in new[] { "Ribeye", "Track001" }) {
+        bool ribeyeOnly = arguments.Contains("--ribeye");
+        foreach (string name in ribeyeOnly ? new[] { "Ribeye" } : new[] { "Ribeye", "Track001" }) {
             ColliderJson data = JsonSerializer.Deserialize<ColliderJson>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, name + "_ColliderData.json")))!;
             AnalyzeTrack(name, data);
         }
-        AnalyzeSynthetic();
+        if (!ribeyeOnly) { AnalyzeSynthetic(); }
         ValidateIndependentOracle();
+        ValidateOrientationArithmetic();
         ValidateInvalidInputs();
         Console.WriteLine($"PASS: independent exact oracle comparisons={OracleComparisons}; checksum={Checksum}.");
         string output = arguments.FirstOrDefault(value => value.StartsWith("--output=", StringComparison.Ordinal))?[9..]
@@ -68,17 +70,17 @@ internal static class PerformanceAnalysis {
             CompareOracle(data, detector, query);
         }
         Console.WriteLine($"Validation {name}: {mixed.Length + neighborhoods.Count} indexed/linear comparisons, every edge plus closing edges.");
+        ValidateGridBoundaries(data, detector);
         Benchmark(name + "/Mixed", detector, mixed);
         Benchmark(name + "/ClearInsideBounds", detector, mixed.Where(query => !detector.IsColliding(query.Bounds, query.Pose)).ToArray());
         Benchmark(name + "/Contact", detector, neighborhoods.Where(query => detector.IsColliding(query.Bounds, query.Pose)).ToArray());
         Benchmark(name + "/ExactVertexContact", detector, points.Select(point => new Query(new(0, 0, 3, 6), new(point.X, point.Y, 0))).ToArray());
         Benchmark(name + "/OutsideBounds", detector, [new(CarBounds, new(maxX + 100, maxY + 100, 0.7f))]);
         Benchmark(name + "/HugeContainingRectangle", detector, [new(new(minX - 100, minY - 100, maxX + 100, maxY + 100), new(0, 0, 0))]);
-        foreach (float scale in new[] { 0.25f, 2f, 4f }) {
-            RectangleLocalBounds scaled = new(CarBounds.MinX * scale, CarBounds.MinY * scale, CarBounds.MaxX * scale, CarBounds.MaxY * scale);
-            TrackCollisionDetector alternative = new(data, scaled);
-            DescribeIndex(name + $"/CellScale{scale}", alternative);
-            Benchmark(name + $"/CellScale{scale}", alternative, mixed);
+        foreach (double scale in new[] { 0.5, 1.0, 1.5, 2.0, 3.0, 4.0 }) {
+            TrackCollisionDetector alternative = new(data, CarBounds, scale);
+            DescribeIndex(name + $"/CellSize{alternative.CellSize}", alternative);
+            Benchmark(name + $"/CellSize{alternative.CellSize}", alternative, mixed);
         }
         if (name == "Ribeye") {
             Benchmark(name + "/Spawn", detector, [new(CarBounds, new(117.841125f, 61.20298f, 1.793361f))]);
@@ -176,6 +178,9 @@ internal static class PerformanceAnalysis {
         int allocationRepetitions = Math.Max(1, 32768 / queries.Length);
         Checksum += Batch(detector, queries, allocationRepetitions, false);
         double bytes = (GC.GetAllocatedBytesForCurrentThread() - before) / (double)(allocationRepetitions * queries.Length);
+        if (name.StartsWith("Ribeye/", StringComparison.Ordinal)) {
+            Require(bytes == 0, "Ribeye queries must not allocate after warmup: " + name);
+        }
         double median = Percentile(indexed, 0.5), tail = Percentile(indexed, 0.95);
         double linearMedian = compareLinear ? Percentile(linear, 0.5) : 0;
         Results.Add(new { Kind = "Query", Name = name, Queries = queries.Length, Contacts = expected,

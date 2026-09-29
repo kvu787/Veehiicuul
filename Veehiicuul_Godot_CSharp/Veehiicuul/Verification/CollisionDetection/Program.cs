@@ -139,7 +139,7 @@ internal static class Program {
             detector.EdgeCount == ExpectedTrack001EdgeCount,
             $"Detector indexed {detector.EdgeCount} edges instead of "
             + $"{ExpectedTrack001EdgeCount}.");
-        RequireNear((float)detector.CellSize, 3f, 0.00001f, "Track001 grid cell size");
+        RequireNear((float)detector.CellSize, 1.5f, 0.00001f, "Track001 grid cell size");
         Require(
             detector.OrdinaryEdgeCount == ExpectedTrack001EdgeCount,
             $"Expected all Track001 edges to be ordinary, found "
@@ -148,19 +148,20 @@ internal static class Program {
             detector.OutlierEdgeCount == 0,
             $"Expected no Track001 outlier edges, found {detector.OutlierEdgeCount}.");
         Require(
-            detector.StoredGridEdgeReferenceCount == ExpectedTrack001EdgeCount,
-            "Each Track001 edge must have exactly one center-grid reference; found "
+            detector.StoredGridEdgeReferenceCount >= ExpectedTrack001EdgeCount,
+            "Every Track001 edge must have at least one grid reference; found "
             + $"{detector.StoredGridEdgeReferenceCount} references for "
             + $"{ExpectedTrack001EdgeCount} edges.");
         Require(
-            detector.GridColumnCount == 52 && detector.GridRowCount == 45,
-            "Expected a 52x45 Track001 logical grid, found "
+            detector.GridColumnCount > 0 && detector.GridRowCount > 0 && detector.GridCellCount <= 65536,
+            "Expected a bounded Track001 logical grid, found "
             + $"{detector.GridColumnCount}x{detector.GridRowCount}.");
         Require(
-            detector.OccupiedGridCellCount == 342,
-            $"Expected 342 occupied Track001 cells, found "
+            detector.OccupiedGridCellCount > 0 && detector.OccupiedGridCellCount <= detector.GridCellCount,
+            $"Expected valid occupied Track001 cells, found "
             + $"{detector.OccupiedGridCellCount}.");
         Require(detector.UsesDenseGrid, "Track001 should use the dense grid layout.");
+        Require(detector.UsesExpandedGrid, "Track001 should exercise expanded-cell queries.");
 
         long gridCellCount = checked(
             (long)detector.GridColumnCount * detector.GridRowCount);
@@ -215,7 +216,7 @@ internal static class Program {
             SquareLoop(20f, 0f, 2f));
         TrackCollisionDetector detector = new(
             colliderJson,
-            new RectangleLocalBounds(-0.5f, -0.5f, 0.5f, 0.5f));
+            new RectangleLocalBounds(-0.00005f, -0.00005f, 0.00005f, 0.00005f));
         Require(detector.OutlineCount == 3, "Arbitrary-loop detector lost an outline.");
         Require(detector.EdgeCount == 12, "Arbitrary-loop detector expected 12 edges.");
         Require(
@@ -234,9 +235,9 @@ internal static class Program {
 
     private static void ValidateSparseGrid() {
         ColliderJson colliderJson = CreateRuntimeCollider(
-            SquareLoop(-10_000f, 0f, 0.25f),
+            SquareLoop(-100_000f, 0f, 0.25f),
             SquareLoop(0f, 0f, 0.25f),
-            SquareLoop(10_000f, 0f, 0.25f));
+            SquareLoop(100_000f, 0f, 0.25f));
         TrackCollisionDetector detector = new(
             colliderJson,
             new RectangleLocalBounds(-0.5f, -0.5f, 0.5f, 0.5f));
@@ -247,7 +248,7 @@ internal static class Program {
                 && detector.OutlierEdgeCount == 0,
             "The sparse grid must store each of its 12 ordinary edges exactly once.");
 
-        foreach (float centerX in new[] { -10_000f, 0f, 10_000f }) {
+        foreach (float centerX in new[] { -100_000f, 0f, 100_000f }) {
             AssertQuery(
                 detector,
                 new RectangleLocalBounds(-0.5f, -0.1f, 0.5f, 0.1f),

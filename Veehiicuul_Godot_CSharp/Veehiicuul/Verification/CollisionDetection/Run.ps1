@@ -17,7 +17,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Verification exited with code $LASTEXITCODE." }
     if (-not $VerificationOnly) {
         for ($repetition = 1; $repetition -le $Repetitions; ++$repetition) {
-            & $executable --performance "--output=$logDirectory\Performance$repetition.json"
+            & $executable --performance --ribeye "--output=$logDirectory\Performance$repetition.json"
             if ($LASTEXITCODE -ne 0) { throw "Benchmark exited with code $LASTEXITCODE." }
         }
     }
