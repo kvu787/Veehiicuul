@@ -1,18 +1,19 @@
 # Digital input counts
 
 The `DigitalInputCounts` autoload records digital down events delivered to its
-`_Input` callback. Query it from `Main.Process` or code called by that method:
+`_Input` callback. Query its static methods from `Main.Process` or code called by that method:
 
 ```csharp
-DigitalInputCounts input = DigitalInputCounts.Instance;
-int spacePresses = input.GetPhysicalKeyDownCount(Key.Space);
-int letterPresses = input.GetKeyDownCount(Key.A);
-int leftClicks = input.GetMouseButtonDownCount(MouseButton.Left);
-int wheelUpEvents = input.GetMouseButtonDownCount(MouseButton.WheelUp);
-int gamepadPresses = input.GetGamepadButtonDownCount(JoyButton.A);
-int touchDowns = input.GetTouchDownCount(0);
+int spacePresses = DigitalInputCounts.GetPhysicalKeyDownCount(Key.Space);
+int letterPresses = DigitalInputCounts.GetKeyDownCount(Key.A);
+int leftClicks = DigitalInputCounts.GetMouseButtonDownCount(MouseButton.Left);
+int wheelUpEvents = DigitalInputCounts.GetMouseButtonDownCount(MouseButton.WheelUp);
+int gamepadPresses = DigitalInputCounts.GetGamepadButtonDownCount(JoyButton.A);
+int touchDowns = DigitalInputCounts.GetTouchDownCount(0);
 ```
 
+- The autoload instance is private. Static queries access it internally and throw
+  if the autoload is not in the scene tree.
 - Counts start at zero. Multiple presses between game updates accumulate, even if
   each input was released before the update. Reading a count does not consume it.
 - Keyboard auto-repeat and releases do not count. Logical and physical key codes

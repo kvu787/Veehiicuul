@@ -15,7 +15,7 @@ public partial class Main_GodotAdapter : Node {
         try {
             this.Main.Process(delta);
         } finally {
-            DigitalInputCounts.Instance.ClearFrameCounts();
+            DigitalInputCounts.ClearFrameCounts();
         }
     }
 }

@@ -19,7 +19,7 @@ public partial class DigitalInputCounts : Node {
     private readonly Dictionary<int, int> TouchCounts = [];
 
     /// <summary>The autoload instance, available before the main scene enters the tree.</summary>
-    public static DigitalInputCounts Instance => CurrentInstance
+    private static DigitalInputCounts Instance => CurrentInstance
         ?? throw new InvalidOperationException("The DigitalInputCounts autoload is not in the scene tree.");
 
     public override void _EnterTree() {
@@ -27,36 +27,36 @@ public partial class DigitalInputCounts : Node {
     }
 
     public override void _ExitTree() {
-        this.ClearFrameCounts();
+        this.ClearCounts();
         CurrentInstance = null;
     }
 
     /// <summary>Down events for a layout-dependent key code, excluding keyboard auto-repeat.</summary>
-    public int GetKeyDownCount(Key key) {
-        return this.KeyCounts.GetValueOrDefault(key);
+    public static int GetKeyDownCount(Key key) {
+        return Instance.KeyCounts.GetValueOrDefault(key);
     }
 
     /// <summary>Down events for a physical key position, excluding keyboard auto-repeat.</summary>
-    public int GetPhysicalKeyDownCount(Key key) {
-        return this.PhysicalKeyCounts.GetValueOrDefault(key);
+    public static int GetPhysicalKeyDownCount(Key key) {
+        return Instance.PhysicalKeyCounts.GetValueOrDefault(key);
     }
 
     /// <summary>
     /// Down events for a mouse button, including wheel directions. Each wheel event counts
     /// once regardless of its scroll factor. Windows combines connected mice and keyboards.
     /// </summary>
-    public int GetMouseButtonDownCount(MouseButton button) {
-        return this.MouseButtonCounts.GetValueOrDefault(button);
+    public static int GetMouseButtonDownCount(MouseButton button) {
+        return Instance.MouseButtonCounts.GetValueOrDefault(button);
     }
 
     /// <summary>Down events for a button across all gamepads.</summary>
-    public int GetGamepadButtonDownCount(JoyButton button) {
-        return this.GamepadButtonCounts.GetValueOrDefault(button);
+    public static int GetGamepadButtonDownCount(JoyButton button) {
+        return Instance.GamepadButtonCounts.GetValueOrDefault(button);
     }
 
     /// <summary>Touch-down events for a contact index across all devices.</summary>
-    public int GetTouchDownCount(int index) {
-        return this.TouchCounts.GetValueOrDefault(index);
+    public static int GetTouchDownCount(int index) {
+        return Instance.TouchCounts.GetValueOrDefault(index);
     }
 
     public override void _Input(InputEvent @event) {
@@ -89,7 +89,11 @@ public partial class DigitalInputCounts : Node {
     }
 
     // The sole frame callback owns this boundary; do not clear during input dispatch or rendering.
-    internal void ClearFrameCounts() {
+    internal static void ClearFrameCounts() {
+        Instance.ClearCounts();
+    }
+
+    private void ClearCounts() {
         this.KeyCounts.Clear();
         this.PhysicalKeyCounts.Clear();
         this.MouseButtonCounts.Clear();
