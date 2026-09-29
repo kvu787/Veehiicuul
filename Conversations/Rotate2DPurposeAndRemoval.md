@@ -106,3 +106,28 @@ Removed both `Rotate2D` overloads and `Get2DRotationQuaternion` in commit `13fa8
 Passed: 9,620 planar comparisons, car/camera checks, and release C# compilation.
 
 Full export remains blocked by Godot [import errors](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-09-29_08-30-28/Import.log) (`!is_inside_tree()`).
+
+## User
+
+what is this: Full export remains blocked by Godot [import errors](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-09-29_08-30-28/Import.log) (!is_inside_tree()).
+
+## Assistant Commentary
+
+I’ll inspect the import log and Godot’s error path to explain what failed and whether it relates to the method removal.
+
+## Assistant
+
+**The build script stopped before it reached EXE export.** During its headless editor/import step, Godot logged this twice:
+
+```text
+ERROR: Condition "!is_inside_tree()" is true. Returning: Transform3D()
+   at: get_global_transform (scene/3d/node_3d.cpp:649)
+```
+
+This means something requested a 3D node’s **world transform** while that node wasn’t attached to the active scene tree. Godot reports an error and returns an identity transform as a fallback. [Godot documentation](https://docs.godotengine.org/en/stable/classes/class_node3d.html#class-node3d-property-global-transform)
+
+[Build.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Build.ps1:38) stops whenever the import log contains an `ERROR:` line. Consequently, it never reached the export command.
+
+My wording “import errors” was imprecise: **the errors occurred during the import command, but the log does not establish that an asset failed to import.** They appear after the editor finishes loading its layout.
+
+This predates the method removal—the identical errors are in a [September 25 log](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-09-25_05-38-22/Import.log:21). The log doesn’t identify the offending node or caller, so the underlying cause remains undiagnosed. The C# compilation and verification checks passed.
