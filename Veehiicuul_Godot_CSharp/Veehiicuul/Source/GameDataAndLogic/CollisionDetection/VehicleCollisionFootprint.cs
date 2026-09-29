@@ -86,8 +86,8 @@ public readonly struct VehicleCollisionFootprint {
 
         float x0 = this.MinX * xScale;
         float x1 = this.MaxX * xScale;
-        // The preserved two-dimensional detector uses forward-positive Y.
-        // Godot forward is negative Z, so negate and reverse the local interval.
+        // Collision Y is negative Godot Z, so negate and reverse the interval.
+        // Model front (+Z) is therefore at the minimum collision Y.
         float y0 = -this.MaxZ * zScale;
         float y1 = -this.MinZ * zScale;
         return new RectangleLocalBounds(

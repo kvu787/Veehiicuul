@@ -21,6 +21,7 @@ Comparative timings
 are reported without machine-dependent performance thresholds.
 
 The detector uses Blender world X/Y directly, matching glTF's conversion to Godot
-X/negative Z. Clockwise vehicle yaw is negative Godot Y rotation. This program
-checks the collision algorithm and track data; the exported game's Ribeye scene
+X/negative Z. Model front is local Godot +Z, so front shortening applies to the
+minimum local collision Y. Clockwise vehicle yaw is negative Godot Y rotation.
+This program checks the collision algorithm and track data; the exported game's Ribeye scene
 also needs a startup check to verify mesh import and vehicle integration.

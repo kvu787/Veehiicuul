@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace Veehiicuul_Godot_CSharp;
 /// <summary>
 /// Immutable final local-space bounds of the vehicle rectangle on its X/negative Z
-/// plane. The collision coordinate Y is negative Godot Z (forward).
+/// plane. The collision coordinate Y is negative Godot Z.
 /// </summary>
 public readonly struct RectangleLocalBounds {
     public RectangleLocalBounds(float minX, float minY, float maxX, float maxY) {

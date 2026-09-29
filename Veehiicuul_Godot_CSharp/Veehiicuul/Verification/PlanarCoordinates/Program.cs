@@ -7,8 +7,12 @@ AssertNear(Vector3.Forward.Rotate2D(Mathf.Pi / 2f), Vector3.Right, tolerance, "R
 AssertNear(Vector3.Forward.Rotate2D(-Mathf.Pi / 2f), Vector3.Left, tolerance, "Left turn");
 AssertNear(Vector3.Forward.Rotate2D(Mathf.Pi), Vector3.Back, tolerance, "Reverse heading");
 Require(Vector3.Zero.Get2DRotation() == 0f, "Zero heading");
-Require(Vector3.Right.Get2DRotation() == Mathf.Pi / 2f, "Right heading");
-Require(Vector3.Left.Get2DRotation() == -Mathf.Pi / 2f, "Left heading");
+Require(Vector3.ModelFront.Get2DRotation() == 0f, "Model front heading");
+Require(Vector3.ModelRight.Get2DRotation() == Mathf.Pi / 2f, "Model right heading");
+Require(Vector3.ModelLeft.Get2DRotation() == -Mathf.Pi / 2f, "Model left heading");
+Require(Mathf.Abs(Vector3.ModelRear.Get2DRotation()) == Mathf.Pi, "Model rear heading");
+AssertNear(Vector3.ModelFront.Rotate2D(Mathf.Pi / 2f), Vector3.ModelRight, tolerance, "Model right turn");
+AssertNear(Vector3.ModelFront.Rotate2D(-Mathf.Pi / 2f), Vector3.ModelLeft, tolerance, "Model left turn");
 
 int comparisons = 0;
 Vector3[] sourceVectors = [new(0f, 0f, 1f), new(1f, 0f, 0f), new(-1.5f, 0f, 2.5f), new(2f, 0f, -3f)];
@@ -26,7 +30,7 @@ foreach (Vector3 source in sourceVectors) {
         AssertNear(actual.Rotate2D(-radians), reflected, tolerance, "Rotation inverse");
         AssertNear(new Quaternion(Vector3.Up, -radians) * reflected, actual, tolerance, "Native Godot quaternion");
         AssertNear(reflected.Rotate2D(new Quaternion(Vector3.Up, -radians)), actual, tolerance, "Quaternion overload");
-        AssertNear(actual.Get2DRotationQuaternion() * Vector3.Forward, actual.Normalized(), tolerance, "Heading quaternion");
+        AssertNear(actual.Get2DRotationQuaternion() * Vector3.ModelFront, actual.Normalized(), tolerance, "Model heading quaternion");
         Require(actual.Y == 0f, "Planar Y invariant");
         comparisons += 6;
     }

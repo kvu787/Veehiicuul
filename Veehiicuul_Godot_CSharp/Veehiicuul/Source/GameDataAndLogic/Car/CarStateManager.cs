@@ -16,7 +16,7 @@ public sealed class CarStateManager {
     private readonly InputManager InputManager;
 
     private readonly Vector3 StartingPosition;
-    // All yaw angles are radians; planar helpers use the opposite sign to Godot node yaw.
+    // Car yaw is clockwise radians from model front (+Z), opposite to Godot node yaw.
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0032:Use auto property", Justification = "Readability")]
     private readonly float StartingRotation;
 
@@ -50,7 +50,7 @@ public sealed class CarStateManager {
         CarDynamic carDynamic = this.CarSwitcher.CurrentCar.Dynamic;
 
         if (this.InputManager.Brake == 0f) {
-            // The input snapshot reports stick-up as +Y; world-forward is -Z.
+            // Stick-up is +Y; the camera pivot's forward direction is local -Z.
             Vector3 accelerationInputPlanar = new(accelerationInput.X, 0f, -accelerationInput.Y);
             Vector3 accelerationInputWorld = accelerationInputPlanar.Rotate2D(this.CameraYawManager.Yaw);
             Vector3 accelerationInputCar = accelerationInputWorld.Rotate2D(-this.Rotation);
@@ -60,10 +60,11 @@ public sealed class CarStateManager {
             accelerationInputCar = accelerationInputCar.LimitLength(1f);
 
             if (accelerationInputCar != Vector3.Zero) {
+                // Imported cars use model front (+Z) and model right (-X).
                 Vector3 accelerationOutputCar = new(
-                    accelerationInputCar.X * (accelerationInputCar.X > 0f ? carDynamic.AccelerationMap.Right : carDynamic.AccelerationMap.Left),
+                    accelerationInputCar.X * (accelerationInputCar.X < 0f ? carDynamic.AccelerationMap.Right : carDynamic.AccelerationMap.Left),
                     0f,
-                    accelerationInputCar.Z * (accelerationInputCar.Z < 0f ? carDynamic.AccelerationMap.Forward : carDynamic.AccelerationMap.Reverse));
+                    accelerationInputCar.Z * (accelerationInputCar.Z > 0f ? carDynamic.AccelerationMap.Forward : carDynamic.AccelerationMap.Reverse));
                 Vector3 accelerationOutputWorld = accelerationOutputCar.Rotate2D(this.Rotation);
                 this.Velocity += (float)delta * accelerationOutputWorld;
             }

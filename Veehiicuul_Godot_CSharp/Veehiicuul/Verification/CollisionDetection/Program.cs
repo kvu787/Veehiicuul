@@ -15,7 +15,7 @@ internal static class Program {
     private const int BenchmarkQueryCount = 4096;
     private const int BenchmarkRepetitions = 4;
 
-    // Representative vehicle bounds in the forward-positive collision plane.
+    // Representative vehicle bounds in Blender X/Y, or Godot X/negative Z.
     private static readonly RectangleLocalBounds Track001CarBounds = new(
         -1.5f,
         -3.0f,
@@ -62,7 +62,8 @@ internal static class Program {
     private static void ValidateRibeyeData() {
         string path = Path.Combine(AppContext.BaseDirectory, "Ribeye_ColliderData.json");
         ColliderJson colliderJson = LoadColliderJson(path);
-        RectangleLocalBounds carBounds = new(-1.5f, -3f, 1.5f, 3.157522f - 0.165f);
+        // Blender -Y (Godot model front +Z) is the minimum collision Y.
+        RectangleLocalBounds carBounds = new(-1.5f, -3.157522f + 0.165f, 1.5f, 3f);
         TrackCollisionDetector detector = new(colliderJson, carBounds);
         Require(detector.EdgeCount == 800, "Ribeye must load all 800 outline edges without format metadata.");
         // Ribeye.glb's authored placeholder pose, converted from Godot X/Z and yaw.

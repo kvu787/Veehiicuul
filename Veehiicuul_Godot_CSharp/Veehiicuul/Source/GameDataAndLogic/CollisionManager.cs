@@ -35,8 +35,8 @@ public sealed class CollisionManager {
         Node3D vehicle = this.RefreshCurrentVehicleIfNeeded();
         RectangleLocalBounds bounds = this.GetCurrentVehicleBounds(vehicle);
         Vector3 position = vehicle.GlobalPosition;
-        // Godot forward is -Z and positive yaw is counterclockwise viewed from
-        // above. The original collision plane is forward-positive and clockwise.
+        // Both world positions and local bounds use collision coordinates (X, -Z).
+        // The detector's clockwise rotation is negative Godot Y-axis rotation.
         RectanglePose pose = new(
             position.X,
             -position.Z,
@@ -81,10 +81,11 @@ public sealed class CollisionManager {
 
     private RectangleLocalBounds GetCurrentVehicleBounds(Node3D currentVehicle) {
         RectangleLocalBounds bounds = this._currentFootprint.GetScaledLocalBounds(currentVehicle);
+        // Model front is local +Z, which maps to the minimum collision Y.
         return new RectangleLocalBounds(
             bounds.MinX,
-            bounds.MinY + ShortenColliderRear,
+            bounds.MinY + ShortenColliderFront,
             bounds.MaxX,
-            bounds.MaxY - ShortenColliderFront);
+            bounds.MaxY - ShortenColliderRear);
     }
 }

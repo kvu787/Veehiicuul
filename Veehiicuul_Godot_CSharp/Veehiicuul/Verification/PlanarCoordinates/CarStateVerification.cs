@@ -9,6 +9,8 @@ internal static class CarStateVerification {
             ("Neutral input preserves motion", VerifyCoasting),
             ("Applied heading follows velocity", VerifyHeading),
             ("Rotated spawn uses forward acceleration", VerifyRotatedSpawn),
+            ("Model axes select distinct forward, reverse, left, and right strengths", VerifyModelAcceleration),
+            ("Forward acceleration stays aligned over successive updates", VerifySuccessiveForwardAcceleration),
             ("Camera pivot yaw rotates input independently of camera children", VerifyCameraYaw),
             ("Braking slows without reversing and preserves heading", VerifyBraking),
             ("Neutral input still enforces the speed limit", VerifySpeedLimit),
@@ -55,22 +57,61 @@ internal static class CarStateVerification {
             input.AccelerationInput = direction;
             manager.ReadInputAndUpdateState(0.5);
             manager.Apply();
-            AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.Forward, (manager.Position - start).Normalized());
+            AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, (manager.Position - start).Normalized());
         }
     }
 
     private static void VerifyRotatedSpawn() {
-        (CarStateManager manager, InputManager input, _) = Create(-Mathf.Pi / 2f);
+        (CarStateManager manager, InputManager input, _) = Create(Mathf.Pi / 2f);
         Vector3 start = manager.Position;
         input.AccelerationInput = Vector2.Right;
         manager.ReadInputAndUpdateState(0.5);
         AssertNear(manager.Position - start, Vector3.Right);
     }
 
+    private static void VerifyModelAcceleration() {
+        (Vector3 Direction, float Strength)[] directions = [
+            (Vector3.ModelFront, 4f),
+            (Vector3.ModelRear, 8f),
+            (Vector3.ModelLeft, 2f),
+            (Vector3.ModelRight, 6f)
+        ];
+        float[] startingAngles = [0f, Mathf.Pi / 2f, Mathf.Pi, -Mathf.Pi / 2f, 0.7f];
+        const float cameraYaw = -0.35f;
+        foreach (float startingYaw in startingAngles) {
+            foreach ((Vector3 direction, float strength) in directions) {
+                (CarStateManager manager, InputManager input, CarSwitcher cars) = Create(startingYaw, cameraYaw);
+                cars.CurrentCar.Dynamic.AccelerationMap.Right = 6f;
+                Vector3 worldDirection = new Quaternion(Vector3.Up, startingYaw) * direction;
+                Vector3 cameraDirection = new Quaternion(Vector3.Up, -cameraYaw) * worldDirection;
+                input.AccelerationInput = new Vector2(cameraDirection.X, -cameraDirection.Z);
+                Vector3 start = manager.Position;
+                manager.ReadInputAndUpdateState(0.5);
+                AssertNear(manager.Position - start, worldDirection * (strength * 0.25f));
+                manager.Apply();
+                AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, worldDirection);
+            }
+        }
+    }
+
+    private static void VerifySuccessiveForwardAcceleration() {
+        const float startingYaw = 0.7f;
+        (CarStateManager manager, InputManager input, CarSwitcher cars) = Create(startingYaw);
+        Vector3 worldFront = new Quaternion(Vector3.Up, startingYaw) * Vector3.ModelFront;
+        input.AccelerationInput = new Vector2(worldFront.X, -worldFront.Z);
+        Vector3 start = manager.Position;
+        manager.ReadInputAndUpdateState(0.5);
+        manager.ReadInputAndUpdateState(0.5);
+        manager.Apply();
+        AssertNear(manager.Position - start, worldFront * 3f);
+        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, worldFront);
+    }
+
     private static void VerifyCameraYaw() {
         float[] cameraAngles = [-Mathf.Pi, -Mathf.Pi / 2f, -Mathf.Pi / 4f, Mathf.Pi / 4f, Mathf.Pi / 2f];
         foreach (float cameraAngle in cameraAngles) {
-            (CarStateManager manager, InputManager input, _) = Create(cameraAngle, cameraAngle);
+            // Face the model's +Z in the same direction as the camera pivot's -Z.
+            (CarStateManager manager, InputManager input, _) = Create(cameraAngle + Mathf.Pi, cameraAngle);
             Vector3 start = manager.Position;
             input.AccelerationInput = new Vector2(0f, 1f);
             manager.ReadInputAndUpdateState(0.5);
@@ -88,7 +129,7 @@ internal static class CarStateVerification {
         manager.ReadInputAndUpdateState(0.125);
         AssertNear(manager.Position - beforeBraking, new Vector3(0.125f, 0f, 0f));
         manager.Apply();
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.Forward, Vector3.Right);
+        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, Vector3.Right);
         Vector3 beforeStopping = manager.Position;
         manager.ReadInputAndUpdateState(1.0);
         input.Brake = 0f;
@@ -96,7 +137,7 @@ internal static class CarStateVerification {
         manager.ReadInputAndUpdateState(1.0);
         manager.Apply();
         AssertNear(manager.Position, beforeStopping);
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.Forward, Vector3.Right);
+        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, Vector3.Right);
     }
 
     private static void VerifySpeedLimit() {
@@ -114,8 +155,8 @@ internal static class CarStateVerification {
         const float startingYaw = 0.7f;
         (CarStateManager manager, InputManager input, CarSwitcher cars) = Create(startingYaw);
         Vector3 start = manager.Position;
-        Vector3 expectedHeading = new Quaternion(Vector3.Up, startingYaw) * Vector3.Forward;
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.Forward, expectedHeading);
+        Vector3 expectedHeading = new Quaternion(Vector3.Up, startingYaw) * Vector3.ModelFront;
+        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, expectedHeading);
         input.AccelerationInput = Vector2.Right;
         manager.ReadInputAndUpdateState(1.0);
         manager.Reset_PositionRotationVelocity();
@@ -123,7 +164,7 @@ internal static class CarStateVerification {
         manager.ReadInputAndUpdateState(1.0);
         manager.Apply();
         AssertNear(cars.CurrentCar.Node.Position, start);
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.Forward, expectedHeading);
+        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, expectedHeading);
     }
 
     private static void VerifyWorldSpawn() {
@@ -133,10 +174,11 @@ internal static class CarStateVerification {
         CarSwitcher cars = new();
         CarStateManager manager = new(cars, new CameraYawManager(track), new InputManager(), track);
         AssertNear(manager.Position, track.PlaceholderCarNode.GlobalPosition);
-        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.Forward, new Quaternion(Vector3.Up, 0.7f) * Vector3.Forward);
+        AssertNear(cars.CurrentCar.Node.AppliedRotation * Vector3.ModelFront, new Quaternion(Vector3.Up, 0.7f) * Vector3.ModelFront);
     }
 
-    private static (CarStateManager Manager, InputManager Input, CarSwitcher Cars) Create(float startingYaw = 0f, float cameraYaw = 0f) {
+    // By default, face model front (+Z) along camera forward (-Z).
+    private static (CarStateManager Manager, InputManager Input, CarSwitcher Cars) Create(float startingYaw = Mathf.Pi, float cameraYaw = 0f) {
         TrackObjects track = new();
         track.PlaceholderCarNode.Position = new Vector3(3f, 0f, 5f);
         track.PlaceholderCarNode.Rotation = new Vector3(0f, startingYaw, 0f);
