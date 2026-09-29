@@ -346,3 +346,42 @@ Being listed in a cell means “possibly relevant.” The expansion does **not**
 Storage uses two flat arrays: each cell stores an offset and count, and a shared array stores the corresponding edge IDs. An edge can appear in several cells, while its geometry is stored once. The grid stays unchanged as the car moves or rotates.
 
 The tradeoff is **more precomputed storage for less work per query**. Ribeye uses 37,053 cells and 32,134 edge references, with about 440 KiB of total detector array storage. Memory limits and fallback paths handle tracks or query rectangles unsuitable for this grid.
+
+
+## user
+
+what are all the grid structures used by the collision detector
+
+
+## assistant
+
+I’ll check the grid implementations and when the detector chooses each one.
+
+
+## assistant
+
+There are **two grid implementations**, with **three storage variants**. **Ribeye currently uses only `ExpandedGrid`.**
+
+| Grid variant         | Where an edge is stored                                      | How a query finds candidates                     |
+| -------------------- | ----------------------------------------------------------- | ------------------------------------------------ |
+| `ExpandedGrid`       | Every cell touched by its vehicle-expanded bounding box      | Looks up the car origin’s single cell             |
+| Dense `CenterGrid`   | One cell containing the center of the edge’s bounding box     | Visits a rectangular range of cells              |
+| Sparse `CenterGrid`  | Same assignment as dense, but only occupied cells are stored  | Searches that cell range through a dictionary    |
+
+**`ExpandedGrid`** uses a flat array of cells and a packed array of edge IDs. It duplicates references to move candidate-selection work into initialization. The detector tries this first, subject to limits of 65,536 cells, 1,048,576 references, and supported coordinate magnitudes. Its implementation is in [TrackCollisionDetector.ExpandedGrid.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.ExpandedGrid.cs).
+
+**`CenterGrid`** is the fallback. It stores each ordinary edge once. A query expands the rotated car’s bounding box by the maximum edge half-extents to find every cell whose edge centers could be relevant. Its two storage options are:
+
+- **Dense:** `CellRange[]`, including empty cells; selected when the complete grid is sufficiently small.
+- **Sparse:** `Dictionary<long, CellRange>`, keyed by packed row/column coordinates; selected when allocating all empty cells would be wasteful.
+
+Both are implemented by the same class in [TrackCollisionDetector.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs:501).
+
+There are also supporting structures:
+
+- **`CellRange`:** an offset and count into the packed edge-ID array, used by both grids.
+- **`CellAssignment`:** temporary construction data for `CenterGrid`.
+- **`OutlierIndex`:** handles edges too large for `CenterGrid`. This is a bounding-volume hierarchy (BVH), with a simple scan for eight or fewer edges.
+- **Full linear scan:** handles certain oversized queries or cases where scanning is preferable.
+
+The populated alternatives are **`ExpandedGrid`**, or **`CenterGrid` plus `OutlierIndex`**. For Ribeye, the latter two are initialized empty.
