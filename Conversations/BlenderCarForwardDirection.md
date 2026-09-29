@@ -262,3 +262,37 @@ In Blender, they describe **which direction something is looking, measured using
 For example, an unrotated character faces **world `-Y`**. A camera positioned in front of that character looks back toward **world `+Y`**. You rotate the camera so that its **local `-Z`** points toward world `+Y`.
 
 The axes belong to different objects, so they don’t need to have matching names to point toward each other.
+
+## User
+
+okay, do this fix: for your existing models, the driving code should treat car-local +Z as forward
+
+## Assistant Commentary
+
+I’ll update the car’s forward, right, and heading calculations to match the imported models, check the collision front/rear handling, and run the existing verification suites.
+
+## Assistant Commentary
+
+I found three assumptions to change: acceleration treats `-Z` as forward, heading calculations point `-Z` along velocity, and collision shortening treats `-Z` as the nose. I’ll update those for model forward `+Z` and model right `-X`, while keeping camera-relative input and track coordinates unchanged.
+
+## Assistant Commentary
+
+The driving checks pass, including distinct acceleration strengths on all four model axes, rotated spawns, and successive forward acceleration. The applied rotation now points the car’s `+Z` nose along its velocity. I’m checking the collision suite and release build next.
+
+## Assistant Commentary
+
+The C# release build passes with no warnings or errors. The export step is blocked because the project has no `export_presets.cfg`. I also found that gameplay collisions are currently disabled; I’ve corrected their front/rear handling and will verify it directly without enabling collisions.
+
+## Assistant Commentary
+
+The native Godot check passed with all six cars loaded from the existing Ribeye GLB. Their `+Z` noses follow forward motion, and contact checks at three rotations confirm collision shortening now applies to the nose. I’m reviewing the diff and committing the fix and conversation log separately.
+
+## Assistant
+
+Implemented in commit `f9a7bff`.
+
+Cars now use **local +Z as forward and -X as right**. Velocity-based heading points the nose along movement, and collision shortening applies to the correct front end.
+
+The C# release build, driving and collision suites, and native Godot checks with all six imported cars passed.
+
+**EXE export remains blocked:** the project is missing `export_presets.cfg`.
