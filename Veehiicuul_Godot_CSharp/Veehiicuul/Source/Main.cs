@@ -63,8 +63,9 @@ public class Main {
         if (!this.IsReadyDone) {
             throw new InvalidOperationException("A frame ran before initialization completed.");
         }
-        Thread.Sleep(TimeSpan.FromSeconds(0.1));
+        Thread.Sleep(TimeSpan.FromSeconds(1));
         GD.Print($"{DateTimeOffset.Now}, {delta}");
+        GD.Print($"Mouse left down events: {DigitalInputCounts.GetMouseButtonDownCount(MouseButton.Left)}");
         return;
 
         //this.InputManager.UpdateInputs();
