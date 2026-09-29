@@ -236,3 +236,29 @@ With your current export settings:
 The **local** part matters: you can rotate the vehicle in Object Mode to face any direction on the track while its nose still points along its own local `-Y`.
 
 Keep modeling that way. My initial suggestion to change the meshes to face `+Y` was an alternative convention to accommodate the existing code; it wasn’t a correction your models needed. The driving code should be brought into agreement with your models.
+
+## User
+
+what is "camera forward" and "model forward" in blender
+
+## Assistant Commentary
+
+I’ll check Blender’s camera axes so I can compare them precisely with the model convention we’ve been discussing.
+
+## Assistant
+
+In Blender, they describe **which direction something is looking, measured using its own local axes**:
+
+|                           | Camera object                  | Character or vehicle model        |
+| ------------------------- | ------------------------------ | --------------------------------- |
+| Meaning of forward        | Direction the lens looks       | Direction the face or nose points |
+| Local forward axis        | `-Z`                           | Conventionally `-Y`               |
+| Local up axis             | `+Y`                           | Conventionally `+Z`               |
+
+**Camera forward is built into Blender’s camera behavior:** the camera looks along its local `-Z`. Rotating the camera changes where that axis points in the world. With zero rotation, a Blender camera looks straight down along world `-Z`. [Blender documentation](https://docs.blender.org/manual/en/4.5/modeling/modifiers/modify/uv_project.html#options)
+
+**Model forward is an authoring convention:** Blender doesn’t automatically know which end of a mesh is its nose. You build the model with its nose pointing toward local `-Y` and its top toward local `+Z`, matching the convention used by your export pipeline. [Godot’s Blender asset guidance](https://docs.godotengine.org/en/stable/tutorials/assets_pipeline/importing_3d_scenes/model_export_considerations.html#d-asset-direction-conventions)
+
+For example, an unrotated character faces **world `-Y`**. A camera positioned in front of that character looks back toward **world `+Y`**. You rotate the camera so that its **local `-Z`** points toward world `+Y`.
+
+The axes belong to different objects, so they don’t need to have matching names to point toward each other.
