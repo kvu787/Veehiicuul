@@ -9,7 +9,8 @@ dotnet run --project PlanarCoordinatesVerification.csproj --configuration Releas
 This console check uses Godot's managed vector and quaternion types without
 starting the engine. It verifies native Godot quaternion agreement, inverse
 rotations, heading/rotation round trips, cardinal model headings, rejection of
-nonplanar inputs, and exact preservation of Y=0. Model front is +Z and model
+zero and nonplanar heading inputs, and exact preservation of Y=0. Rotations use
+Godot's `Vector3.Rotated` and `Quaternion` directly. Model front is +Z and model
 right is -X; camera-relative input uses camera forward -Z and camera right +X.
 All angles use native Godot radians: positive yaw turns +Z toward +X.
 

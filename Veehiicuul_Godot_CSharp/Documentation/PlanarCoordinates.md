@@ -1,8 +1,9 @@
 # Planar coordinates
 
 All runtime angles are radians. Godot's positive Y rotation turns +Z toward +X.
-`Rotate2D`, `Get2DRotation`, `Get2DRotationQuaternion`, and node `Rotation.Y` use
-this same convention. A zero vector has heading zero.
+`Vector3.Rotated(Vector3.Up, angle)`, `Get2DRotation`, `new Quaternion(Vector3.Up, angle)`,
+and node `Rotation.Y` use this same convention. `Get2DRotation` requires a nonzero
+horizontal vector; it rejects zero vectors and vectors with nonzero Y.
 
 | Reference      | Forward | Right | Up  |
 | -------------- | ------- | ----- | --- |
