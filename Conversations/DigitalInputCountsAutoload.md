@@ -183,3 +183,29 @@ int buttons = input.GetGamepadButtonDownCount(0, JoyButton.A);
 Also supports logical keys, mouse wheels, and touch contacts. Reads preserve counts; they clear automatically after `Main.Process`, including early returns and exceptions. Keyboard auto-repeat is ignored.
 
 Verified with 61 synthetic-event checks in Godot and a release build. Three existing `InputManager` warnings remain.
+
+## User
+
+```
+c:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\project.godot:20:1-20:75
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
+```
+
+```
+DigitalInputCounts="*res://Source/EngineIntegration/DigitalInputCounts.cs"
+```
+
+what does that asterisk mean in the path?
+
+## Assistant
+
+I’ll check how Godot interprets that autoload entry and explain what the `*` changes.
+
+## Assistant
+
+The `*` marks the autoload as a **globally named singleton**. Godot removes it before resolving the actual resource path. [Godot’s parser](/C:/Users/k/Repository/External/Godot_4-7-2/core/config/project_settings.cpp:364)
+
+- **With `*`:** Godot loads the node and exposes `DigitalInputCounts` as a global name in GDScript.
+- **Without `*`:** Godot still loads the node at `/root/DigitalInputCounts`, but doesn’t expose that global name.
+
+It corresponds to the **Enable** checkbox in the Autoload settings. That checkbox has no effect on C# access: our `DigitalInputCounts.Instance` property provides that access independently, so it works either way. [Godot documentation](https://docs.godotengine.org/en/stable/tutorials/scripting/singletons_autoload.html)
