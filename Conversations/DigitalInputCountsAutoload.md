@@ -364,3 +364,27 @@ public override void _Input(InputEvent @event)
 This declares a parameter named `event`. The `@` is only an escape prefix in the source code—it is not part of the name and does not change the parameter’s value or behavior.
 
 We use it here to match the parameter name in Godot’s base `_Input` method.
+
+## User
+
+are there any drawbacks or pitfalls to the _Input approach for DigitalInputCounts that i should be aware of
+
+## Assistant
+
+I’ll check the collector and frame-clearing code for pitfalls with `_Input`.
+
+## Assistant
+
+Yes. These are the main ones for the current implementation:
+
+1. **Other input handlers can hide presses.** If an earlier `_Input` handler calls `SetInputAsHandled()`, the collector never receives that event. Autoloads commonly run after scene nodes because input travels in reverse tree order. I found no other custom `_Input` handlers in your current `Source` folder. [Godot input propagation](https://docs.godotengine.org/en/stable/tutorials/inputs/inputevent.html)
+
+2. **UI interactions also count.** `_Input` runs before ordinary GUI handling. Clicking a button or typing into a text field can therefore increment gameplay input counts, even if the GUI subsequently consumes the event. Gameplay should decide whether to act on those counts when a menu or text field is active. [Godot input order](https://docs.godotengine.org/en/stable/tutorials/inputs/inputevent.html)
+
+3. **The clearing boundary is specifically the end of `Main.Process`.** It is not the end of every callback in the entire Godot frame. Read the counts from that game update; another node processing afterward may see zero. Likewise, if you inject an event *after* the game has read its counts but *before* `Main.Process` returns, it can be cleared without gameplay using it. Inject before the relevant reads. [Current clearing code](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main_GodotAdapter.cs:14)
+
+4. **Pausing needs a deliberate policy.** With the default process mode, the collector stops receiving input while the scene tree is paused. Setting only the collector to `Always` would allow collection, but counts would accumulate while the main adapter—and therefore clearing—remains paused. [Godot pause behavior](https://docs.godotengine.org/en/stable/tutorials/scripting/pausing_games.html)
+
+5. **The autoload belongs to the root viewport.** Input delivered only to another `SubViewport` or window does not automatically reach it. For the injection feature you requested, push events into the root viewport. [Viewport routing](https://docs.godotengine.org/en/stable/tutorials/inputs/inputevent.html)
+
+6. **It does not collect asynchronously while your game loop is blocked.** A long-running update delays input dispatch. Your [current main loop](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs:66) contains a 100 ms sleep; using `_Input` does not remove that latency.
