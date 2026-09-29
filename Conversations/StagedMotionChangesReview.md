@@ -30,3 +30,20 @@ Validation: application ExportRelease build passed; verification compilation fai
 
 Staged changes preserved. Review recorded in a separate `[cnv]` commit.
 
+## User
+
+[P2] Convert the spawn pose between its different parents
+
+The placeholder is under Model, while TrackObjects parents playable cars directly under the track root. Copying the placeholder’s local position/yaw into the car’s local pose therefore drops any translation or rotation on Model, making spawn and reset incorrect for transformed models. Convert the placeholder pose into the playable car parent’s space, or consistently retain world-space poses.
+
+is this an issue if i require that the "Model" node has an identity transform?
+
+## Assistant Commentary
+
+No. If `Model` is guaranteed to have an identity transform, that finding does not apply. I’ll update the review record to reflect that requirement.
+
+## Assistant
+
+No. If `Model` has an identity transform—zero position and rotation, unit scale—the placeholder and playable car use equivalent coordinate spaces. Copying local position and yaw is correct, even if the track root itself is transformed.
+
+I withdraw that finding under this requirement.
