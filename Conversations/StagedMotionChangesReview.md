@@ -47,3 +47,17 @@ No. If `Model` is guaranteed to have an identity transform, that finding does no
 No. If `Model` has an identity transform—zero position and rotation, unit scale—the placeholder and playable car use equivalent coordinate spaces. Copying local position and yaw is correct, even if the track root itself is transformed.
 
 I withdraw that finding under this requirement.
+
+## User
+
+Add a validation in TrackObjects.cs that throws if "Model" doesn't have an identity transform. don't stage or commit it.
+
+## Assistant Commentary
+
+I’ll add the identity-transform validation in `TrackObjects.cs` and leave the change unstaged and uncommitted.
+
+## Assistant
+
+[TrackObjects.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/TrackObjects.cs:14) now throws `InvalidOperationException` unless `Model.Transform` is exactly `Transform3D.Identity`.
+
+ExportRelease build passed. Nothing staged or committed.
