@@ -296,3 +296,30 @@ Cars now use **local +Z as forward and -X as right**. Velocity-based heading poi
 The C# release build, driving and collision suites, and native Godot checks with all six imported cars passed.
 
 **EXE export remains blocked:** the project is missing `export_presets.cfg`.
+
+## User
+
+provide the complete model and camera axes orientations in godot
+
+## Assistant Commentary
+
+I’ll check Godot’s documented directions and list all six axes for models and cameras.
+
+## Assistant
+
+These are Godot’s **local-axis conventions**. [Godot reference](https://docs.godotengine.org/en/stable/classes/class_vector3.html#constants)
+
+| Direction | Model local axis | Camera local axis |
+| --------- | ---------------- | ----------------- |
+| Forward   | **+Z**           | **-Z**            |
+| Backward  | -Z               | +Z                |
+| Right     | **-X**           | **+X**            |
+| Left      | +X               | -X                |
+| Up        | +Y               | +Y                |
+| Down      | -Y               | -Y                |
+
+**Left and right are from the model’s or camera’s own perspective.** Model forward points out of its face/nose; camera forward is the direction its lens looks.
+
+In C#, `Vector3.ModelFront` is `(0, 0, 1)`, while `Vector3.Forward` is `(0, 0, -1)`.
+
+Rotating a node changes where these directions point in **world space**, while their local-axis meanings stay the same.
