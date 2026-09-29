@@ -57,3 +57,40 @@ Your existing architecture, export path, resource filters, Direct3D 12 export se
 I’d keep the generated version and commit it once. With the same Godot version and settings, subsequent saves should avoid this large rewrite. Godot explicitly supports committing this file to version control. [Documentation](https://docs.godotengine.org/en/latest/tutorials/export/exporting_projects.html)
 
 Separately, **“Export With Debug” is checked in your screenshot**. Uncheck it for a release export like `Build.ps1` produces. That checkbox is independent of the extra preset entries.
+
+
+## User
+
+do a comprehensive review of the currently staged C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\export_presets.cfg before i commit it
+
+## Assistant
+
+I’ll review the staged version against Godot 4.7.2’s defaults, the project resources, and `Build.ps1`, then report any concrete issues before you commit it.
+
+## Assistant
+
+The staged additions match Godot’s defaults so far. I’m checking the exported package for runtime JSON files and unwanted development files. The first build attempt hit sandbox restrictions on Godot’s certificate store and portable editor settings; I’ll retry with the access the build needs.
+
+## Assistant
+
+The release build and export passed with zero compiler warnings or errors, and the required Ribeye JSON files are included. I found two existing cleanup points: the JSON include filters refer to old folders, and `all_resources` also packages test assets and `Properties/launchSettings.json`. I’m finishing checks of the packaged C# files and Direct3D 12 startup.
+
+## Assistant
+
+**No blocking findings. The staged change preserves the export behavior and is safe to commit.**
+
+I reviewed the indexed file against Godot 4.7.2’s source, the project configuration, and the build/run scripts.
+
+- **Format and defaults:** the runnable-preset migration is correct. Every added setting matches the previous default, including patching, encryption, signing, shader baking, and Direct3D 12 library layout. The SSH scripts remain inactive.
+- **Build compatibility:** the preset name, output path, x64 architecture, separate PCK, and external .NET output folder still match `Build.ps1` and `Run.ps1`. Release/debug selection remains controlled by the export command.
+- **Packaged content:** Ribeye’s settings, collider JSON, and scene are included. The excluded development folders are absent. All 39 packaged C# files contain only a newline placeholder; source contents and PDB files are absent.
+- **Runtime settings:** the exported application started successfully using Direct3D 12 and Forward+, with VSync disabled and maximum FPS set to `0`.
+
+Validation passed: a complete `Build.ps1` release build/export with **zero compiler warnings or errors**, direct inspection of the generated PCK, a three-frame startup check with **exit code 0 and no logged errors**, and the staged whitespace check. [Build log](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-09-29_08-59-57/Build.log) · [Startup log](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-09-29_09-01-35/Godot.log)
+
+Two **pre-existing, nonblocking cleanup points**:
+
+- [Line 12](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/export_presets.cfg:12): the JSON include filters reference old root-level folders. They currently match nothing, but Godot recognizes the JSON files as resources and includes them through `all_resources`; the package inspection confirmed this.
+- [Lines 11–13](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/export_presets.cfg:11): `all_resources` also packages `Testyo` assets and `Properties/launchSettings.json`, including its local development paths. Exclude those separately if they should not ship. This follows Godot’s [resource export rules](https://docs.godotengine.org/en/latest/tutorials/export/exporting_projects.html).
+
+The runtime check covered startup, not a full gameplay test. I left the preset unchanged and staged.
