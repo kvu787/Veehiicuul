@@ -30,7 +30,10 @@ public static class Vector3Extensions {
     /// <summary>Returns native Godot yaw in radians from model front (+Z); zero for a zero vector.</summary>
     public static float Get2DRotation(this Vector3 vector) {
         RequireHorizontal(vector);
-        return vector == Vector3.Zero ? 0f : Mathf.Atan2(vector.X, vector.Z);
+        if (vector == Vector3.Zero) {
+            throw new ArgumentException("Rotation is undefined for Vector3.Zero", nameof(vector));
+        }
+        return Mathf.Atan2(vector.X, vector.Z);
     }
 
     /// <summary>Returns the native Godot yaw quaternion that points model front (+Z) along the vector.</summary>
