@@ -1,6 +1,5 @@
 using Godot;
 using System;
-using System.Threading;
 
 namespace Veehiicuul_Godot_CSharp;
 
@@ -60,13 +59,14 @@ public class Main {
     }
 
     public void Process(double delta) {
+        GD.Print(delta);
         if (!this.IsReadyDone) {
             throw new InvalidOperationException("A frame ran before initialization completed.");
         }
-        Thread.Sleep(TimeSpan.FromSeconds(1));
-        GD.Print($"{DateTimeOffset.Now}, {delta}");
-        GD.Print($"Mouse left down events: {DigitalInputCounts.GetMouseButtonDownCount(MouseButton.Left)}");
-        return;
+
+        if (DigitalInputCounts.GetKeyDownCount(Key.Escape) > 0) {
+            Quit(0);
+        }
 
         //this.InputManager.UpdateInputs();
         //this.CarControlTimeoutRemaining = Math.Max(0.0, this.CarControlTimeoutRemaining - delta);
