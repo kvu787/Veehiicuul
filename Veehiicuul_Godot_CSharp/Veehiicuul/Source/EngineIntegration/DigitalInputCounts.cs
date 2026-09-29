@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Veehiicuul_Godot_CSharp;
 
 /// <summary>
-/// Counts digital down events received by the main window during the current game frame.
+/// Counts digital down events delivered to this node's _Input during the current game frame.
 /// Query from the main thread; reads do not consume counts. Main_GodotAdapter clears them
 /// after Main.Process returns, including early returns and exceptions.
 /// </summary>
@@ -16,7 +16,6 @@ public partial class DigitalInputCounts : Node {
     private readonly Dictionary<MouseButton, int> MouseButtonCounts = [];
     private readonly Dictionary<(int Device, JoyButton Button), int> GamepadButtonCounts = [];
     private readonly Dictionary<(int Device, int Index), int> TouchCounts = [];
-    private Window MainWindow = null!;
 
     /// <summary>The autoload instance, available before the main scene enters the tree.</summary>
     public static DigitalInputCounts Instance => CurrentInstance
@@ -24,13 +23,9 @@ public partial class DigitalInputCounts : Node {
 
     public override void _EnterTree() {
         CurrentInstance = this;
-        this.MainWindow = this.GetTree().Root;
-        // WindowInput arrives before scene/GUI input handling, so handled events still count.
-        this.MainWindow.WindowInput += this.RecordInput;
     }
 
     public override void _ExitTree() {
-        this.MainWindow.WindowInput -= this.RecordInput;
         this.ClearFrameCounts();
         CurrentInstance = null;
     }
@@ -63,8 +58,8 @@ public partial class DigitalInputCounts : Node {
         return this.TouchCounts.GetValueOrDefault((device, index));
     }
 
-    private void RecordInput(InputEvent inputEvent) {
-        switch (inputEvent) {
+    public override void _Input(InputEvent @event) {
+        switch (@event) {
         case InputEventKey { Pressed: true, Echo: false } key:
             // Synthetic events can supply only one of these codes; zero means unspecified.
             if (key.Keycode != Key.None) {

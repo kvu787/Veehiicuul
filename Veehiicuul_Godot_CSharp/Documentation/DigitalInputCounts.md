@@ -1,8 +1,7 @@
 # Digital input counts
 
-The `DigitalInputCounts` autoload records digital down events from the main window
-before scene or GUI input handlers can consume them. Query it from `Main.Process`
-or code called by that method:
+The `DigitalInputCounts` autoload records digital down events delivered to its
+`_Input` callback. Query it from `Main.Process` or code called by that method:
 
 ```csharp
 DigitalInputCounts input = DigitalInputCounts.Instance;
@@ -34,9 +33,20 @@ after `Main.Process`, including when it returns early or throws. This keeps the
 project's single frame callback and also works when rendering is disabled.
 Read counts during the game update, before this boundary. Deferred work after
 the update sees zero; input arriving after the boundary belongs to the next update.
-If the main adapter stops processing, counts accumulate until its next update.
+If the main adapter stops processing while the collector continues receiving
+input, counts accumulate until the adapter's next update.
 
-Collection uses the root window's `WindowInput` signal and remains active across
-main-scene changes. `Input.ParseInputEvent` uses this route too. Events pushed
-directly into another viewport with `Viewport.PushInput` are outside this window
-input stream, as are input events from separate native windows.
+Collection remains available across main-scene changes. It includes normal input,
+events sent through `Input.ParseInputEvent`, and events pushed directly into the
+root viewport with `GetTree().Root.PushInput(inputEvent)`, provided they reach
+the autoload's `_Input` callback. Events delivered only to a different viewport
+or native window do not reach this root-viewport autoload.
+
+Godot calls `_Input` handlers in reverse tree order. An earlier handler can stop
+an event from reaching this collector by calling `SetInputAsHandled()`. The
+collector does not consume events itself. Regular GUI input handling happens
+after `_Input`.
+
+Collection obeys the node's process mode and `SetProcessInput`. With the default
+inherited process mode, pausing the scene tree stops collection and the main
+adapter's frame clearing until processing resumes.
