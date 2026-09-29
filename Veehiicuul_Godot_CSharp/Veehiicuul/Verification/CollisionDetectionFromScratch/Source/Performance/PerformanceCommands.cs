@@ -76,10 +76,13 @@ internal static class PerformanceCommands {
             Spacing(Add);
             break;
         case "cellsize":
-            CellSize(Add);
+            CellSize(Add, options.List("tracks"));
             break;
         case "breakdown":
             Breakdown(Add);
+            break;
+        case "indexfootprint":
+            IndexFootprint(Add);
             break;
         case "construction":
             Construction(constructions);
@@ -201,6 +204,49 @@ internal static class PerformanceCommands {
         }
     }
 
+    /// <summary>
+    /// One circuit indexed for the vehicle that queries it and for larger vehicles. The
+    /// collision manager indexes a track for the union of its vehicles, so a small vehicle
+    /// queries an index whose reach is longer than it needs.
+    /// </summary>
+    private static void IndexFootprint(Action<Measurement> add) {
+        TrackCase own = TrackCatalog.Build(TrackCatalog.Circuit);
+        RectangleLocalBounds vehicle = own.IndexFootprint;
+        (string Name, RectanglePose[] Poses)[] workloads = [
+            ("LapCenter", Workloads.Lap(own, 0.0, 0.25)),
+            ("NearMiss", Workloads.NearMisses(own, vehicle, 8603)),
+            ("Contact", Workloads.Contacts(own, vehicle, 8604)),
+        ];
+        (string Name, RectangleLocalBounds Bounds)[] indexes = [
+            ("Own", vehicle),
+            // The union of the four vehicles of the engine-side fixture.
+            ("OneAndAHalf", new RectangleLocalBounds(-2.25f, -4.335f, 2.25f, 4.5f)),
+            ("Twice", new RectangleLocalBounds(-3f, -5.835f, 3f, 6f)),
+        ];
+        foreach ((string indexName, RectangleLocalBounds bounds) in indexes) {
+            TrackCase track = new(own.Track, bounds, 1.0, "index footprint");
+            foreach ((string workload, RectanglePose[] poses) in workloads) {
+                Measurement measurement = Timed(
+                    $"IndexFootprint/{indexName}/{workload}", track,
+                    new IndexedQueries(track.Detector, vehicle, poses));
+                measurement.Facts["IndexFootprint"] = string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"({bounds.MinX:R}, {bounds.MinY:R}, {bounds.MaxX:R}, {bounds.MaxY:R})");
+                if (track.Grid is not null) {
+                    long candidates = 0;
+                    foreach (RectanglePose pose in poses) {
+                        candidates += track.Grid.GetRange(pose.PositionX, pose.PositionY).Count;
+                    }
+
+                    measurement.Facts["MeanCandidates"] = ((double)candidates / poses.Length).ToString(
+                        "F2", CultureInfo.InvariantCulture);
+                }
+
+                add(measurement);
+            }
+        }
+    }
+
     /// <summary>The same circuit shape at growing size, across the expanded grid's cell limit.</summary>
     private static void Extent(Action<Measurement> add) {
         foreach (double radius in new[] { 40.0, 80.0, 110.0, 140.0, 155.0, 160.0, 165.0, 170.0, 180.0, 200.0, 300.0, 600.0, 1200.0 }) {
@@ -241,20 +287,28 @@ internal static class PerformanceCommands {
     }
 
     /// <summary>Cell size as a multiple of the shorter footprint side, for both index families.</summary>
-    private static void CellSize(Action<Measurement> add) {
+    private static void CellSize(Action<Measurement> add, HashSet<string> only) {
         foreach (string trackName in new[] {
             TrackCatalog.Circuit, TrackCatalog.CircuitFine, TrackCatalog.CircuitWide, TrackCatalog.CircuitVast,
+            TrackCatalog.ScatteredRemote, TrackCatalog.Crowded,
         }) {
+            if (only.Count > 0 && !only.Contains(trackName)) {
+                continue;
+            }
+
             TrackCase reference = TrackCatalog.Build(trackName);
             RectangleLocalBounds footprint = reference.IndexFootprint;
-            RectanglePose[] lap = Workloads.Lap(reference, 0.0, 0.25);
+            // Obstacle fields have no lap. Their clear poses are spread over the whole track.
+            (string Name, RectanglePose[] Poses) clear = reference.Track.HasCenterline
+                ? ("LapCenter", Workloads.Lap(reference, 0.0, 0.25))
+                : ("UniformClear", Workloads.UniformClear(reference, footprint, 8602));
             RectanglePose[] nearMiss = Workloads.NearMisses(reference, footprint, 8603);
             RectanglePose[] contact = Workloads.Contacts(reference, footprint, 8604);
             foreach (double scale in new[] { 0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0 }) {
                 TrackCollisionDetector detector = new(reference.Track.Collider, footprint, scale);
                 string name = string.Create(CultureInfo.InvariantCulture, $"CellSize/{trackName}/Scale{scale:F3}");
                 foreach ((string workload, RectanglePose[] poses) in new[] {
-                    ("LapCenter", lap), ("NearMiss", nearMiss), ("Contact", contact),
+                    clear, ("NearMiss", nearMiss), ("Contact", contact),
                 }) {
                     Measurement measurement = Bench.Run($"{name}/{workload}", new IndexedQueries(detector, footprint, poses));
                     measurement.Facts["Track"] = trackName;

@@ -91,8 +91,9 @@ Single commands, from this folder:
 
 Validation groups for `--only`: `oracle`, `predicate`, `transform`, `input`,
 `contact`, `boundary`, `structure`, `differential`, `metamorphic`,
-`concurrency`. Measurement suites for `--suite`: `queries`, `paths`, `extent`,
-`spacing`, `cellsize`, `breakdown`, `construction`, `single`.
+`concurrency`. Measurement suites for `--suite`: `queries`, `paths`,
+`indexfootprint`, `extent`, `spacing`, `cellsize`, `breakdown`, `construction`,
+`single`.
 
 `validate` exits with 0 when every check passes and with 1 otherwise.
 

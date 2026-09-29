@@ -7,7 +7,7 @@ param(
     [ValidateRange(1, 60)] [int] $ColdStartProcesses = 15,
     # Any of: Validation, Simulation, Measure, NativeMeasure, Variants, ColdStart.
     [string[]] $Stages = @('Validation', 'Simulation', 'Measure', 'NativeMeasure', 'Variants', 'ColdStart'),
-    [string[]] $Suites = @('queries', 'paths', 'extent', 'spacing', 'cellsize', 'breakdown', 'construction', 'single'),
+    [string[]] $Suites = @('queries', 'paths', 'indexfootprint', 'extent', 'spacing', 'cellsize', 'breakdown', 'construction', 'single'),
     [string[]] $Tracks = @(),
     [string[]] $ColdStartTracks = @('Circuit', 'CircuitFine', 'CircuitWide', 'Crowded'),
     # performance, efficiency, none, or logical processor numbers such as 19,20,21.
