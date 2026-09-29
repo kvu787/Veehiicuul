@@ -212,3 +212,27 @@ My earlier recommendation preserved the existing driving code by changing the as
 That correction needs to cover forward/reverse acceleration, car-relative left/right, heading calculated from velocity, and which end of the collision footprint is considered the front. Your camera-relative input can continue using `-Z` as camera forward; it must then be transformed into the car’s coordinate frame.
 
 So this is a mismatch between the driving code’s assumptions and the imported models’ convention. The exporter is behaving correctly.
+
+## User
+
+also, am i modeling in blender correctly? currently, i model so that a character/vehicle's local axis is such that the model is looking toward the -Y axis
+
+## Assistant Commentary
+
+I’ll verify the Blender convention against the glTF/Godot documentation.
+
+## Assistant
+
+**Yes. Having the character or vehicle face local `-Y` in Blender is correct for the standard Blender → glTF → Godot workflow.** Godot’s documentation explicitly identifies Blender `-Y` as the asset’s front. [Source](https://docs.godotengine.org/en/stable/tutorials/assets_pipeline/importing_3d_scenes/model_export_considerations.html#d-asset-direction-conventions)
+
+With your current export settings:
+
+| Model direction             | Blender local axis | Godot local axis |
+| --------------------------- | ------------------ | ---------------- |
+| Front                       | `-Y`               | `+Z`             |
+| Up                          | `+Z`               | `+Y`             |
+| Right, from its perspective  | `-X`               | `-X`             |
+
+The **local** part matters: you can rotate the vehicle in Object Mode to face any direction on the track while its nose still points along its own local `-Y`.
+
+Keep modeling that way. My initial suggestion to change the meshes to face `+Y` was an alternative convention to accommodate the existing code; it wasn’t a correction your models needed. The driving code should be brought into agreement with your models.
