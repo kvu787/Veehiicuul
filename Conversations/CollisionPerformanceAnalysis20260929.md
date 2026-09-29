@@ -312,3 +312,37 @@ Implemented a precomputed spatial index, managed-pose reuse, cached car footprin
 Validation passed: 2.36 million grid-boundary checks, independent geometry tests, all six cars, reset/switch/reload flows, and release export/startup with DirectX 12 and VSync off.
 
 [Full report and measurements](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Documentation/CollisionOptimization20260929/Report.md). Changes committed separately; working tree clean.
+
+
+## user
+
+explain what TrackCollisionDetector.ExpandedGrid is
+
+
+## assistant
+
+I’ll check the implementation so I can explain how it selects collision candidates and why it speeds up Ribeye.
+
+
+## assistant
+
+`ExpandedGrid` is a **precomputed spatial lookup that tells the collision detector which track edges are worth testing at the car’s position**. It is a private helper inside `TrackCollisionDetector`, kept in [its own source file](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.ExpandedGrid.cs). The `partial` keyword lets that class span multiple files.
+
+When the track loads, it:
+
+1. Divides the track area into square cells—approximately **1.5 × 1.5 units** for Ribeye.
+2. Calculates the distance from the vehicle origin to its farthest possible corner. That radius covers the vehicle at **any heading**.
+3. Expands each track edge’s axis-aligned bounding box by that radius, then records the edge’s ID in every cell touched by the expanded box.
+
+For example, a roughly 3 × 6 car has a corner radius of about 3.35 units. Expanding an edge’s box by that distance identifies an intentionally generous region where the car’s origin could be while the car touches that edge. This is why it is called **ExpandedGrid**.
+
+During a normal collision query, the detector looks up just **the cell containing the car’s origin**:
+
+- **No candidate edges:** return `false` immediately, without calculating rotated corners or trigonometry.
+- **Candidate edges present:** construct the actual rotated rectangle and run exact intersection tests against those edges.
+
+Being listed in a cell means “possibly relevant.” The expansion does **not** enlarge the actual collision boundary; the final intersection tests determine contact.
+
+Storage uses two flat arrays: each cell stores an offset and count, and a shared array stores the corresponding edge IDs. An edge can appear in several cells, while its geometry is stored once. The grid stays unchanged as the car moves or rotates.
+
+The tradeoff is **more precomputed storage for less work per query**. Ribeye uses 37,053 cells and 32,134 edge references, with about 440 KiB of total detector array storage. Memory limits and fallback paths handle tracks or query rectangles unsuitable for this grid.
