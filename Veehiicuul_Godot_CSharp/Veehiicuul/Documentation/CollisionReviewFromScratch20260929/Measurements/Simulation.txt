@@ -1,0 +1,69 @@
+Environment: .NET 10.0.12; Microsoft Windows 10.0.26200; X64; logical processors=24
+straight wall: step=0.292 (0.05 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.1461; largestOverlap=0.2917; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=1.459 (0.25 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.7282; largestOverlap=1.4587; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=2.918 (0.50 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=1.4507; largestOverlap=2.9172; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=5.252 (0.90 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=2.6125; largestOverlap=5.2510; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=5.835 (1.00 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=2.9143; largestOverlap=5.8350; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=6.419 (1.10 lengths); incidence=0; missed=8.96 %; predicted=9.09 %; meanOverlap=2.9216; largestOverlap=5.8346; framesInsideBarrier=37611; clearFramesInsideBarrier=37611
+straight wall: step=7.294 (1.25 lengths); incidence=0; missed=19.40 %; predicted=20.00 %; meanOverlap=2.9250; largestOverlap=5.8343; framesInsideBarrier=73701; clearFramesInsideBarrier=73701
+straight wall: step=8.753 (1.50 lengths); incidence=0; missed=33.77 %; predicted=33.33 %; meanOverlap=2.9106; largestOverlap=5.8348; framesInsideBarrier=105674; clearFramesInsideBarrier=105674
+straight wall: step=11.670 (2.00 lengths); incidence=0; missed=49.78 %; predicted=50.00 %; meanOverlap=2.9122; largestOverlap=5.8347; framesInsideBarrier=117744; clearFramesInsideBarrier=117744
+straight wall: step=17.505 (3.00 lengths); incidence=0; missed=66.73 %; predicted=66.67 %; meanOverlap=2.9513; largestOverlap=5.8347; framesInsideBarrier=105632; clearFramesInsideBarrier=105632
+straight wall: step=29.175 (5.00 lengths); incidence=0; missed=80.69 %; predicted=80.00 %; meanOverlap=2.9050; largestOverlap=5.8330; framesInsideBarrier=75958; clearFramesInsideBarrier=75958
+straight wall: step=0.292 (0.05 lengths); incidence=30; missed=0.00 %; predicted=0.00 %; meanOverlap=0.1266; largestOverlap=0.2526; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=1.459 (0.25 lengths); incidence=30; missed=0.00 %; predicted=0.00 %; meanOverlap=0.6296; largestOverlap=1.2632; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=2.918 (0.50 lengths); incidence=30; missed=0.00 %; predicted=0.00 %; meanOverlap=1.2534; largestOverlap=2.5266; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=5.252 (0.90 lengths); incidence=30; missed=0.00 %; predicted=0.00 %; meanOverlap=2.2739; largestOverlap=4.5476; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=5.835 (1.00 lengths); incidence=30; missed=0.00 %; predicted=0.00 %; meanOverlap=2.5393; largestOverlap=5.0531; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=6.419 (1.10 lengths); incidence=30; missed=0.00 %; predicted=0.00 %; meanOverlap=2.7843; largestOverlap=5.5585; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=7.294 (1.25 lengths); incidence=30; missed=0.00 %; predicted=0.00 %; meanOverlap=3.1562; largestOverlap=6.3165; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=8.753 (1.50 lengths); incidence=30; missed=13.71 %; predicted=13.54 %; meanOverlap=3.2809; largestOverlap=6.5520; framesInsideBarrier=49374; clearFramesInsideBarrier=49374
+straight wall: step=11.670 (2.00 lengths); incidence=30; missed=35.18 %; predicted=35.16 %; meanOverlap=3.2768; largestOverlap=6.5523; framesInsideBarrier=93567; clearFramesInsideBarrier=93567
+straight wall: step=17.505 (3.00 lengths); incidence=30; missed=56.51 %; predicted=56.77 %; meanOverlap=3.2673; largestOverlap=6.5526; framesInsideBarrier=101718; clearFramesInsideBarrier=101718
+straight wall: step=29.175 (5.00 lengths); incidence=30; missed=74.13 %; predicted=74.06 %; meanOverlap=3.2691; largestOverlap=6.5518; framesInsideBarrier=78955; clearFramesInsideBarrier=78955
+straight wall: step=0.292 (0.05 lengths); incidence=60; missed=0.00 %; predicted=0.00 %; meanOverlap=0.0730; largestOverlap=0.1459; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=1.459 (0.25 lengths); incidence=60; missed=0.00 %; predicted=0.00 %; meanOverlap=0.3622; largestOverlap=0.7293; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=2.918 (0.50 lengths); incidence=60; missed=0.00 %; predicted=0.00 %; meanOverlap=0.7240; largestOverlap=1.4586; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=5.252 (0.90 lengths); incidence=60; missed=0.00 %; predicted=0.00 %; meanOverlap=1.3191; largestOverlap=2.6256; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=5.835 (1.00 lengths); incidence=60; missed=0.00 %; predicted=0.00 %; meanOverlap=1.4667; largestOverlap=2.9175; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=6.419 (1.10 lengths); incidence=60; missed=0.00 %; predicted=0.00 %; meanOverlap=1.6095; largestOverlap=3.2090; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=7.294 (1.25 lengths); incidence=60; missed=0.00 %; predicted=0.00 %; meanOverlap=1.8130; largestOverlap=3.6467; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=8.753 (1.50 lengths); incidence=60; missed=0.00 %; predicted=0.00 %; meanOverlap=2.1766; largestOverlap=4.3762; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=11.670 (2.00 lengths); incidence=60; missed=5.63 %; predicted=5.47 %; meanOverlap=2.7590; largestOverlap=5.5144; framesInsideBarrier=25534; clearFramesInsideBarrier=25533
+straight wall: step=17.505 (3.00 lengths); incidence=60; missed=36.26 %; predicted=36.98 %; meanOverlap=2.7268; largestOverlap=5.5156; framesInsideBarrier=108298; clearFramesInsideBarrier=108298
+straight wall: step=29.175 (5.00 lengths); incidence=60; missed=62.37 %; predicted=62.19 %; meanOverlap=2.7788; largestOverlap=5.5153; framesInsideBarrier=105402; clearFramesInsideBarrier=105402
+straight wall: step=0.292 (0.05 lengths); incidence=80; missed=0.00 %; predicted=0.00 %; meanOverlap=0.0253; largestOverlap=0.0507; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=1.459 (0.25 lengths); incidence=80; missed=0.00 %; predicted=0.00 %; meanOverlap=0.1269; largestOverlap=0.2533; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=2.918 (0.50 lengths); incidence=80; missed=0.00 %; predicted=0.00 %; meanOverlap=0.2552; largestOverlap=0.5066; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=5.252 (0.90 lengths); incidence=80; missed=0.00 %; predicted=0.00 %; meanOverlap=0.4590; largestOverlap=0.9118; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=5.835 (1.00 lengths); incidence=80; missed=0.00 %; predicted=0.00 %; meanOverlap=0.5067; largestOverlap=1.0132; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=6.419 (1.10 lengths); incidence=80; missed=0.00 %; predicted=0.00 %; meanOverlap=0.5580; largestOverlap=1.1145; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=7.294 (1.25 lengths); incidence=80; missed=0.00 %; predicted=0.00 %; meanOverlap=0.6314; largestOverlap=1.2665; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=8.753 (1.50 lengths); incidence=80; missed=0.00 %; predicted=0.00 %; meanOverlap=0.7559; largestOverlap=1.5198; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=11.670 (2.00 lengths); incidence=80; missed=0.00 %; predicted=0.00 %; meanOverlap=1.0100; largestOverlap=2.0262; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=17.505 (3.00 lengths); incidence=80; missed=0.00 %; predicted=0.00 %; meanOverlap=1.5222; largestOverlap=3.0397; framesInsideBarrier=0; clearFramesInsideBarrier=0
+straight wall: step=29.175 (5.00 lengths); incidence=80; missed=21.88 %; predicted=21.68 %; meanOverlap=2.0086; largestOverlap=3.9676; framesInsideBarrier=32087; clearFramesInsideBarrier=32087
+square obstacle of side 0.50: step=0.100 (0.02 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.0499; largestOverlap=0.1000; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 0.50: step=0.250 (0.04 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.1255; largestOverlap=0.2500; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 0.50: step=0.500 (0.09 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.2505; largestOverlap=0.5000; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 0.50: step=1.000 (0.17 lengths); incidence=0; missed=33.60 %; predicted=33.50 %; meanOverlap=1.6550; largestOverlap=5.9999; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 0.50: step=1.500 (0.26 lengths); incidence=0; missed=55.23 %; predicted=55.67 %; meanOverlap=1.6351; largestOverlap=5.9999; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 0.50: step=2.000 (0.34 lengths); incidence=0; missed=66.38 %; predicted=66.75 %; meanOverlap=1.6869; largestOverlap=6.0000; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 0.50: step=3.000 (0.51 lengths); incidence=0; missed=77.88 %; predicted=77.83 %; meanOverlap=1.6638; largestOverlap=5.9997; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 0.50: step=6.000 (1.03 lengths); incidence=0; missed=89.01 %; predicted=88.92 %; meanOverlap=1.5898; largestOverlap=5.9989; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 1.00: step=0.100 (0.02 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.0499; largestOverlap=0.1000; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 1.00: step=0.250 (0.04 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.1254; largestOverlap=0.2500; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 1.00: step=0.500 (0.09 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.2493; largestOverlap=0.5000; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 1.00: step=1.000 (0.17 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.4995; largestOverlap=1.0000; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 1.00: step=1.500 (0.26 lengths); incidence=0; missed=22.87 %; predicted=22.33 %; meanOverlap=1.2685; largestOverlap=5.9999; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 1.00: step=2.000 (0.34 lengths); incidence=0; missed=42.19 %; predicted=41.75 %; meanOverlap=1.2717; largestOverlap=6.0000; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 1.00: step=3.000 (0.51 lengths); incidence=0; missed=61.56 %; predicted=61.17 %; meanOverlap=1.2597; largestOverlap=5.9999; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 1.00: step=6.000 (1.03 lengths); incidence=0; missed=80.26 %; predicted=80.58 %; meanOverlap=1.2699; largestOverlap=5.9995; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 2.00: step=0.100 (0.02 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.0496; largestOverlap=0.1000; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 2.00: step=0.250 (0.04 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.1252; largestOverlap=0.2500; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 2.00: step=0.500 (0.09 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.2494; largestOverlap=0.5000; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 2.00: step=1.000 (0.17 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.5012; largestOverlap=1.0000; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 2.00: step=1.500 (0.26 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=0.7475; largestOverlap=1.4999; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 2.00: step=2.000 (0.34 lengths); incidence=0; missed=0.00 %; predicted=0.00 %; meanOverlap=1.0016; largestOverlap=1.9998; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 2.00: step=3.000 (0.51 lengths); incidence=0; missed=27.67 %; predicted=27.83 %; meanOverlap=1.3875; largestOverlap=5.9999; framesInsideBarrier=0; clearFramesInsideBarrier=0
+square obstacle of side 2.00: step=6.000 (1.03 lengths); incidence=0; missed=64.04 %; predicted=63.92 %; meanOverlap=1.3646; largestOverlap=5.9998; framesInsideBarrier=0; clearFramesInsideBarrier=0

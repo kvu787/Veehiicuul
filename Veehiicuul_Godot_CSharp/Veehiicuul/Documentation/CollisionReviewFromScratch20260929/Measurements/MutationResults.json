@@ -1,0 +1,979 @@
+[
+    {
+        "Name":  "Unmodified",
+        "Area":  "None",
+        "Description":  "Control run without any change.",
+        "Build":  "Pass",
+        "Outcome":  "Pass",
+        "FailedSuites":  [
+
+                         ],
+        "Failures":  0
+    },
+    {
+        "Name":  "ReachUsesLargerExtentOnly",
+        "Area":  "Expanded grid",
+        "Description":  "Reach is the larger half extent instead of the corner distance.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Structure: every expanded-grid cell lists every reachable edge",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered",
+                             "Concurrency: simultaneous construction from one collider"
+                         ],
+        "Failures":  101639
+    },
+    {
+        "Name":  "ReachShortByOneTenth",
+        "Area":  "Expanded grid",
+        "Description":  "Reach is 0.1 too small.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Structure: every expanded-grid cell lists every reachable edge",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented"
+                         ],
+        "Failures":  84840
+    },
+    {
+        "Name":  "ReachShortByOneHundredth",
+        "Area":  "Expanded grid",
+        "Description":  "Reach is 0.01 too small.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Structure: every expanded-grid cell lists every reachable edge",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Metamorphic: Rectangular"
+                         ],
+        "Failures":  94524
+    },
+    {
+        "Name":  "ReachShortByOneThousandth",
+        "Area":  "Expanded grid",
+        "Description":  "Reach is 0.001 too small.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Structure: every expanded-grid cell lists every reachable edge",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: Rectangular (expanded grid)"
+                         ],
+        "Failures":  49779
+    },
+    {
+        "Name":  "ReachShortByOneMillionth",
+        "Area":  "Expanded grid",
+        "Description":  "Reach is 0.000001 too small.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Structure: every expanded-grid cell lists every reachable edge"
+                         ],
+        "Failures":  2701
+    },
+    {
+        "Name":  "ReachWithoutRoundingMargin",
+        "Area":  "Expanded grid",
+        "Description":  "Reach omits the margin for binary32 rounding of corners.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Boundary: barriers placed at full reach from cell boundaries"
+                         ],
+        "Failures":  54
+    },
+    {
+        "Name":  "UpperColumnOmitsReach",
+        "Area":  "Expanded grid",
+        "Description":  "Edge coverage omits the reach on the upper X side.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Structure: every expanded-grid cell lists every reachable edge",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered",
+                             "Concurrency: simultaneous construction from one collider"
+                         ],
+        "Failures":  319334
+    },
+    {
+        "Name":  "LowerRowOmitsReach",
+        "Area":  "Expanded grid",
+        "Description":  "Edge coverage omits the reach on the lower Y side.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Contact: lattice poses against integer arithmetic",
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Structure: every expanded-grid cell lists every reachable edge",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered",
+                             "Concurrency: simultaneous construction from one collider"
+                         ],
+        "Failures":  327923
+    },
+    {
+        "Name":  "LastCandidateSkipped",
+        "Area":  "Expanded grid",
+        "Description":  "The origin-cell query skips the final candidate of each cell.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Contact: named configurations",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered",
+                             "Concurrency: simultaneous construction from one collider"
+                         ],
+        "Failures":  27254
+    },
+    {
+        "Name":  "CellLookupRoundsToNearest",
+        "Area":  "Expanded grid",
+        "Description":  "The cell lookup rounds the column to the nearest cell.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered",
+                             "Concurrency: simultaneous construction from one collider"
+                         ],
+        "Failures":  10614
+    },
+    {
+        "Name":  "OriginLookupIgnoresFootprintLimit",
+        "Area":  "Expanded grid",
+        "Description":  "Origin-cell lookup accepts footprints larger than the indexed one.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Contact: named configurations",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  207092
+    },
+    {
+        "Name":  "CenterLookupIgnoresHeightLimit",
+        "Area":  "Expanded grid",
+        "Description":  "Center-cell lookup accepts footprints taller than the indexed one.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)"
+                         ],
+        "Failures":  93875
+    },
+    {
+        "Name":  "CenterLookupUsesOrigin",
+        "Area":  "Expanded grid",
+        "Description":  "Shifted-origin lookup uses the pose position instead of the rectangle center.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: extreme valid input is answered exactly",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)"
+                         ],
+        "Failures":  5553
+    },
+    {
+        "Name":  "CenterLookupUsesAdjacentCorners",
+        "Area":  "Expanded grid",
+        "Description":  "Shifted-origin lookup averages two adjacent corners instead of opposite ones.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)"
+                         ],
+        "Failures":  4828
+    },
+    {
+        "Name":  "OverallBoundsIgnoreUpperY",
+        "Area":  "Expanded grid",
+        "Description":  "The overall bounds never grow in the upper Y direction.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Contact: named configurations",
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (expanded grid)",
+                             "Differential: CircuitVast (no grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (expanded grid)",
+                             "Differential: Crowded (expanded grid)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered",
+                             "Concurrency: simultaneous construction from one collider"
+                         ],
+        "Failures":  767634
+    },
+    {
+        "Name":  "ClosingEdgeTargetsSecondVertex",
+        "Area":  "Edge construction",
+        "Description":  "Each closing edge ends at the second vertex instead of the first.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: invalid construction is refused",
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Contact: named configurations",
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Structure: edges match the outlines",
+                             "Structure: index properties are consistent",
+                             "Structure: every expanded-grid cell lists every reachable edge",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  50098
+    },
+    {
+        "Name":  "CoordinatesSwapped",
+        "Area":  "Edge construction",
+        "Description":  "Barrier X and Y are exchanged.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Contact: named configurations",
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Structure: edges match the outlines",
+                             "Structure: every expanded-grid cell lists every reachable edge",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitVast (no grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Differential: Crowded (dense center grid with no long edges)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  1746950
+    },
+    {
+        "Name":  "RotationDirectionReversed",
+        "Area":  "Rectangle transform",
+        "Description":  "Positive yaw turns the rectangle counterclockwise.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Transform: corners follow the pose convention",
+                             "Transform: rounding error within one turn of yaw",
+                             "Transform: rounding error for yaw up to one thousand radians",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitVast (no grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Differential: Crowded (dense center grid with no long edges)"
+                         ],
+        "Failures":  91897
+    },
+    {
+        "Name":  "SineAndCosineExchanged",
+        "Area":  "Rectangle transform",
+        "Description":  "Sine and cosine are exchanged.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Transform: corners follow the pose convention",
+                             "Transform: rounding error within one turn of yaw",
+                             "Transform: rounding error for yaw up to one thousand radians",
+                             "Input: invalid queries are refused",
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Contact: named configurations",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitVast (no grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Differential: Crowded (dense center grid with no long edges)"
+                         ],
+        "Failures":  99450
+    },
+    {
+        "Name":  "TrigonometryInSinglePrecision",
+        "Area":  "Rectangle transform",
+        "Description":  "Sine and cosine are rounded to binary32 before use.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Transform: rounding error within one turn of yaw",
+                             "Transform: rounding error for yaw up to one thousand radians"
+                         ],
+        "Failures":  9773
+    },
+    {
+        "Name":  "OppositeCornersExchanged",
+        "Area":  "Rectangle transform",
+        "Description":  "The third and fourth corners are exchanged, which crosses two sides.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Transform: corners follow the pose convention",
+                             "Transform: rounding error within one turn of yaw",
+                             "Transform: rounding error for yaw up to one thousand radians",
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Contact: named configurations",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Differential: Crowded (dense center grid with no long edges)"
+                         ],
+        "Failures":  52970
+    },
+    {
+        "Name":  "FourthSideNotTested",
+        "Area":  "Narrow phase",
+        "Description":  "The side from the fourth corner to the first is never tested.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Contact: named configurations",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Differential: Crowded (dense center grid with no long edges)",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  62371
+    },
+    {
+        "Name":  "CollinearPointExcludedAtLowerX",
+        "Area":  "Narrow phase",
+        "Description":  "A collinear point at the lower X end of a segment is not on it.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Oracle: hand-derived segment cases",
+                             "Predicate: segment intersection",
+                             "Input: extreme valid input is answered exactly"
+                         ],
+        "Failures":  2316
+    },
+    {
+        "Name":  "CollinearOverlapIgnored",
+        "Area":  "Narrow phase",
+        "Description":  "Collinear points are never treated as lying on a segment.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Oracle: hand-derived segment cases",
+                             "Predicate: segment intersection",
+                             "Input: extreme valid input is answered exactly"
+                         ],
+        "Failures":  6550
+    },
+    {
+        "Name":  "CrossingUsesEitherStraddle",
+        "Area":  "Narrow phase",
+        "Description":  "A crossing is reported when either segment straddles the other line.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Oracle: hand-derived segment cases",
+                             "Predicate: segment intersection",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitVast (no grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Differential: Crowded (dense center grid with no long edges)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  162682
+    },
+    {
+        "Name":  "TouchingIsNotCrossing",
+        "Area":  "Narrow phase",
+        "Description":  "The final test requires strictly opposite signs.",
+        "Build":  "Pass",
+        "Outcome":  "Pass",
+        "FailedSuites":  [
+
+                         ],
+        "Failures":  0
+    },
+    {
+        "Name":  "TouchingBoundsDoNotOverlap",
+        "Area":  "Narrow phase",
+        "Description":  "Bounding boxes that only touch are treated as separate.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Oracle: hand-derived segment cases",
+                             "Predicate: segment intersection",
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Contact: named configurations",
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: corners at full reach land on barrier vertices",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitVast (no grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented"
+                         ],
+        "Failures":  33320
+    },
+    {
+        "Name":  "EarlyRejectionInverted",
+        "Area":  "Narrow phase",
+        "Description":  "Segments on the same side are no longer rejected; opposite sides are.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Oracle: hand-derived segment cases",
+                             "Predicate: segment intersection",
+                             "Input: extreme valid input is answered exactly",
+                             "Input: JSON text reaches the detector",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Contact: named configurations",
+                             "Boundary: barriers placed at full reach from cell boundaries",
+                             "Boundary: every cell corner with corners at full reach",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitFine (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitVast (no grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: Scattered (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Differential: Crowded (dense center grid with no long edges)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  964780
+    },
+    {
+        "Name":  "ErrorBoundFarTooSmall",
+        "Area":  "Orientation arithmetic",
+        "Description":  "The filter trusts determinants it cannot certify.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Predicate: orientation across wide exponent spans"
+                         ],
+        "Failures":  664
+    },
+    {
+        "Name":  "UncertainOrientationIsCollinear",
+        "Area":  "Orientation arithmetic",
+        "Description":  "Uncertain orientations are reported as collinear without exact arithmetic.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Predicate: orientation of arbitrary finite values",
+                             "Predicate: orientation across wide exponent spans",
+                             "Predicate: segment intersection"
+                         ],
+        "Failures":  4826
+    },
+    {
+        "Name":  "BoundedIntegerShiftTooWide",
+        "Area":  "Orientation arithmetic",
+        "Description":  "The 128-bit route accepts exponent spans that overflow 64-bit operands.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Predicate: orientation of arbitrary finite values",
+                             "Predicate: orientation across wide exponent spans"
+                         ],
+        "Failures":  2597
+    },
+    {
+        "Name":  "ExactDeterminantSignReversed",
+        "Area":  "Orientation arithmetic",
+        "Description":  "The 128-bit route returns the opposite sign.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Predicate: orientation of arbitrary finite values",
+                             "Predicate: orientation near collinearity",
+                             "Predicate: orientation across wide exponent spans"
+                         ],
+        "Failures":  41826
+    },
+    {
+        "Name":  "LargeIntegerDeterminantWrong",
+        "Area":  "Orientation arithmetic",
+        "Description":  "The arbitrary-precision route subtracts the wrong product.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Predicate: orientation of arbitrary finite values",
+                             "Predicate: orientation across wide exponent spans",
+                             "Predicate: segment intersection",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)"
+                         ],
+        "Failures":  19678
+    },
+    {
+        "Name":  "SubnormalCheckRemoved",
+        "Area":  "Orientation arithmetic",
+        "Description":  "Subnormal inputs use the filtered route. Expected to preserve behavior.",
+        "Build":  "Pass",
+        "Outcome":  "Pass",
+        "FailedSuites":  [
+
+                         ],
+        "Failures":  0
+    },
+    {
+        "Name":  "CenterGridExpansionDropped",
+        "Area":  "Fallback center grid",
+        "Description":  "Fallback grid queries are not grown by the largest edge half extent.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: Crowded (dense center grid with no long edges)",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  218
+    },
+    {
+        "Name":  "SparseCellsSkipLastRow",
+        "Area":  "Fallback center grid",
+        "Description":  "Sparse fallback queries skip the final covered row.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  11557
+    },
+    {
+        "Name":  "DenseCellsSkipLastColumn",
+        "Area":  "Fallback center grid",
+        "Description":  "Dense fallback queries skip the final covered column.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: extreme valid input is answered exactly",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: Crowded (dense center grid with no long edges)",
+                             "Metamorphic: CircuitWide"
+                         ],
+        "Failures":  116
+    },
+    {
+        "Name":  "SparseCellKeysCollide",
+        "Area":  "Fallback center grid",
+        "Description":  "Sparse cell keys keep only sixteen bits of the row.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Structure: index properties are consistent"
+                         ],
+        "Failures":  1
+    },
+    {
+        "Name":  "BroadQuerySkipsLongEdges",
+        "Area":  "Fallback center grid",
+        "Description":  "A grid hit is required before long edges are consulted.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  3961
+    },
+    {
+        "Name":  "TreeVisitsLeftChildOnly",
+        "Area":  "Fallback long-edge tree",
+        "Description":  "Tree traversal never descends into right children.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: extreme valid input is answered exactly",
+                             "Contact: lattice poses against integer arithmetic",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitVast (no grid with long-edge tree)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: Rectangular",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  88053
+    },
+    {
+        "Name":  "TreeLeafSkipsLastEdge",
+        "Area":  "Fallback long-edge tree",
+        "Description":  "Each tree leaf skips its final edge.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Contact: lattice poses against integer arithmetic",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitVast (no grid with long-edge tree)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  3174
+    },
+    {
+        "Name":  "TreeBoundsOmitLastEdge",
+        "Area":  "Fallback long-edge tree",
+        "Description":  "Node bounds omit the final edge of their range.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Contact: lattice poses against integer arithmetic",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitVast (no grid with long-edge tree)",
+                             "Metamorphic: Circuit",
+                             "Metamorphic: CircuitCompact",
+                             "Metamorphic: CircuitWide",
+                             "Metamorphic: RectangularSegmented",
+                             "Metamorphic: Scattered"
+                         ],
+        "Failures":  1296
+    },
+    {
+        "Name":  "ShortListSkipsFirstEdge",
+        "Area":  "Fallback long-edge tree",
+        "Description":  "The short long-edge list skips its first edge.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: extreme valid input is answered exactly",
+                             "Metamorphic: Rectangular"
+                         ],
+        "Failures":  832
+    },
+    {
+        "Name":  "FullScanSkipsLastEdge",
+        "Area":  "Full scan",
+        "Description":  "The full scan, which also serves as the detector\u0027s own reference, skips the last edge.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Contact: named configurations",
+                             "Differential: Circuit (expanded grid)",
+                             "Differential: CircuitCompact (expanded grid)",
+                             "Differential: CircuitWide (dense center grid with long-edge tree)",
+                             "Differential: CircuitFar (expanded grid)",
+                             "Differential: CircuitMinute (expanded grid)",
+                             "Differential: CircuitGiant (expanded grid)",
+                             "Differential: Rectangular (expanded grid)",
+                             "Differential: RectangularSegmented (expanded grid)",
+                             "Differential: ScatteredRemote (sparse center grid with no long edges)",
+                             "Differential: ScatteredAligned (sparse center grid with no long edges)",
+                             "Metamorphic: Rectangular"
+                         ],
+        "Failures":  4568
+    },
+    {
+        "Name":  "OverflowingCornersAccepted",
+        "Area":  "Input handling",
+        "Description":  "Corner coordinates that overflow binary32 are accepted.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: invalid queries are refused"
+                         ],
+        "Failures":  4
+    },
+    {
+        "Name":  "ZeroLengthEdgeAccepted",
+        "Area":  "Input handling",
+        "Description":  "Zero-length barrier edges are accepted.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: invalid construction is refused",
+                             "Input: JSON text reaches the detector"
+                         ],
+        "Failures":  4
+    },
+    {
+        "Name":  "TwoVertexOutlineAccepted",
+        "Area":  "Input handling",
+        "Description":  "Outlines with two vertices are accepted.",
+        "Build":  "Pass",
+        "Outcome":  "Fail",
+        "FailedSuites":  [
+                             "Input: invalid construction is refused"
+                         ],
+        "Failures":  2
+    }
+]

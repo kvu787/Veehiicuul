@@ -1,0 +1,24 @@
+Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+Mode: checks; display server: headless; runtime: .NET 10.0.12; debug build of the engine: False
+PASS Footprint: mesh bounds in vehicle space: cases=208, failures=0
+     Mesh below a non-spatial node = footprint Z reaches 10; after moving the vehicle to X=100 the engine renders that mesh at X=0
+PASS Footprint: scaled collision bounds: cases=32, failures=0
+Built track collision index: edges=691, cellSize=2.25, gridCells=13356, occupiedCells=4643, references=25334, expandedGrid=True
+Built track collision index: edges=4, cellSize=2.25, gridCells=846, occupiedCells=846, references=1039, expandedGrid=True
+PASS Manager: construction: cases=2, failures=0
+PASS Manager: vehicle bounds: cases=22, failures=0
+     Vehicle 0 = (-1.5, -2.835, 1.5, 3)
+     Vehicle 1 = (-1, -2.085, 1, 2.25)
+     Vehicle 2 = (-1.7, -3.085, 1.7, 3.15)
+     Vehicle 3 = (-2.25, -4.335, 2.25, 4.5)
+PASS Manager: poses reach the detector unchanged: cases=56000, failures=0
+     Contacts = 23724
+     Queries = 56000
+PASS Manager: rectangle matches the engine's transform of the mesh: cases=8000, failures=0
+     Largest difference = 1.52587890625E-05
+PASS Manager: contact as seen in the engine: cases=13, failures=0
+     Front overlap that is not reported = mesh front at X=50.1, wall at X=50
+PASS Manager: repeated and changed queries: cases=34, failures=0
+     Vehicle scaled after construction = the manager keeps the bounds it captured
+NATIVE PASSED: 64311 cases.
