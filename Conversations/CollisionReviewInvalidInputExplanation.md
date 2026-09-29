@@ -198,3 +198,24 @@ This is a summary of **input-validation tests** for the collision detector. The 
 The JSON example used a test stand-in. The application’s [JsonUtility.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Utility/JsonUtility.cs:9) also leaves property-name matching case sensitive, so its code suggests the same lowercase-key behavior; that exact application path was not tested in the review.
 
 The practical finding is that these inputs are rejected, but the two messages should identify the invalid JSON keys or the empty vehicle list.
+
+## User
+
+okay, what would be the fix for this
+
+## Assistant Commentary
+
+I’ll check the JSON model and validation path, then give you a concrete fix for each message and the behavior it would change.
+
+## Assistant Commentary
+
+I found an important wrinkle: the real app already rejects an empty car list when loading the initial track. That check is missing when switching tracks, while the review harness can pass an empty list directly to `CollisionManager`. I’ll account for both paths in the fix.
+
+## Assistant
+
+I’d fix both at the point where the bad input enters:
+
+1. **JSON coordinates:** Add `[JsonRequired]` to the `X` and `Y` properties in [CoordinateXY.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/CoordinateXY.cs:6). With the current case-sensitive reader, lowercase `x` and `y` would then cause a `JsonException` for missing `X` and `Y`, before the detector sees zeroed vertices. Keep the detector’s zero-length check for genuinely repeated points. [Microsoft’s documentation](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/required-properties) confirms that missing required properties fail deserialization.
+2. **Empty vehicle list:** At the start of [CollisionManager](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionManager.cs:23), check `carSwitcher.AvailableCars.Count == 0` and throw an `ArgumentException` saying at least one vehicle is required. [TrackSwitcher](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/TrackSwitcher.cs:29) already checks this for the initial track; reuse that validation when switching tracks too.
+
+Then test lowercase and missing coordinate keys through the application’s actual JSON options, plus empty vehicle lists on initial load, track switch, and direct manager construction. The error should name the missing coordinates or vehicles, while a truly repeated vertex should still report a zero-length segment.
