@@ -26,8 +26,8 @@ public sealed class CollisionManager {
         ArgumentNullException.ThrowIfNull(carSwitcher);
 
         this._carSwitcher = carSwitcher;
-        this._colliderJson = JsonUtility.Deserialize<ColliderJson>(
-            $"res://ColliderData/{trackName}_ColliderData.json");
+        // C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\Tracks\Ribeye\Ribeye_ColliderData.json
+        this._colliderJson = JsonUtility.Deserialize<ColliderJson>($"res://Tracks/{trackName}/{trackName}_ColliderData.json");
         _ = this.RefreshCurrentVehicleIfNeeded();
     }
 

@@ -17,7 +17,7 @@ public class Main {
     private CameraYawManager CameraYawManager = null!;
     private CarSwitcher CarSwitcher = null!;
     private CarStateManager CarStateManager = null!;
-    //private readonly CollisionManager CollisionManager = null!;
+    private CollisionManager CollisionManager = null!;
     //private double CarControlTimeoutRemaining;
     private bool IsReadyDone;
     private static Node MainNode = null!;
@@ -54,8 +54,7 @@ public class Main {
         this.CarSwitcher = new CarSwitcher(this.InputManager, this.TrackSwitcher);
         this.CarStateManager = new CarStateManager(this.CarSwitcher, this.CameraYawManager, this.InputManager, this.TrackObjects);
         this.CameraPanManager = new CameraPanManager(this.TrackObjects, this.CameraFollowManager, this.CarStateManager);
-
-        //this.CollisionManager = new CollisionManager(this.TrackSwitcher.CurrentTrackName, this.CarSwitcher);
+        this.CollisionManager = new CollisionManager(this.TrackSwitcher.CurrentTrackName, this.CarSwitcher);
     }
 
     public void Process(double delta) {
@@ -75,7 +74,7 @@ public class Main {
             this.InitializeTrack();
         } else {
             bool wasCarSwitched = this.CarSwitcher.ReadInputAndSwitchCar();
-            if (wasCarSwitched || this.InputManager.ResetCar) {
+            if (wasCarSwitched || this.InputManager.ResetCar || this.CollisionManager.IsCarColliding()) {
                 this.CarStateManager.Reset_PositionRotationVelocity();
             }
 
