@@ -337,3 +337,30 @@ Changed [DigitalInputCounts.cs](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_God
 All 78 runtime checks passed. Release build succeeds with three existing `InputManager` warnings.
 
 Committed as `a360727`.
+
+## User
+
+```
+c:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\Source\EngineIntegration\DigitalInputCounts.cs:61:44-61:50
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
+```
+```
+@event
+```
+what does the `@` symbol do here?
+
+## Assistant
+
+I’ll check the declaration and explain that C# syntax.
+
+## Assistant
+
+`@` lets you use a **reserved C# keyword as a name**. Since `event` is a keyword, we write `@event`:
+
+```csharp
+public override void _Input(InputEvent @event)
+```
+
+This declares a parameter named `event`. The `@` is only an escape prefix in the source code—it is not part of the name and does not change the parameter’s value or behavior.
+
+We use it here to match the parameter name in Godot’s base `_Input` method.
