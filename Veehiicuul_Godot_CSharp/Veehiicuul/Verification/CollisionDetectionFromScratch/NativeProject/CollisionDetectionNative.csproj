@@ -1,0 +1,51 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+
+        <!-- Enables nullable reference annotations and warnings to catch potential null errors. -->
+        <Nullable>enable</Nullable>
+
+        <!-- Enforces the repository's configured code-style rules during builds. -->
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+        <!--
+            Required for IDE0005 to work.
+            Enables the build-time IDE0005 check for unused using directives by generating XML documentation.
+        -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+        <!--
+            Required in Godot .NET/C# projects.
+            Prepares the C# library and its dependencies for dynamic loading by Godot.
+        -->
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+
+        <!--
+            Required to properly export a Godot .NET/C# project using the command-line (instead of the Godot Editor export GUI).
+            Prevents an idle compiler server from keeping Godot's Windows console wrapper waiting after export.
+            See https://github.com/godotengine/godot/issues/110101 for more information.
+        -->
+        <UseSharedCompilation>false</UseSharedCompilation>
+
+        <RootNamespace>CollisionDetectionFromScratch</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'ExportRelease'">
+        <Optimize>true</Optimize>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="Build/**" />
+        <!-- The collision detection code under test, unmodified. -->
+        <Compile Include="../../../Source/GameDataAndLogic/CollisionDetection/*.cs" Link="Production/CollisionDetection/%(Filename)%(Extension)" />
+        <Compile Include="../../../Source/GameDataAndLogic/CollisionManager.cs" Link="Production/CollisionManager.cs" />
+        <!-- Parts of this harness that do not depend on the console program. -->
+        <Compile Include="../Source/Geometry/ExactNumber.cs" Link="Harness/ExactNumber.cs" />
+        <Compile Include="../Source/Geometry/ExactOracle.cs" Link="Harness/ExactOracle.cs" />
+        <Compile Include="../Source/Geometry/OracleTrack.cs" Link="Harness/OracleTrack.cs" />
+        <Compile Include="../Source/Detector/DetectorInternals.cs" Link="Harness/DetectorInternals.cs" />
+        <Compile Include="../Source/Tracks/SyntheticTrack.cs" Link="Harness/SyntheticTrack.cs" />
+        <Compile Include="../Source/Tracks/PoseSampler.cs" Link="Harness/PoseSampler.cs" />
+        <Compile Include="../Source/Performance/Bench.cs" Link="Harness/Bench.cs" />
+    </ItemGroup>
+</Project>
