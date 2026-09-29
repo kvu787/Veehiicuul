@@ -31,6 +31,8 @@ public sealed class CollisionManager {
         _ = this.RefreshCurrentVehicleIfNeeded();
     }
 
+    // "Teleporting" errors are intentionally allowed. This means that a sufficiently fast vehicle and/or low fps
+    // can result in the vehicle crossing past a collider with no frame having the vehicle intersect the collider.
     public bool IsCarColliding() {
         Node3D vehicle = this.RefreshCurrentVehicleIfNeeded();
         RectangleLocalBounds bounds = this.GetCurrentVehicleBounds(vehicle);
