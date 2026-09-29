@@ -262,3 +262,27 @@ It’s an environment variable intended to tell the launched application where i
 **Nothing in the current application reads it.** Logging works through `--log-file` and the explicit file paths in `Run.ps1`.
 
 You can remove the three lines referencing `VEEHIICUUL_LOG_DIRECTORY`—including `$previousLogDirectory`—without affecting current logging.
+
+## User
+
+okay, do that cleanup and any other cleanup for run.ps1
+
+## Assistant Commentary
+
+I’ll remove the unused environment variable handling and check `Run.ps1` for other small cleanup opportunities, then verify that logging and exit codes still work.
+
+## Assistant Commentary
+
+The cleanup is done. I removed the unused variable handling, the unnecessary working-directory change, and the temporary argument array. The process handle is now disposed even if launching or saving logs fails. Windows PowerShell checks passed for paths containing spaces, log capture, exit-code propagation, missing builds, and launch failures.
+
+## Assistant
+
+Cleaned up [Run.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Run.ps1):
+
+- Removed unused environment-variable handling.
+- Simplified argument construction and removed the unnecessary directory change.
+- Ensured the process handle is disposed on failure.
+
+Verified logging, paths containing spaces, exit codes, and failure handling under Windows PowerShell.
+
+Committed as `6e364f7`; conversation recorded separately.
