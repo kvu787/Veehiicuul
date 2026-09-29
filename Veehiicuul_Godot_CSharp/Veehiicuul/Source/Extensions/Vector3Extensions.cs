@@ -14,9 +14,9 @@ public static class Vector3Extensions {
         float cosine = Mathf.Cos(rotationRadians);
         float sine = Mathf.Sin(rotationRadians);
         return new Vector3(
-            vector.X * cosine - vector.Z * sine,
+            (vector.X * cosine) - (vector.Z * sine),
             0f,
-            vector.X * sine + vector.Z * cosine);
+            (vector.X * sine) + (vector.Z * cosine));
     }
 
     /// <summary>Applies a native Godot quaternion containing only yaw.</summary>
@@ -24,6 +24,7 @@ public static class Vector3Extensions {
         if (!Mathf.IsZeroApprox(rotation.X) || !Mathf.IsZeroApprox(rotation.Z)) {
             throw new ArgumentException("A planar rotation must contain only Y-axis rotation.", nameof(rotation));
         }
+
         return vector.Rotate2D(-rotation.GetEuler().Y);
     }
 
