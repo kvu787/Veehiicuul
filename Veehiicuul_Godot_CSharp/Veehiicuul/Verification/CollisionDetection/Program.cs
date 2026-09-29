@@ -22,8 +22,12 @@ internal static class Program {
         1.5f,
         3.157522f);
 
-    public static int Main() {
+    public static int Main(string[] arguments) {
         try {
+            if (arguments.Contains("--performance")) {
+                PerformanceAnalysis.Run(arguments);
+                return 0;
+            }
             Run();
             Console.WriteLine("PASS: Ported ZoomTracks production collision validation completed.");
             return 0;

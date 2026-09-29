@@ -1,0 +1,103 @@
+using Godot;
+using System;
+using System.Diagnostics;
+using System.Reflection;
+
+namespace Veehiicuul_Godot_CSharp;
+
+// Temporary replacement for the existing adapter, installed/restored by RunNative.ps1.
+public partial class Main_GodotAdapter : Node {
+    public override void _Ready() {
+        try {
+            Main main = new(this);
+            main.Ready();
+            CarSwitcher cars = GetField<CarSwitcher>(main, "CarSwitcher");
+            CollisionManager manager = GetField<CollisionManager>(main, "CollisionManager");
+            CarStateManager state = GetField<CarStateManager>(main, "CarStateManager");
+            TrackSwitcher tracks = GetField<TrackSwitcher>(main, "TrackSwitcher");
+            ColliderJson data = JsonUtility.Deserialize<ColliderJson>("res://Tracks/Ribeye/Ribeye_ColliderData.json");
+            for (int index = 0; index < 6; ++index) {
+                typeof(CarSwitcher).GetField("CurrentCarIndex", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(cars, index);
+                state.Reset_PositionRotationVelocity();
+                state.Apply();
+                bool collision = manager.IsCarColliding();
+                if (collision) { throw new InvalidOperationException("Spawn collides: " + cars.CurrentCar.GameObjectName); }
+                Node3D current = cars.CurrentCar.Node!;
+                RectangleLocalBounds raw = VehicleCollisionFootprint.FromMeshGeometry(current).GetScaledLocalBounds(current);
+                GD.Print($"SPAWN {cars.CurrentCar.GameObjectName}: clear; bounds={raw.MinX:R},{raw.MinY:R},{raw.MaxX:R},{raw.MaxY:R}; scale={current.Scale}");
+            }
+            Node3D vehicle = cars.CurrentCar.Node!;
+            VehicleCollisionFootprint footprint = VehicleCollisionFootprint.FromMeshGeometry(vehicle);
+            RectangleLocalBounds rawBounds = footprint.GetScaledLocalBounds(vehicle);
+            RectangleLocalBounds bounds = new(rawBounds.MinX, rawBounds.MinY + 0.165f, rawBounds.MaxX, rawBounds.MaxY);
+            TrackCollisionDetector detector = new(data, bounds);
+            RectanglePose spawn = Pose(vehicle);
+            Measure("ManagerSpawn", manager.IsCarColliding);
+            Measure("KernelSpawn", () => detector.IsColliding(bounds, spawn));
+            Measure("ScaledBounds", () => footprint.GetScaledLocalBounds(vehicle).MaxX > 0);
+            CoordinateXY vertex = data.Outlines[0].Vertices[0];
+            vehicle.Position = new Vector3(vertex.X, 0, -vertex.Y);
+            vehicle.Rotation = new Vector3(0, 0.3f, 0);
+            RectanglePose contact = Pose(vehicle);
+            if (!manager.IsCarColliding()) { throw new InvalidOperationException("Expected native vertex neighborhood contact"); }
+            Measure("ManagerContact", manager.IsCarColliding);
+            Measure("KernelContact", () => detector.IsColliding(bounds, contact));
+            Random random = new(20260929);
+            for (int index = 0; index < 4096; ++index) {
+                vehicle.Position = new Vector3((float)random.NextDouble() * 400 - 200, 0, (float)random.NextDouble() * 400 - 200);
+                vehicle.Rotation = new Vector3(0, (float)random.NextDouble() * 6 - 3, 0);
+                RectangleLocalBounds actualRaw = footprint.GetScaledLocalBounds(vehicle);
+                RectangleLocalBounds actualBounds = new(actualRaw.MinX, actualRaw.MinY + 0.165f, actualRaw.MaxX, actualRaw.MaxY);
+                if (manager.IsCarColliding() != detector.IsColliding(actualBounds, Pose(vehicle))) {
+                    throw new InvalidOperationException("Native/kernel mismatch at query " + index);
+                }
+            }
+            GD.Print("PASS: 4096 native manager/kernel pose comparisons.");
+            vehicle.Position = new Vector3(vertex.X, 0, -vertex.Y);
+            vehicle.Rotation = new Vector3(0, 0.3f, 0);
+            Node3D trackRoot = (Node3D)tracks.CurrentTrackScene;
+            bool beforeTranslation = manager.IsCarColliding();
+            trackRoot.Position = new Vector3(1000, 0, 1000);
+            bool afterTranslation = manager.IsCarColliding();
+            GD.Print($"ROOT_TRANSLATION: identical track-relative contact before={beforeTranslation}, after={afterTranslation}.");
+            trackRoot.Position = Vector3.Zero;
+            // Alternate actual cars after prewarming every mesh and manager branch.
+            FieldInfo indexField = typeof(CarSwitcher).GetField("CurrentCarIndex", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            int nextIndex = 0;
+            Measure("SwitchCarAndQuery", () => {
+                indexField.SetValue(cars, nextIndex++ % 6);
+                return manager.IsCarColliding();
+            }, 1000);
+            GD.Print("PASS: native collision analysis completed.");
+            this.GetTree().Quit(0);
+        } catch (Exception exception) {
+            GD.PrintErr(exception.ToString());
+            this.GetTree().Quit(1);
+        }
+    }
+
+    private static RectanglePose Pose(Node3D vehicle) {
+        return new(vehicle.GlobalPosition.X, -vehicle.GlobalPosition.Z, -vehicle.GlobalRotation.Y);
+    }
+
+    private static T GetField<T>(object instance, string name) {
+        return (T)instance.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(instance)!;
+    }
+
+    private static void Measure(string name, Func<bool> action, int iterations = 100000) {
+        int checksum = 0;
+        long warmStart = Stopwatch.GetTimestamp();
+        do { for (int index = 0; index < 10000; ++index) { if (action()) { ++checksum; } } }
+        while (Stopwatch.GetElapsedTime(warmStart).TotalMilliseconds < 400);
+        double[] samples = new double[15];
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        for (int sample = 0; sample < samples.Length; ++sample) {
+            long start = Stopwatch.GetTimestamp();
+            for (int index = 0; index < iterations; ++index) { if (action()) { ++checksum; } }
+            samples[sample] = Stopwatch.GetElapsedTime(start).TotalNanoseconds / iterations;
+        }
+        long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
+        Array.Sort(samples);
+        GD.Print($"NATIVE {name}: median={samples[7]:F1} ns; batch-p95={samples[14]:F1} ns; bytes/query={bytes / (15.0 * iterations):F1}; checksum={checksum}; iterations/sample={iterations}");
+    }
+}
