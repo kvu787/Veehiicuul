@@ -8,7 +8,7 @@ namespace Veehiicuul_Godot_CSharp;
 /// Counts digital down events delivered to this node's _Input during the current game frame.
 /// Device IDs are ignored; matching input codes share a count across all devices.
 /// Query from the main thread; reads do not consume counts. Main_GodotAdapter clears them
-/// after Main.Process returns, including early returns and exceptions.
+/// after Main.Process returns, including early returns. An exception exits the application.
 /// </summary>
 public partial class DigitalInputCounts : Node {
     private static DigitalInputCounts? CurrentInstance { get; set; }

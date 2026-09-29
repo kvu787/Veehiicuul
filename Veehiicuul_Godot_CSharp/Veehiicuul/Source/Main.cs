@@ -67,6 +67,7 @@ public class Main {
 
         if (this.InputManager.QuitGame) {
             Quit(0);
+            return;
         }
 
         if (this.InputManager.ResetCar) {

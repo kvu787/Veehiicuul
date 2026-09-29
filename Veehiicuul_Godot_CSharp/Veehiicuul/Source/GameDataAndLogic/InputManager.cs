@@ -3,11 +3,12 @@ using System;
 
 namespace Veehiicuul_Godot_CSharp;
 
-/// <summary>One snapshot per Main._Process; no input signals or node callbacks.</summary>
+/// <summary>One snapshot per Main.Process; analog input uses gamepad 0 and digital down events include all devices.</summary>
 public sealed class InputManager {
     private DateTime LastLogTime = DateTime.MinValue;
 
-    public bool HasGamepad { get; private set; }
+    /// <summary>Queries whether the gamepad used for analog input is connected; only needed by diagnostics.</summary>
+    public static bool HasGamepad => Input.GetConnectedJoypads().Contains(0);
     public float Brake { get; private set; }
     public Vector2 AccelerationInput { get; private set; }
     public Vector2 RightStick => this.AccelerationInput;
@@ -97,7 +98,7 @@ public sealed class InputManager {
 
     /// <summary>Optional diagnostic called explicitly after polling, never on its own timer.</summary>
     public void LogGamepadRightStick() {
-        if (this.HasGamepad && DateTime.Now - this.LastLogTime > TimeSpan.FromSeconds(0.5)) {
+        if (DateTime.Now - this.LastLogTime > TimeSpan.FromSeconds(0.5) && HasGamepad) {
             this.LastLogTime = DateTime.Now;
             Vector2 processed = ApplySourceStickDeadzone(this.RightStick);
             GD.Print($"Right stick processed: magnitude={processed.Length():R}, x={processed.X:R}, y={processed.Y:R}");
