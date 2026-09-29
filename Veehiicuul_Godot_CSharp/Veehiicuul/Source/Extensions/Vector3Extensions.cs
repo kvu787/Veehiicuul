@@ -30,12 +30,12 @@ public static class Vector3Extensions {
     /// <summary>Returns clockwise model yaw in radians from model front (+Z); zero for a zero vector.</summary>
     public static float Get2DRotation(this Vector3 vector) {
         RequireHorizontal(vector);
-        return vector == Vector3.Zero ? 0f : Mathf.Atan2(-vector.X, vector.Z);
+        return vector == Vector3.Zero ? 0f : Mathf.Atan2(vector.X, vector.Z);
     }
 
     /// <summary>Returns the native Godot yaw quaternion that points model front (+Z) along the vector.</summary>
     public static Quaternion Get2DRotationQuaternion(this Vector3 vector) {
-        return new Quaternion(Vector3.Up, -vector.Get2DRotation());
+        return new Quaternion(Vector3.Up, vector.Get2DRotation());
     }
 
     private static void RequireHorizontal(Vector3 vector) {
