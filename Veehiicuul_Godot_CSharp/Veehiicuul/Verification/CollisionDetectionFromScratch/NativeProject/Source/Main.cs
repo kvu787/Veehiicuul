@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime;
 using System.Runtime.InteropServices;
 
@@ -86,8 +87,19 @@ public partial class Main : Node3D {
     }
 
     private void Finish() {
+        // The launcher places this process; the record states where it ran.
+        string priority = string.Empty;
+        long affinityMask = 0;
+        if (OperatingSystem.IsWindows()) {
+            using Process process = Process.GetCurrentProcess();
+            priority = process.PriorityClass.ToString();
+            affinityMask = process.ProcessorAffinity.ToInt64();
+        }
+
         this._report.Write(this._output, new {
             Mode = this._mode,
+            Priority = priority,
+            AffinityMask = affinityMask,
             Engine = Engine.GetVersionInfo()["string"].AsString(),
             DebugBuild = OS.IsDebugBuild(),
             DisplayServer = DisplayServer.GetName(),

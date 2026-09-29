@@ -44,10 +44,37 @@ minutes and opens a window three times, for a few seconds each.
 .\Run.ps1 -SkipWindowedFrames -Repetitions 1
 .\Run.ps1 -Scale 10 -ValidationOnly
 .\Run.ps1 -Stages Measure -Suites cellsize,extent
+.\Run.ps1 -Stages Measure -Suites queries -Tracks Circuit,CircuitWide
+.\Run.ps1 -Stages ColdStart -ColdStartTracks CircuitWide,Crowded
+.\Run.ps1 -SkipWindowedFrames -Affinity 19,20,21 -Priority normal
 ```
 
-Stages for `-Stages`: `Validation`, `Simulation`, `Measure`, `Variants`,
-`ColdStart`.
+Stages for `-Stages`: `Validation`, `Simulation`, `Measure`, `NativeMeasure`,
+`Variants`, `ColdStart`.
+
+### Where the processes run
+
+| Parameter   | Values                                                            | Default       |
+| ----------- | ----------------------------------------------------------------- | ------------- |
+| `-Affinity` | `performance`, `efficiency`, `none`, or logical processor numbers | `performance` |
+| `-Priority` | `high`, `normal`, `belownormal`                                   | `high`        |
+| `-Threads`  | Validation threads; 0 lets the harness choose                     | 0             |
+
+The defaults give the cleanest timing on an idle machine. They also take a
+performance core at high priority, and validation uses all but two logical
+processors. Other software on the machine notices both. While the machine is in
+use, find logical processors that are idle, name them with `-Affinity`, and use
+`-Priority normal`.
+
+| Process                   | `performance` or `efficiency`        | Numbers such as `19,20,21`           |
+| ------------------------- | ------------------------------------ | ------------------------------------ |
+| Timing, console program   | Pinned to the last core of that kind | Pinned to the last number            |
+| Timing, engine-side       | Confined to the cores of that kind   | Confined to the numbers              |
+| Validation and simulation | Not confined                         | Confined; one thread for each number |
+
+Every run records its placement in `Placement.json`. It records how busy each
+logical processor was before and after the run in `ProcessorUseBefore.json` and
+`ProcessorUseAfter.json`.
 
 Single commands, from this folder:
 
@@ -55,8 +82,11 @@ Single commands, from this folder:
 .\bin\Release\net10.0\CollisionDetectionFromScratch.exe validate --scale=1 --only=boundary,contact
 .\bin\Release\net10.0\CollisionDetectionFromScratch.exe measure --suite=queries --tracks=Circuit
 .\bin\Release\net10.0\CollisionDetectionFromScratch.exe measure --suite=extent --affinity=efficiency
+.\bin\Release\net10.0\CollisionDetectionFromScratch.exe measure --suite=paths --affinity=21 --priority=normal
 .\bin\Release\net10.0\CollisionDetectionFromScratch.exe coldstart --track=Circuit
 .\bin\Release\net10.0\CollisionDetectionFromScratch.exe simulate --trials=20000
+.\bin\Release\net10.0\CollisionDetectionFromScratch.exe validate --threads=4
+.\bin\Release\net10.0\CollisionDetectionFromScratch.exe placement --affinity=efficiency
 ```
 
 Validation groups for `--only`: `oracle`, `predicate`, `transform`, `input`,
@@ -93,7 +123,8 @@ Private members of the detector are reached through compiled accessors in
 
 ## How time is measured
 
-- One process per suite, pinned to one performance core, at high priority.
+- One process per suite. By default it is pinned to one performance core at
+  high priority.
 - Warmup continues until ten consecutive batches agree within four percent.
   The runtime replaces code while it runs, so a fixed warmup time can end early.
 - Twenty-five timed batches of about 25 ms each. Tables report the median.
@@ -104,7 +135,8 @@ Private members of the detector are reached through compiled accessors in
 - `coldstart` runs in a new process and times the first construction and the
   first queries, which include compiling the detector.
 - The engine-side harness repeats the hot loops inside an exported release
-  build and times one query per rendered frame, headless and in a window.
+  build and times one query per rendered frame, headless and in a window. The
+  launcher confines it to cores of the kind that the console program uses.
 
 ## Mutation check of this harness
 

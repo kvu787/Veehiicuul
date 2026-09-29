@@ -23,6 +23,7 @@ internal static class Program {
                 "measure" => PerformanceCommands.Measure(options),
                 "coldstart" => PerformanceCommands.ColdStart(options),
                 "simulate" => SimulationCommands.Simulate(options),
+                "placement" => ShowPlacement(options),
                 _ => Usage(),
             };
         } catch (Exception exception) {
@@ -32,8 +33,17 @@ internal static class Program {
     }
 
     private static int Usage() {
-        Console.WriteLine("Commands: validate, measure, coldstart, simulate. See Readme.md.");
+        Console.WriteLine("Commands: validate, measure, coldstart, simulate, placement. See Readme.md.");
         return 2;
+    }
+
+    /// <summary>Tells the launcher which logical processors an affinity request names.</summary>
+    private static int ShowPlacement(Options options) {
+        Placement placement = ProcessorTopology.Select(options.Text("affinity", "performance"));
+        Console.WriteLine("PLACEMENT " + JsonSerializer.Serialize(new {
+            placement.TimingProcessor, placement.Mask, placement.Description,
+        }));
+        return 0;
     }
 
     private static int Validate(Options options) {
