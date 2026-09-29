@@ -74,7 +74,8 @@ public class Main {
             this.InitializeTrack();
         } else {
             bool wasCarSwitched = this.CarSwitcher.ReadInputAndSwitchCar();
-            if (wasCarSwitched || this.InputManager.ResetCar || this.CollisionManager.IsCarColliding()) {
+            if (wasCarSwitched || this.InputManager.ResetCar
+                || this.CollisionManager.IsCarColliding(this.CarStateManager.Position, this.CarStateManager.Rotation)) {
                 this.CarStateManager.Reset_PositionRotationVelocity();
             }
 

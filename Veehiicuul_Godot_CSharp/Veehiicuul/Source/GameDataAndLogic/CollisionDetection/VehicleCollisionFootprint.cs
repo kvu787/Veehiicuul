@@ -1,12 +1,11 @@
 using Godot;
 using System;
-using System.Collections.Generic;
 
 namespace Veehiicuul_Godot_CSharp;
 
 /// <summary>
 /// The axis-aligned footprint of a vehicle's render meshes in Godot vehicle-local
-/// X/Z space. Derive it once when the car changes, including hidden mesh children.
+/// X/Z space. Derive it once per track session, including hidden mesh children.
 /// </summary>
 public readonly struct VehicleCollisionFootprint {
     private VehicleCollisionFootprint(float minX, float minZ, float maxX, float maxZ) {
@@ -32,29 +31,7 @@ public readonly struct VehicleCollisionFootprint {
 
         // MeshInstance3D represents both static meshes and meshes using a Skeleton3D.
         // Walk every child, independent of visibility, just like includeInactive.
-        Stack<Node> pending = new();
-        pending.Push(vehicleRoot);
-        Transform3D worldToVehicle = vehicleRoot.GlobalTransform.AffineInverse();
-        while (pending.TryPop(out Node? node)) {
-            if (node is MeshInstance3D meshInstance && meshInstance.Mesh is not null) {
-                Transform3D meshToVehicle = worldToVehicle * meshInstance.GlobalTransform;
-                Aabb bounds = meshInstance.CustomAabb == default
-                    ? meshInstance.GetAabb()
-                    : meshInstance.CustomAabb;
-                IncludeBounds(
-                    bounds,
-                    meshToVehicle,
-                    ref foundBounds,
-                    ref minX,
-                    ref minZ,
-                    ref maxX,
-                    ref maxZ);
-            }
-
-            foreach (Node child in node.GetChildren()) {
-                pending.Push(child);
-            }
-        }
+        IncludeNode(vehicleRoot, Transform3D.Identity, ref foundBounds, ref minX, ref minZ, ref maxX, ref maxZ);
 
         if (!foundBounds) {
             throw new InvalidOperationException(
@@ -74,8 +51,9 @@ public readonly struct VehicleCollisionFootprint {
 
         // CarState applies pure yaw and positive, axis-aligned vehicle scale.
         // Basis-vector lengths retain scale without turning yaw into AABB growth.
-        float xScale = vehicleRoot.GlobalBasis.X.Length();
-        float zScale = vehicleRoot.GlobalBasis.Z.Length();
+        Basis basis = vehicleRoot.GlobalBasis;
+        float xScale = basis.X.Length();
+        float zScale = basis.Z.Length();
         if (!Guard.IsFinite(xScale)
             || !Guard.IsFinite(zScale)
             || !(xScale > 0f)
@@ -95,6 +73,22 @@ public readonly struct VehicleCollisionFootprint {
             Math.Min(y0, y1),
             Math.Max(x0, x1),
             Math.Max(y0, y1));
+    }
+
+    private static void IncludeNode(Node node, Transform3D nodeToVehicle,
+        ref bool foundBounds, ref float minX, ref float minZ, ref float maxX, ref float maxZ) {
+        if (node is MeshInstance3D meshInstance && meshInstance.Mesh is not null) {
+            Aabb customBounds = meshInstance.CustomAabb;
+            Aabb bounds = customBounds == default ? meshInstance.GetAabb() : customBounds;
+            IncludeBounds(bounds, nodeToVehicle, ref foundBounds, ref minX, ref minZ, ref maxX, ref maxZ);
+        }
+
+        int childCount = node.GetChildCount();
+        for (int index = 0; index < childCount; ++index) {
+            Node child = node.GetChild(index);
+            Transform3D childToVehicle = child is Node3D child3D ? nodeToVehicle * child3D.Transform : nodeToVehicle;
+            IncludeNode(child, childToVehicle, ref foundBounds, ref minX, ref minZ, ref maxX, ref maxZ);
+        }
     }
 
     private static void IncludeBounds(

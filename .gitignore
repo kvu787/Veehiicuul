@@ -1,5 +1,6 @@
 .vs/
 .godot/
+/Build/
 
 CMakeUserPresets.json
 *.suo

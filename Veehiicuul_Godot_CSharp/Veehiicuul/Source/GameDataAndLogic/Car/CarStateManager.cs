@@ -23,7 +23,8 @@ public sealed class CarStateManager {
     private float? Rotation_ForMostRecentNonZeroVelocity;
     private Vector3 Velocity;
 
-    private float Rotation => this.Rotation_ForMostRecentNonZeroVelocity ?? this.StartingRotation;
+    /// <summary>The managed yaw applied to the car; collision queries share this authoritative pose.</summary>
+    public float Rotation => this.Rotation_ForMostRecentNonZeroVelocity ?? this.StartingRotation;
 
     /// <summary>Car position relative to the track root; Model has an identity local transform.</summary>
     public Vector3 Position { get; private set; }

@@ -35,4 +35,8 @@
         <Compile Remove="Verification/**/*.cs" />
         <PackageReference Include="System.Management" Version="10.0.12" />
     </ItemGroup>
+    <!-- Opt-in historical sources for native performance comparison only. -->
+    <ItemGroup Condition="'$(CollisionBaselineDirectory)' != ''">
+        <Compile Include="$(CollisionBaselineDirectory)/*.cs" />
+    </ItemGroup>
 </Project>

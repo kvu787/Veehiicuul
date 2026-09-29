@@ -6,7 +6,8 @@ namespace Veehiicuul_Godot_CSharp;
 public sealed class CarSwitcher {
     private readonly InputManager InputManager;
     private readonly List<Car> Cars;
-    private int CurrentCarIndex;
+    public int CurrentCarIndex { get; private set; }
+    public IReadOnlyList<Car> AvailableCars => this.Cars;
     public Car CurrentCar => this.Cars[this.CurrentCarIndex];
 
     public CarSwitcher(InputManager inputManager, TrackSwitcher trackSwitcher) {

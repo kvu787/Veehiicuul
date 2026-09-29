@@ -4,92 +4,64 @@ using System;
 namespace Veehiicuul_Godot_CSharp;
 
 /// <summary>
-/// Connects the active Godot vehicle to the immutable track-outline index.
-/// Track geometry is rebuilt only when a track is initialized; vehicle mesh
-/// bounds are refreshed only when the active car changes.
-///
+/// Queries immutable track geometry using the same managed pose as car movement.
+/// Mesh geometry and positive planar scale are static for a track session, so
+/// every car footprint is prepared once, including cars not yet selected.
 /// Assumes that the ancestor hierarchy of nodes all have identity transforms.
 /// </summary>
 public sealed class CollisionManager {
-    // For standard-height barriers. The source's zero-height alternatives were
-    // 0.7 at the front and 1.3 at the rear.
     private const float ShortenColliderFront = 0.165f;
     private const float ShortenColliderRear = 0.0f;
 
     private readonly CarSwitcher _carSwitcher;
-    private readonly ColliderJson _colliderJson;
-
-    private Node3D? _currentVehicle;
-    private VehicleCollisionFootprint _currentFootprint;
-    private TrackCollisionDetector? _detector;
+    private readonly RectangleLocalBounds[] _vehicleBounds;
+    private readonly TrackCollisionDetector _detector;
+    private int _previousCarIndex = -1;
+    private RectanglePose _previousPose;
+    private bool _previousResult;
 
     public CollisionManager(string trackName, CarSwitcher carSwitcher) {
         ArgumentException.ThrowIfNullOrEmpty(trackName);
         ArgumentNullException.ThrowIfNull(carSwitcher);
-
         this._carSwitcher = carSwitcher;
-        // C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\Tracks\Ribeye\Ribeye_ColliderData.json
-        this._colliderJson = JsonUtility.Deserialize<ColliderJson>($"res://Tracks/{trackName}/{trackName}_ColliderData.json");
-        _ = this.RefreshCurrentVehicleIfNeeded();
-    }
-
-    // "Teleporting" errors are intentionally allowed. This means that a sufficiently fast vehicle and/or low fps
-    // can result in the vehicle crossing past a collider with no frame having the vehicle intersect the collider.
-    public bool IsCarColliding() {
-        Node3D vehicle = this.RefreshCurrentVehicleIfNeeded();
-        RectangleLocalBounds bounds = this.GetCurrentVehicleBounds(vehicle);
-        Vector3 position = vehicle.GlobalPosition;
-        // Both world positions and local bounds use collision coordinates (X, -Z).
-        // The detector's clockwise rotation is negative Godot Y-axis rotation.
-        RectanglePose pose = new(
-            position.X,
-            -position.Z,
-            -vehicle.GlobalRotation.Y);
-        TrackCollisionDetector detector = this._detector
-            ?? throw new InvalidOperationException("The track collision index was not initialized.");
-        return detector.IsColliding(bounds, pose);
-    }
-
-    private Node3D RefreshCurrentVehicleIfNeeded() {
-        Node3D currentVehicle = this._carSwitcher.CurrentCar.Node!;
-        if (ReferenceEquals(currentVehicle, this._currentVehicle)) {
-            return currentVehicle;
+        this._vehicleBounds = new RectangleLocalBounds[carSwitcher.AvailableCars.Count];
+        float minX = float.PositiveInfinity, minY = float.PositiveInfinity;
+        float maxX = float.NegativeInfinity, maxY = float.NegativeInfinity;
+        for (int index = 0; index < this._vehicleBounds.Length; ++index) {
+            Node3D vehicle = carSwitcher.AvailableCars[index].Node!;
+            RectangleLocalBounds raw = VehicleCollisionFootprint.FromMeshGeometry(vehicle).GetScaledLocalBounds(vehicle);
+            // Model front (+Z) is the minimum collision Y.
+            RectangleLocalBounds bounds = new(raw.MinX, raw.MinY + ShortenColliderFront, raw.MaxX, raw.MaxY - ShortenColliderRear);
+            this._vehicleBounds[index] = bounds;
+            minX = Math.Min(minX, bounds.MinX);
+            minY = Math.Min(minY, bounds.MinY);
+            maxX = Math.Max(maxX, bounds.MaxX);
+            maxY = Math.Max(maxY, bounds.MaxY);
         }
 
-        this._currentVehicle = currentVehicle;
-        this._currentFootprint = VehicleCollisionFootprint.FromMeshGeometry(currentVehicle);
-        RectangleLocalBounds representativeBounds = this.GetCurrentVehicleBounds(currentVehicle);
-
-        // Keep index cell scale aligned with materially different vehicles while
-        // ignoring tiny importer roundoff differences between identical cars.
-        float shortExtent = Mathf.Min(
-            representativeBounds.MaxX - representativeBounds.MinX,
-            representativeBounds.MaxY - representativeBounds.MinY);
-        if (this._detector is null
-            || shortExtent < this._detector.CellSize * 0.75f
-            || shortExtent > this._detector.CellSize * 1.25f) {
-            this._detector = new TrackCollisionDetector(
-                this._colliderJson,
-                representativeBounds);
-            GD.Print(
-                $"Built track collision index: edges={this._detector.EdgeCount}, "
-                + $"cellSize={this._detector.CellSize}, "
-                + $"gridCells={this._detector.GridCellCount}, "
-                + $"occupiedCells={this._detector.OccupiedCellCount}, "
-                + $"oversizedEdges={this._detector.OversizedEdgeCount}, "
-                + $"denseGrid={this._detector.UsesDenseGrid}");
-        }
-
-        return currentVehicle;
+        ColliderJson colliderJson = JsonUtility.Deserialize<ColliderJson>($"res://Tracks/{trackName}/{trackName}_ColliderData.json");
+        this._detector = new TrackCollisionDetector(colliderJson, new RectangleLocalBounds(minX, minY, maxX, maxY));
+        GD.Print($"Built track collision index: edges={this._detector.EdgeCount}, cellSize={this._detector.CellSize}, "
+            + $"gridCells={this._detector.GridCellCount}, occupiedCells={this._detector.OccupiedCellCount}, "
+            + $"references={this._detector.StoredGridEdgeReferenceCount}, expandedGrid={this._detector.UsesExpandedGrid}");
     }
 
-    private RectangleLocalBounds GetCurrentVehicleBounds(Node3D currentVehicle) {
-        RectangleLocalBounds bounds = this._currentFootprint.GetScaledLocalBounds(currentVehicle);
-        // Model front is local +Z, which maps to the minimum collision Y.
-        return new RectangleLocalBounds(
-            bounds.MinX,
-            bounds.MinY + ShortenColliderFront,
-            bounds.MaxX,
-            bounds.MaxY - ShortenColliderRear);
+    // "Teleporting" errors are intentionally allowed. A sufficiently fast vehicle
+    // and/or low fps can cross a collider without a sampled pose intersecting it.
+    public bool IsCarColliding(Vector3 position, float rotationRadians) {
+        int carIndex = this._carSwitcher.CurrentCarIndex;
+        if (carIndex == this._previousCarIndex
+            && position.X == this._previousPose.PositionX
+            && -position.Z == this._previousPose.PositionY
+            && -rotationRadians == this._previousPose.RotationRadians) {
+            return this._previousResult;
+        }
+
+        RectanglePose pose = new(position.X, -position.Z, -rotationRadians);
+        bool result = this._detector.IsColliding(this._vehicleBounds[carIndex], pose);
+        this._previousPose = pose;
+        this._previousCarIndex = carIndex;
+        this._previousResult = result;
+        return result;
     }
 }
