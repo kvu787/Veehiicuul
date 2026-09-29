@@ -82,6 +82,8 @@ public class Main {
         this.CameraZoomManager.Apply();
         this.CarStateManager.Apply();
 
+        this.CameraFollowManager.EndFrame();
+
         //--------------------------------------------------
 
         //this.InputManager.UpdateInputs();
