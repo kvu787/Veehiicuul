@@ -1,0 +1,26 @@
+Environment: .NET 10.0.12; Microsoft Windows 10.0.26200; X64; logical processors=24; stopwatch=10000000; tiered=default
+Index Ribeye: edges=896; cell=1.5; dense=False; grid=167x241; occupied=237; outliers=614; nodes=255
+Build Ribeye: median=0.847 ms; bytes=133560
+Validation Ribeye: 8576 indexed/linear comparisons, every edge plus closing edges.
+Query Ribeye/Mixed: contact=360/4096; median=269.5 ns; batch-p95=317.9 ns; linear=1257.3 ns; bytes=0.0
+Query Ribeye/ClearInsideBounds: contact=0/3736; median=254.0 ns; batch-p95=256.5 ns; linear=1011.6 ns; bytes=0.0
+Query Ribeye/Contact: contact=2695/2695; median=280.5 ns; batch-p95=287.3 ns; linear=561.3 ns; bytes=0.0
+Query Ribeye/ExactVertexContact: contact=896/896; median=147.4 ns; batch-p95=155.4 ns; linear=524.5 ns; bytes=0.0
+Query Ribeye/OutsideBounds: contact=0/1; median=42.3 ns; batch-p95=43.1 ns; linear=22.3 ns; bytes=0.0
+Query Ribeye/HugeContainingRectangle: contact=0/1; median=16671.5 ns; batch-p95=17453.4 ns; linear=17373.4 ns; bytes=0.0
+Index Ribeye/CellSize1.5: edges=896; cell=1.5; dense=False; grid=167x241; occupied=237; outliers=614; nodes=255
+Query Ribeye/CellSize1.5: contact=360/4096; median=269.9 ns; batch-p95=273.7 ns; linear=984.4 ns; bytes=0.0
+Index Ribeye/CellSize3: edges=896; cell=3; dense=True; grid=136x149; occupied=4037; outliers=0; nodes=0
+Query Ribeye/CellSize3: contact=360/4096; median=27.8 ns; batch-p95=29.9 ns; linear=985.2 ns; bytes=0.0
+Index Ribeye/CellSize4.5: edges=896; cell=4.5; dense=True; grid=91x99; occupied=2054; outliers=0; nodes=0
+Query Ribeye/CellSize4.5: contact=360/4096; median=30.4 ns; batch-p95=30.8 ns; linear=984.0 ns; bytes=0.0
+Index Ribeye/CellSize6: edges=896; cell=6; dense=True; grid=68x75; occupied=1279; outliers=0; nodes=0
+Query Ribeye/CellSize6: contact=360/4096; median=31.9 ns; batch-p95=33.8 ns; linear=991.4 ns; bytes=0.0
+Index Ribeye/CellSize9: edges=896; cell=9; dense=True; grid=46x50; occupied=685; outliers=0; nodes=0
+Query Ribeye/CellSize9: contact=360/4096; median=37.1 ns; batch-p95=38.3 ns; linear=1006.3 ns; bytes=0.0
+Index Ribeye/CellSize12: edges=896; cell=12; dense=True; grid=34x38; occupied=437; outliers=0; nodes=0
+Query Ribeye/CellSize12: contact=360/4096; median=41.0 ns; batch-p95=42.2 ns; linear=996.5 ns; bytes=0.0
+Query Ribeye/Spawn: contact=0/1; median=83.4 ns; batch-p95=86.2 ns; linear=1008.2 ns; bytes=0.0
+PASS: 32019 independent exact orientation checks over arbitrary finite binary32 values.
+PASS: 11 invalid-input checks.
+PASS: independent exact oracle comparisons=7629; checksum=8814848.

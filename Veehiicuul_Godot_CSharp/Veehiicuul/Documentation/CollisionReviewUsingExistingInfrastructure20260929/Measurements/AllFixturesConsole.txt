@@ -1,0 +1,80 @@
+Environment: .NET 10.0.12; Microsoft Windows 10.0.26200; X64; logical processors=24; stopwatch=10000000; tiered=default
+Index Ribeye: edges=800; cell=1.5; dense=True; grid=207x179; occupied=8274; outliers=0; nodes=0
+Build Ribeye: median=0.562 ms; bytes=612080
+Validation Ribeye: 8096 indexed/linear comparisons, every edge plus closing edges.
+PASS: 2358720 expanded-grid boundary comparisons and 160 offset-origin oracle cases.
+Query Ribeye/Mixed: contact=518/4096; median=31.4 ns; batch-p95=32.3 ns; linear=1177.8 ns; bytes=0.0
+Query Ribeye/ClearInsideBounds: contact=0/3578; median=17.4 ns; batch-p95=20.5 ns; linear=1199.1 ns; bytes=0.0
+Query Ribeye/Contact: contact=2407/2407; median=81.6 ns; batch-p95=84.1 ns; linear=493.7 ns; bytes=0.0
+Query Ribeye/ExactVertexContact: contact=800/800; median=63.2 ns; batch-p95=66.2 ns; linear=453.8 ns; bytes=0.0
+Query Ribeye/OutsideBounds: contact=0/1; median=9.5 ns; batch-p95=9.8 ns; linear=22.4 ns; bytes=0.0
+Query Ribeye/HugeContainingRectangle: contact=0/1; median=14211.5 ns; batch-p95=14659.4 ns; linear=14938.2 ns; bytes=0.0
+Index Ribeye/CellSize1.5: edges=800; cell=1.5; dense=True; grid=207x179; occupied=8274; outliers=0; nodes=0
+Query Ribeye/CellSize1.5: contact=518/4096; median=31.1 ns; batch-p95=32.1 ns; linear=875.0 ns; bytes=0.0
+Index Ribeye/CellSize3: edges=800; cell=3; dense=True; grid=104x90; occupied=2413; outliers=0; nodes=0
+Query Ribeye/CellSize3: contact=518/4096; median=34.8 ns; batch-p95=36.2 ns; linear=878.1 ns; bytes=0.0
+Index Ribeye/CellSize4.5: edges=800; cell=4.5; dense=True; grid=69x60; occupied=1228; outliers=0; nodes=0
+Query Ribeye/CellSize4.5: contact=518/4096; median=38.1 ns; batch-p95=39.5 ns; linear=873.8 ns; bytes=0.0
+Index Ribeye/CellSize6: edges=800; cell=6; dense=True; grid=52x45; occupied=772; outliers=0; nodes=0
+Query Ribeye/CellSize6: contact=518/4096; median=41.8 ns; batch-p95=43.3 ns; linear=900.8 ns; bytes=0.0
+Index Ribeye/CellSize9: edges=800; cell=9; dense=True; grid=35x30; occupied=406; outliers=0; nodes=0
+Query Ribeye/CellSize9: contact=518/4096; median=48.1 ns; batch-p95=49.8 ns; linear=881.9 ns; bytes=0.0
+Index Ribeye/CellSize12: edges=800; cell=12; dense=True; grid=26x23; occupied=254; outliers=0; nodes=0
+Query Ribeye/CellSize12: contact=518/4096; median=52.6 ns; batch-p95=54.4 ns; linear=873.9 ns; bytes=0.0
+Query Ribeye/Spawn: contact=0/1; median=9.5 ns; batch-p95=10.2 ns; linear=880.3 ns; bytes=0.0
+Index Track001: edges=1984; cell=1.5; dense=True; grid=108x94; occupied=3870; outliers=0; nodes=0
+Build Track001: median=0.224 ms; bytes=470528
+Validation Track001: 14016 indexed/linear comparisons, every edge plus closing edges.
+PASS: 652365 expanded-grid boundary comparisons and 160 offset-origin oracle cases.
+Query Track001/Mixed: contact=968/4096; median=76.1 ns; batch-p95=78.0 ns; linear=1957.4 ns; bytes=0.0
+Query Track001/ClearInsideBounds: contact=0/3128; median=31.0 ns; batch-p95=32.2 ns; linear=2223.3 ns; bytes=0.0
+Query Track001/Contact: contact=5985/5985; median=220.4 ns; batch-p95=227.3 ns; linear=1212.7 ns; bytes=0.0
+Query Track001/ExactVertexContact: contact=1984/1984; median=77.3 ns; batch-p95=78.3 ns; linear=1100.4 ns; bytes=0.0
+Query Track001/OutsideBounds: contact=0/1; median=9.8 ns; batch-p95=10.1 ns; linear=22.3 ns; bytes=0.0
+Query Track001/HugeContainingRectangle: contact=0/1; median=35032.2 ns; batch-p95=35623.8 ns; linear=36927.0 ns; bytes=0.0
+Index Track001/CellSize1.5: edges=1984; cell=1.5; dense=True; grid=108x94; occupied=3870; outliers=0; nodes=0
+Query Track001/CellSize1.5: contact=968/4096; median=75.9 ns; batch-p95=77.6 ns; linear=1963.1 ns; bytes=0.0
+Index Track001/CellSize3: edges=1984; cell=3; dense=True; grid=54x47; occupied=1084; outliers=0; nodes=0
+Query Track001/CellSize3: contact=968/4096; median=82.5 ns; batch-p95=84.3 ns; linear=1961.6 ns; bytes=0.0
+Index Track001/CellSize4.5: edges=1984; cell=4.5; dense=True; grid=36x32; occupied=525; outliers=0; nodes=0
+Query Track001/CellSize4.5: contact=968/4096; median=88.3 ns; batch-p95=106.8 ns; linear=1962.2 ns; bytes=0.0
+Index Track001/CellSize6: edges=1984; cell=6; dense=True; grid=27x24; occupied=317; outliers=0; nodes=0
+Query Track001/CellSize6: contact=968/4096; median=94.2 ns; batch-p95=96.4 ns; linear=2011.7 ns; bytes=0.0
+Index Track001/CellSize9: edges=1984; cell=9; dense=True; grid=18x16; occupied=160; outliers=0; nodes=0
+Query Track001/CellSize9: contact=968/4096; median=105.5 ns; batch-p95=107.0 ns; linear=1964.2 ns; bytes=0.0
+Index Track001/CellSize12: edges=1984; cell=12; dense=True; grid=14x12; occupied=97; outliers=0; nodes=0
+Query Track001/CellSize12: contact=968/4096; median=120.7 ns; batch-p95=126.0 ns; linear=1960.1 ns; bytes=0.0
+Index TiledRibeye/1: edges=800; cell=1.5; dense=True; grid=207x179; occupied=8274; outliers=0; nodes=0
+Build TiledRibeye/1: median=0.239 ms; bytes=612080
+Query TiledRibeye/1/Clear: contact=0/512; median=9.7 ns; batch-p95=9.9 ns; linear=883.0 ns; bytes=0.0
+Index TiledRibeye/16: edges=12800; cell=1.5; dense=False; grid=10195x175; occupied=3662; outliers=7584; nodes=2047
+Build TiledRibeye/16: median=5.112 ms; bytes=1719032
+Query TiledRibeye/16/Clear: contact=0/512; median=195.6 ns; batch-p95=439.7 ns; linear=13606.3 ns; bytes=0.0
+Index TiledRibeye/256: edges=204800; cell=1.5; dense=False; grid=10195x10175; occupied=58491; outliers=121344; nodes=32767
+Build TiledRibeye/256: median=75.987 ms; bytes=28052256
+Query TiledRibeye/256/Clear: contact=0/512; median=708.2 ns; batch-p95=761.0 ns; linear=0.0 ns; bytes=0.0
+Index Sparse: edges=12; cell=0.5; dense=False; grid=40002x2; occupied=9; outliers=0; nodes=0
+Query Sparse/Contact: contact=1/1; median=74.3 ns; batch-p95=76.7 ns; linear=38.8 ns; bytes=0.0
+Query Sparse/EmptyCell: contact=0/1; median=64.4 ns; batch-p95=66.0 ns; linear=25.9 ns; bytes=0.0
+Index LongEdges/1: edges=4; cell=0.5; dense=True; grid=23x23; occupied=240; outliers=0; nodes=0
+Build LongEdges/1: median=0.001 ms; bytes=8120
+Query LongEdges/1/Contact: contact=1/1; median=48.5 ns; batch-p95=50.1 ns; linear=35.7 ns; bytes=0.0
+Query LongEdges/1/Clear: contact=0/1; median=9.7 ns; batch-p95=10.2 ns; linear=24.7 ns; bytes=0.0
+Index LongEdges/256: edges=1024; cell=0.5; dense=False; grid=0x0; occupied=0; outliers=1024; nodes=255
+Build LongEdges/256: median=0.209 ms; bytes=115288
+Query LongEdges/256/Contact: contact=1/1; median=102.5 ns; batch-p95=128.6 ns; linear=1128.4 ns; bytes=0.0
+Query LongEdges/256/Clear: contact=0/1; median=91.7 ns; batch-p95=95.0 ns; linear=1110.0 ns; bytes=0.0
+Index LongEdges/4096: edges=16384; cell=0.5; dense=False; grid=0x0; occupied=0; outliers=16384; nodes=4095
+Build LongEdges/4096: median=4.955 ms; bytes=1835704
+Query LongEdges/4096/Contact: contact=1/1; median=125.2 ns; batch-p95=149.2 ns; linear=17805.0 ns; bytes=0.0
+Query LongEdges/4096/Clear: contact=0/1; median=113.8 ns; batch-p95=116.3 ns; linear=17869.4 ns; bytes=0.0
+Query Exact/Collinear: contact=1/1; median=48.2 ns; batch-p95=49.6 ns; linear=35.2 ns; bytes=0.0
+Query Exact/Endpoint: contact=1/1; median=48.5 ns; batch-p95=50.2 ns; linear=35.7 ns; bytes=0.0
+Query Exact/OneUlpGap: contact=0/1; median=33.5 ns; batch-p95=34.2 ns; linear=16.0 ns; bytes=0.0
+Query Exact/DiagonalContact: contact=1/1; median=49.0 ns; batch-p95=50.5 ns; linear=35.7 ns; bytes=0.0
+Query Exact/Subnormal: contact=1/1; median=78.7 ns; batch-p95=80.6 ns; linear=62.8 ns; bytes=0.0
+Index GridIntegerFallback: edges=10; cell=0.5; dense=False; grid=0x0; occupied=0; outliers=10; nodes=3
+Query GridIntegerFallback/Contact: contact=1/1; median=51.8 ns; batch-p95=52.6 ns; linear=34.3 ns; bytes=0.0
+PASS: 32019 independent exact orientation checks over arbitrary finite binary32 values.
+PASS: 11 invalid-input checks.
+PASS: independent exact oracle comparisons=11877; checksum=168426332.

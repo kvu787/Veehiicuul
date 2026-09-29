@@ -1,0 +1,13 @@
+Passed cardinal headings and 9620 coordinate, quaternion, inverse, and planar comparisons.
+PASS: Neutral input preserves motion
+PASS: Applied heading follows velocity
+PASS: Rotated spawn uses forward acceleration
+PASS: Model axes select distinct forward, reverse, left, and right strengths
+PASS: Forward acceleration stays aligned over successive updates
+PASS: Camera pivot yaw rotates input independently of camera children
+PASS: Braking slows without reversing and preserves heading
+PASS: Neutral input still enforces the speed limit
+PASS: Reset restores the authored pose and clears velocity
+PASS: Spawn, input, and reset use track space independently of world transforms
+Passed 10 car state checks.
+Passed camera follow, pan, zoom, reset, frame-boundary, and clamp checks.
