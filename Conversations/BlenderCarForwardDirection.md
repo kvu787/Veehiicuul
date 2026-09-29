@@ -187,3 +187,28 @@ For each car in Blender:
 Apply this to **`SlopeCarPlaceholder` and all six playable cars**, including the template used for future tracks. Fixing only the placeholder leaves the playable meshes facing backward relative to their movement.
 
 If you want to **retain local `-Y` as front in Blender**, the export script can instead perform the same mesh rotation and compensating object rotation on temporary copies of those car objects. Rotating the entire exported scene won’t fix the car’s local forward axis, because the mesh and its axes rotate together.
+
+## User
+
+if godot treats model front as +Z, then shouldn't the driving code treat forward as +Z?
+
+## Assistant Commentary
+
+I’ll check how the driving code uses “forward” so I can distinguish the car’s local direction from camera and world directions.
+
+## Assistant
+
+**Yes—for your existing models, the driving code should treat car-local `+Z` as forward.** That matches the Blender → glTF → Godot asset convention directly.
+
+Godot supports both conventions:
+
+- **Camera forward:** local `-Z`.
+- **Model forward:** local `+Z`, with **model right being local `-X`**.
+
+Its documentation explicitly recommends the `MODEL_*` direction constants when working in model space. [Godot Vector3 documentation](https://docs.godotengine.org/en/stable/classes/class_vector3.html#class-vector3-constant-model-front)
+
+My earlier recommendation preserved the existing driving code by changing the assets. **For your pipeline, I would instead correct the car code and keep the Blender models and export conversion as they are.** Using `-Z` for gameplay objects is a choice, not an engine requirement.
+
+That correction needs to cover forward/reverse acceleration, car-relative left/right, heading calculated from velocity, and which end of the collision footprint is considered the front. Your camera-relative input can continue using `-Z` as camera forward; it must then be transformed into the car’s coordinate frame.
+
+So this is a mismatch between the driving code’s assumptions and the imported models’ convention. The exporter is behaving correctly.
