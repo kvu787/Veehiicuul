@@ -82,3 +82,27 @@ Your existing quaternion helper already uses this built-in axis-and-angle constr
 The explicit zero check preserves zero heading and identity rotation for a zero vector. These replacements **do not reject non-horizontal vectors**, so retain that validation if you want it.
 
 For this strictly planar calculation, your existing `Mathf.Atan2(vector.X, vector.Z)` is also a simple built-in option; you can use it directly without an extension method. `Get2DRotationQuaternion` currently has no gameplay callers, so that helper can simply be removed when its verification references are updated.
+
+## User
+
+remove Vector3Extensions.Rotate2D and Get2DRotationQuaternion and do any corresponding fixes
+
+## Assistant Commentary
+
+I’ll remove the three methods, update their verification checks and documentation, then run the relevant checks and release build.
+
+## Assistant Commentary
+
+`Get2DRotation` now rejects zero vectors, but its comment and verification still expect a zero heading. I’ll update those to match the current behavior while removing the unused helpers.
+
+## Assistant Commentary
+
+The updated planar, car, and camera checks pass. The full build stops during Godot’s import step with two `!is_inside_tree()` errors; I’m checking C# release compilation separately to verify the code changes.
+
+## Assistant
+
+Removed both `Rotate2D` overloads and `Get2DRotationQuaternion` in commit `13fa851`. Updated verification and documentation, preserving `Get2DRotation`’s zero-vector rejection.
+
+Passed: 9,620 planar comparisons, car/camera checks, and release C# compilation.
+
+Full export remains blocked by Godot [import errors](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-09-29_08-30-28/Import.log) (`!is_inside_tree()`).
