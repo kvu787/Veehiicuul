@@ -131,3 +131,24 @@ This means something requested a 3D node’s **world transform** while that node
 My wording “import errors” was imprecise: **the errors occurred during the import command, but the log does not establish that an asset failed to import.** They appear after the editor finishes loading its layout.
 
 This predates the method removal—the identical errors are in a [September 25 log](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-09-25_05-38-22/Import.log:21). The log doesn’t identify the offending node or caller, so the underlying cause remains undiagnosed. The C# compilation and verification checks passed.
+
+## User
+
+i deleted .vs and .godot folders in C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul. try again
+
+## Assistant Commentary
+
+I’ll rerun the full release build and export now that those caches have been cleared.
+
+## Assistant
+
+**The `!is_inside_tree()` errors no longer appear.** The retry now stops on a different error:
+
+```text
+Failed to create an autoload, script
+'res://Source/EngineIntegration/DigitalInputCounts.cs' is not compiling.
+```
+
+Deleting `.godot` also removed the compiled C# assembly. [Build.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Build.ps1:37) runs the editor/import step before compilation, so the editor cannot load the C# autoload from a clean cache. This message doesn’t establish a C# source compilation error.
+
+The build script needs to prepare the editor’s C# assembly before importing. **No new EXE was exported.** [Latest log](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-09-29_08-34-48/Import.log:8)
