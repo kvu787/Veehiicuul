@@ -219,3 +219,37 @@ I’d fix both at the point where the bad input enters:
 2. **Empty vehicle list:** At the start of [CollisionManager](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionManager.cs:23), check `carSwitcher.AvailableCars.Count == 0` and throw an `ArgumentException` saying at least one vehicle is required. [TrackSwitcher](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/TrackSwitcher.cs:29) already checks this for the initial track; reuse that validation when switching tracks too.
 
 Then test lowercase and missing coordinate keys through the application’s actual JSON options, plus empty vehicle lists on initial load, track switch, and direct manager construction. The error should name the missing coordinates or vehicles, while a truly repeated vertex should still report a zero-length segment.
+
+## User
+
+okay, do these fixes
+
+## Assistant Commentary
+
+I’ll make the validation changes in the application and update the relevant checks. I’ll keep the source changes and the required conversation record in separate commits.
+
+## Assistant Commentary
+
+The source changes and focused checks are in place. The JSON check now rejects missing coordinates during parsing, and the empty-vehicle checks run before bounds are built. I’m compiling both the application and the verification harness now.
+
+## Assistant Commentary
+
+The focused input checks pass, and the application compiles with warnings treated as errors. I had to disable NuGet’s online audit for the build because this environment cannot reach its service; package restore otherwise completed. I’m now running the native harness and export path to check the manager behavior.
+
+## Assistant Commentary
+
+The native checks and release exports passed. I’m reviewing the final diff now and updating the review report so its original findings are clearly marked as resolved by these changes.
+
+## Assistant Commentary
+
+The full validation run passed: 46 console suites and 64,311 native checks. The application exported successfully in release mode. The source commit is complete; I’m recording this conversation in the separate commit required by the repository.
+
+## Assistant
+
+Implemented in commit `12a8c5f`.
+
+- [CoordinateXY.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/CoordinateXY.cs:15) now requires `X` and `Y` during JSON deserialization, so missing or lowercase keys fail before collision geometry is built.
+- [CollisionManager.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionManager.cs:26) names an empty vehicle list. [TrackSwitcher.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/TrackSwitcher.cs:37) validates a new track before replacing the current one.
+- The checks and review report were updated.
+
+Verification passed: 46 console suites (23,100,279 cases), 64,311 native checks, and the application’s release export. NuGet’s online audit was unavailable, so builds ran with `NuGetAudit=false`. The invalid track-switch path was not exercised with a malformed track file.
