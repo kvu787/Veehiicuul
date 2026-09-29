@@ -317,3 +317,23 @@ The relevant difference is where the event enters the system:
 - **Calling `PushInput` directly:** starts at the viewport’s input handlers, bypassing `WindowInput`. [Godot’s dispatch code](/C:/Users/k/Repository/External/Godot_4-7-2/scene/main/window.cpp:2020)
 
 Consequently, your `_Input` example can count that manually supplied Space press, provided the node receives it. Our current `DigitalInputCounts` would not count it because it listens at the earlier window stage.
+
+## User
+
+that seems like a useful feature. change DigitalInputCounts to use the _Input approach.
+
+## Assistant
+
+I’ll switch `DigitalInputCounts` to `_Input`, keep the existing API and frame clearing, and verify that it counts events sent through `Viewport.PushInput`.
+
+## Assistant
+
+The change passed all 78 Godot checks, including `PushInput`, pause behavior, and frame clearing. The release build also succeeds with the same three existing `InputManager` warnings. I’m committing the change and updated documentation.
+
+## Assistant
+
+Changed [DigitalInputCounts.cs](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/EngineIntegration/DigitalInputCounts.cs:61) to use `_Input`, including events injected through the root viewport’s `PushInput`. It now follows normal input consumption and pause behavior.
+
+All 78 runtime checks passed. Release build succeeds with three existing `InputManager` warnings.
+
+Committed as `a360727`.
