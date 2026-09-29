@@ -1,0 +1,18 @@
+Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: NVIDIA - NVIDIA GeForce RTX 5090 Laptop GPU
+
+Display resolution = (2560, 1440)
+Display refresh rate = 119.998 Hz
+Window resolution = (2560, 1440)
+Viewport resolution = (2560, 1440)
+Render scale = 1
+Window mode = Fullscreen
+Renderer = forward_plus
+Graphics driver = d3d12
+Graphics device = NVIDIA GeForce RTX 5090 Laptop GPU
+Graphics vendor = NVIDIA
+Graphics API version = 12_0
+Render thread model setting = 1
+Maximum FPS = 0
+VSync mode = Disabled
+Built track collision index: edges=800, cellSize=1.500000238418579, gridCells=37053, occupiedCells=8274, references=32134, expandedGrid=True
