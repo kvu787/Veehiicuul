@@ -388,3 +388,30 @@ Yes. These are the main ones for the current implementation:
 5. **The autoload belongs to the root viewport.** Input delivered only to another `SubViewport` or window does not automatically reach it. For the injection feature you requested, push events into the root viewport. [Viewport routing](https://docs.godotengine.org/en/stable/tutorials/inputs/inputevent.html)
 
 6. **It does not collect asynchronously while your game loop is blocked.** A long-running update delays input dispatch. Your [current main loop](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs:66) contains a 100 ms sleep; using `_Input` does not remove that latency.
+
+## User
+
+All of those are fine.
+
+Change DigitalInputCounts to ignore device ID
+
+## Assistant
+
+I’ll aggregate counts across devices, remove device IDs from the query methods, and update the documentation.
+
+## Assistant
+
+Gamepad buttons and touch contact indices now share counts across devices. All 78 runtime checks passed, including aggregation and frame clearing. The release build succeeds with the same three existing `InputManager` warnings.
+
+## Assistant
+
+Updated [DigitalInputCounts.cs](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/EngineIntegration/DigitalInputCounts.cs) to ignore device IDs and combine counts across devices.
+
+The affected queries are now:
+
+```csharp
+input.GetGamepadButtonDownCount(JoyButton.A);
+input.GetTouchDownCount(0); // Contact index
+```
+
+All 78 runtime checks passed. Release build succeeds with three existing `InputManager` warnings.
