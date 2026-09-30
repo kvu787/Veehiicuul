@@ -1,9 +1,0 @@
-{
-    "Affinity":  "19,20,21",
-    "Priority":  "normal",
-    "TimingProcessor":  21,
-    "Mask":  3670016,
-    "Description":  "cores=24; highest efficiency class on 8; others 16; affinity=19,20,21 on logical processor 21 (efficiency class 0)",
-    "PerformanceMask":  12598275,
-    "EfficiencyMask":  4178940
-}
