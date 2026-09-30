@@ -3,13 +3,45 @@ using System;
 
 namespace Veehiicuul_Godot_CSharp;
 
-/// <summary>Integrates the source game's planar acceleration, braking, and heading.</summary>
 public sealed class CarStateManager {
-    // Hardware deadzones vary by controller; the source chose 0.05 to allow for
-    // both controller noise and thumb precision. Apply this in car space, not
-    // before rotating input: forward/reverse/left/right have different strengths.
-    private const float AxialDeadzoneInner = 0.05f;
-    private const float AxialDeadzoneOuter = 0.95f;
+    /// <summary>
+    /// A "hardware deadzone" refers to deadzone processing done by the controller hardware prior to sending input data via USB or wireless connection to the PC.
+    /// A "game deadzone" refers to deadzone processing by the game software via Unity built-in code or this custom code.
+    ///
+    /// 1. For an 8BitDo Ultimate 2 Wireless controller:
+    ///    * This controller has hardware deadzones that are enabled by default.
+    ///    * The at-rest analog stick value is always reported as 0.0000152587890625 for both X and Y.
+    ///      * (I don't know why it is 0.0000152587890625 instead of just 0.0.)
+    ///    * Therefore, if the hardware deadzone is enabled and set high enough, then a minimum safe game inner deadzone is 0.0001, which is effectively 0.0.
+    ///    * However, if the hardware deadzone is disabled or enabled but set low enough, then you will need a high enough game inner deadzone.
+    ///
+    /// 2. For a Razer Wolverine Pro 8K PC controller:
+    ///    * Turn off "Prevent Double Deadzones".
+    ///    * Same as 1.
+    ///
+    /// 3. For a Gamesir G7 Pro 8K PC controller:
+    ///    * Same as 1.
+    ///
+    /// 4. For a standard Xbox Series controller:
+    ///    * This controller does not have hardware deadzones.
+    ///    * This means the at-rest analog stick value will bounce around from 0.00 to +/-0.02.
+    ///    * A minimum safe game inner deadzone is 0.03.
+    ///
+    /// 5. For a standard PlayStation 5 DualSense controller:
+    ///    * Same as 3.
+    ///
+    /// However, just because a controller's minimum safe game inner deadzone is N doesn't mean it should be set to N.
+    /// I have set the inner deadzone value to 0.05, which is well above all the minimums for the controllers I use,
+    /// because my thumb's precision is too janky below 0.05.
+    ///
+    /// In general, a player should start by setting the inner deadzone to the minimum for their controller.
+    /// Then, they should test it out and increase the deadzone in small increments (~0.01) until they have
+    /// good control of the thumbstick even at its smallest actuations.
+    /// </summary>
+    private const float AxialDeadzone_Inner_LeftRight = 0.10f;
+    private const float AxialDeadzone_Outer_LeftRight = 0.95f;
+    private const float AxialDeadzone_Inner_ForwardBackward = 0.05f;
+    private const float AxialDeadzone_Outer_ForwardBackward = 0.95f;
 
     private readonly CarSwitcher CarSwitcher;
     private readonly CameraYawManager CameraYawManager;
@@ -57,9 +89,9 @@ public sealed class CarStateManager {
             Vector3 accelerationInput_trackSpace = accelerationInput_xzPlane.Rotated(Vector3.Up, this.CameraYawManager.Yaw);
 
             Vector3 accelerationInput_carSpace = accelerationInput_trackSpace.Rotated(Vector3.Up, -1f * this.Rotation);
-            accelerationInput_carSpace.X = InputUtility.AxialDeadzone(accelerationInput_carSpace.X, AxialDeadzoneInner, AxialDeadzoneOuter);
+            accelerationInput_carSpace.X = InputUtility.AxialDeadzone(accelerationInput_carSpace.X, AxialDeadzone_Inner_LeftRight, AxialDeadzone_Outer_LeftRight);
             accelerationInput_carSpace.Y = 0f;
-            accelerationInput_carSpace.Z = InputUtility.AxialDeadzone(accelerationInput_carSpace.Z, AxialDeadzoneInner, AxialDeadzoneOuter);
+            accelerationInput_carSpace.Z = InputUtility.AxialDeadzone(accelerationInput_carSpace.Z, AxialDeadzone_Inner_ForwardBackward, AxialDeadzone_Outer_ForwardBackward);
             accelerationInput_carSpace = accelerationInput_carSpace.LimitLength(1f);
 
             if (accelerationInput_carSpace != Vector3.Zero) {
