@@ -6,7 +6,9 @@ namespace Veehiicuul_Godot_CSharp;
 public class Main {
     private static readonly string[] TrackNames = ["Ribeye"];
     private const int InitialTrackIndex = 0;
-    //private const double CarControlTimeoutSeconds = 0.35;
+
+    private const double CarControlTimeoutSeconds = 0.35;
+    private DateTime CarControlTimeoutStart = DateTime.MinValue;
 
     private InputManager InputManager = null!;
     private TrackSwitcher TrackSwitcher = null!;
@@ -18,7 +20,6 @@ public class Main {
     private CarSwitcher CarSwitcher = null!;
     private CarStateManager CarStateManager = null!;
     private CollisionManager CollisionManager = null!;
-    //private double CarControlTimeoutRemaining;
     private bool IsReadyDone;
     private static Node MainNode = null!;
 
@@ -73,16 +74,20 @@ public class Main {
         if (wasTrackSwitched) {
             this.InitializeTrack();
         } else {
-            bool wasCarSwitched = this.CarSwitcher.ReadInputAndSwitchCar();
-            if (wasCarSwitched || this.InputManager.ResetCar
+            if (this.CarSwitcher.ReadInputAndSwitchCar()
+                || this.InputManager.ResetCar
                 || this.CollisionManager.IsCarColliding(this.CarStateManager.Position, this.CarStateManager.Rotation)) {
+                this.CarControlTimeoutStart = DateTime.Now;
                 this.CarStateManager.Reset_PositionRotationVelocity();
             }
 
             this.CameraFollowManager.ReadInputAndUpdateFollowSetting();
             this.CameraZoomManager.ReadInputAndZoom(delta);
             this.CameraZoomManager.ReadInputAndResetZoom();
-            this.CarStateManager.ReadInputAndUpdateState(delta);
+
+            if (!this.InCarControlTimeout()) {
+                this.CarStateManager.ReadInputAndUpdateState(delta);
+            }
 
             this.CameraPanManager.Apply();
             this.CameraZoomManager.Apply();
@@ -133,5 +138,9 @@ public class Main {
         //if (switchedTrack) {
         //    GarbageCollectionUtility.ForceGarbageCollection();
         //}
+    }
+
+    private bool InCarControlTimeout() {
+        return (DateTime.Now - this.CarControlTimeoutStart).TotalSeconds <= CarControlTimeoutSeconds;
     }
 }
