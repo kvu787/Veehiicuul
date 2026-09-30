@@ -99,45 +99,6 @@ public class Main {
         if (wasTrackSwitched) {
             GarbageCollectionUtility.ForceGarbageCollection();
         }
-
-        //--------------------------------------------------
-
-        //this.InputManager.UpdateInputs();
-        //this.CarControlTimeoutRemaining = Math.Max(0.0, this.CarControlTimeoutRemaining - delta);
-        //if (this.InputManager.QuitGame) {
-        //    this.Quit(0);
-        //    return;
-        //}
-        //if (this.InputManager.ToggleFullscreen) {
-        //    Window window = this.MainNode.GetWindow();
-        //    window.Mode = window.Mode == Window.ModeEnum.Fullscreen
-        //        ? Window.ModeEnum.Windowed : Window.ModeEnum.Fullscreen;
-        //}
-        //bool switchedTrack = this.TrackSwitcher.ReadInputAndSwitchTracks();
-        //if (switchedTrack) {
-        //    this.InitializeTrack();
-        //} else {
-        //    // As in ZoomTracks, show the collision frame, then reset and skip car input.
-        //    bool resetCar = this.InputManager.ResetCar || this.CollisionManager.IsCarColliding();
-        //    if (resetCar) {
-        //        this.CarStateManager.Reset_PositionRotationVelocity();
-        //        this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
-        //    }
-        //    this.CameraController.ReadInputAndChangeCameraSettings(delta);
-        //    this.CameraPivotManager.ReadInputAndToggle();
-        //    if (this.CarSwitcher.ReadInputAndSwitchCar()) {
-        //        this.CarStateManager.Reset_PositionRotationVelocity();
-        //        this.CarControlTimeoutRemaining = CarControlTimeoutSeconds;
-        //    } else if (!resetCar && this.CarControlTimeoutRemaining <= 0.0) {
-        //        this.CarStateManager.ReadInputAndUpdateState(delta);
-        //    }
-        //}
-        //this.CarStateManager.ApplyStateToGameObject();
-        //this.CameraController.Update();
-        //this.CameraPivotManager.UpdateCameraPivot();
-        //if (switchedTrack) {
-        //    GarbageCollectionUtility.ForceGarbageCollection();
-        //}
     }
 
     private bool InCarControlTimeout() {
