@@ -13,7 +13,7 @@ Specifically, this UI setting is separate from the underlying actual setting:
 </ProfileSetting>
 ```
 
-That is **“Ultra Low Latency — CPL State”**, the NVIDIA Control Panel’s bookkeeping setting:
+That is **"Ultra Low Latency — CPL State"**, the NVIDIA Control Panel's bookkeeping setting:
 
 - `390467` = hexadecimal **`0x0005F543`**
 - Value **`2` = Ultra** (`0` = Off, `1` = On)
