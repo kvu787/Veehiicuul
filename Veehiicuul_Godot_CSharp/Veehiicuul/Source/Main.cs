@@ -97,9 +97,12 @@ public class Main {
             this.CameraFollowManager.ResetEvents();
         }
 
-        if (wasTrackSwitched) {
-            GarbageCollectionUtility.ForceGarbageCollection();
-        }
+        //if (wasTrackSwitched) {
+        //    GarbageCollectionUtility.ForceGarbageCollection();
+        //}
+
+        GC.Collect();
+        //GarbageCollectionUtility.ForceGarbageCollection();
     }
 
     private bool InCarControlTimeout() {
