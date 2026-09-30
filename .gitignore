@@ -1,5 +1,6 @@
 .vs/
 .godot/
+MyBuildOutput/
 /Build/
 
 CMakeUserPresets.json
