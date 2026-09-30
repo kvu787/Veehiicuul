@@ -1,5 +1,10 @@
 # Base template
 
+## Style
+
+For single and double quotes, only use the ASCII forms: ', "
+Never use these: “, ”, ‘, ’, etc.
+
 ## Development platform compatibility
 
 Support Windows 11 x64 as the only development platform.
