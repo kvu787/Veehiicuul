@@ -25,7 +25,7 @@ public sealed class CameraFollowManager {
         }
     }
 
-    public void EndFrame() {
+    public void ResetEvents() {
         this.FollowsCarLocationChanged = false;
     }
 }

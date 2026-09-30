@@ -32,10 +32,10 @@ public sealed class CameraZoomManager {
 
         this.CameraSize = this.CameraFollowManager.FollowsCarLocation ? this.DefaultFollowCameraSize : this.DefaultFixedCameraSize;
 
-        this.Apply();
+        this.ApplyInternalStateToCameraSize();
     }
 
-    public void Apply() {
+    public void ApplyInternalStateToCameraSize() {
         this.TrackObjects.Camera.Size = this.CameraSize;
     }
 

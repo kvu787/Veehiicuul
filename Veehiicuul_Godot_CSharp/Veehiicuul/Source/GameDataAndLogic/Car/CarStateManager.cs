@@ -75,16 +75,14 @@ public sealed class CarStateManager {
         this.StartingRotation = trackObjects.PlaceholderCarNode.Rotation.Y;
 
         this.Reset_PositionRotationVelocity();
-        this.Apply();
+        this.ApplyInternalStateToCarTransform();
     }
 
-    public void ReadInputAndUpdateState(double delta) {
-        // Neutral input must still integrate velocity so the car continues coasting.
+    public void ReadAccelerationAndBrakeInput_AndUpdateVelocity(double delta) {
         Vector2 accelerationInput = this.InputManager.AccelerationInput;
         CarDynamic carDynamic = this.CarSwitcher.CurrentCar.Dynamic;
 
         if (this.InputManager.Brake == 0f) {
-            // Stick-up is +Y; the camera pivot's forward direction is local -Z.
             Vector3 accelerationInput_xzPlane = new(accelerationInput.X, 0f, -accelerationInput.Y);
             Vector3 accelerationInput_trackSpace = accelerationInput_xzPlane.Rotated(Vector3.Up, this.CameraYawManager.Yaw);
 
@@ -95,7 +93,6 @@ public sealed class CarStateManager {
             accelerationInput_carSpace = accelerationInput_carSpace.LimitLength(1f);
 
             if (accelerationInput_carSpace != Vector3.Zero) {
-                // Imported cars use model front (+Z) and model right (-X).
                 Vector3 accelerationOutput_carSpace = new(
                     accelerationInput_carSpace.X * (accelerationInput_carSpace.X < 0f ? carDynamic.AccelerationMap.Right : carDynamic.AccelerationMap.Left),
                     0f,
@@ -134,7 +131,9 @@ public sealed class CarStateManager {
         if (this.Velocity != Vector3.Zero) {
             this.Rotation_ForMostRecentNonZeroVelocity = this.Velocity.Get2DRotation();
         }
+    }
 
+    public void ApplyVelocityToPosition(double delta) {
         this.Position += this.Velocity * (float)delta;
     }
 
@@ -144,7 +143,7 @@ public sealed class CarStateManager {
         this.Velocity = Vector3.Zero;
     }
 
-    public void Apply() {
+    public void ApplyInternalStateToCarTransform() {
         this.CarSwitcher.CurrentCar.Node!.Position = this.Position;
         this.CarSwitcher.CurrentCar.Node!.Rotation = new Vector3(0f, this.Rotation, 0f);
     }

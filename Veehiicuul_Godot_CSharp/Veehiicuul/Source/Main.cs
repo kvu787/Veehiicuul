@@ -86,14 +86,15 @@ public class Main {
             this.CameraZoomManager.ReadInputAndResetZoom();
 
             if (!this.InCarControlTimeout()) {
-                this.CarStateManager.ReadInputAndUpdateState(delta);
+                this.CarStateManager.ReadAccelerationAndBrakeInput_AndUpdateVelocity(delta);
+                this.CarStateManager.ApplyVelocityToPosition(delta);
             }
 
-            this.CameraPanManager.Apply();
-            this.CameraZoomManager.Apply();
-            this.CarStateManager.Apply();
+            this.CameraPanManager.ApplyInternalStateToCameraPosition();
+            this.CameraZoomManager.ApplyInternalStateToCameraSize();
+            this.CarStateManager.ApplyInternalStateToCarTransform();
 
-            this.CameraFollowManager.EndFrame();
+            this.CameraFollowManager.ResetEvents();
         }
 
         if (wasTrackSwitched) {
