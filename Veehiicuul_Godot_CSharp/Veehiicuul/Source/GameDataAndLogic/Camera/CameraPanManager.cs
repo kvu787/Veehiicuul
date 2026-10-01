@@ -4,13 +4,13 @@ using System;
 namespace Veehiicuul_Godot_CSharp;
 
 public sealed class CameraPanManager {
-    private readonly TrackObjects TrackObjects;
+    private readonly TrackNodes TrackObjects;
     private readonly CameraFollowManager CameraFollowManager;
     private readonly CarStateManager CarStateManager;
 
     private readonly Vector3 OriginalCameraPosition;
 
-    public CameraPanManager(TrackObjects trackObjects, CameraFollowManager cameraFollowManager, CarStateManager carStateManager) {
+    public CameraPanManager(TrackNodes trackObjects, CameraFollowManager cameraFollowManager, CarStateManager carStateManager) {
         ArgumentNullException.ThrowIfNull(trackObjects);
         ArgumentNullException.ThrowIfNull(cameraFollowManager);
         ArgumentNullException.ThrowIfNull(carStateManager);

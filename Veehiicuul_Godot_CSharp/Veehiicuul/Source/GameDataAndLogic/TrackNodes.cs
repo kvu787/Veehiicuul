@@ -3,14 +3,14 @@ using System;
 
 namespace Veehiicuul_Godot_CSharp;
 
-public sealed class TrackObjects {
+public sealed class TrackNodes {
     public Node3D PlaceholderCarNode { get; }
     public Node3D CameraPanAndYaw { get; }
     public Node3D CameraYawOffset { get; }
     public Node3D CameraPanOffsetAndPitch { get; }
     public Camera3D Camera { get; }
 
-    public TrackObjects(TrackSwitcher trackSwitcher) {
+    public TrackNodes(TrackSwitcher trackSwitcher) {
         Node3D model = trackSwitcher.CurrentTrackScene.GetNode<Node3D>("Model") ?? throw new InvalidOperationException("Couldn't find a node named 'Model'");
         if (model.Transform != Transform3D.Identity) {
             throw new InvalidOperationException("Model must have an identity local transform (zero position and rotation, unit scale).");

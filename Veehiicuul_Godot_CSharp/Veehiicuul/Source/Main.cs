@@ -13,7 +13,7 @@ public class Main {
     private InputManager InputManager = null!;
     private TrackSwitcher TrackSwitcher = null!;
     private CameraFollowManager CameraFollowManager = null!;
-    private TrackObjects TrackObjects = null!;
+    private TrackNodes TrackObjects = null!;
     private CameraZoomManager CameraZoomManager = null!;
     private CameraPanManager CameraPanManager = null!;
     private CameraYawManager CameraYawManager = null!;
@@ -49,7 +49,7 @@ public class Main {
 
     private void InitializeTrack() {
         this.CameraFollowManager = new CameraFollowManager(this.InputManager, this.TrackSwitcher);
-        this.TrackObjects = new TrackObjects(this.TrackSwitcher);
+        this.TrackObjects = new TrackNodes(this.TrackSwitcher);
         this.CameraYawManager = new CameraYawManager(this.TrackObjects);
         this.CameraZoomManager = new CameraZoomManager(this.TrackObjects, this.InputManager, this.CameraFollowManager, this.TrackSwitcher);
         this.CarSwitcher = new CarSwitcher(this.InputManager, this.TrackSwitcher);

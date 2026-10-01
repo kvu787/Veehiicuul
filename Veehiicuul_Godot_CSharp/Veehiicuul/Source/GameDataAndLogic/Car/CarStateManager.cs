@@ -61,7 +61,7 @@ public sealed class CarStateManager {
     /// <summary>Car position relative to the track root; Model has an identity local transform.</summary>
     public Vector3 Position { get; private set; }
 
-    public CarStateManager(CarSwitcher carSwitcher, CameraYawManager cameraYawManager, InputManager inputManager, TrackObjects trackObjects) {
+    public CarStateManager(CarSwitcher carSwitcher, CameraYawManager cameraYawManager, InputManager inputManager, TrackNodes trackObjects) {
         ArgumentNullException.ThrowIfNull(trackObjects);
         ArgumentNullException.ThrowIfNull(cameraYawManager);
         ArgumentNullException.ThrowIfNull(carSwitcher);

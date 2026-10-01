@@ -8,7 +8,7 @@ public sealed class CameraZoomManager {
     private const float MaxOrthographicCameraSize = 281.25f;
     private const float CameraZoomSpeed = 50f;
 
-    private readonly TrackObjects TrackObjects;
+    private readonly TrackNodes TrackObjects;
     private readonly InputManager InputManager;
     private readonly CameraFollowManager CameraFollowManager;
 
@@ -17,7 +17,7 @@ public sealed class CameraZoomManager {
 
     public float CameraSize { get; private set; }
 
-    public CameraZoomManager(TrackObjects trackObjects, InputManager inputManager, CameraFollowManager cameraFollowManager, TrackSwitcher trackSwitcher) {
+    public CameraZoomManager(TrackNodes trackObjects, InputManager inputManager, CameraFollowManager cameraFollowManager, TrackSwitcher trackSwitcher) {
         ArgumentNullException.ThrowIfNull(trackObjects);
         ArgumentNullException.ThrowIfNull(inputManager);
         ArgumentNullException.ThrowIfNull(cameraFollowManager);
