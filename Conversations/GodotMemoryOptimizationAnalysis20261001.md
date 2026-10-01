@@ -398,3 +398,78 @@ The remaining ordinary frame code looks sound for managed memory: `Vector2`, `Ve
 The input dictionaries retain capacity when cleared. Pre-sizing them once could remove first-use or capacity-growth allocations during driving, but would not remove recurring digital-event wrapper allocations. Likewise, [render-graph scratch storage](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/rendering_device_graph.cpp:1757) and the [DX12 command-list array](C:/Users/k/Repository/External/Godot_4-7-2/drivers/d3d12/rendering_device_driver_d3d12.cpp:2479) retain storage; their `clear`/`resize` operations should not be counted as fresh heap allocations every frame.
 
 No application or engine files were changed. This analysis is recorded and committed in [the conversation log](C:/Users/k/Repository/Veehiicuul/Conversations/GodotMemoryOptimizationAnalysis20261001.md).
+
+## User
+
+elaborate on this:
+Digital input delivery creates managed wrappers; native action polling can avoid them.
+[DigitalInputCounts._ShortcutInput (line 62)](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/DigitalInputCounts.cs:62) receives keyboard and joypad-button events. Their conversion creates managed event objects, temporary class-name representations, and disposal-tracking objects through [ScriptManagerBridge (line 93)](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/ScriptManagerBridge.cs:93) and [DisposablesTracker (line 68)](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/DisposablesTracker.cs:68).
+Filtering releases, keyboard repeat, or irrelevant buttons inside the C# callback happens after that conversion.
+Your callback already benefits from [Godot's shortcut filter (line 3583)](C:/Users/k/Repository/External/Godot_4-7-2/scene/main/viewport.cpp:3583): joystick motion and mouse motion never reach it. Therefore, this managed pressure is tied to digital events; holding an analog stick does not create managed event wrappers.
+A useful application change would be native InputMap actions queried through Input.IsActionJustPressed, with action StringName objects cached once, and the managed event callback removed or disabled. In this source, [the default nonlegacy behavior (line 435)](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:435) preserves a press followed by release within the same frame.
+Action transitions differ from your raw down-event counts, especially when one controller holds a button while another presses it. That behavior needs to be preserved or intentionally changed. Plain held-state polling would also lose short presses between frames.
+
+
+## Assistant (commentary)
+
+I'll trace an input event through the native and C# paths, then explain what action polling would save and how its behavior differs from your current counters.
+
+
+## Assistant (commentary)
+
+The key distinction is event rate versus frame rate: your analog polling already avoids C# event objects. The savings apply to keyboard and button events, and require removing or disabling the managed shortcut callback. I also confirmed that your current consumers use only "pressed this frame" booleans, although overlapping presses from different controllers would still behave differently.
+
+
+## Assistant (final)
+
+**The opportunity is to keep digital input events on the native side and let C# query their results.** The allocation savings scale with keyboard/button event traffic, so the benefit during mostly analog driving is likely modest.
+
+Godot first creates a native input event. To pass that event to your C# `_ShortcutInput` method, it needs a managed object representing it. For a newly wrapped event, [ScriptManagerBridge](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/ScriptManagerBridge.cs:93) creates:
+
+- An `InputEventKey` or `InputEventJoypadButton` C# wrapper around the native event.
+- A temporary managed `StringName` representing the event's native class name.
+- A managed string containing that class name, used to select the wrapper constructor.
+- Weak-reference objects and tracking registrations for the event wrapper and temporary `StringName`, through [DisposablesTracker](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/DisposablesTracker.cs:68).
+
+This happens when the native event first needs a managed representation. [An existing managed wrapper is reused](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/NativeInterop/InteropUtils.cs:35), so multiple C# listeners receiving the same event do not necessarily create separate wrappers.
+
+By the time [your switch statement](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/DigitalInputCounts.cs:62) checks `Pressed`, `Echo`, or the button code, these allocations have already happened. Returning immediately for releases or keyboard repeat cannot avoid them. A normal press followed by release can therefore cause this wrapper work twice, even though your counters use only the press.
+
+Your counter dictionaries reuse their storage when cleared. Replacing them with arrays would leave the event-conversion allocations in place.
+
+With InputMap actions, Godot instead updates the action's state while processing the native event. C# can subsequently ask whether the action became pressed during the current frame. [The native query](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:419) looks up stored state, compares frame numbers, and returns a boolean; it does not return an event object.
+
+For example, after defining a `ResetCar` action mapped to the X button, the relevant parts of `InputManager` could become:
+
+```csharp
+private static readonly StringName ResetCarAction = new("ResetCar");
+
+public void UpdateInputs() {
+    this.ResetCar = Input.IsActionJustPressed(ResetCarAction);
+    // Other existing input queries...
+}
+```
+
+The action and its bindings should be configured once, through project configuration or startup code. To obtain the allocation savings, migrate the other digital queries too, then remove or disable `_ShortcutInput` and remove the manual `ClearFrameCounts` dependency. Keeping the callback enabled would continue creating event wrappers, even if its body ignored every event. Other managed input listeners receiving those events could also keep that allocation path active.
+
+**Caching the action name matters.** Writing `Input.IsActionJustPressed("ResetCar")` every frame implicitly converts the string to a `StringName`. [That conversion constructs a new wrapper](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/StringName.cs:81), with disposal tracking. Although the string literal itself is reused, the conversion would introduce recurring allocations. The cached field avoids that. Without caching, querying several actions every frame could create more managed garbage than the occasional digital events you currently receive.
+
+The behavior comparison, assuming the action has the same bindings and device scope, is:
+
+| Situation                                      | Current counter-based query | Native `IsActionJustPressed`  |
+| ---------------------------------------------- | --------------------------- | ----------------------------- |
+| First press during this frame                  | True                        | True                          |
+| Held since a previous frame, no new press      | False                       | False                         |
+| Press and release before the next frame update | True                        | True with the default setting |
+| Two complete presses within one frame          | True; underlying count is 2 | True; no count is provided    |
+| Controller B presses while A still holds       | True                        | False                         |
+
+The short-press case works because Godot records the frame of the press. With the default `legacy_just_pressed_behavior = false`, [the query does not require the action to remain held](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:435). Merely sampling held state and comparing it with the previous frame would miss a press and release occurring between samples. `IsActionJustPressed` also does not consume the result: repeated queries in that frame can return true.
+
+The overlapping-controller case differs because Godot [combines held state across devices and bindings](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1846), then [records a press only when the combined state changes from released to pressed](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1030). If controller A already holds X, controller B pressing X leaves that combined state unchanged. Your counter records B's new down event independently.
+
+All current [InputManager consumers](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/InputManager.cs:33) use booleans, so losing the exact numeric count would not affect their current logic. To match their existing all-controller scope, action bindings would need the [all-devices setting, `Device = -1`](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input_map.h:47). Preserving independent overlapping-controller presses would additionally require device-specific actions whose results are combined, or another event-counting design.
+
+For your active-driving workload, this is an event-dependent cleanup opportunity. [The native shortcut filter](C:/Users/k/Repository/External/Godot_4-7-2/scene/main/viewport.cpp:3583) already excludes joystick-axis and mouse-motion events. Frames containing only analog input therefore avoid these particular managed allocations already. Action polling would remove the additional managed work caused by digital events; native event creation, queuing, and action processing would continue.
+
+No application or engine code was changed, built, or run. The explanation is recorded in [the conversation log](C:/Users/k/Repository/Veehiicuul/Conversations/GodotMemoryOptimizationAnalysis20261001.md).
