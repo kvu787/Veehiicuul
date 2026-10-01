@@ -280,3 +280,121 @@ Other suspected allocation sites are already fine: `Vector2`, `Vector3`, `Quater
 I found no definite track-node leak in the inspected ownership paths: freeing the track recursively deletes its gameplay children, and the owned `PackedScene` and `FileAccess` wrappers already use `using`. The project also has no imported images or animations in Ribeye, so texture or animation optimizations offer little here.
 
 No application or engine files were changed. The conversation is recorded and committed in [GodotMemoryOptimizationAnalysis20261001.md](C:/Users/k/Repository/Veehiicuul/Conversations/GodotMemoryOptimizationAnalysis20261001.md).
+
+## User
+
+<external_codex_apps_open_page>{"page_id":null}</external_codex_apps_open_page>
+
+## User
+
+perform a comprehensive analysis of "C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp" and focus on per-frame memory allocations during active driving time which doesn't include switching tracks or switching car.
+use the godot engine source code at "C:\Users\k\Repository\External\Godot_4-7-2".
+this is a source code only level analysis. don't build or run the engine, editor, or game, etc
+
+
+## Assistant (commentary)
+
+I'll trace the active-driving frame path and the Godot code it reaches, excluding track and car switching. I'll distinguish managed allocations from native engine allocations and keep the analysis entirely at the source level.
+
+## Assistant (commentary)
+
+The current driving loop no longer forces garbage collection every frame, and its movement and camera calculations use value types. The remaining allocation risks are concentrated in input event delivery, an exceptional collision fallback, and native engine work. I'm checking those paths against the supplied Godot source to separate recurring allocations from buffers that simply grow during warmup.
+
+
+## Assistant (commentary)
+
+I found a definite native allocation in Godot's input dispatch: it shares the node list, then requests a writable pointer, which immediately copies the buffer. The renderer also creates small temporary arrays each frame. These are separate from managed GC pressure, so removing C# allocations alone would not eliminate all driving-time allocation churn.
+
+
+## Assistant (commentary)
+
+The managed input callback already excludes joystick motion, so analog steering does not create C# event wrappers. Digital button and key events still do. Godot's native action polling looks like a viable way to remove those wrappers, with care around the current cross-device counting behavior. The collision code's allocating fallback is conditional; its normal and Int128 paths reuse existing storage.
+
+
+## Assistant (commentary)
+
+The review is complete. The strongest recurring opportunities are native buffer copies and temporary input/rendering storage. The C# driving calculations already avoid routine heap allocations; their remaining opportunities concern digital input delivery, first-use dictionary growth, and the conditional collision fallback. I'm checking the source references and recording this analysis as required by AGENTS.md.
+
+
+## Assistant (final)
+
+The current code is already close to allocation-free on the managed heap during ordinary analog driving. **The clearest recurring allocation opportunities are in Godot's native input and rendering paths.** Managed allocations remain on digital input events and one conditional collision path.
+
+I reviewed the current application at `816357f` against the supplied Godot 4.7.2 source at `ed1daf0`. This includes steering, braking, collisions, resets, camera follow and zoom, and engine input/rendering work. Track and car switching are excluded. Nothing was built or run; allocation frequency and performance impact are not measured.
+
+The earlier per-frame GC finding has been addressed: [Main.Process](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs:102) now forces collection only after a track or car switch.
+
+1. **Unnecessary native buffer copies: concrete, small engine optimization.**
+
+   Godot has two reachable places that share a reference-counted vector and immediately request a writable pointer:
+
+   - The [rendering frustum constructor](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_scene_cull.h:182) assigns `planes = p_planes`, then calls `planes.ptrw()`.
+   - [Input group dispatch](C:/Users/k/Repository/External/Godot_4-7-2/scene/main/scene_tree.cpp:1448) assigns `nodes_copy = g.nodes`, then calls `nodes_copy.ptrw()`.
+
+   [CowData::ptrw](C:/Users/k/Repository/External/Godot_4-7-2/core/templates/cowdata.h:164) invokes copy-on-write. Because both buffers are shared at that point, it allocates and copies immediately, even though these callers only read the elements.
+
+   The frustum copy occurs during scene rendering; the input copy occurs per nonempty input-group dispatch, including delivery to `DigitalInputCounts`. Using `planes.ptr()` and `Node *const *gr_nodes = nodes_copy.ptr()` would remove these unnecessary copies while preserving the snapshots. These are engine changes, with native heap benefits.
+
+2. **Other recurring renderer allocations: reuse small CPU buffers.**
+
+   The rendering path creates several fresh vectors during driving:
+
+   - [Projection::get_projection_planes](C:/Users/k/Repository/External/Godot_4-7-2/core/math/projection.cpp:469) allocates a six-plane vector. Both [scene culling](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_scene_cull.cpp:3352) and the enabled [light culler](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/rendering_light_culler.cpp:632) request one. The frustum also constructs a new plane-sign vector.
+   - Scene culling creates a fresh `directional_lights` vector and appends the track's visible Sunlight.
+   - [Forward+ render-pass setup](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/forward_clustered/render_forward_clustered.cpp:3483) constructs a 16-entry lightmap/shadowmask RID vector, even when all entries are default textures. Setup runs for the opaque and transparent passes, including when the transparent render list is empty.
+   - The [opaque pass](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/forward_clustered/render_forward_clustered.cpp:2206) constructs a temporary clear-color vector when clearing the framebuffer.
+
+   Fixed storage for the six-plane frustum and its signs, retained light-list storage, and a cached default lightmap RID array could remove this recurring native allocation work. [Uniform-set cache hits](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/uniform_set_cache_rd.h:185) already reuse GPU uniform sets; the temporary CPU arrays are still constructed before that lookup.
+
+   These buffers are small. Their existence is clear from the source; whether removing them noticeably improves frame times remains unknown.
+
+3. **Changing controller axes allocate native events and queue nodes.**
+
+   The Windows SDL path passes axis changes to `Input::joy_axis`. Identical values [return early](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1695), but a changed value reaches [_axis_event](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1836), which instantiates an `InputEventJoypadMotion`.
+
+   With the current default accumulated-input behavior, [parse_input_event](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1549) also appends it to a linked list. Joypad motion does not implement accumulation, so these events each get a newly allocated [list element](C:/Users/k/Repository/External/Godot_4-7-2/core/templates/list.h:295), freed during flushing.
+
+   Consequently, allocation follows delivered axis changes, potentially several per frame. Your C# deadzones run afterward and cannot reduce this native event creation.
+
+   There are two possible approaches:
+
+   - A project-side option is `Input.UseAccumulatedInput = false`. With agile flushing left at its current default of false, this source dispatches immediately and avoids buffered-list nodes. It still creates the input events, changes dispatch timing, and disables mouse-motion accumulation, so it needs a deliberate behavior tradeoff.
+   - An engine-side retained queue or ring buffer could reduce queue allocations while retaining buffering behavior. Coalescing analog changes before constructing events would require additional care around action threshold crossings and event consumers.
+
+   There is another conditional Windows allocation: [process_raw_input](C:/Users/k/Repository/External/Godot_4-7-2/platform/windows/display_server_windows.cpp:4392) uses `new BYTE[dw_size]` and `delete[]` for every pending raw mouse/keyboard batch. A retained, suitably aligned buffer could avoid repeated allocation. This is not a constant cost of controller-only driving.
+
+4. **Digital input delivery creates managed wrappers; native action polling can avoid them.**
+
+   [DigitalInputCounts._ShortcutInput](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/DigitalInputCounts.cs:62) receives keyboard and joypad-button events. Their conversion creates managed event objects, temporary class-name representations, and disposal-tracking objects through [ScriptManagerBridge](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/ScriptManagerBridge.cs:93) and [DisposablesTracker](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/DisposablesTracker.cs:68).
+
+   Filtering releases, keyboard repeat, or irrelevant buttons inside the C# callback happens after that conversion.
+
+   Your callback already benefits from [Godot's shortcut filter](C:/Users/k/Repository/External/Godot_4-7-2/scene/main/viewport.cpp:3583): joystick motion and mouse motion never reach it. Therefore, this managed pressure is tied to digital events; holding an analog stick does not create managed event wrappers.
+
+   A useful application change would be native InputMap actions queried through `Input.IsActionJustPressed`, with action `StringName` objects cached once, and the managed event callback removed or disabled. In this source, [the default nonlegacy behavior](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:435) preserves a press followed by release within the same frame.
+
+   Action transitions differ from your raw down-event counts, especially when one controller holds a button while another presses it. That behavior needs to be preserved or intentionally changed. Plain held-state polling would also lose short presses between frames.
+
+5. **Collision detection has a conditional managed allocation fallback.**
+
+   The grid lookup, rectangle transformation, indexed loops, BVH traversal, and ordinary predicate calculations reuse arrays and value types. The unchanged-pose cache also avoids repeating stationary queries.
+
+   However, [ExactOrientationSign](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs:1228) falls back from `Int128` to `BigInteger` when the coordinate exponent spread exceeds its bounded conversion limit. That path allocates backing arrays for wide arithmetic.
+
+   The stored Ribeye coordinates span only 12 raw dyadic exponent steps, within the existing 37-step limit. Transformed vehicle corners must also be considered, so that observation does not prove the allocating fallback is unreachable.
+
+   This is a lower-priority opportunity unless strict allocation-free collision queries are required. Separate X/Y exponent normalization and significand-width checks could expand the existing `Int128` path. A fixed-size exact arithmetic implementation could eliminate the fallback entirely, but requires careful correctness work.
+
+6. **Repeated transform and camera writes offer CPU savings, without a demonstrated steady heap saving.**
+
+   [CarStateManager](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs:146), [CameraPanManager](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Camera/CameraPanManager.cs:27), and [CameraZoomManager](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Camera/CameraZoomManager.cs:38) write their values every frame, including unchanged yaw, fixed-camera position, and zoom.
+
+   Godot's position/rotation setters propagate transform dirtiness without equality guards, and `Camera3D.set_size` forces a projection update. Caching the last applied values would avoid redundant interop calls and engine work.
+
+   The main-thread transform notification list is intrusive, and the renderer checks unchanged instance transforms. I would classify this as a CPU optimization rather than claim that every setter allocates.
+
+The remaining ordinary frame code looks sound for managed memory: `Vector2`, `Vector3`, nullable yaw, collision structs, `Math.SinCos` tuples, and timeout arithmetic use value types. [Frame dispatch](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24) uses a stack-only argument wrapper, and generated native calls use `stackalloc`. Node references and collision footprints are cached; the driving path contains no resource loading, LINQ materialization, or routine string formatting.
+
+The input dictionaries retain capacity when cleared. Pre-sizing them once could remove first-use or capacity-growth allocations during driving, but would not remove recurring digital-event wrapper allocations. Likewise, [render-graph scratch storage](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/rendering_device_graph.cpp:1757) and the [DX12 command-list array](C:/Users/k/Repository/External/Godot_4-7-2/drivers/d3d12/rendering_device_driver_d3d12.cpp:2479) retain storage; their `clear`/`resize` operations should not be counted as fresh heap allocations every frame.
+
+No application or engine files were changed. This analysis is recorded and committed in [the conversation log](C:/Users/k/Repository/Veehiicuul/Conversations/GodotMemoryOptimizationAnalysis20261001.md).
