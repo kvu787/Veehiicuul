@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dwccqg1ap4gek"
-path="res://.godot/imported/Ribeye_Scene.glb-c0a6bd18b657be1b00acc8b026a1b983.scn"
+uid="uid://dtddm7u8ohviy"
+path="res://.godot/imported/Ribeye_Model.glb-d7544e4a92c4d8bffe93f1680faa00e5.scn"
 
 [deps]
 
-source_file="res://Tracks/Ribeye/Ribeye_Scene.glb"
-dest_files=["res://.godot/imported/Ribeye_Scene.glb-c0a6bd18b657be1b00acc8b026a1b983.scn"]
+source_file="res://Tracks/Ribeye/Ribeye_Model.glb"
+dest_files=["res://.godot/imported/Ribeye_Model.glb-d7544e4a92c4d8bffe93f1680faa00e5.scn"]
 
 [params]
 
