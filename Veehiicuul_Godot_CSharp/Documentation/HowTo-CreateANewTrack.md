@@ -1,8 +1,8 @@
-Veehiicuul ------------
+# Blender-side steps
 
-Blender-side
-
-- Copy/paste the latest TrackBuilder.py into TrackTemplate
+- Update scripts in TrackTemplate
+  - Copy/paste the latest TrackBuilder.py
+  - Update validate and export scripts
 - Copy/paste TrackTemplate.blend to a new file
 - In the Outliner, exclude these collections:
   - ColorBlocks
@@ -12,7 +12,7 @@ Blender-side
 - Add decorative objects as desired
   - Don't modify anything in the `*_Defaults` collections other than moving their positions
   - Instead, duplicate (not copy) them into your track
-  - Exclude the `*_Defaults` collections when you're done
+  - When you're done, exclude the `*_Defaults` collections
 - Before exporting, do this:
   - Purge unused data
   - Exclude these collections:
@@ -20,9 +20,9 @@ Blender-side
     - `*_Defaults`
   - Run ValidateTrackScene.py and fix any issues
 - To export, run ExportToVeehiicuul.py
-  - This should create a GLB model file and a JSON file with collision data
+  - This should create a new folder with the track name that contains a GLB model file and a JSON file with collision data
 
-Godot-side
+# Godot-side steps
 
 - Open the import settings for the GLB and set this import script: `Source\Editor\DisableSpecularImport.gd`
 - Reimport
@@ -49,56 +49,6 @@ Godot-side
   - Clip:
     - Camera.Near
     - Camera.Far
-
-Runtime positions and yaw used by the car and camera pivot are relative to the
-track root. All C# angles use native Godot radians; positive Y rotation turns +Z
-toward +X. The camera looks along its local -Z. See [Planar coordinates](PlanarCoordinates.md)
-for the collision coordinate conversion.
-
-ZoomTracks ------------
-
-# How to create a new track
-
-- Copy/paste TrackTemplate.blend to a new file
-- In the Outliner, exclude these collections:
-  * ColorBlocks
-  * Templates
-- You probably want to exclude Checkpoints/Defaults because checkpoint functionality isn't implemented yet.
-- Don't modify anything in Decorations/Defaults other than moving their positions
-  - Instead duplicate them into your track
-  - Exclude Decorations/Defaults when you're done
-- Copy/paste the latest TrackBuilder.py into a script pane
-- After finishing your input track outlines, run TrackBuilder
-- Adjust vehicle road, placeholder car, and checkered line objects as desired
-- Add decorative objects as desired
-- Before exporting, do this:
-  - Exclude these collections:
-    - TrackBuilder/Input
-    - Checkpoints/Defaults
-    - Decorations/Defaults
-  - Run ValidateTrackScene.py and fix any issues
-- To export, run ExportToZoomTracks.py
-  - This should generate an FBX model file and a JSON file with collision data
-- Open the ZoomTracks project in Unity Editor
-- In the Scenes folder, copy/paste a track scene.
-  - Rename it to the name of the new track
-- Click the track FBX file in the Project pane, view it in the Inspector, and check "Bake Axis Conversion, and click "Apply"
-- In the new track scene, delete the old track FBX object and drag/drop the new track FBX object
-  - Set its transform.position to (0,0,0)
-- Adjust the fixed camera settings by changing these:
-  - CameraPanAndYaw.Position.XZ
-  - CameraPanAndYaw.Rotation.
-  - Camera.Size
-  - Optional: Minimize clipping planes
-- Click "Build Profiles > Scene List > Add Open Scenes"
-- Edit these in the C#:
-  - ZoomTracks.Main.TrackNames
-  - ZoomTracks.Main.InitialTrackIndex
-- Copy/paste a track settings JSON file, rename it to the name of the new track
-  - Adjust settings as desired
-- Switch back to Unity Editor and press Ctrl+R
-- Run the game in Unity Editor and check that everything works
-- Do an export to update the EXE
 
 # Things to check in the track Blender file
 
