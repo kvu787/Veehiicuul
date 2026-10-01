@@ -173,7 +173,7 @@ def main() -> None:
     export_collider_data(TRACKS_FOLDER_PATH / track_name / f"{track_name}_ColliderData.json")
 
     result = bpy.ops.export_scene.gltf(
-        filepath=str(TRACKS_FOLDER_PATH / track_name / f"{track_name}_Scene.glb"),
+        filepath=str(TRACKS_FOLDER_PATH / track_name / f"{track_name}_Model.glb"),
         export_format="GLB",
         export_copyright="",
         will_save_settings=False,
