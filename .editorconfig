@@ -17,6 +17,11 @@ indent_size = 4
 indent_style = space
 indent_size = 2
 
+# This section should be the same for all projects.
+[*.gd]
+indent_style = tab
+indent_size = 4
+
 # This section should be the same for all Godot and Unity projects.
 [*.cs]
 
