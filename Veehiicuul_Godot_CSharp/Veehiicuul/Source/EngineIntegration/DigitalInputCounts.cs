@@ -15,7 +15,6 @@ public partial class DigitalInputCounts : Node {
     private readonly Dictionary<Key, int> KeyCounts = [];
     private readonly Dictionary<MouseButton, int> MouseButtonCounts = [];
     private readonly Dictionary<JoyButton, int> GamepadButtonCounts = [];
-    private readonly Dictionary<int, int> TouchCounts = [];
 
     /// <summary>The autoload instance, available before the main scene enters the tree.</summary>
     private static DigitalInputCounts Instance => CurrentInstance
@@ -60,11 +59,6 @@ public partial class DigitalInputCounts : Node {
         return GetGamepadButtonDownCount(button) > 0;
     }
 
-    /// <summary>Touch-down events for a contact index across all devices.</summary>
-    public static int GetTouchDownCount(int index) {
-        return Instance.TouchCounts.GetValueOrDefault(index);
-    }
-
     public override void _ShortcutInput(InputEvent @event) {
         switch (@event) {
         case InputEventKey { Pressed: true, Echo: false } key:
@@ -97,6 +91,5 @@ public partial class DigitalInputCounts : Node {
         this.KeyCounts.Clear();
         this.MouseButtonCounts.Clear();
         this.GamepadButtonCounts.Clear();
-        this.TouchCounts.Clear();
     }
 }
