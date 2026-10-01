@@ -65,7 +65,7 @@ public partial class DigitalInputCounts : Node {
         return Instance.TouchCounts.GetValueOrDefault(index);
     }
 
-    public override void _Input(InputEvent @event) {
+    public override void _ShortcutInput(InputEvent @event) {
         switch (@event) {
         case InputEventKey { Pressed: true, Echo: false } key:
             // Synthetic events can supply only one of these codes; zero means unspecified.
@@ -78,9 +78,6 @@ public partial class DigitalInputCounts : Node {
             break;
         case InputEventJoypadButton { Pressed: true } gamepadButton:
             Increment(this.GamepadButtonCounts, gamepadButton.ButtonIndex);
-            break;
-        case InputEventScreenTouch { Pressed: true, Canceled: false } touch:
-            Increment(this.TouchCounts, touch.Index);
             break;
         default:
             break;
