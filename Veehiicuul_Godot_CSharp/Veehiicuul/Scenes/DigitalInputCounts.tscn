@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://buwma85swf3td"]
 
-[ext_resource type="Script" uid="uid://dyru2i16qamc0" path="res://Source/EngineIntegration/DigitalInputCounts.cs" id="1"]
+[ext_resource type="Script" uid="uid://dyru2i16qamc0" path="res://Source/DigitalInputCounts.cs" id="1"]
 
 [node name="DigitalInputCounts" type="Node" unique_id=1366221244]
 script = ExtResource("1")
