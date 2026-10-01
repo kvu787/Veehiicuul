@@ -3,7 +3,7 @@
 - Update scripts in TrackTemplate
   - Copy/paste the latest TrackBuilder.py
   - Update validate and export scripts
-- Copy/paste TrackTemplate.blend to a new file
+- Copy/paste TrackTemplate.blend to a new file in `Blender/Tracks`
 - In the Outliner, exclude these collections:
   - ColorBlocks
   - Templates
@@ -27,6 +27,7 @@
 - Open the import settings for the GLB and set this import script: `Source\Editor\DisableSpecularImport.gd`
 - Reimport
 - Create a new scene with the same name as the track
+  - Use the name `$"{TrackName}_Scene"`
 - Copy/paste an existing track or its nodes to get these nodes:
   - CameraPanAndYaw
   - Sunlight
@@ -49,6 +50,9 @@
   - Clip:
     - Camera.Near
     - Camera.Far
+- Update C#:
+  - Veehiicuul_Godot_CSharp.Main.TrackNames
+  - Veehiicuul_Godot_CSharp.Main.InitialTrackIndex
 
 # Things to check in the track Blender file
 
