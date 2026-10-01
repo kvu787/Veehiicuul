@@ -71,10 +71,12 @@ public class Main {
         }
 
         bool wasTrackSwitched = this.TrackSwitcher.ReadInputAndSwitchTracks();
+        bool wasCarSwitched = false;
         if (wasTrackSwitched) {
             this.InitializeTrack();
         } else {
-            if (this.CarSwitcher.ReadInputAndSwitchCar()
+            wasCarSwitched = this.CarSwitcher.ReadInputAndSwitchCar();
+            if (wasCarSwitched
                 || this.InputManager.ResetCar
                 || this.CollisionManager.IsCarColliding(this.CarStateManager.Position, this.CarStateManager.Rotation)) {
                 this.CarControlTimeoutStart = DateTime.Now;
@@ -97,12 +99,9 @@ public class Main {
             this.CameraFollowManager.ResetEvents();
         }
 
-        //if (wasTrackSwitched) {
-        //    GarbageCollectionUtility.ForceGarbageCollection();
-        //}
-
-        GC.Collect();
-        //GarbageCollectionUtility.ForceGarbageCollection();
+        if (wasTrackSwitched || wasCarSwitched) {
+            GarbageCollectionUtility.ForceGarbageCollection();
+        }
     }
 
     private bool InCarControlTimeout() {
