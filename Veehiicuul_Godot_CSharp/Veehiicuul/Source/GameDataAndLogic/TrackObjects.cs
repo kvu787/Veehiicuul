@@ -11,7 +11,7 @@ public sealed class TrackObjects {
     public Camera3D Camera { get; }
 
     public TrackObjects(TrackSwitcher trackSwitcher) {
-        Node3D model = trackSwitcher.CurrentTrackScene.GetNode<Node3D>("Model") ?? throw new InvalidOperationException();
+        Node3D model = trackSwitcher.CurrentTrackScene.GetNode<Node3D>("Model") ?? throw new InvalidOperationException("Couldn't find a node named 'Model'");
         if (model.Transform != Transform3D.Identity) {
             throw new InvalidOperationException("Model must have an identity local transform (zero position and rotation, unit scale).");
         }

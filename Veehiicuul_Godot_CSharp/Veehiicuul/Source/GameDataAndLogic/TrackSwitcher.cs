@@ -65,6 +65,29 @@ public sealed class TrackSwitcher {
     }
 
     private Node LoadCurrentTrackScene() {
-        return SceneUtility.Load(this.MainNode, $"res://Tracks/{this.CurrentTrackName}/{this.CurrentTrackName}_Scene.tscn");
+        Node trackSceneRootNode = SceneUtility.Load(this.MainNode, $"res://Tracks/{this.CurrentTrackName}/{this.CurrentTrackName}_Scene.tscn");
+        ValidateTrackScene(trackSceneRootNode);
+        return trackSceneRootNode;
+    }
+
+    private static void ValidateTrackScene(Node rootNode) {
+        if (rootNode.Name != "Track") {
+            throw new InvalidOperationException("Track scene root node must be named 'Track'");
+        }
+        if (rootNode is not Node3D) {
+            throw new InvalidOperationException("Track scene root node must have type='Node3D'");
+        }
+
+        RequireTrackNode<WorldEnvironment>(rootNode, "WorldEnvironment");
+        RequireTrackNode<Node3D>(rootNode, "CameraPanAndYaw");
+        RequireTrackNode<Node3D>(rootNode, "CameraPanAndYaw/CameraYawOffset");
+        RequireTrackNode<Node3D>(rootNode, "CameraPanAndYaw/CameraYawOffset/CameraPanOffsetAndPitch");
+        RequireTrackNode<Camera3D>(rootNode, "CameraPanAndYaw/CameraYawOffset/CameraPanOffsetAndPitch/Camera");
+        RequireTrackNode<DirectionalLight3D>(rootNode, "Sunlight");
+        RequireTrackNode<Node3D>(rootNode, "Model");
+    }
+
+    private static void RequireTrackNode<T>(Node node, string path) where T : Node {
+        _ = node.GetNodeOrNull<T>(path) ?? throw new InvalidOperationException($"Track scene format error: Couldn't find '{path}'");
     }
 }
