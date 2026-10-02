@@ -266,13 +266,13 @@ public sealed partial class TrackCollisionDetector {
             throw new ArgumentException("Collider outlines must not be null.", nameof(colliderJson));
         }
 
-        if (colliderJson.Outlines.Count == 0) {
+        if (colliderJson.Outlines.Length == 0) {
             throw new ArgumentException("Collider data must contain at least one outline.", nameof(colliderJson));
         }
     }
 
     private static Edge[] CreateEdges(ColliderJson colliderJson, out int outlineCount) {
-        outlineCount = colliderJson.Outlines.Count;
+        outlineCount = colliderJson.Outlines.Length;
         long edgeCountLong = 0;
         for (int outlineIndex = 0; outlineIndex < outlineCount; ++outlineIndex) {
             Outline outline = colliderJson.Outlines[outlineIndex];
@@ -282,13 +282,13 @@ public sealed partial class TrackCollisionDetector {
                     nameof(colliderJson));
             }
 
-            if (outline.Vertices.Count < 3) {
+            if (outline.Vertices.Length < 3) {
                 throw new ArgumentException(
                     $"Outline {outlineIndex} must contain at least three vertices.",
                     nameof(colliderJson));
             }
 
-            edgeCountLong += outline.Vertices.Count;
+            edgeCountLong += outline.Vertices.Length;
             if (edgeCountLong > int.MaxValue) {
                 throw new ArgumentException("Collider data contains too many vertices.", nameof(colliderJson));
             }
@@ -297,11 +297,11 @@ public sealed partial class TrackCollisionDetector {
         Edge[] edges = new Edge[(int)edgeCountLong];
         int outputIndex = 0;
         for (int outlineIndex = 0; outlineIndex < outlineCount; ++outlineIndex) {
-            List<CoordinateXY> vertices = colliderJson.Outlines[outlineIndex].Vertices;
-            for (int vertexIndex = 0; vertexIndex < vertices.Count; ++vertexIndex) {
+            CoordinateXY[] vertices = colliderJson.Outlines[outlineIndex].Vertices;
+            for (int vertexIndex = 0; vertexIndex < vertices.Length; ++vertexIndex) {
                 CoordinateXY rawA = vertices[vertexIndex];
                 CoordinateXY rawB = vertices[
-                    vertexIndex + 1 == vertices.Count ? 0 : vertexIndex + 1];
+                    vertexIndex + 1 == vertices.Length ? 0 : vertexIndex + 1];
                 if (!CollisionMath.IsFinite(rawA.X)
                     || !CollisionMath.IsFinite(rawA.Y)
                     || !CollisionMath.IsFinite(rawB.X)
