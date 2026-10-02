@@ -75,14 +75,14 @@ public class Main {
         }
 
         bool wasTrackSwitched = this.TrackSwitcher.ReadInputAndSwitchTracks();
-        bool wasCarSwitched = false;
+        bool wasCarReset = false;
         if (wasTrackSwitched) {
             this.InitializeTrack();
         } else {
-            wasCarSwitched = this.CarSwitcher.ReadInputAndSwitchCar();
-            if (wasCarSwitched
+            if (this.CarSwitcher.ReadInputAndSwitchCar()
                 || this.InputManager.ResetCar
                 || this.CollisionManager.IsCarColliding(this.CarStateManager.Position, this.CarStateManager.Rotation)) {
+                wasCarReset = true;
                 this.CarControlTimeoutStart = DateTime.Now;
                 this.CarStateManager.Reset_PositionRotationVelocity();
             }
@@ -103,7 +103,7 @@ public class Main {
             this.CameraFollowManager.ResetEvents();
         }
 
-        if (wasTrackSwitched || wasCarSwitched) {
+        if (wasTrackSwitched || wasCarReset) {
             GarbageCollectionUtility.ForceGarbageCollection();
         }
     }
