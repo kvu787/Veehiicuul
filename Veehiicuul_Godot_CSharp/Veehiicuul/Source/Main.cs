@@ -5,11 +5,13 @@ namespace Veehiicuul_Godot_CSharp;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "TODO")]
 public class Main {
-    private static readonly string[] TrackNames = ["Ribeye"];
     private const int InitialTrackIndex = 0;
+    private static readonly string[] TrackNames = ["Ribeye"];
 
     private const double CarControlTimeoutSeconds = 0.35;
     private DateTime CarControlTimeoutStart = DateTime.MinValue;
+    private bool IsReadyDone;
+    private readonly Node MainNode;
 
     private DigitalInputMap DigitalInputMap = null!;
     private InputManager InputManager = null!;
@@ -22,9 +24,6 @@ public class Main {
     private CarSwitcher CarSwitcher = null!;
     private CarStateManager CarStateManager = null!;
     private CollisionManager CollisionManager = null!;
-
-    private bool IsReadyDone;
-    private readonly Node MainNode;
 
     public Main(Node mainNode) {
         ArgumentNullException.ThrowIfNull(mainNode);
