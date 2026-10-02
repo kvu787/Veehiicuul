@@ -668,3 +668,28 @@ For your driving code, the practical effects are:
 The tradeoff is that compatible mouse-motion events are processed individually, which can increase event-dispatch CPU work. For your current controller-driven application, this is principally an opportunity to reduce native queue allocations; the source alone does not establish a frame-time improvement.
 
 No settings were changed, and nothing was built or run.
+
+## User
+
+my game will probably never use mouse, joystick, or any other "motion events". given this, what do you recommend?
+
+
+## Assistant
+
+I'll check which input events your current controls generate, then recommend settings for a game that uses only digital buttons.
+
+## Assistant
+
+I recommend **setting `Input.UseAccumulatedInput = false` once at startup and leaving agile event flushing at `false`.** For example, add this near the beginning of your [Main.Ready initialization](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs:44):
+
+```csharp
+Input.UseAccumulatedInput = false;
+```
+
+Keyboard and gamepad-button events are not merged by accumulation, so buffering them offers no merging benefit. With both settings false, Godot [processes each event directly](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1549), avoiding the native queue allocations. Your existing action polling continues to work, including detection of short presses through `IsActionJustPressed`.
+
+One terminology detail: your current [InputManager](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Input/InputManager.cs:48) reads analog sticks and a trigger. Godot generates native `InputEventJoypadMotion` events internally to update those values, even when you only call `GetJoyAxis` and never receive motion events in C#. Those events also do not merge, so the same recommendation applies to your existing controls.
+
+Ignoring mouse input in your game does not stop Godot from receiving it. Moving the mouse over the game window can still produce events, and disabling accumulation means processing those individually. That is the remaining CPU tradeoff; otherwise, your stated usage gives little reason to retain accumulation.
+
+This removes queue allocations, **not the native input-event objects themselves**. No application settings or code were changed.
