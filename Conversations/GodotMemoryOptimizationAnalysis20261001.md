@@ -820,3 +820,36 @@ Your [Main_GodotAdapter._Ready()](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Go
 Also, **Godot C# does not provide an `_Init()` lifecycle override**. C# uses constructors for that stage; the engine [explicitly excludes `_init` from C# bindings](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/editor/bindings_generator.cpp:5206).
 
 Set it once during startup; keep it out of `_Process()`.
+
+## User
+
+can this be simply disabled?
+
+Collision detection retains a conditional managed allocation path.
+[CollisionManager (line 55)](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/CollisionManager.cs:55) caches unchanged poses. Moving queries use existing arrays, struct-valued rectangles and cell ranges, indexed loops, and stack-based BVH recursion.
+[ExactOrientationSign (line 1228)](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs:1228) first tries nonallocating Int128 arithmetic. If its bounded conversion rejects the coordinate exponent spread, it falls back to BigInteger; wide shifts and arithmetic allocate backing arrays.
+This requires both entering the exact predicate and failing its bounded-integer path. It is not an allocation on every collision query, or even on every exact query.
+Static inspection of Ribeye's 800 collider vertices found a raw dyadic exponent spread of 12, within the current conversion limit of 37. Transformed vehicle corners also participate, so that does not prove the allocating fallback is unreachable.
+Separate X/Y exponent normalization and actual significand-width checks could expand the Int128 path. A fixed-size exact predicate could remove the fallback entirely. This is a lower-priority change unless strict allocation-free collision queries are required, because its driving-time frequency is unestablished and exactness must be preserved.
+
+
+
+## Assistant
+
+I'll check what the fallback protects and what disabling it would change in collision detection.
+
+## Assistant
+
+**You can remove the allocating fallback, but simply disabling it would weaken collision correctness. There is no existing setting that turns it off.** It is part of your C# collision algorithm.
+
+The [floating-point fast path](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs:1151) already handles cases where it can reliably determine which side of an edge a point occupies. Exact arithmetic handles the uncertain cases. When [the bounded `Int128` path](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs:1250) cannot represent the coordinates, `BigInteger` provides the remaining exact answer.
+
+Removing that last fallback requires choosing another behavior:
+
+- **Use the approximate `double` result:** simple and allocation-free, but some difficult cases can produce missed collisions or false collision reports.
+- **Return zero:** treats uncertainty as collinearity. The [segment-intersection code](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs:1125) gives zero special meaning, so this changes collision results and is not a reliable substitute.
+- **Replace it with fixed-size exact arithmetic:** preserves correctness and removes allocations, but requires implementation work.
+
+**I recommend keeping it for now.** We have established that it can allocate, but not that it is reached during ordinary driving. If eliminating every managed allocation is the goal, replace the fallback with nonallocating exact arithmetic. Expanding the `Int128` path can reduce its use, but cannot by itself guarantee zero allocations.
+
+No collision code was changed.
