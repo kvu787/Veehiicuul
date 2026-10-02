@@ -612,3 +612,59 @@ I also excluded several apparent allocation sites after tracing their lifetimes.
 For project-only work, I would prioritize the shadow-culling setting, then consider the input-accumulation tradeoff. For engine work, the frustum `ptrw()` correction is the smallest concrete change; binding-array reuse addresses more recurring sites. The collision fallback remains the main conditional C# opportunity.
 
 No application or engine files were changed. This analysis is recorded in [the conversation log](C:/Users/k/Repository/Veehiicuul/Conversations/GodotMemoryOptimizationAnalysis20261001.md).
+
+## User
+
+explain what this does: Input.UseAccumulatedInput = false
+explain what you mean by this: With agile event flushing left at its current default of false
+
+
+
+## Assistant
+
+I'll trace both settings in the supplied Godot source and explain how they affect event delivery and action polling.
+
+## Assistant
+
+The settings are separate: accumulation controls whether compatible events are merged, while agile flushing adds points where queued events are delivered. In this source, disabling both sends events straight to processing. Disabling accumulation alone still queues events if agile flushing is enabled.
+
+## Assistant
+
+**`Input.UseAccumulatedInput = false` disables Godot's input-event merging. In your current configuration, it also makes events get processed immediately when they reach Godot's `Input` system.**
+
+With the default `UseAccumulatedInput = true`, Godot puts incoming events in a buffer and tries to merge each new event with the last buffered event. For example, three compatible mouse-motion events can become one event containing their combined movement. Godot later processes the buffered events, updates action states, and delivers input callbacks. This behavior is implemented in [Input::parse_input_event](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1549).
+
+Setting it to `false` stops that merging. Whether it also bypasses the buffer depends on the second setting.
+
+**By "agile event flushing left at its current default of false," I meant this separate project setting:**
+
+```text
+input_devices/buffering/agile_event_flushing = false
+```
+
+Your project does not override it, and Godot [initializes it to false](C:/Users/k/Repository/External/Godot_4-7-2/main/main.cpp:3659).
+
+"Flushing" means taking queued events out of the buffer and processing them. On Windows, the usual flush happens [at the end of platform event processing](C:/Users/k/Repository/External/Godot_4-7-2/platform/windows/display_server_windows.cpp:4490). Enabling agile flushing adds flushes [before each physics step](C:/Users/k/Repository/External/Godot_4-7-2/main/main.cpp:4973) and [before ordinary frame processing](C:/Users/k/Repository/External/Godot_4-7-2/main/main.cpp:5055).
+
+The interaction is:
+
+| UseAccumulatedInput | Agile event flushing | What happens to incoming events                                  |
+| ------------------- | -------------------- | ---------------------------------------------------------------- |
+| `true`              | `false`              | Buffer events and merge compatible ones; use the usual flush.    |
+| `true`              | `true`               | Buffer and merge; also flush at the additional main-loop points. |
+| `false`             | `false`              | Process each event immediately without putting it in the buffer. |
+| `false`             | `true`               | Buffer each event separately, without merging; flush later.      |
+
+The last row is why I qualified the earlier recommendation: **turning off accumulation does not bypass the queue when agile flushing is enabled.** These are the three branches in [the event parser](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1549).
+
+For your driving code, the practical effects are:
+
+- **Less native queue allocation with both settings false.** Events bypass the linked-list buffer, avoiding its per-event nodes and queue metadata allocations.
+- **Native event objects still allocate.** For example, Godot [creates a joypad-motion event before calling the parser](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1836). This setting does not eliminate that object.
+- **Joystick motion already remains separate with accumulation enabled.** It does not implement merging. The allocation benefit here comes from bypassing its queue entries.
+- **Your `_Process` input polling still happens once per frame.** The setting does not increase controller sampling frequency or make the car simulation run more often. It changes when Godot processes the samples it receives. Your analog polling still reads the latest available value.
+- **Short digital presses still use action-transition tracking.** With your default nonlegacy behavior, [IsActionJustPressed](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:435) can detect a press followed by release within the same frame.
+
+The tradeoff is that compatible mouse-motion events are processed individually, which can increase event-dispatch CPU work. For your current controller-driven application, this is principally an opportunity to reduce native queue allocations; the source alone does not establish a frame-time improvement.
+
+No settings were changed, and nothing was built or run.
