@@ -1,8 +1,8 @@
 namespace Veehiicuul_Godot_CSharp;
 
 public sealed class CarAccelerationMap {
-    public float Forward { get; set; }
-    public float Reverse { get; set; }
-    public float Left { get; set; }
-    public float Right { get; set; }
+    public required float Forward { get; set; }
+    public required float Reverse { get; set; }
+    public required float Left { get; set; }
+    public required float Right { get; set; }
 }

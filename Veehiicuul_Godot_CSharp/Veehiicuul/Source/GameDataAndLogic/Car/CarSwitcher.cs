@@ -5,7 +5,7 @@ namespace Veehiicuul_Godot_CSharp;
 
 public sealed class CarSwitcher {
     private readonly InputManager InputManager;
-    private readonly List<Car> Cars;
+    private readonly Car[] Cars;
     public int CurrentCarIndex { get; private set; }
     public IReadOnlyList<Car> AvailableCars => this.Cars;
     public Car CurrentCar => this.Cars[this.CurrentCarIndex];
@@ -26,7 +26,7 @@ public sealed class CarSwitcher {
             return false;
         } else {
             this.CurrentCar.Node!.Visible = false;
-            this.CurrentCarIndex = this.InputManager.NextCar ? this.CurrentCarIndex.CycleNext(this.Cars.Count) : this.CurrentCarIndex.CyclePrev(this.Cars.Count);
+            this.CurrentCarIndex = this.InputManager.NextCar ? this.CurrentCarIndex.CycleNext(this.Cars.Length) : this.CurrentCarIndex.CyclePrev(this.Cars.Length);
             this.CurrentCar.Node.Visible = true;
             return true;
         }

@@ -4,8 +4,8 @@ using System.Text.Json.Serialization;
 namespace Veehiicuul_Godot_CSharp;
 
 public sealed class Car {
-    public string GameObjectName { get; set; } = string.Empty;
-    public CarDynamic Dynamic { get; set; } = new();
+    public required string GameObjectName { get; set; }
+    public required CarDynamic Dynamic { get; set; }
 
     [JsonIgnore]
     public Node3D? Node { get; set; }

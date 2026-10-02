@@ -52,10 +52,10 @@ public sealed class TrackSwitcher {
     }
 
     private static void ValidateTrackJson(TrackJson trackJson) {
-        if (trackJson.Cars is null || trackJson.Cars.Count == 0) {
+        if (trackJson.Cars is null || trackJson.Cars.Length == 0) {
             throw new InvalidOperationException("The track must define at least 1 car");
         }
-        if (trackJson.StartCarIndex < 0 || trackJson.StartCarIndex >= trackJson.Cars.Count) {
+        if (trackJson.StartCarIndex < 0 || trackJson.StartCarIndex >= trackJson.Cars.Length) {
             throw new InvalidOperationException("The track must define a valid StartCarIndex");
         }
     }

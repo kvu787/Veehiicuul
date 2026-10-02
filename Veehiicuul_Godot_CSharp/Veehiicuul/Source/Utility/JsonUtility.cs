@@ -6,7 +6,10 @@ using System.Text.Json;
 namespace Veehiicuul_Godot_CSharp;
 
 public static class JsonUtility {
-    private static readonly JsonSerializerOptions Options = new() { IncludeFields = true };
+    private static readonly JsonSerializerOptions Options = new() {
+        PropertyNameCaseInsensitive = false,
+        PropertyNamingPolicy = null,
+    };
 
     public static T Deserialize<T>(string resourcePath) {
         ArgumentException.ThrowIfNullOrWhiteSpace(resourcePath);
