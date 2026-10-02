@@ -898,3 +898,36 @@ This example also exceeds your current integer-conversion limit: its raw coordin
 Incorrect orientation signs can also make endpoints appear to occupy the same side of an edge, causing the intersection test to reject a real crossing: a **false negative**.
 
 If you retain `Int128` and approximate only when it fails, the behavior change is confined to the cases currently reaching `BigInteger`. Ordinary certified results remain unchanged. The tradeoff is accepting possible boundary-classification errors in exchange for removing that allocation path. Exact arithmetic with fixed-size storage would remove the allocations while preserving those decisions.
+
+## User
+
+i don't fully understand all of this and i don't have time to dive deep into it currently. i just want collision that looks visually "good enough". given this, what should be done?
+
+
+## Assistant
+
+I'll simplify the collision predicate for visually good enough behavior, removing the exact-arithmetic fallback and its allocation path. I'll keep this source-only and won't build or run anything.
+
+## Assistant
+
+Double-precision edge tests fit the level of accuracy you're asking for. I'll remove the exact-number machinery and update the comments that currently promise exact results.
+
+## User
+
+update:
+i don't fully understand all of this and i don't have time to dive deep into it currently. i just want collision that is performant and looks visually "good enough". given this, what should be done?
+
+
+## Assistant
+
+That supports the same choice: simple double-precision edge tests, with the spatial index selecting nearby walls to test. This removes the allocating fallback and reduces the work in each edge test.
+
+## Assistant
+
+**Use simple double-precision collision checks with the nearby-wall lookup. I've implemented that approach.**
+
+[TrackCollisionDetector](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs:1147) now uses ordinary `double` arithmetic. I removed the allocating exact-arithmetic fallback and its supporting machinery. This reduces edge-test work and eliminates those managed allocations, accepting numerical imprecision in difficult boundary cases.
+
+Reviewed the source and diff only; nothing was built or run. Visual quality and the actual performance improvement remain unverified.
+
+Implementation commit: `3f2781d`.
