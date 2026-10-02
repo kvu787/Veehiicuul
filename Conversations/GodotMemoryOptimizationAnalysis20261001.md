@@ -791,3 +791,32 @@ Windows performs event processing [before the game-loop iteration](C:/Users/k/Re
 Immediate event callbacks can benefit from earlier delivery. Your state-polling gameplay still waits for its frame update, and disabling accumulation does not increase controller sampling frequency.
 
 For your game, a latency change would mainly come from changed CPU work: removing queue overhead could help, while individually processing otherwise merged mouse events could hurt. The source establishes the timing order, but cannot quantify that effect. **The concrete reason to use `false` in your design remains reducing native queue allocations.**
+
+## User
+
+should i put `Input.UseAccumulatedInput = false` in Main_GodotAdapter._Init, Main_GodotAdapter._Ready, or somewhere else
+
+
+## Assistant
+
+I'll check the adapter's initialization order and the engine setter to choose the earliest suitable place.
+
+## Assistant
+
+Put it at the beginning of [Main.Ready()](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs:44), before the existing initialization:
+
+```csharp
+public void Ready() {
+    Input.UseAccumulatedInput = false;
+
+    // Existing initialization follows.
+}
+```
+
+Your [Main_GodotAdapter._Ready()](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main_GodotAdapter.cs:10) already calls this method. That configures input once, before gameplay starts, alongside your other application initialization. Putting the assignment directly at the start of the adapter's existing `try` block would also work.
+
+**You do not need earlier initialization for this setting.** It only changes a flag on the already initialized Input singleton; it does not depend on scene nodes or their readiness.
+
+Also, **Godot C# does not provide an `_Init()` lifecycle override**. C# uses constructors for that stage; the engine [explicitly excludes `_init` from C# bindings](C:/Users/k/Repository/External/Godot_4-7-2/modules/mono/editor/bindings_generator.cpp:5206).
+
+Set it once during startup; keep it out of `_Process()`.
