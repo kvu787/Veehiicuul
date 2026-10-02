@@ -9,6 +9,7 @@ public partial class Main_GodotAdapter : Node {
 
     public override void _Ready() {
         try {
+            Input.UseAccumulatedInput = false;
             this.Main = new Main(mainNode: this);
             this.Main.Ready();
         } catch (Exception exception) {
