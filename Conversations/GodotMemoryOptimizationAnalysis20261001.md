@@ -720,3 +720,29 @@ Keyboard-key and gamepad-button events are not merged by accumulation. With both
 This is a small, appropriate optimization for that design. The savings occur when input events arrive, including presses, releases, and keyboard repeat, rather than on every frame. Native event objects still allocate; this removes the additional queue allocation.
 
 No application code or settings were changed.
+
+## User
+
+to clarify:
+my game will probably never use mouse, joystick, gamepad stick, gamepad trigger, or any other "motion events". reading analog/stick state doesn't require "motion events", right?
+
+
+## Assistant
+
+I'll trace how `GetJoyAxis` gets its value in this Godot version, including whether native motion events are required before your code reads it.
+
+## Assistant
+
+**Your C# code does not need to handle motion events to read analog state. Godot still uses native motion events internally to update that state.** I misunderstood your previous clarification as ruling out analog controls themselves.
+
+In the supplied Godot source, the path is:
+
+1. The controller backend receives an axis change and [passes it to `Input::joy_axis`](C:/Users/k/Repository/External/Godot_4-7-2/drivers/sdl/joypad_sdl.cpp:257).
+2. Godot [creates a native `InputEventJoypadMotion`](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1836). When it processes that event, it [updates the cached axis value](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:989).
+3. Your [`Input.GetJoyAxis` call reads that cached value](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:601). It does not query the controller hardware or create a motion event on each call.
+
+So your polling calls themselves avoid event allocations, and you do not need a C# motion-event callback. However, changing stick or trigger values still creates native event objects upstream. Identical reported values are [rejected before event creation](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1695).
+
+**My recommendation remains `Input.UseAccumulatedInput = false`, with agile flushing left false.** Analog-state polling continues to work, and events bypass the native queue. This removes queue allocations; the native motion-event allocations remain.
+
+Eliminating those native motion-event objects would require an engine change that updates cached axis state directly while preserving any required action and event behavior.
