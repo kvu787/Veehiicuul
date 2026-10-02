@@ -42,8 +42,8 @@ public sealed class InputManager {
         this.NextCar = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonDpadRight);
         this.PreviousTrack = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonDpadDown);
         this.NextTrack = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonDpadUp);
-        this.QuitGame = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonStart) || Input.IsActionJustPressed(this.DigitalInputMap.KeyEscape);
-        this.ToggleBetweenFixedAndFollowCamera = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonBack);
+        this.QuitGame = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonBack) || Input.IsActionJustPressed(this.DigitalInputMap.KeyEscape);
+        this.ToggleBetweenFixedAndFollowCamera = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonStart);
         this.ResetCar = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonX);
         this.AccelerationInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX), -Input.GetJoyAxis(0, JoyAxis.RightY));
         this.Brake = Input.GetJoyAxis(0, JoyAxis.TriggerLeft);
