@@ -767,3 +767,27 @@ I'll check the timing and event-processing tradeoffs in the supplied source, wit
 **The increased event-count cost does not apply to your analog-stick polling:** [`InputEventJoypadMotion` does not implement accumulation](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input_event.h:312), so Godot already processes individual axis changes with either setting. Keyboard and gamepad-button events likewise are not merged.
 
 I still recommend `Input.UseAccumulatedInput = false`, with agile flushing false, for your design. It removes native queue allocations while preserving state polling and your default short-press detection. Native event objects still allocate. The net frame-time improvement cannot be established from source inspection alone.
+
+## User
+
+does Input.UseAccumulatedInput = false affect input latency at all
+
+
+## Assistant
+
+I'll check where Windows input processing happens relative to your frame update, to distinguish earlier event delivery from earlier game response.
+
+## Assistant
+
+**It can deliver events earlier, but in your current Windows game it should not normally make input affect an earlier frame.**
+
+With agile flushing false:
+
+- `UseAccumulatedInput = true`: events are queued during Windows event processing, then [flushed at the end of that processing](C:/Users/k/Repository/External/Godot_4-7-2/platform/windows/display_server_windows.cpp:4490).
+- `UseAccumulatedInput = false`: events are [processed immediately when they reach `Input`](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1549).
+
+Windows performs event processing [before the game-loop iteration](C:/Users/k/Repository/External/Godot_4-7-2/platform/windows/os_windows.cpp:2352). Your game then [polls input once during its frame update](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs:70). Consequently, both settings normally make the received input available to that same update. Accumulation does not inherently add an extra frame of delay here.
+
+Immediate event callbacks can benefit from earlier delivery. Your state-polling gameplay still waits for its frame update, and disabling accumulation does not increase controller sampling frequency.
+
+For your game, a latency change would mainly come from changed CPU work: removing queue overhead could help, while individually processing otherwise merged mouse events could hurt. The source establishes the timing order, but cannot quantify that effect. **The concrete reason to use `false` in your design remains reducing native queue allocations.**
