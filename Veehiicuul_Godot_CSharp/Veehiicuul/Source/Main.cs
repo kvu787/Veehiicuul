@@ -93,7 +93,7 @@ public class Main {
 
             if (!this.InCarControlTimeout()) {
                 this.CarStateManager.ReadAccelerationAndBrakeInput_AndUpdateVelocity(delta);
-                this.CarStateManager.ApplyVelocityToPosition(delta);
+                this.CarStateManager.UpdatePosition(delta);
             }
 
             this.CameraPanManager.ApplyInternalStateToCameraPosition();

@@ -15,6 +15,7 @@ public sealed class CameraZoomManager {
     private readonly float DefaultFixedCameraSize;
     private readonly float DefaultFollowCameraSize;
 
+    private float PreviousCameraSize;
     public float CameraSize { get; private set; }
 
     public CameraZoomManager(TrackNodes trackObjects, InputManager inputManager, CameraFollowManager cameraFollowManager, TrackSwitcher trackSwitcher) {
@@ -30,13 +31,17 @@ public sealed class CameraZoomManager {
         this.DefaultFixedCameraSize = this.TrackObjects.Camera.Size;
         this.DefaultFollowCameraSize = trackSwitcher.CurrentTrackJson.FollowCameraSize;
 
+        this.PreviousCameraSize = -1f;
         this.CameraSize = this.CameraFollowManager.FollowsCarLocation ? this.DefaultFollowCameraSize : this.DefaultFixedCameraSize;
 
         this.ApplyInternalStateToCameraSize();
     }
 
     public void ApplyInternalStateToCameraSize() {
-        this.TrackObjects.Camera.Size = this.CameraSize;
+        if (this.CameraSize != this.PreviousCameraSize) {
+            this.TrackObjects.Camera.Size = this.CameraSize;
+            this.PreviousCameraSize = this.CameraSize;
+        }
     }
 
     public void ReadInputAndZoom(double delta) {

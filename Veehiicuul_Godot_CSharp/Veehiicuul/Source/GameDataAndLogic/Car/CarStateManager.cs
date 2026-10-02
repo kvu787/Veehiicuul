@@ -133,7 +133,7 @@ public sealed class CarStateManager {
         }
     }
 
-    public void ApplyVelocityToPosition(double delta) {
+    public void UpdatePosition(double delta) {
         this.Position += this.Velocity * (float)delta;
     }
 
