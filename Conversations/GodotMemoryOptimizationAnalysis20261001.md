@@ -693,3 +693,30 @@ One terminology detail: your current [InputManager](C:/Users/k/Repository/Veehii
 Ignoring mouse input in your game does not stop Godot from receiving it. Moving the mouse over the game window can still produce events, and disabling accumulation means processing those individually. That is the remaining CPU tradeoff; otherwise, your stated usage gives little reason to retain accumulation.
 
 This removes queue allocations, **not the native input-event objects themselves**. No application settings or code were changed.
+
+## User
+
+to clarify:
+my game will probably never use mouse, joystick, gamepad stick, gamepad trigger, or any other "motion events". given this, what do you recommend?
+
+
+## Assistant
+
+I'll treat this as a game with only digital controls and check which buffering settings fit that design.
+
+## Assistant
+
+For a game with **only digital controls**, I recommend:
+
+- Set `Input.UseAccumulatedInput = false` once during startup.
+- Leave `input_devices/buffering/agile_event_flushing` at its default of `false`.
+
+```csharp
+Input.UseAccumulatedInput = false;
+```
+
+Keyboard-key and gamepad-button events are not merged by accumulation. With both settings false, Godot [processes those events directly](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1549), avoiding the buffered queue's allocations. Keep using your cached InputMap actions and `IsActionJustPressed` polling; short presses remain detectable with your default nonlegacy behavior.
+
+This is a small, appropriate optimization for that design. The savings occur when input events arrive, including presses, releases, and keyboard repeat, rather than on every frame. Native event objects still allocate; this removes the additional queue allocation.
+
+No application code or settings were changed.
