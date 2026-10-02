@@ -1,5 +1,3 @@
-using System;
-
 namespace Veehiicuul_Godot_CSharp;
 
 /// <summary>
@@ -7,7 +5,6 @@ namespace Veehiicuul_Godot_CSharp;
 /// are Blender world-space X/Y values. glTF maps these to Godot world X/negative Z,
 /// so the collision plane uses the exported X/Y unchanged.
 /// </summary>
-[Serializable]
 public sealed class ColliderJson {
     public required Outline[] Outlines { get; set; }
 }

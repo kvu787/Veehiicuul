@@ -1,8 +1,5 @@
-using System;
-
 namespace Veehiicuul_Godot_CSharp;
 
-[Serializable]
 public struct CoordinateXY {
     public CoordinateXY(float x, float y) {
         Guard.ThrowIfNotFinite(x, nameof(x));
