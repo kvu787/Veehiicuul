@@ -746,3 +746,24 @@ So your polling calls themselves avoid event allocations, and you do not need a 
 **My recommendation remains `Input.UseAccumulatedInput = false`, with agile flushing left false.** Analog-state polling continues to work, and events bypass the native queue. This removes queue allocations; the native motion-event allocations remain.
 
 Eliminating those native motion-event objects would require an engine change that updates cached axis state directly while preserving any required action and event behavior.
+
+## User
+
+what are potential downsides of using Input.UseAccumulatedInput = false
+
+
+## Assistant
+
+I'll check the timing and event-processing tradeoffs in the supplied source, with your state-polling input design in mind.
+
+## Assistant
+
+**For your current state-polling design, the downsides are limited. The main tradeoff is more CPU work for events Godot would otherwise merge.**
+
+- **More processing of mouse motion or touch dragging.** Godot processes each event individually, potentially increasing CPU work and frame-time spikes during heavy input. Ignoring mouse input in your C# code does not eliminate the engine's processing of it. Godot documents this [CPU tradeoff](C:/Users/k/Repository/External/Godot_4-7-2/doc/classes/Input.xml:845).
+- **Different callback timing.** With agile flushing also false, input callbacks run immediately when an event reaches `Input`, instead of during a later buffer flush. This matters for code that changes scenes, controls, or input modes inside callbacks. Your current once-per-frame polling code is less affected. See [the processing branches](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1549).
+- **Switching the setting during play requires care.** The [setter only changes a flag](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input.cpp:1592); it does not flush existing queued events. New events could therefore be processed before older buffered events. Set it once at startup, or flush buffered events before changing it during play.
+
+**The increased event-count cost does not apply to your analog-stick polling:** [`InputEventJoypadMotion` does not implement accumulation](C:/Users/k/Repository/External/Godot_4-7-2/core/input/input_event.h:312), so Godot already processes individual axis changes with either setting. Keyboard and gamepad-button events likewise are not merged.
+
+I still recommend `Input.UseAccumulatedInput = false`, with agile flushing false, for your design. It removes native queue allocations while preserving state polling and your default short-press detection. Native event objects still allocate. The net frame-time improvement cannot be established from source inspection alone.
