@@ -1,0 +1,142 @@
+{
+    "ProductionRevision": "7d8cd9cd92706248d136bbadad255e44dd10a94d",
+    "CollisionImplementationRevision": "3f2781d71f9648a0378bb4987bbce823b6966d4d",
+    "ProcessorName": "Intel(R) Core(TM) Ultra 9 275HX",
+    "DotnetSdk": "10.0.401",
+    "Godot": "4.7.2.stable.mono.official.ed1daf0bf",
+    "Run": "2026-10-02_15-32-44",
+    "SourceFiles": [
+        {
+            "Path": "Source/Utility/SceneUtility.cs",
+            "Sha256": "BC059AF4A606F4AE27D8E3AA8669467B1B57F41585C08B16B4E23C17F36DAF50"
+        },
+        {
+            "Path": "Source/Utility/PrintInfoUtility.cs",
+            "Sha256": "3FCD8EAD6264045905C375875F1066F50B91A6953E4C2719F84F76D09F8C1B3D"
+        },
+        {
+            "Path": "Source/Utility/JsonUtility.cs",
+            "Sha256": "FCD5B7EFBDC4AF37E221AE98FA096500581C56CD0A6F86F203CD5A311E027096"
+        },
+        {
+            "Path": "Source/Utility/InputUtility.cs",
+            "Sha256": "D64CF0FA2B6D1D78B1E089499925A4AFA5D6D9FFE08788CF0BC685C03E5AD8CE"
+        },
+        {
+            "Path": "Source/Utility/GarbageCollectionUtility.cs",
+            "Sha256": "7A5628070170D2C2F6CC9C06BB0FE67B421F261EC36E22FCFFB16B4EDCF2FE8B"
+        },
+        {
+            "Path": "Source/Main_GodotAdapter.cs",
+            "Sha256": "49C466765E3CD247ABD76EFF1EDECEDBF8026FBDA52F20E9F2D01E8C6402EF7E"
+        },
+        {
+            "Path": "Source/Main.cs",
+            "Sha256": "B1A9D31BB93216203A06A53CBAA07313631983E68CDEB3ED2CD41E6EB330604A"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Track/TrackSwitcher.cs",
+            "Sha256": "D300F10CFB67702EFFC87C3231D18B7DCA6DF9238DB69DDCE69C9FD1C72319F8"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Track/TrackJson.cs",
+            "Sha256": "6803EEE7F88394D7CC7FCD32269773E357F39331925E26669E741E89530AF85F"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Track/TrackNodes.cs",
+            "Sha256": "0622CAB3B4CE2532B1677AADB2CD5B58FA443987279FCE55A129AD9E733713A7"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Car/CarSwitcher.cs",
+            "Sha256": "E8558076680FC7379D7131395E343D629175AF00B9B7B4B2D5BA7AD33E8A3771"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Car/CarStateManager.cs",
+            "Sha256": "F43B631774C9D8C3E2619B44A4F9949C84C7A77BBE75A491A0993043DDB8E1C1"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Car/CarDynamic.cs",
+            "Sha256": "9309817EBE8684DF3FE15C956ABD38DF2575BCF3FABED6C9BF0F6E2BD82D37CF"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Car/CarAccelerationMap.cs",
+            "Sha256": "1EB1B26D53D0B339A0C27721CA75485A3FD6454F305AEC02AEB872DF5EB5D403"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Car/Car.cs",
+            "Sha256": "CD37CA82CCDEC7F3F57EC9CE0A227C74F896DE38C32FF878817BC4A742627F73"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Input/InputManager.cs",
+            "Sha256": "760B1966AF19ACDA7A964D6C696B2D881418972B1E4054621196099BAEB3346D"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Input/DigitalInputMap.cs",
+            "Sha256": "CF9312837AE3FE594B31A87CEDB45C67CF49BF31A1E74053742314FA3F55BA71"
+        },
+        {
+            "Path": "Source/Extensions/Vector3Extensions.cs",
+            "Sha256": "E70EB58DAB517E1B35D6EFA04A8BCE0A28B743BC1C1149DCC0F178B186B7B48F"
+        },
+        {
+            "Path": "Source/Extensions/IntExtensions.cs",
+            "Sha256": "A4F7FA13041150F9BD2C1E2A11653C44D81065DE1BF98061FB67A45AB3F617B2"
+        },
+        {
+            "Path": "Source/Extensions/FloatExtensions.cs",
+            "Sha256": "ACEB16B6CC9598B711AD4A99455A7A1CB0CFFE6444F8FA5568070C82E6916920"
+        },
+        {
+            "Path": "Source/Extensions/EnumExtensions.cs",
+            "Sha256": "CD34BB46720736DF76745E9BF89AE67485CA15DBA7005BE0A906CD98B4F3A2D7"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/CollisionDetection/CollisionManager.cs",
+            "Sha256": "96B1630CF1FF02520F2BE09200840EAFF7C05F075D1C7DA673D11DE412467B7A"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/CollisionDetection/ColliderJson.cs",
+            "Sha256": "10043E523E283FC5D318FDA6665DE7C9ADE6B05D38B14F0577A7164F959A6A5A"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/CollisionDetection/CoordinateXY.cs",
+            "Sha256": "198083B3FE9A024E13B9FF6EB053B1B0850E202D199694269C602CFA44E9A8BD"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Camera/CameraFollowManager.cs",
+            "Sha256": "4302326550C9033EB6C7920B136DF061ECA15C495B8836938DD98799C228D670"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/CollisionDetection/Guard.cs",
+            "Sha256": "5684F77D6711EE1FCD62D4E427A4EED267832D840C6794654DE22A1313DE3D73"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/CollisionDetection/Outline.cs",
+            "Sha256": "5EF063EE5DD865F875341FAE909FCED92434D88C40E4329EBBB29A9790EC55D7"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Camera/CameraZoomManager.cs",
+            "Sha256": "A5DE34BFA0A44B9CB4086FA0A06E7AF0CF6591251696AB88E2C56A9061041D41"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/CollisionDetection/VehicleCollisionFootprint.cs",
+            "Sha256": "99636ABBF0B80562E3729E5681C10D75CDE79354855EE32511FB5A7AB3401D65"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Camera/CameraYawManager.cs",
+            "Sha256": "EC62D50C5D73B8901F46BF6B0C1D8E5DE0053CAEBA495C96D043A6FFF914D964"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.ExpandedGrid.cs",
+            "Sha256": "DBD13268F1E7A92B32FFD488E2411FA91072E6702A41CFA14521AD654BE9FDF2"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs",
+            "Sha256": "ED01AA6908D3F5C4D60CD5095B34897CC3B4F5A553F1B1DDBC4A5DEB2479CD3C"
+        },
+        {
+            "Path": "Source/GameDataAndLogic/Camera/CameraPanManager.cs",
+            "Sha256": "B297D7207919740B087C205D22FCB7D803651803DFA001254B62BCF1EE53C623"
+        }
+    ]
+}

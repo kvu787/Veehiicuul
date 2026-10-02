@@ -1,0 +1,28 @@
+{
+    "Outlines": [
+        {
+            "Index": 0,
+            "Vertices": 512,
+            "SignedArea": 25071.396500650575
+        },
+        {
+            "Index": 1,
+            "Vertices": 224,
+            "SignedArea": 11899.277146340162
+        },
+        {
+            "Index": 2,
+            "Vertices": 64,
+            "SignedArea": 760.2105137513936
+        }
+    ],
+    "VertexCount": 800,
+    "NonadjacentIntersections": 0,
+    "MinimumEdgeLength": 0.551861408095699,
+    "MaximumEdgeLength": 4.146078954617268,
+    "MinimumX": -94.60731,
+    "MaximumX": 147.16698,
+    "MinimumY": -114.87975,
+    "MaximumY": 94.141014,
+    "LargestCoordinateUlp": 1.5258789E-05
+}
