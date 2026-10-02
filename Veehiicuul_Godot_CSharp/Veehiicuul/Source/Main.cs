@@ -3,6 +3,7 @@ using System;
 
 namespace Veehiicuul_Godot_CSharp;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "TODO")]
 public class Main {
     private static readonly string[] TrackNames = ["Ribeye"];
     private const int InitialTrackIndex = 0;
@@ -10,6 +11,7 @@ public class Main {
     private const double CarControlTimeoutSeconds = 0.35;
     private DateTime CarControlTimeoutStart = DateTime.MinValue;
 
+    private DigitalInputMap DigitalInputMap = null!;
     private InputManager InputManager = null!;
     private TrackSwitcher TrackSwitcher = null!;
     private CameraFollowManager CameraFollowManager = null!;
@@ -20,6 +22,7 @@ public class Main {
     private CarSwitcher CarSwitcher = null!;
     private CarStateManager CarStateManager = null!;
     private CollisionManager CollisionManager = null!;
+
     private bool IsReadyDone;
     private static Node MainNode = null!;
 
@@ -41,7 +44,8 @@ public class Main {
     public void Ready() {
         PrintInfoUtility.PrintDisplayInfo(MainNode.GetViewport());
         PrintInfoUtility.PrintGraphicsInfo();
-        this.InputManager = new InputManager();
+        this.DigitalInputMap = new DigitalInputMap();
+        this.InputManager = new InputManager(this.DigitalInputMap);
         this.TrackSwitcher = new TrackSwitcher(MainNode, this.InputManager, TrackNames, InitialTrackIndex);
         this.InitializeTrack();
         this.IsReadyDone = true;

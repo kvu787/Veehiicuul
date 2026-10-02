@@ -11,14 +11,10 @@ config_version=5
 [application]
 
 config/name="Veehiicuul_Godot_CSharp"
-run/main_scene="res://Scenes/Main.tscn"
+run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 run/delta_smoothing=false
 config/icon="res://Resources/icon.svg"
-
-[autoload]
-
-DigitalInputCounts="*res://Scenes/DigitalInputCounts.tscn"
 
 [display]
 

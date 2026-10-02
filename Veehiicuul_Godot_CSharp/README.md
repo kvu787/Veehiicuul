@@ -1,3 +1,5 @@
+# Nvidia settings
+
 Verify nvidia profile settings are as expected using Nvidia Profile Inspector, not the Nvidia App or Nvidia Control Panel.
 
 It is possible for Nvidia App or NVCP to incorrectly show the state of the "Ultra Low Latency" mode setting.
@@ -90,4 +92,37 @@ This is an example of a misleading profile because the ULLM UI setting is 0 even
     <ExecutableFindFiles />
   </Profile>
 </ArrayOfProfile>
+```
+
+# Generate DigitalInputMap.cs
+
+```powershell
+$ScriptPath = "C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Tools\DigitalInputMapGenerator\GenerateDigitalInputMap.py"
+$OutputPath = "C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\Source\GameDataAndLogic\DigitalInputMap.cs"
+
+$source = py -3.14 $ScriptPath `
+  "JoyButton.A" `
+  "JoyButton.B" `
+  "JoyButton.X" `
+  "JoyButton.Y" `
+  "JoyButton.DpadUp" `
+  "JoyButton.DpadDown" `
+  "JoyButton.DpadLeft" `
+  "JoyButton.DpadRight" `
+  "JoyButton.LeftShoulder" `
+  "JoyButton.RightShoulder" `
+  "JoyButton.LeftStick" `
+  "JoyButton.RightStick" `
+  "JoyButton.Back" `
+  "JoyButton.Start" `
+  "Key.Escape" `
+  "MouseButton.Middle"
+if ($LASTEXITCODE -ne 0) {
+    throw "Generator failed."
+}
+[System.IO.File]::WriteAllText(
+  $OutputPath,
+  ($source -join "`n") + "`n",
+  [System.Text.UTF8Encoding]::new($false)
+)
 ```

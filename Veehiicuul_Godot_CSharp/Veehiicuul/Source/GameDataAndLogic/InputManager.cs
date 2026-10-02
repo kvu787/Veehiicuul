@@ -1,4 +1,5 @@
 using Godot;
+using System;
 
 namespace Veehiicuul_Godot_CSharp;
 
@@ -16,6 +17,13 @@ public sealed class InputManager {
 
     public float CameraZoom { get; private set; }
 
+    private readonly DigitalInputMap DigitalInputMap;
+
+    public InputManager(DigitalInputMap digitalInputMap) {
+        ArgumentNullException.ThrowIfNull(digitalInputMap);
+        this.DigitalInputMap = digitalInputMap;
+    }
+
     private static float DeadzoneFilter(float input, float innerDeadzone, float outerDeadzone) {
         float sign = Mathf.Sign(input);
         input = Mathf.Abs(input);
@@ -30,17 +38,17 @@ public sealed class InputManager {
     }
 
     public void UpdateInputs() {
-        this.PreviousCar = DigitalInputCounts.GetGamepadButtonDown(JoyButton.DpadLeft);
-        this.NextCar = DigitalInputCounts.GetGamepadButtonDown(JoyButton.DpadRight);
-        this.PreviousTrack = DigitalInputCounts.GetGamepadButtonDown(JoyButton.DpadDown);
-        this.NextTrack = DigitalInputCounts.GetGamepadButtonDown(JoyButton.DpadUp);
-        this.QuitGame = DigitalInputCounts.GetKeyDown(Key.Escape) || DigitalInputCounts.GetGamepadButtonDown(JoyButton.Start);
-        this.ToggleBetweenFixedAndFollowCamera = DigitalInputCounts.GetGamepadButtonDown(JoyButton.Back);
-        this.ResetCar = DigitalInputCounts.GetGamepadButtonDown(JoyButton.X);
+        this.PreviousCar = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonDpadLeft);
+        this.NextCar = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonDpadRight);
+        this.PreviousTrack = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonDpadDown);
+        this.NextTrack = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonDpadUp);
+        this.QuitGame = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonStart) || Input.IsActionJustPressed(this.DigitalInputMap.KeyEscape);
+        this.ToggleBetweenFixedAndFollowCamera = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonBack);
+        this.ResetCar = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonX);
         this.AccelerationInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX), -Input.GetJoyAxis(0, JoyAxis.RightY));
         this.Brake = Input.GetJoyAxis(0, JoyAxis.TriggerLeft);
-        this.ResetCameraZoom = DigitalInputCounts.GetGamepadButtonDown(JoyButton.Y);
-        if (Input.IsJoyButtonPressed(0, JoyButton.RightShoulder)) {
+        this.ResetCameraZoom = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonY);
+        if (Input.IsActionPressed(this.DigitalInputMap.JoyButtonRightShoulder)) {
             const float innerDeadzone = 0.0078125f;
             const float outerDeadzone = 0.95f;
             this.CameraZoom = DeadzoneFilter(Input.GetJoyAxis(0, JoyAxis.LeftY), innerDeadzone, outerDeadzone);

@@ -19,7 +19,6 @@ public partial class Main_GodotAdapter : Node {
     public override void _Process(double delta) {
         try {
             this.Main.Process(delta);
-            DigitalInputCounts.ClearFrameCounts();
         } catch (Exception exception) {
             Main.LogExceptionAndQuit(exception);
         }
