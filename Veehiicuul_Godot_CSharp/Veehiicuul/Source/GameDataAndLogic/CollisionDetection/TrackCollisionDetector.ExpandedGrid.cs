@@ -83,7 +83,7 @@ public sealed partial class TrackCollisionDetector {
 
             // Cover rounding in sin/cos, the double additions and final float
             // corner conversion. This expands ONLY the broad phase; contacts
-            // still use the unchanged exact binary32 segment predicate.
+            // still use the double-precision segment predicate.
             float magnitude = (float)coordinateMagnitude;
             double roundingMargin = 2.0 * ((double)MathF.BitIncrement(magnitude) - magnitude);
             radius = Math.BitIncrement(radius + roundingMargin);

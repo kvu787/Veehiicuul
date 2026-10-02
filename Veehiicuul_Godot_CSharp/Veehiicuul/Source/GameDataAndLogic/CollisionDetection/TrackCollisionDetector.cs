@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Veehiicuul_Godot_CSharp;
 /// <summary>
@@ -63,12 +61,12 @@ public readonly struct RectanglePose {
 }
 
 /// <summary>
-/// Exact vehicle-perimeter versus track-outline collision detector.
+/// Vehicle-perimeter versus track-outline collision detector.
 ///
 /// Compact tracks precompute vehicle-expanded edge references per grid cell.
 /// Large coordinate spans retain a center grid and an oversized-edge AABB tree.
-/// All broad phases are conservative; the final no-epsilon segment predicate
-/// is exact for the binary32 coordinates supplied to it.
+/// Broad phases are conservative. Contacts use approximate double-precision
+/// segment tests without an allocating exact-arithmetic fallback.
 /// </summary>
 public sealed partial class TrackCollisionDetector {
     private const int DenseGridMinimumCellLimit = 4096;
@@ -150,7 +148,7 @@ public sealed partial class TrackCollisionDetector {
                 cellSize,
                 out CenterGrid? grid)) {
             // This requires an enormous coordinate span relative to the vehicle.
-            // A BVH remains exact and prevents unsafe integer cell arithmetic.
+            // A BVH preserves candidate coverage and prevents unsafe integer cell arithmetic.
             outlierEdgeIds.AddRange(ordinaryEdgeIds);
             ordinaryEdgeIds.Clear();
             grid = CenterGrid.CreateEmpty(cellSize);
@@ -254,7 +252,7 @@ public sealed partial class TrackCollisionDetector {
     }
 
     /// <summary>
-    /// Simple exact implementation retained as a game-side correctness oracle.
+    /// Direct implementation retained as a reference for the indexed queries.
     /// </summary>
     internal bool IsCollidingLinear(RectangleLocalBounds localBounds, RectanglePose pose) {
         RectangleQuad rectangle = CreateRectangle(localBounds, pose);
@@ -1063,10 +1061,10 @@ public sealed partial class TrackCollisionDetector {
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal bool IntersectsSegment(in PointF a, in PointF b) {
-            return RobustPredicates.SegmentsIntersect(a, b, this.P0, this.P1)
-                || RobustPredicates.SegmentsIntersect(a, b, this.P1, this.P2)
-                || RobustPredicates.SegmentsIntersect(a, b, this.P2, this.P3)
-                || RobustPredicates.SegmentsIntersect(a, b, this.P3, this.P0);
+            return CollisionPredicates.SegmentsIntersect(a, b, this.P0, this.P1)
+                || CollisionPredicates.SegmentsIntersect(a, b, this.P1, this.P2)
+                || CollisionPredicates.SegmentsIntersect(a, b, this.P2, this.P3)
+                || CollisionPredicates.SegmentsIntersect(a, b, this.P3, this.P0);
         }
     }
 
@@ -1106,10 +1104,7 @@ public sealed partial class TrackCollisionDetector {
         }
     }
 
-    private static class RobustPredicates {
-        // Shewchuk's orient2d first-stage error bound for IEEE binary64.
-        private const double CcwErrorBoundA = 3.3306690738754716e-16;
-
+    private static class CollisionPredicates {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool SegmentsIntersect(
             in PointF a,
@@ -1148,73 +1143,14 @@ public sealed partial class TrackCollisionDetector {
             return abc != abd && cda != cdb;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int OrientationSign(in PointF a, in PointF b, in PointF c) {
-            if (IsSubnormal(a.X)
-                || IsSubnormal(a.Y)
-                || IsSubnormal(b.X)
-                || IsSubnormal(b.Y)
-                || IsSubnormal(c.X)
-                || IsSubnormal(c.Y)) {
-                return ExactOrientationSign(a, b, c);
-            }
-
             double acx = (double)a.X - c.X;
             double bcx = (double)b.X - c.X;
             double acy = (double)a.Y - c.Y;
             double bcy = (double)b.Y - c.Y;
-            double determinantLeft = acx * bcy;
-            double determinantRight = acy * bcx;
-            double determinant = determinantLeft - determinantRight;
-
-            double determinantSum;
-            if (determinantLeft > 0.0) {
-                if (determinantRight <= 0.0) {
-                    return SignOrExact(determinant, a, b, c);
-                }
-
-                determinantSum = determinantLeft + determinantRight;
-            } else if (determinantLeft < 0.0) {
-                if (determinantRight >= 0.0) {
-                    return SignOrExact(determinant, a, b, c);
-                }
-
-                determinantSum = -determinantLeft - determinantRight;
-            } else {
-                return SignOrExact(determinant, a, b, c);
-            }
-
-            double errorBound = CcwErrorBoundA * determinantSum;
-            if (determinant >= errorBound) {
-                return 1;
-            }
-
-            if (-determinant >= errorBound) {
-                return -1;
-            }
-
-            return ExactOrientationSign(a, b, c);
-        }
-
-        private static int SignOrExact(
-            double value,
-            in PointF a,
-            in PointF b,
-            in PointF c) {
-            if (value > 0.0) {
-                return 1;
-            }
-
-            if (value < 0.0) {
-                return -1;
-            }
-
-            return ExactOrientationSign(a, b, c);
-        }
-
-        private static bool IsSubnormal(float value) {
-            SingleBits bits = new(value);
-            int magnitude = bits.Bits & 0x7fffffff;
-            return magnitude != 0 && (magnitude & 0x7f800000) == 0;
+            double determinant = acx * bcy - acy * bcx;
+            return determinant > 0.0 ? 1 : determinant < 0.0 ? -1 : 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1223,131 +1159,6 @@ public sealed partial class TrackCollisionDetector {
                 && point.X <= Math.Max(a.X, b.X)
                 && point.Y >= Math.Min(a.Y, b.Y)
                 && point.Y <= Math.Max(a.Y, b.Y);
-        }
-
-        private static int ExactOrientationSign(in PointF a, in PointF b, in PointF c) {
-            Dyadic ax = Dyadic.FromSingle(a.X);
-            Dyadic ay = Dyadic.FromSingle(a.Y);
-            Dyadic bx = Dyadic.FromSingle(b.X);
-            Dyadic by = Dyadic.FromSingle(b.Y);
-            Dyadic cx = Dyadic.FromSingle(c.X);
-            Dyadic cy = Dyadic.FromSingle(c.Y);
-
-            int commonExponent = int.MaxValue;
-            IncludeExponent(ax, ref commonExponent);
-            IncludeExponent(ay, ref commonExponent);
-            IncludeExponent(bx, ref commonExponent);
-            IncludeExponent(by, ref commonExponent);
-            IncludeExponent(cx, ref commonExponent);
-            IncludeExponent(cy, ref commonExponent);
-            if (commonExponent == int.MaxValue) {
-                return 0;
-            }
-
-            // At most 61 magnitude bits per coordinate and 62 per difference:
-            // the exact signed determinant fits in 128 bits without allocating.
-            // Retain BigInteger for the full binary32 exponent range.
-            if (ax.TryGetBoundedInteger(commonExponent, out long axl)
-                && ay.TryGetBoundedInteger(commonExponent, out long ayl)
-                && bx.TryGetBoundedInteger(commonExponent, out long bxl)
-                && by.TryGetBoundedInteger(commonExponent, out long byl)
-                && cx.TryGetBoundedInteger(commonExponent, out long cxl)
-                && cy.TryGetBoundedInteger(commonExponent, out long cyl)) {
-                Int128 exact = ((Int128)bxl - axl) * ((Int128)cyl - ayl)
-                    - ((Int128)byl - ayl) * ((Int128)cxl - axl);
-                return exact > 0 ? 1 : exact < 0 ? -1 : 0;
-            }
-
-            BigInteger axi = ax.ToIntegerAtExponent(commonExponent);
-            BigInteger ayi = ay.ToIntegerAtExponent(commonExponent);
-            BigInteger bxi = bx.ToIntegerAtExponent(commonExponent);
-            BigInteger byi = by.ToIntegerAtExponent(commonExponent);
-            BigInteger cxi = cx.ToIntegerAtExponent(commonExponent);
-            BigInteger cyi = cy.ToIntegerAtExponent(commonExponent);
-            BigInteger determinant = ((bxi - axi) * (cyi - ayi))
-                - ((byi - ayi) * (cxi - axi));
-            return determinant.Sign;
-        }
-
-        private static void IncludeExponent(Dyadic value, ref int minimum) {
-            if (value.Significand != 0 && value.Exponent < minimum) {
-                minimum = value.Exponent;
-            }
-        }
-
-        private readonly struct Dyadic {
-            private Dyadic(int significand, int exponent) {
-                this.Significand = significand;
-                this.Exponent = exponent;
-            }
-
-            internal int Significand { get; }
-            internal int Exponent { get; }
-
-            internal bool TryGetBoundedInteger(int commonExponent, out long value) {
-                if (this.Significand == 0) {
-                    value = 0;
-                    return true;
-                }
-
-                int shift = this.Exponent - commonExponent;
-                if (shift > 37) {
-                    value = 0;
-                    return false;
-                }
-
-                value = (long)this.Significand << shift;
-                return true;
-            }
-
-            internal BigInteger ToIntegerAtExponent(int commonExponent) {
-                if (this.Significand == 0) {
-                    return BigInteger.Zero;
-                }
-
-                return new BigInteger(this.Significand) << (this.Exponent - commonExponent);
-            }
-
-            internal static Dyadic FromSingle(float value) {
-                SingleBits union = new(value);
-                int bits = union.Bits;
-                int magnitude = bits & 0x7fffffff;
-                int rawExponent = (magnitude >> 23) & 0xff;
-                int fraction = magnitude & 0x7fffff;
-                if (rawExponent == 0 && fraction == 0) {
-                    return new Dyadic(0, 0);
-                }
-
-                int significand;
-                int exponent;
-                if (rawExponent == 0) {
-                    significand = fraction;
-                    exponent = -149;
-                } else {
-                    significand = (1 << 23) | fraction;
-                    exponent = rawExponent - 150;
-                }
-
-                if (bits < 0) {
-                    significand = -significand;
-                }
-
-                return new Dyadic(significand, exponent);
-            }
-        }
-
-        [StructLayout(LayoutKind.Explicit)]
-        private struct SingleBits {
-            internal SingleBits(float value) {
-                this.Bits = 0;
-                this.Value = value;
-            }
-
-            [FieldOffset(0)]
-            internal float Value;
-
-            [FieldOffset(0)]
-            internal int Bits;
         }
     }
 }
