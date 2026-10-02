@@ -13,7 +13,7 @@ public partial class Main_GodotAdapter : Node {
             this.Main = new Main(mainNode: this);
             this.Main.Ready();
         } catch (Exception exception) {
-            Main.LogExceptionAndQuit(exception);
+            this.Main.LogExceptionAndQuit(exception);
         }
     }
 
@@ -21,7 +21,7 @@ public partial class Main_GodotAdapter : Node {
         try {
             this.Main.Process(delta);
         } catch (Exception exception) {
-            Main.LogExceptionAndQuit(exception);
+            this.Main.LogExceptionAndQuit(exception);
         }
     }
 }

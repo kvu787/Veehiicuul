@@ -24,29 +24,29 @@ public class Main {
     private CollisionManager CollisionManager = null!;
 
     private bool IsReadyDone;
-    private static Node MainNode = null!;
+    private readonly Node MainNode;
 
     public Main(Node mainNode) {
         ArgumentNullException.ThrowIfNull(mainNode);
-        MainNode = mainNode;
+        this.MainNode = mainNode;
     }
 
-    public static void LogExceptionAndQuit(Exception exception) {
+    public void LogExceptionAndQuit(Exception exception) {
         GD.PrintErr(exception.ToString());
-        Quit(1);
+        this.Quit(1);
     }
 
-    public static void Quit(int exitCode) {
-        MainNode.SetProcess(false);
-        MainNode.GetTree().Quit(exitCode);
+    public void Quit(int exitCode) {
+        this.MainNode.SetProcess(false);
+        this.MainNode.GetTree().Quit(exitCode);
     }
 
     public void Ready() {
-        PrintInfoUtility.PrintDisplayInfo(MainNode.GetViewport());
+        PrintInfoUtility.PrintDisplayInfo(this.MainNode.GetViewport());
         PrintInfoUtility.PrintGraphicsInfo();
         this.DigitalInputMap = new DigitalInputMap();
         this.InputManager = new InputManager(this.DigitalInputMap);
-        this.TrackSwitcher = new TrackSwitcher(MainNode, this.InputManager, TrackNames, InitialTrackIndex);
+        this.TrackSwitcher = new TrackSwitcher(this.MainNode, this.InputManager, TrackNames, InitialTrackIndex);
         this.InitializeTrack();
         this.IsReadyDone = true;
     }
@@ -70,7 +70,7 @@ public class Main {
         this.InputManager.UpdateInputs();
 
         if (this.InputManager.QuitGame) {
-            Quit(0);
+            this.Quit(0);
             return;
         }
 
