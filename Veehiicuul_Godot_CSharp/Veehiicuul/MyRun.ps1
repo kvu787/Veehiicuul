@@ -14,7 +14,7 @@ New-Item -ItemType "Directory" -Path $LogFolderPath
 if (Test-Path $PresentMonPath) {
     Start-Process `
         -FilePath $PresentMonPath `
-        -ArgumentList "--process_name `"$($ProcessName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats" `
+        -ArgumentList "--process_name `"$($ProcessName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time" `
         -Verb "RunAs"
 }
 

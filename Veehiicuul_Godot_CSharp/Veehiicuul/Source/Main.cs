@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Diagnostics;
 
 namespace Veehiicuul_Godot_CSharp;
 
@@ -42,6 +43,7 @@ public class Main {
     }
 
     public void Ready() {
+        GD.Print($"ProcessId='{System.Environment.ProcessId}', QpcFrequency='{Stopwatch.Frequency}'");
         PrintInfoUtility.PrintDisplayInfo(this.MainNode.GetViewport());
         PrintInfoUtility.PrintGraphicsInfo();
         this.DigitalInputMap = new DigitalInputMap();
@@ -68,6 +70,12 @@ public class Main {
         }
 
         this.InputManager.UpdateInputs();
+
+        if (Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonLeftStick)) {
+            long eventQpc = Stopwatch.GetTimestamp();
+            ulong frameNumber = Engine.GetProcessFrames();
+            GD.Print($"QPC='{eventQpc}', Engine.GetProcessFrames()='{frameNumber}', Event='Stutter observed by player. Account for player reaction time and latency.'");
+        }
 
         if (this.InputManager.QuitGame) {
             this.Quit(0);
