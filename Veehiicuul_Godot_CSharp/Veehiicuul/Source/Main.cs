@@ -12,6 +12,7 @@ public class Main {
     private DateTime CarControlTimeoutStart = DateTime.MinValue;
     private bool IsReadyDone;
     private readonly Node MainNode;
+    private bool RunInitialForceGarbageCollection = true;
 
     private DigitalInputMap DigitalInputMap = null!;
     private InputManager InputManager = null!;
@@ -102,7 +103,10 @@ public class Main {
             this.CameraFollowManager.ResetEvents();
         }
 
-        if (wasTrackSwitched || wasCarReset) {
+        if (this.RunInitialForceGarbageCollection) {
+            GarbageCollectionUtility.ForceGarbageCollection();
+            this.RunInitialForceGarbageCollection = false;
+        } else if (wasTrackSwitched || wasCarReset) {
             GarbageCollectionUtility.ForceGarbageCollection();
         }
     }
