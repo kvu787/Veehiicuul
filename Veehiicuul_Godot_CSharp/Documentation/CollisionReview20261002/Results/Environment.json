@@ -1,9 +1,0 @@
-{
-    "Runtime": ".NET 10.0.12",
-    "OperatingSystem": "Microsoft Windows 10.0.26200",
-    "Architecture": "X64",
-    "LogicalProcessorCount": 24,
-    "Priority": "BelowNormal",
-    "Frequency": 10000000,
-    "TotalSeconds": 20.9380804
-}
