@@ -97,8 +97,8 @@ This is an example of a misleading profile because the ULLM UI setting is 0 even
 # Generate DigitalInputMap.cs
 
 ```powershell
-$ScriptPath = "C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Tools\DigitalInputMapGenerator\GenerateDigitalInputMap.py"
-$OutputPath = "C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\Source\GameDataAndLogic\DigitalInputMap.cs"
+$ScriptPath = "C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Tools\GenerateDigitalInputMap.py"
+$OutputPath = "C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\Source\GameDataAndLogic\Input\DigitalInputMap.cs"
 
 $source = py -3.14 $ScriptPath `
   "JoyButton.A" `

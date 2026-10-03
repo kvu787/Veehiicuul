@@ -13,7 +13,7 @@ def main() -> None:
     cleanup = []
     for code in codes:
         if code.startswith("JoyButton."):
-            event = f"InputEventJoypadButton binding = new() {{ ButtonIndex = {code}, Device = -1 }}"
+            event = f"InputEventJoypadButton binding = new() {{ ButtonIndex = {code}, Device = 0 }}"
         elif code.startswith("Key."):
             event = f"InputEventKey binding = new() {{ Keycode = {code} }}"
         elif code.startswith("MouseButton."):

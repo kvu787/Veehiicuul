@@ -25,59 +25,59 @@ public sealed class DigitalInputMap : IDisposable {
 
     public DigitalInputMap() {
         InputMap.AddAction(this.JoyButtonA);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.A, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.A, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonA, binding);
         }
         InputMap.AddAction(this.JoyButtonB);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.B, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.B, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonB, binding);
         }
         InputMap.AddAction(this.JoyButtonX);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.X, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.X, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonX, binding);
         }
         InputMap.AddAction(this.JoyButtonY);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.Y, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.Y, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonY, binding);
         }
         InputMap.AddAction(this.JoyButtonDpadUp);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.DpadUp, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.DpadUp, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonDpadUp, binding);
         }
         InputMap.AddAction(this.JoyButtonDpadDown);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.DpadDown, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.DpadDown, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonDpadDown, binding);
         }
         InputMap.AddAction(this.JoyButtonDpadLeft);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.DpadLeft, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.DpadLeft, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonDpadLeft, binding);
         }
         InputMap.AddAction(this.JoyButtonDpadRight);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.DpadRight, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.DpadRight, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonDpadRight, binding);
         }
         InputMap.AddAction(this.JoyButtonLeftShoulder);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.LeftShoulder, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.LeftShoulder, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonLeftShoulder, binding);
         }
         InputMap.AddAction(this.JoyButtonRightShoulder);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.RightShoulder, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.RightShoulder, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonRightShoulder, binding);
         }
         InputMap.AddAction(this.JoyButtonLeftStick);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.LeftStick, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.LeftStick, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonLeftStick, binding);
         }
         InputMap.AddAction(this.JoyButtonRightStick);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.RightStick, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.RightStick, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonRightStick, binding);
         }
         InputMap.AddAction(this.JoyButtonBack);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.Back, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.Back, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonBack, binding);
         }
         InputMap.AddAction(this.JoyButtonStart);
-        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.Start, Device = -1 }) {
+        using (InputEventJoypadButton binding = new() { ButtonIndex = JoyButton.Start, Device = 0 }) {
             InputMap.ActionAddEvent(this.JoyButtonStart, binding);
         }
         InputMap.AddAction(this.KeyEscape);
