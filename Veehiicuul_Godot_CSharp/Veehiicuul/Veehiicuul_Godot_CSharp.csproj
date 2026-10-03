@@ -31,8 +31,4 @@
     <PropertyGroup>
         <DefaultItemExcludes>$(DefaultItemExcludes);MyBuildOutput\**;MyLogOutput\**</DefaultItemExcludes>
     </PropertyGroup>
-
-    <ItemGroup>
-        <PackageReference Include="System.Management" Version="10.0.12" />
-    </ItemGroup>
 </Project>
