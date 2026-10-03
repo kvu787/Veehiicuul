@@ -21,7 +21,7 @@ The repository records a previous export stall caused by the idle compiler serve
 
 This controls how compilation runs; it does **not** change the game’s intended behavior, graphics settings, or runtime performance. [Roslyn compiler-server documentation](https://github.com/dotnet/roslyn/blob/main/docs/compilers/Compiler%20Server.md)
 
-The complication here is **Godot’s Windows console wrapper can wait for the compiler server to exit, even after exporting has finished**. Consequently, `Run.cmd` can appear stuck before launching the game. The repository’s [previous investigation](C:/Users/k/Repository/Veehiicuul/Conversations/20260918GodotEditorSaveChanges.md:235) reproduced this in `InputLatency_Godot` and verified that `false` fixed it. The current Veehiicuul launcher uses the same console wrapper, so enabling it could reintroduce that delay; it need not happen on every run.
+The complication here is **Godot’s Windows console wrapper can wait for the compiler server to exit, even after exporting has finished**. Consequently, `Run.cmd` can appear stuck before launching the game. The repository’s [previous investigation](C:/Users/k/Repository/Veehiicuul/Conversations/2026-09-19_00-57_UTC_GodotEditorSaveChanges.md:235) reproduced this in `InputLatency_Godot` and verified that `false` fixed it. The current Veehiicuul launcher uses the same console wrapper, so enabling it could reintroduce that delay; it need not happen on every run.
 
 **I would keep `false` with the current launcher.** Enabling shared compilation is reasonable if the launcher is adjusted and verified to finish without waiting for the server.
 

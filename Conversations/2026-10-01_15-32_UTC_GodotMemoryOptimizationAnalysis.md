@@ -279,7 +279,7 @@ Other suspected allocation sites are already fine: `Vector2`, `Vector3`, `Quater
 
 I found no definite track-node leak in the inspected ownership paths: freeing the track recursively deletes its gameplay children, and the owned `PackedScene` and `FileAccess` wrappers already use `using`. The project also has no imported images or animations in Ribeye, so texture or animation optimizations offer little here.
 
-No application or engine files were changed. The conversation is recorded and committed in [GodotMemoryOptimizationAnalysis20261001.md](C:/Users/k/Repository/Veehiicuul/Conversations/GodotMemoryOptimizationAnalysis20261001.md).
+No application or engine files were changed. The conversation is recorded and committed in [GodotMemoryOptimizationAnalysis20261001.md](C:/Users/k/Repository/Veehiicuul/Conversations/2026-10-01_15-32_UTC_GodotMemoryOptimizationAnalysis.md).
 
 ## User
 
@@ -397,7 +397,7 @@ The remaining ordinary frame code looks sound for managed memory: `Vector2`, `Ve
 
 The input dictionaries retain capacity when cleared. Pre-sizing them once could remove first-use or capacity-growth allocations during driving, but would not remove recurring digital-event wrapper allocations. Likewise, [render-graph scratch storage](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/rendering_device_graph.cpp:1757) and the [DX12 command-list array](C:/Users/k/Repository/External/Godot_4-7-2/drivers/d3d12/rendering_device_driver_d3d12.cpp:2479) retain storage; their `clear`/`resize` operations should not be counted as fresh heap allocations every frame.
 
-No application or engine files were changed. This analysis is recorded and committed in [the conversation log](C:/Users/k/Repository/Veehiicuul/Conversations/GodotMemoryOptimizationAnalysis20261001.md).
+No application or engine files were changed. This analysis is recorded and committed in [the conversation log](C:/Users/k/Repository/Veehiicuul/Conversations/2026-10-01_15-32_UTC_GodotMemoryOptimizationAnalysis.md).
 
 ## User
 
@@ -472,7 +472,7 @@ All current [InputManager consumers](C:/Users/k/Repository/Veehiicuul/Veehiicuul
 
 For your active-driving workload, this is an event-dependent cleanup opportunity. [The native shortcut filter](C:/Users/k/Repository/External/Godot_4-7-2/scene/main/viewport.cpp:3583) already excludes joystick-axis and mouse-motion events. Frames containing only analog input therefore avoid these particular managed allocations already. Action polling would remove the additional managed work caused by digital events; native event creation, queuing, and action processing would continue.
 
-No application or engine code was changed, built, or run. The explanation is recorded in [the conversation log](C:/Users/k/Repository/Veehiicuul/Conversations/GodotMemoryOptimizationAnalysis20261001.md).
+No application or engine code was changed, built, or run. The explanation is recorded in [the conversation log](C:/Users/k/Repository/Veehiicuul/Conversations/2026-10-01_15-32_UTC_GodotMemoryOptimizationAnalysis.md).
 
 ## User
 
@@ -611,7 +611,7 @@ I also excluded several apparent allocation sites after tracing their lifetimes.
 
 For project-only work, I would prioritize the shadow-culling setting, then consider the input-accumulation tradeoff. For engine work, the frustum `ptrw()` correction is the smallest concrete change; binding-array reuse addresses more recurring sites. The collision fallback remains the main conditional C# opportunity.
 
-No application or engine files were changed. This analysis is recorded in [the conversation log](C:/Users/k/Repository/Veehiicuul/Conversations/GodotMemoryOptimizationAnalysis20261001.md).
+No application or engine files were changed. This analysis is recorded in [the conversation log](C:/Users/k/Repository/Veehiicuul/Conversations/2026-10-01_15-32_UTC_GodotMemoryOptimizationAnalysis.md).
 
 ## User
 
