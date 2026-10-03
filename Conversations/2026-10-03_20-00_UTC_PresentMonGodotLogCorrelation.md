@@ -54,3 +54,41 @@ For performance captures, use occasional markers; frequent `GD.Print` calls can 
 
 `Time.GetTicksUsec()` can also measure elapsed time, but it starts at Godot startup and needs an offset calibration to align with PresentMon. Raw QPC avoids that extra step. [Godot Time documentation](https://docs.godotengine.org/en/stable/classes/class_time.html#class-time-method-get-ticks-usec).
 
+
+## User
+
+review the currently staged changes. i did a test run that output this: C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyLogOutput\2026-10-03_13-12-06
+
+(i didn't actually observe any stutters. i just pressed LS to trigger the log statement.)
+
+## Assistant Commentary
+
+I'll review the staged instrumentation and check whether the LS marker aligns with the PresentMon capture from your test run.
+
+## Assistant Commentary
+
+All five LS markers align with the capture for PID 22728, using the logged 10 MHz QPC frequency. The build and PowerShell syntax checks also pass. The marker-containing frames have slightly longer present intervals; I'll compare those with the surrounding frames to assess the logging overhead.
+
+## Assistant Final
+
+No actionable findings in the staged changes. The QPC logging in [Main.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs:74) and `--qpc_time` in [MyRun.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyRun.ps1:17) correctly use the same clock.
+
+Your test confirms:
+
+- Both logs identify PID **22728**, with a QPC frequency of **10,000,000 ticks/second**.
+- All five LS markers fall inside the capture and align with nearby frame timestamps.
+- The capture contains **21,804 rows**, one swapchain, and monotonically increasing QPC timestamps.
+
+| Godot process frame | Time from first CPUStartQPC | Present interval containing marker |
+| ------------------- | --------------------------- | ---------------------------------- |
+| 10921               | 9.012 s                     | 1.2903 ms                          |
+| 12449               | 10.235 s                    | 1.0790 ms                          |
+| 16303               | 13.318 s                    | 1.1180 ms                          |
+| 18570               | 15.131 s                    | 1.0089 ms                          |
+| 20492               | 16.670 s                    | 1.1278 ms                          |
+
+Nearby median present intervals are about **0.80 ms**. The marker frames also have higher CPU busy times, consistent with a small logging cost; this is not evidence of an observed stutter. I treated all five as test presses, as you specified.
+
+For future stutter reports, inspect the time **before** the marker to account for your reaction time and input processing. `Engine.GetProcessFrames()` is useful context, but QPC should remain the correlation key.
+
+The `ExportRelease` C# build passed with warnings treated as errors, and the PowerShell syntax and staged whitespace checks passed.
