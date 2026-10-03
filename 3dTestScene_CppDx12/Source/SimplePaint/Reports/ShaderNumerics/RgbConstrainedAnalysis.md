@@ -87,7 +87,7 @@ Consequently the former near-white shadow-floor cases are excluded. The survivin
 All examples in this table use Brightness=0.01, DarkPoint=0, LightPoint=1, Shift=0, Rotation=0, and N=(0,0,1). C is the same sRGB value in all three channels. Every RGB value satisfies the strict bounds. Every expected linear channel is 1.
 
 | C        | Current linear output | Main mechanism                           |
-| ---:     | ---:                  | ---------------------------------------- |
+| -------: | --------------------: | ---------------------------------------- |
 | 0.010001 | 0.77407122            | Denominator floor                        |
 | 0.0101   | 0.78173369            | Denominator floor                        |
 | 0.011    | 0.85139316            | Denominator floor                        |
@@ -170,7 +170,7 @@ e > approximately 0.01136661779
 At the exact threshold the strict RGB inequality also makes each exact denominator greater than the floor, but leaves no uniform positive safety margin beyond it. Rounding can invalidate that reasoning for the implemented coefficients. A rounded suggestion such as 0.01137 is therefore not an accuracy certification.
 
 | e     | Mathematical color-denominator lower bound | Relation to 1e-5 floor |
-| ---:  | ---:                                       | ---------------------- |
+| ----: | -----------------------------------------: | ---------------------- |
 | 0.005 | 0.000001934985                             | Below                  |
 | 0.010 | 0.000007739938                             | Below                  |
 | 0.011 | 0.000009365325                             | Below                  |

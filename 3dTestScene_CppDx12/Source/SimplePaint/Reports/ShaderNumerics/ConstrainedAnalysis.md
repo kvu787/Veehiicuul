@@ -19,7 +19,7 @@ K12 compares the corrected normal's camera-facing component against 0.01. A smal
 All examples use Rotation=0. Unless a different Shift is specified, Shift=0. C is applied to each Body sRGB channel. N is the view-space surface normal supplied to the pixel shader, before normalization.
 
 | Example                                                | Brightness | C        | DarkPoint | LightPoint | N or behavior                                          | Current linear output | Reference  |
-| ------------------------------------------------------ | ---:       | ---:     | ---:      | ---:       | ------------------------------------------------------ | ---:                  | ---:       |
+| ------------------------------------------------------ | ---------: | -------: | --------: | ---------: | ------------------------------------------------------ | --------------------: | ---------: |
 | Original dark-channel failure, adapted to the contract | 0.01       | 0.001    | 0         | 1          | N=(0,0,1)                                              | 0.07739938            | 1          |
 | Stronger dark-channel case                             | 0.01       | 0.0002   | 0         | 1          | N=(0,0,1)                                              | 0.01547988            | 1          |
 | Counterexample valid for every feasible e              | 0.5        | 0.0002   | 0         | 1          | N=(0,0,1)                                              | 0.77399379            | 1          |
@@ -125,7 +125,7 @@ This is an exact-arithmetic bound for the normalized input model. It is not a fo
 The lower bound remains useful for smaller e:
 
 | Input margin e | Shift upper bound | Shift-denominator lower bound | Multiple of current 1e-5 floor |
-| -------------- | ---:              | ---:                          | ---:                           |
+| -------------- | ----------------: | ----------------------------: | -----------------------------: |
 | 0.01           | 0.99              | 0.001410674                   | 141.1                          |
 | 0.005          | 0.995             | 0.000998749                   | 99.9                           |
 | 0.001          | 0.999             | 0.000447102                   | 44.7                           |

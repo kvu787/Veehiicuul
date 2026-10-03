@@ -55,12 +55,12 @@ shader headers. It rendered the same car pose and sphere through the actual
 background/object draw functions. Images were copied directly from the GPU
 render target and compared as 8-bit RGB; no desktop screenshot timing was involved.
 
-| Paint preset | Coverage | Comparisons | Result |
-| --- | --- | ---: | --- |
-| Shipped settings | Zero shift, original angles | 4 | Pixel-identical |
-| Zero shift, changed angles | Different nonzero angles in all six materials | 4 | Pixel-identical |
-| Shifted paint | Shifts 0.3–0.95, varied positive/negative angles | 4 | Pixel-identical |
-| Edge values | Shifts around epsilon and near/at 1; wrapped angles | 4 | Pixel-identical |
+| Paint preset               | Coverage                                            | Comparisons | Result          |
+| -------------------------- | --------------------------------------------------- | ----------: | --------------- |
+| Shipped settings           | Zero shift, original angles                         | 4           | Pixel-identical |
+| Zero shift, changed angles | Different nonzero angles in all six materials       | 4           | Pixel-identical |
+| Shifted paint              | Shifts 0.3–0.95, varied positive/negative angles    | 4           | Pixel-identical |
+| Edge values                | Shifts around epsilon and near/at 1; wrapped angles | 4           | Pixel-identical |
 
 Each preset was compared at 1280×720, 720×1280, 2560×720, and 3000×700.
 These cover normal, portrait, 32:9, and wider-than-background layouts, with
@@ -86,11 +86,11 @@ the two actual object draws. The background was outside the timed interval.
 Four warmup batches preceded 15 recorded batches. Three independent process runs
 rotated the order of baseline, rotation/interpolation-only, and final renderer.
 
-| Renderer | Shipped settings: run medians (microseconds) | Shifted paint: run medians (microseconds) |
-| --- | --- | --- |
-| Baseline | 8.043, 8.058, 8.036 | 8.713, 9.165, 8.045 |
-| Rotation/interpolation only | 8.029, 8.026, 8.038 | 8.055, 8.050, 8.054 |
-| Final renderer | 8.035, 8.039, 8.037 | 8.052, 8.059, 8.052 |
+| Renderer                    | Shipped settings: run medians (microseconds) | Shifted paint: run medians (microseconds) |
+| --------------------------- | -------------------------------------------- | ----------------------------------------- |
+| Baseline                    | 8.043, 8.058, 8.036                          | 8.713, 9.165, 8.045                       |
+| Rotation/interpolation only | 8.029, 8.026, 8.038                          | 8.055, 8.050, 8.054                       |
+| Final renderer              | 8.035, 8.039, 8.037                          | 8.052, 8.059, 8.052                       |
 
 Default-settings times are effectively unchanged. Two shifted baseline runs
 were slower, but the third was as fast as the optimized variants. This is not

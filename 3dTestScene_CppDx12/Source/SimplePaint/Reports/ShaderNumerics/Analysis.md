@@ -20,7 +20,7 @@ The [Presets](Presets) directory contains ten complete INI files. They were gene
 The reference column below uses the same stored float32 parameters and CPU color conversion/clamps as the application, with stable arithmetic. This isolates the shader arithmetic from input quantization. References to the original requested parameters are separately recorded in the CSV.
 
 | Example             | Brightness | C, sRGB | T        | Current GPU | Stable reference |
-| ------------------- | ---:       | ---:    | ---:     | ---:        | ---:             |
+| ------------------- | ---------: | ------: | -------: | ----------: | ---------------: |
 | Previously reported | 0.01       | 0.001   | 1        | 0.07739938  | 1                |
 | Dark A              | 0.1        | 0.0002  | 1        | 0.15479876  | 1                |
 | Dark B              | 0.5        | 0.0002  | 1        | 0.77399379  | 1                |
@@ -57,7 +57,7 @@ For dark colors, k2 is negative and k3 is positive. Near the bright endpoint the
 Examples, with C used in all Body channels and DarkPoint=LightPoint=1:
 
 | Brightness | C         | Current     | Experimental floor removed | Nonnegative formula |
-| ---------- | ---:      | ---:        | ---:                       | ---:                |
+| ---------- | --------: | ----------: | -------------------------: | ------------------: |
 | 0.5        | 0.000259  | 0.99799234  | 0.99799234                 | 1                   |
 | 0.00001    | 0.04      | 0.003095975 | 0.51941842                 | 1                   |
 | 0.00001    | 0.0001292 | 0.000010000 | 1 after saturation         | 1                   |
@@ -75,7 +75,7 @@ Location: Renderer.cpp, lines 1161-1164.
 The CPU clamps each linear channel into [0.00001, 0.99999]. This does not preserve exact black or white. It also collapses a band of near-black/near-white inputs onto the same value. The changed endpoints can be strongly amplified by the paint curve.
 
 | Brightness | C       | T      | Current GPU | Requested-parameter reference |
-| ---------- | ---:    | ---:   | ---:        | ---:                          |
+| ---------- | ------: | -----: | ----------: | ----------------------------: |
 | 0.9999     | 0       | 0.8    | 0.28566208  | 0                             |
 | 0.9999     | 0.00001 | 0.8    | 0.28566208  | 0.03002714                    |
 | 0.5        | 1       | 0.0001 | 0.90898609  | 1                             |
@@ -91,7 +91,7 @@ Location: Renderer.cpp, line 1140.
 Brightness is silently constrained to [0.00001, 0.99999]. Use C=0.7353569830524495, which is approximately linear 0.5.
 
 | Requested Brightness | T       | Current GPU | Requested-parameter reference |
-| -------------------- | ---:    | ---:        | ---:                          |
+| -------------------- | ------: | ----------: | ----------------------------: |
 | 0.0000001            | 0.999   | 0.009891283 | 0.000099890                   |
 | 0.9999999            | 0.001   | 0.99009538  | 0.99990011                    |
 | 0                    | 0.99999 | 0.49932212  | 0                             |
@@ -149,7 +149,7 @@ Location: Renderer.cpp, line 1141.
 With the neutral material, DarkPoint=0, LightPoint=1, FacingCutoff=0, and normal=(0,0,1):
 
 | Requested Shift | Current GPU | Requested-parameter reference |
-| --------------- | ---:        | ---:                          |
+| --------------- | ----------: | ----------------------------: |
 | 0.999999        | 0.00447517  | 0.00141421                    |
 | 1               | 0.00447517  | 0                             |
 

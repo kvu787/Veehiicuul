@@ -2,6 +2,7 @@
 # Run explicitly to refresh; AnalyzePresentMon.py never refreshes this snapshot.
 [CmdletBinding()]
 param()
+Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $analysisDirectory = $PSScriptRoot
 $repositoryDirectory = (Resolve-Path (Join-Path $analysisDirectory '..\..')).Path
