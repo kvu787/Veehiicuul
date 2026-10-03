@@ -1,6 +1,6 @@
 # Using Visual Studio with this project
 
-This guide covers the full Visual Studio IDE on Windows. Use the CMake project
+This guide covers the full Visual Studio IDE on Windows 11 x64. Use the CMake project
 in `3dTestScene_CppDx12` directly. Paths and command examples below are relative to `3dTestScene_CppDx12`
 unless stated otherwise.
 
@@ -23,7 +23,7 @@ For Direct3D validation during development, search Windows Settings for **Option
 
 1. Start Visual Studio.
 2. Choose **Open a local folder** on the start screen, or **File > Open > Folder**.
-3. Open the Veehiicuul repository's `3dTestScene_CppDx12` folder containing `Run.cmd`, `CMakeLists.txt`, and `CMakePresets.json`.
+3. Open the Veehiicuul repository's `3dTestScene_CppDx12` folder containing `Build.cmd`, `Run.cmd`, `CMakeLists.txt`, and `CMakePresets.json`.
 4. Confirm that Solution Explorer contains `CMakeLists.txt`, `Source`, `Assets`, and `Tests`.
 5. Allow the initial CMake configuration and IntelliSense indexing to finish.
 
@@ -33,18 +33,18 @@ Open `3dTestScene_CppDx12` as the CMake project folder. Visual Studio can consum
 
 The checked-in [CMakePresets.json](../CMakePresets.json) provides `vs-debug` and `vs-release` configure, build, and test presets. Their explicit `Out/Build/${presetName}` output path preserves the folder capitalization when Visual Studio creates new build directories. Personal presets can inherit these configurations in the ignored `CMakeUserPresets.json` file.
 
-The `RunDebug` and `RunRelease` launcher presets inherit these shared settings and use the launcher's `MyBuildOutput/Debug` and `MyBuildOutput/Release`. Both `Out/` and `CMakeUserPresets.json` are already ignored by Git. The shared presets are versioned; personal overrides remain local. [CMake preset format](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
+The `RunDebug` and `RunRelease` script presets inherit these shared settings and use `MyBuildOutput/Debug` and `MyBuildOutput/Release`. `Build.ps1` builds these outputs, and `Run.ps1` launches them. Both `Out/` and `CMakeUserPresets.json` are already ignored by Git. The shared presets are versioned; personal overrides remain local. [CMake preset format](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
 
 In **Tools > Options > CMake > General**, enable preset-based configuration, using **Always use CMakePresets.json** or the equivalent option in your version. Close and reopen the folder if necessary. Select **Local Machine**, **Windows x64 Debug**, and the associated `vs-debug` build preset if that selector is shown. Wait for successful configuration. Visual Studio supplies the MSVC environment for the preset's external x64 architecture. [Visual Studio preset setup](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170)
 
 Use the generated output paths below after following this setup:
 
-| Purpose                 | Directory               |
-| ----------------------- | ----------------------- |
-| Visual Studio Debug     | `Out/Build/vs-debug`     |
-| Visual Studio Release   | `Out/Build/vs-release`   |
-| Run.cmd default Release | `MyBuildOutput/Release`  |
-| Run.ps1 explicit Debug  | `MyBuildOutput/Debug`    |
+| Purpose                   | Directory               |
+| ------------------------- | ----------------------- |
+| Visual Studio Debug       | `Out/Build/vs-debug`    |
+| Visual Studio Release     | `Out/Build/vs-release`  |
+| Build.cmd default Release | `MyBuildOutput/Release` |
+| Build.ps1 explicit Debug  | `MyBuildOutput/Debug`   |
 
 The first CMake configure checks the compiler and locates DXC. Configuration generates the build system; building then compiles the C++ and shaders and stages the assets.
 
@@ -158,11 +158,11 @@ The C++ configuration registers 13 tests, covering paint contracts, standalone m
 
 For step-by-step test debugging, select an executable such as `SimplePaintTests` as the startup item and press F5. Return the startup item to the game afterward.
 
-The launcher uses the inherited `RunDebug` and `RunRelease` configure, build, and test presets and prepares the compiler environment automatically. From PowerShell in `3dTestScene_CppDx12`:
+The build script uses the inherited `RunDebug` and `RunRelease` configure, build, and test presets and prepares the compiler environment automatically. From PowerShell in `3dTestScene_CppDx12`:
 
 ```powershell
-.\Run.ps1 -Test -Configuration Debug
-.\Run.ps1 -Test
+.\Build.ps1 -Test -Configuration Debug
+.\Build.ps1 -Test
 ```
 
 These build and test `MyBuildOutput/Debug` and `MyBuildOutput/Release`, respectively, rather than the IDE output. `-Test` runs tests instead of launching the normal game.
@@ -177,17 +177,17 @@ Release with the presets produces:
 Out/Build/vs-release/Veehiicuul.exe
 ```
 
-Double-clicking `Run.cmd` uses the `RunRelease` preset to build and launch Release in `MyBuildOutput/Release`. It does not use whichever preset is active in Visual Studio.
+Double-clicking `Build.cmd` uses the `RunRelease` preset to build Release in `MyBuildOutput/Release`. Double-clicking `Run.cmd` launches that existing executable and exits with an error if it is missing. These scripts do not use whichever preset is active in Visual Studio.
 
 Other existing PowerShell commands are:
 
 ```powershell
-.\Run.ps1 -BuildOnly
-.\Run.ps1 -BuildOnly -Configuration Debug
+.\Build.ps1
+.\Build.ps1 -Configuration Debug
 .\Run.ps1 -Configuration Debug
 ```
 
-They build Release, build Debug, and build/launch Debug, respectively. For distribution or moving the output, preserve the executable's adjacent assets directory.
+They build Release, build Debug, and launch the existing Debug build, respectively. Rebuild after editing source assets or settings. For distribution or moving the output, preserve the executable's adjacent assets directory.
 
 Debug builds enable additional validation when available and have different CPU optimization. Breakpoints also disrupt timing. Do performance comparisons using Release without an attached debugger.
 
@@ -231,7 +231,7 @@ Check that the active configuration is Debug and the startup executable comes fr
 
 **Settings changes appear to do nothing**
 
-Edit the source JSON, rebuild the selected game target, and restart the correct executable. The launcher and IDE each have their own staged settings copy.
+Edit the source JSON, rebuild the selected game target, and restart the correct executable. The scripts and IDE each have their own staged settings copy.
 
 **The game cannot load its image or settings**
 
@@ -239,7 +239,7 @@ Build the game target so its asset dependency runs. Confirm both files are under
 
 **CMake reports a generator mismatch or an old repository path**
 
-Use Visual Studio's **Delete Cache and Reconfigure** command for the affected configuration; wording and menu placement vary. Keep different configurations in separate build directories. The launcher has its own moved-folder detection for its caches. [CMake cache management](https://learn.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-170)
+Use Visual Studio's **Delete Cache and Reconfigure** command for the affected configuration; wording and menu placement vary. Keep different configurations in separate build directories. The build script refreshes its own caches when the repository, build folder, or compiler changes. [CMake cache management](https://learn.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-170)
 
 **A test executable cannot be found**
 

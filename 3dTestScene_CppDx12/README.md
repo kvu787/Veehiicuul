@@ -2,14 +2,15 @@
 
 A native Win32/C++ DirectX 12 scene with an orthographic camera and SimplePaint shading.
 
-Double-click [Run.cmd](Run.cmd) to build and launch the app.
+Double-click [Build.cmd](Build.cmd) to build the app, then [Run.cmd](Run.cmd) to launch it.
 
 From PowerShell in this `3dTestScene_CppDx12` directory:
 
 ```powershell
-.\Run.ps1 -BuildOnly
-.\Run.ps1 -Test
-.\Run.ps1 -Test -Configuration Debug
+.\Build.ps1
+.\Build.ps1 -Test
+.\Build.ps1 -Test -Configuration Debug
+.\Run.ps1
 ```
 
 For CMake commands or Visual Studio's Open Folder workflow, use this directory,
@@ -54,7 +55,7 @@ human developers and coding agents within this C++ application.
 
 ### Platform and GPU policy
 
-The runtime platform preconditions are **Windows 11** and
+The development and runtime platform preconditions are **Windows 11** and
 **x86_64 (x64)**. There are **no GPU preconditions**: no particular GPU vendor,
 model, generation, or hardware feature set may be required.
 
@@ -86,15 +87,14 @@ that capability remains an implementation gap.
 
 ## Run
 
-Double-click `Run.cmd` in File Explorer. This minimal wrapper starts `Run.ps1`,
+Double-click `Build.cmd` in File Explorer. This minimal wrapper starts `Build.ps1`,
 which discovers Visual Studio, configures a 64-bit Release build with its
 bundled CMake and Ninja through the `RunRelease` preset, stages the runtime
-assets, builds, and launches the
-game. Subsequent launches rebuild only changed files. If the repository or its
-build folder has moved, the launcher automatically refreshes the saved CMake
-configuration before building. `-Configuration Debug` selects `RunDebug`.
+assets, and builds the game. Subsequent builds rebuild only changed files. If the
+repository, build folder, or compiler changes, the build script automatically
+refreshes the saved CMake configuration. `-Configuration Debug` selects `RunDebug`.
 These configure, build, and test presets in `CMakePresets.json` inherit the
-shared compiler and build settings; the launcher supplies the installed Ninja
+shared compiler and build settings; the build script supplies the installed Ninja
 path and prepares the x64 compiler environment.
 
 Build prerequisites:
@@ -109,8 +109,16 @@ The generated executable is `MyBuildOutput\Release\Veehiicuul.exe`. CMake
 places `SceneBackground.png` and `Settings.json` in its adjacent `Assets`
 directory.
 
-Each launcher invocation writes `Launcher.log` in
-`MyLogOutput/yyyy-MM-dd_HH-mm-ss/`. Game runs also write startup, shutdown,
+Double-click `Run.cmd` to launch the existing Release executable. Use
+`Run.ps1 -Configuration Debug` to launch the existing Debug executable. Both
+scripts also accept these arguments through their `.cmd` wrappers. The run script
+exits with an error if the selected build is missing; it does not require Visual
+Studio or build tools. Rebuild after editing source assets or settings to stage
+the changes beside the executable.
+
+Each build invocation writes `Build.log`, and each launcher invocation writes
+`Launcher.log`, in its own `MyLogOutput/yyyy-MM-dd_HH-mm-ss/` folder.
+Game runs also write startup, shutdown,
 and errors to `Application.log` in that folder. Direct executable and Visual
 Studio launches create a session folder under this C++ application's `MyLogOutput`
 directory, whose location is set at build time. This directory is ignored by Git.
@@ -150,7 +158,7 @@ example to compare queue sizes and wait strategies; higher FPS is not guaranteed
 
 ## Adjust the paint and sphere
 
-Edit `Assets/Settings.json`, then relaunch through `Run.cmd`. The six `SimplePaintShader_*`
+Edit `Assets/Settings.json`, rebuild through `Build.cmd`, then relaunch through `Run.cmd`. The six `SimplePaintShader_*`
 objects provide independent paint controls for Axles, Body, Cabin, Headlights,
 Wheels, and Sphere. See [Usage.md](Source/SimplePaint/Usage.md) for accepted numerical ranges, examples,
 and instructions for embedding the shader in another C++/DX12 project.
@@ -188,8 +196,8 @@ The stationary sphere's transforms refresh at initialization and after resize
 while the GPU is idle. Only the car's 96-byte transform block changes each
 frame; each object slot retains DirectX's 256-byte alignment.
 
-Run `.\Run.ps1 -Test` for the Release CPU and production GPU tests, or add
-`-Configuration Debug` for Debug. `-BuildOnly` builds without launching.
+Run `.\Build.ps1 -Test` for the Release CPU and production GPU tests, or add
+`-Configuration Debug` for Debug. `Build.ps1` always builds without launching.
 The GPU tests exercise both the preferred adapter and WARP.
 
 ## Assets and implementation

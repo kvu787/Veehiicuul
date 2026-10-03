@@ -240,7 +240,7 @@ Reproduce module checks using [the standalone build commands](Usage.md#build-and
 | Existing geometry tests  | UV sphere checks and 4,000 orthographic transform samples     |
 | DX12 debug validation    | No warnings or errors in either GPU correctness run           |
 
-The rebuilt Release application also passed a hidden-window smoke check: normal initialization, two seconds in its render loop, and clean exit after `WM_CLOSE`. `Run.cmd` retains its double-click build-and-launch behavior; the same launcher now also exposes build-only and test modes through `Run.ps1`.
+The rebuilt Release application also passed a hidden-window smoke check: normal initialization, two seconds in its render loop, and clean exit after `WM_CLOSE`. `Build.cmd` builds the application, and `Run.cmd` launches the existing build. `Build.ps1 -Test` builds and runs the verification suite.
 
 The module owns five CTest entries: SimplePaintContract, OrthographicTransforms,
 SimplePaintGpuHardware, SimplePaintGpuWarp, and SimplePaintStandalone.

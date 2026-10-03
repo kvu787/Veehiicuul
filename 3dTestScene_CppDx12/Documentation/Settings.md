@@ -68,9 +68,9 @@ the plain C++ validator. Update the consuming renderer code and relevant tests.
 
 ## Run and edit this application
 
-Double-click [Run.cmd](../Run.cmd). It builds and launches the application using Visual Studio's C++ tools, CMake, Ninja, and the Windows SDK's DXC shader compiler. See [README.md](../README.md) for installation requirements and app controls.
+Double-click [Build.cmd](../Build.cmd) to build the application using Visual Studio's C++ tools, CMake, Ninja, and the Windows SDK's DXC shader compiler. Then double-click [Run.cmd](../Run.cmd) to launch the existing build. See [README.md](../README.md) for installation requirements and app controls.
 
-Edit [Assets/Settings.json](../Assets/Settings.json), then launch again. The six `SimplePaintShader_*` objects provide independent controls for Axles, Body, Cabin, Headlights, Wheels, and Sphere. The setting name for Rotation is `RotationDegrees`.
+Edit [Assets/Settings.json](../Assets/Settings.json), rebuild, then launch again. The six `SimplePaintShader_*` objects provide independent controls for Axles, Body, Cabin, Headlights, Wheels, and Sphere. The setting name for Rotation is `RotationDegrees`.
 
 For example, edit these fields within the complete file to change the sphere's
 paint and select the minimum-latency pipeline:
@@ -118,7 +118,8 @@ includes zero. For example, `"Shift": 1e-999` becomes zero, while
 
 The removed `FacingCutoff` property has no effect, like any unknown property.
 Settings load from the executable's adjacent `assets` directory;
-`Run.cmd` copies the repository settings there during the build.
+`Build.cmd` copies the repository settings there during the build. Rebuild after
+editing the source settings, then restart with `Run.cmd`.
 A missing or invalid file fails startup. There is no INI fallback.
 
 

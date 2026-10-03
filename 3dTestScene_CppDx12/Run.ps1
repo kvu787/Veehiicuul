@@ -1,30 +1,10 @@
 param(
-    [switch] $BuildOnly,
-    [switch] $Test,
     [ValidateSet('Release', 'Debug')]
     [string] $Configuration = 'Release'
 )
 
 Set-StrictMode -Version Latest
-
 $ErrorActionPreference = 'Stop'
-
-Set-Location -LiteralPath $PSScriptRoot
-
-function Invoke-Checked {
-    param(
-        [Parameter(Mandatory)]
-        [string] $FilePath,
-
-        [Parameter(ValueFromRemainingArguments)]
-        [string[]] $ArgumentList
-    )
-
-    & $FilePath @ArgumentList
-    if ($LASTEXITCODE -ne 0) {
-        throw "'$FilePath' exited with code $LASTEXITCODE."
-    }
-}
 
 $transcriptStarted = $false
 try {
@@ -33,98 +13,32 @@ try {
     Start-Transcript -LiteralPath (Join-Path $logFolderPath 'Launcher.log') | Out-Null
     $transcriptStarted = $true
     Write-Host "Session logs: $logFolderPath"
-    $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-    if (-not (Test-Path -LiteralPath $vswhere -PathType Leaf)) {
-        throw 'Visual Studio Installer''s vswhere.exe was not found. Install Visual Studio with the Desktop development with C++ workload.'
-    }
-
-    $vsInstall = & $vswhere `
-        -latest `
-        -products '*' `
-        -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 Microsoft.VisualStudio.Component.VC.CMake.Project `
-        -property installationPath
-
-    if ($LASTEXITCODE -ne 0 -or -not $vsInstall) {
-        throw 'A Visual Studio installation with the C++ desktop and CMake tools was not found.'
-    }
-
-    $vsInstall = $vsInstall.Trim()
-    $cmake = Join-Path $vsInstall 'Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe'
-    $ninja = Join-Path $vsInstall 'Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe'
-    $vsDevCmd = Join-Path $vsInstall 'Common7\Tools\VsDevCmd.bat'
-
-    foreach ($tool in @($cmake, $ninja, $vsDevCmd)) {
-        if (-not (Test-Path -LiteralPath $tool -PathType Leaf)) {
-            throw "A required Visual Studio build tool was not found at: $tool"
-        }
-    }
-
-    $devCommand = "call `"$vsDevCmd`" -arch=x64 -host_arch=x64 >nul && set"
-    $environmentLines = & $env:ComSpec /d /s /c $devCommand
-    if ($LASTEXITCODE -ne 0) {
-        throw 'Visual Studio''s x64 developer environment could not be initialized.'
-    }
-
-    foreach ($line in $environmentLines) {
-        if ($line -match '^([^=]+)=(.*)$') {
-            [Environment]::SetEnvironmentVariable($Matches[1], $Matches[2], 'Process')
-        }
-    }
 
     $presetName = if ($Configuration -ieq 'Debug') { 'RunDebug' } else { 'RunRelease' }
     $presets = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'CMakePresets.json') -Raw | ConvertFrom-Json
     $configurePreset = $presets.configurePresets | Where-Object { $_.name -ceq $presetName }
-    # Launcher presets declare their output path directly, using only ${sourceDir}.
     $buildDirectory = $configurePreset.binaryDir.Replace('${sourceDir}', $PSScriptRoot)
-    $cachePath = Join-Path $buildDirectory 'CMakeCache.txt'
-    $configureOptions = @()
-
-    if (Test-Path -LiteralPath $cachePath -PathType Leaf) {
-        $expectedDirectories = @{
-            CMAKE_HOME_DIRECTORY = $PSScriptRoot
-            CMAKE_CACHEFILE_DIR = $buildDirectory
-        }
-
-        foreach ($line in Get-Content -LiteralPath $cachePath) {
-            if ($line -match '^(CMAKE_HOME_DIRECTORY|CMAKE_CACHEFILE_DIR):INTERNAL=(.*)$') {
-                # CMake stores absolute paths, so a moved build needs a fresh configuration.
-                $cachedDirectory = $Matches[2].Replace('/', '\').TrimEnd('\')
-                $expectedDirectory = $expectedDirectories[$Matches[1]].Replace('/', '\').TrimEnd('\')
-                if ($cachedDirectory -ine $expectedDirectory) {
-                    Write-Host 'Repository or build folder moved. Refreshing CMake configuration.'
-                    $configureOptions += '--fresh'
-                    break
-                }
-            }
-        }
+    $applicationPath = Join-Path $buildDirectory 'Veehiicuul.exe'
+    if (-not (Test-Path -LiteralPath $applicationPath -PathType Leaf)) {
+        throw "No $Configuration build was found at '$applicationPath'. Run Build.cmd -Configuration $Configuration first."
     }
 
-    Invoke-Checked $cmake --preset $presetName @configureOptions "-DCMAKE_MAKE_PROGRAM=$ninja"
-
-    Invoke-Checked $cmake --build --preset $presetName --parallel
-    if ($Test) {
-        Invoke-Checked (Join-Path (Split-Path $cmake) 'ctest.exe') --preset $presetName
+    $previousLogDirectory = $env:VEEHIICUUL_LOG_DIRECTORY
+    try {
+        $env:VEEHIICUUL_LOG_DIRECTORY = $logFolderPath
+        $applicationProcess = Start-Process -FilePath $applicationPath -WorkingDirectory $PSScriptRoot -Wait -PassThru
     }
-    elseif (-not $BuildOnly) {
-        $previousLogDirectory = $env:VEEHIICUUL_LOG_DIRECTORY
-        try {
-            $env:VEEHIICUUL_LOG_DIRECTORY = $logFolderPath
-            $applicationProcess = Start-Process -FilePath (Join-Path $buildDirectory 'Veehiicuul.exe') -PassThru
-        }
-        finally {
-            $env:VEEHIICUUL_LOG_DIRECTORY = $previousLogDirectory
-        }
-        $applicationProcess.WaitForExit()
-        if ($applicationProcess.ExitCode -ne 0) {
-            throw "Application exited with code $($applicationProcess.ExitCode)."
-        }
+    finally {
+        $env:VEEHIICUUL_LOG_DIRECTORY = $previousLogDirectory
+    }
+    if ($applicationProcess.ExitCode -ne 0) {
+        throw "Application exited with code $($applicationProcess.ExitCode)."
     }
 }
 catch {
     Write-Host
     Write-Host $_.Exception.Message -ForegroundColor Red
-    Write-Host 'Build or launch failed. Review the messages above.' -ForegroundColor Red
-    if (-not ($BuildOnly -or $Test)) { Read-Host 'Press Enter to continue' }
+    Write-Host 'Launch failed. Review the messages above.' -ForegroundColor Red
     exit 1
 }
 finally {

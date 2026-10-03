@@ -9,8 +9,8 @@ center half of the image maps one-to-one to 2560x1440.
 `Settings.json` exposes independent SimplePaint controls and a base color
 for each car material and the sphere. See [Usage.md](../Source/SimplePaint/Usage.md) for the validated
 parameter ranges; `Sphere` controls mesh resolution. The normal build copies both
-files beside the executable. Edit the source JSON and relaunch through `Run.cmd`
-to apply changes.
+files beside the executable. Edit the source JSON, rebuild through `Build.cmd`,
+and relaunch through `Run.cmd` to apply changes.
 
 Regenerate the background and `Source/Generated/CarMesh.generated.h` with Blender
 4.5.12 LTS from the `3dTestScene_CppDx12` directory. The shared Blender source remains one level

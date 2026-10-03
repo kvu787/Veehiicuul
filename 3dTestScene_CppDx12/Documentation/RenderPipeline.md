@@ -96,8 +96,8 @@ same pipeline behavior as `MaximizeFps`, set the `RenderPipeline` object in
 ```
 
 Keep the material and sphere objects alongside `RenderPipeline` in the root
-object. Relaunch through `Run.cmd` to stage the edited source JSON beside the
-executable and apply the settings.
+object. Rebuild through `Build.cmd` to stage the edited source JSON beside the
+executable, then relaunch through `Run.cmd` to apply the settings.
 
 All eight fields in `RenderPipeline` are required for every preset.
 Custom does not inherit omitted values from a preset; a missing key is an error.
@@ -384,8 +384,9 @@ including across a cancelled attempt or buffer resize.
 ## Applying changes and reading diagnostics
 
 The application reads `Assets/Settings.json` beside the executable at startup.
-Edit the repository's [source JSON](../Assets/Settings.json) and launch through
-[Run.cmd](../Run.cmd) to build and stage it. Restart after configuration changes;
+Edit the repository's [source JSON](../Assets/Settings.json) and rebuild through
+[Build.cmd](../Build.cmd) to build and stage it, then launch through
+[Run.cmd](../Run.cmd). Restart after configuration changes;
 the `V` key toggles only the current run's VSync state.
 
 The window title reports the selected preset, GPU frame limit, active presentation
@@ -423,7 +424,7 @@ that reach the measured throughput plateau when latency also matters. FPS alone
 does not measure physical input-to-photon latency. No preset adds benchmark
 instrumentation to the render loop.
 
-`Run.ps1 -Test` runs configuration tests, production renderer integration tests
+`Build.ps1 -Test` runs configuration tests, production renderer integration tests
 on the selected adapter and WARP, and application lifecycle smoke tests for
 Standard and MaximizeFps. Coverage includes inactive Custom isolation, invalid
 active settings, VSync in every preset, independently sized resource rings, limits

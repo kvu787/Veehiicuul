@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.21)
 
 project(Veehiicuul LANGUAGES CXX)
 
+if(NOT CMAKE_HOST_WIN32 OR CMAKE_HOST_SYSTEM_VERSION VERSION_LESS "10.0.22000"
+    OR NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "AMD64")
+    message(FATAL_ERROR "Development requires Windows 11 x64.")
+endif()
+if(NOT WIN32 OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8
+    OR NOT CMAKE_CXX_COMPILER_ARCHITECTURE_ID STREQUAL "x64")
+    message(FATAL_ERROR "The application requires a Windows x64 target.")
+endif()
+
 find_program(DXC_EXECUTABLE NAMES dxc.exe dxc)
 if(NOT DXC_EXECUTABLE AND DEFINED ENV{WindowsSdkVerBinPath})
     find_program(DXC_EXECUTABLE
