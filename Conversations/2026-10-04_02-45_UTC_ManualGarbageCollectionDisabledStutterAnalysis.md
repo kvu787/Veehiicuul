@@ -214,3 +214,69 @@ Saved [full analysis](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/V
 - :codex-followup[Capture automatic GC pauses]{prompt="Set up lightweight automatic .NET GC pause tracing alongside PresentMon for the C# application, preserving existing changes."}
 - :codex-followup[Investigate presentation stalls]{prompt="Prepare a Windows scheduling and graphics trace to identify the cause of stalls inside Present(), using this session's 98.87-second hitch as the reference."}
 - :codex-followup[Compare with GDScript]{prompt="Compare this manual-GC-disabled C# capture with an available GDScript session using the same startup exclusion and frame-pacing metrics."}
+
+## User
+
+how would i capture relevant gc information that can be correlated with presentmon capture info
+
+## Assistant Commentary
+
+I'll check the available .NET tracing tools and your PresentMon launcher to find a capture method that puts GC pauses and frame timings on a shared clock.
+
+## Assistant Final
+
+**Capture .NET GC events with Windows ETW while PresentMon runs.** For your setup, this gives the cleanest correlation: both captures can use the same QPC clock, and no application changes are needed.
+
+Windows already has `logman`; I verified that the `Microsoft-Windows-DotNETRuntime` provider is available on your machine.
+
+1. Launch the application through your existing `MyRun.cmd`, which starts PresentMon with `--qpc_time`.
+2. Before reproducing the stutter, open **PowerShell as administrator** and run:
+
+```powershell
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$logRoot = "$env:UserProfile\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyLogOutput"
+$sessionFolder = Get-ChildItem -LiteralPath $logRoot -Directory |
+    Sort-Object Name -Descending |
+    Select-Object -First 1
+
+$tracePath = Join-Path $sessionFolder.FullName 'GarbageCollection.etl'
+
+logman create trace VeehiicuulGarbageCollection -p Microsoft-Windows-DotNETRuntime 0x1 4 -ct perf -bs 64 -nb 16 128 -o "$tracePath" -ets
+if ($LASTEXITCODE -ne 0) {
+    throw 'Starting the GC trace failed.'
+}
+```
+
+This selects the newest session folder. `0x1` enables GC events, `4` selects informational events, and `-ct perf` selects QPC timestamps. This focused configuration avoids allocation sampling and CPU stack sampling. [Logman documentation](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/logman-create-trace).
+
+3. Play until you observe a stutter. Press your existing left-stick stutter-marker button if possible.
+4. After exiting the game, stop and flush the GC trace:
+
+```powershell
+logman stop VeehiicuulGarbageCollection -ets
+if ($LASTEXITCODE -ne 0) {
+    throw 'Stopping the GC trace failed.'
+}
+```
+
+Keep `GarbageCollection.etl`, `PresentMon.csv`, and `Godot.log` together. This procedure captures gameplay after tracing starts; capturing initialization would require starting ETW before launching the game.
+
+For analysis, filter the ETL to the **game's PID from Godot.log**. The provider captures other .NET processes too. Extract:
+
+- GC start/end, collection number, generation, reason, and blocking/background type.
+- Runtime suspension and restart events.
+- Heap statistics and finalizer start/end events.
+
+**The suspension intervals are the crucial measurement.** A background collection can last much longer than the time it pauses managed execution. Measure each GC-related suspension from `GCSuspendEEBegin` through `GCRestartEEEnd`, rather than treating the entire GC start/end interval as a pause. [Microsoft's GC pause explanation](https://devblogs.microsoft.com/dotnet/gc-etw-events-3/).
+
+Using an ETL reader such as Microsoft's TraceEvent library, retain each event's raw `TimeStampQPC`. Convert it to the same timeline used in my PresentMon analysis:
+
+```text
+Seconds = (GC event QPC - first PresentMon CPUStartQPC) / QpcFrequency
+```
+
+Your latest run reports `QpcFrequency = 10000000`. **Do not align the two captures by their individual "seconds since capture started" values**, because they start at different times. [TraceEvent timestamp implementation](https://github.com/microsoft/perfview/blob/main/src/TraceEvent/TraceEvent.cs).
+
+Then compare GC suspension intervals against the exact QPC ranges of frame-time spikes. An overlapping pause of comparable duration would support GC contributing to the hitch. If complete, loss-free tracing shows no overlapping GC suspension, that rules out a direct GC suspension for that hitch; thread scheduling or graphics tracing would be the next step.
