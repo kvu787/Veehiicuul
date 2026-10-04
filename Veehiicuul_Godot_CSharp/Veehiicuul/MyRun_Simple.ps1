@@ -12,4 +12,4 @@ $process.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::High
 Write-Host "Launched with PID=$($process.Id)"
 
 Wait-Process -Id $process.Id
-Read-Host "Press ENTER to exit"
+Read-Host "Press ENTER to close"
