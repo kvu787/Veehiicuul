@@ -319,3 +319,52 @@ common/physics_jitter_fix=0.0
 With zero, all tested sequences passed through this timer stage without altered deltas. That would remove this particular allowance for clock adjustment; it would not eliminate an actual rendering/input stall. Other engine behavior, such as time scaling or the catch-up limit after a very long stall, can still affect `_Process` delta.
 
 Neither setting has been changed, and the game has not been run.
+
+## User
+
+this is surprising to me. my game doesn't use engine physics at all and doesn't use the physics process callback, yet it is still affected by this `physics_jitter_fix` setting whose name suggests that it is limited to only engine-provided physics stuff. is this behavior intended by godot? have other people complained about this? is there any reason i might want to keep the default value for physics_jitter_fix?
+
+## Assistant Commentary
+
+I will check Godot's documentation, source history, and issue discussions to distinguish the intended behavior from reported problems, then assess whether the default offers any benefit for your game.
+
+## Assistant Commentary
+
+The original 2018 implementation explicitly says it modifies the `_process()` delta along with physics-step scheduling. That establishes intent more directly than the setting's name or current description. I also found historical bug reports about its effects on process delta; I am checking which are directly relevant and which describe problems that were later fixed.
+
+## Assistant Commentary
+
+I found a discussion very close to your concern: a Godot contributor questioned why delta smoothing involved physics ticks, and the author agreed that describing it in terms of physics was misleading. The author also described a possible benefit for `_process`-only motion: smoothing CPU timing variations when buffered frames still reach the display evenly. That makes keeping the default a tradeoff, not a requirement for your game.
+
+## Assistant Final
+
+**Yes, the effect on `_Process` is intentional, and Godot contributors have questioned both the coupling and its documentation. For your current game, I favor `physics_jitter_fix=0.0`.**
+
+The feature's original [PR #17353, merged in May 2018](https://github.com/godotengine/godot/pull/17353), explicitly modifies both physics-step scheduling and `_process()` delta. Smoothing process delta was itself an intended benefit, rather than an accidental consequence of the physics implementation.
+
+In your 4.7.2 source, this work lives in the common main-loop timer. It does not first ask whether your scene has physics bodies or whether you implement `_PhysicsProcess`. That explains why your Dummy backends and absence of a physics callback do not exempt your game. [Current implementation](C:/Users/k/Repository/External/Godot_4-7-2/main/main_timer_sync.cpp:432).
+
+**The discussion contains an objection very close to yours.** In January 2020, contributor lawnjelly questioned why delta smoothing needed to involve physics ticks. The feature's author, zmanuel, subsequently recommended removing the physics terminology from its description:
+
+> Cut out the 'physic', and I think it should be clearer and more correct.
+
+That exchange is in the [original PR discussion](https://github.com/godotengine/godot/pull/17353). My assessment is that the setting's name understates its scope.
+
+There are also related historical reports:
+
+- A [2019 forum question](https://forum.godotengine.org/t/what-is-physics-jitter-fix-physics-common-physics-jitter-fix/24405) asked what the setting and its default actually meant, because the documentation did not explain them adequately.
+- [Issue #26887](https://github.com/godotengine/godot/issues/26887) reported negative `_process` deltas. The eventual fix addressed timing-correction edge cases, including heavily fluctuating performance. That fix is already present in your source; this is historical evidence of problems in this mechanism, not a claim that your build still has that negative-delta bug. [Positive-delta safeguard](C:/Users/k/Repository/External/Godot_4-7-2/main/main_timer_sync.cpp:466).
+
+I did not find a report exactly matching your combination of Dummy physics, no physics callback, and uncapped D3D12. The architectural concern itself has clearly been discussed.
+
+**There are reasons someone might retain the default.** It can stabilize physics-update cadence when small timing fluctuations would otherwise alternate between too few and too many physics steps per rendered frame. It can also smooth `_process` motion when CPU timing varies while buffered display delivery remains even. The author describes both benefits in the [PR discussion](https://github.com/godotengine/godot/pull/17353).
+
+That second benefit can apply without engine physics. A CPU timestamp is taken at one point in the pipeline; the frame reaches the display later. Making movement follow every CPU timing fluctuation is not guaranteed to produce the smoothest displayed motion. Conversely, modifying delta can introduce an unwanted delay in catching up when the elapsed-time variation represents a real stall. Which effect dominates depends on the timing pattern.
+
+Godot's documentation still presents `0.5` as a general default, while recommending zero for networking or custom physics interpolation. Built-in physics interpolation automatically disables this correction. Zero is therefore a supported operating mode. [Official setting documentation](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-physics-common-physics-jitter-fix).
+
+**For your game, the main physics-related benefit does not apply.** Your movement and collision detection run from `_Process`; there is no visible fixed-tick simulation whose cadence needs this correction. Meanwhile, our isolated test demonstrated that the default can redistribute a genuine long interval across subsequent movement updates.
+
+I would choose zero as the baseline for this architecture. I would retain `0.5` only if a controlled comparison showed that its general delta filtering improved visible motion on your setup, or if the application later acquired fixed-tick behavior that benefited from it. This is an architectural recommendation, not a measured guarantee that zero will look better in every circumstance.
+
+With zero, a real long interval still produces a large movement step. It removes this timing adjustment; it does not remove the underlying stall. No settings have been changed, and the game has not been run.
