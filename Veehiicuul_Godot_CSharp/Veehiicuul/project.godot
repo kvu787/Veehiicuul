@@ -32,6 +32,7 @@ project/assembly_name="Veehiicuul_Godot_CSharp"
 
 [physics]
 
+common/physics_jitter_fix=0.0
 2d/physics_engine="Dummy"
 3d/physics_engine="Dummy"
 
