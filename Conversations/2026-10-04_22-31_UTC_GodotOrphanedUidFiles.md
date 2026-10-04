@@ -166,3 +166,39 @@ An older bug preventing automatic cleanup in subdirectories was fixed for Godot 
 
 So if you mean "clean up every `.uid` whose companion file is missing", you would need a separate cleanup script or manual deletion.
 
+
+## User
+
+check for orphaned uid files or any other things that should be cleaned up in C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp
+
+## Assistant
+
+I'll check for orphaned UID and import files, stale build outputs, and other cleanup candidates without deleting anything.
+
+## Assistant
+
+I found six orphaned UID files in the source tree, plus copies of those six in an old runtime review folder under `MyLogOutput`. None of the six UID values is referenced by the current project files. I'm checking resource references and generated folders for any other cleanup candidates.
+
+## Assistant
+
+**I found six orphaned `.uid` files in the tracked source tree.** Their companion `.cs` files are missing, and their UID values have no references elsewhere in the current project:
+
+- [CollisionManager.cs.uid](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/CollisionManager.cs.uid)
+- [DigitalInputMap.cs.uid](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/DigitalInputMap.cs.uid)
+- [InputManager.cs.uid](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/InputManager.cs.uid)
+- [StutterLogger.cs.uid](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/StutterLogger.cs.uid)
+- [TimeManager.cs.uid](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/TimeManager.cs.uid)
+- [QuaternionUtility.cs.uid](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Utility/QuaternionUtility.cs.uid)
+
+These are clear deletion candidates. The current `CollisionManager`, `DigitalInputMap`, and `InputManager` files have their own UID files in their newer subfolders.
+
+Other findings:
+
+- **Six more orphaned UIDs** are copies inside [the old ReviewRuntime folder](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-10-03_16-02-06/ReviewRuntime).
+- **MyLogOutput: 840.79 MiB.** Optional archival/cleanup candidate, but it contains diagnostic evidence referenced by the stutter analysis.
+- **.vs: 0.50 MiB.** Disposable IDE cache; optional cleanup with Visual Studio closed.
+- **MyBuildOutput: 187.58 MiB.** Used by the `MyRun` launchers, so I would keep it unless you intend to rebuild that export.
+
+I found **no orphaned `.import` files, duplicate UID definitions in the current project, missing script UID files, or broken literal source-resource paths**. No stray backup/temp files or empty source directories turned up either.
+
+No application files were changed or deleted.
