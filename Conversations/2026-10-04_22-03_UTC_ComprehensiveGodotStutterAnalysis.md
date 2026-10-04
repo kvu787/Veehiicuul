@@ -232,3 +232,90 @@ The export is verified as release. The isolated collision test performed **3,059
 The older capture's **19.38 ms and 11.68 ms gaps** occurred mostly before `Present`, with no recorded GC. That capture predates this export and cannot establish its root cause.
 
 The report ranks follow-up work and explains what each measurement would resolve. Only documentation, evidence, and the required conversation log were added; application code, settings, and exported files are unchanged.
+
+## User
+
+explain this in greater detail: Disabling delta smoothing leaves another delta adjustment active
+
+## Assistant Commentary
+
+I will trace both delta-adjustment stages in Godot 4.7.2 and use the isolated test results to show exactly what reaches your movement code.
+
+## Assistant Commentary
+
+The key distinction is that `delta_smoothing` controls a VSync-related filter, while `physics_jitter_fix` controls a later stage that coordinates process time with the physics clock. That later stage can carry a timing difference into subsequent frames, which explains why one hitch can affect several movement updates after rendering has recovered.
+
+## Assistant Final
+
+**Your `_Process(delta)` can receive a value different from the actual elapsed time even with `delta_smoothing=false`.** That setting disables one filter, but a separate stage that coordinates the process and physics clocks still runs.
+
+For your configuration, the relevant path is:
+
+```text
+Elapsed time measured between main-loop iterations
+    -> DeltaSmoother: bypassed
+    -> MainTimerSync::advance_checked: still active
+    -> _Process(delta)
+    -> Your acceleration and position updates
+```
+
+**The first stage is the setting you disabled.** `DeltaSmoother` tries to remove timing noise when frames are synchronized to the monitor. It estimates the refresh interval and can express elapsed time in multiples of that interval. It returns the input unchanged when `application/run/delta_smoothing=false`.
+
+Your VSync setting independently bypasses it too: this implementation only attempts smoothing when the requested mode is ordinary `VSYNC_ENABLED`. Therefore, this first filter is inactive in your project for both reasons. [Source: main_timer_sync.cpp:252](C:/Users/k/Repository/External/Godot_4-7-2/main/main_timer_sync.cpp:252).
+
+**The second stage has a different purpose and setting.** Godot must coordinate variable-frequency process updates with fixed-frequency physics ticks. Your physics clock still defaults to 60 Hz, or approximately 16.667 ms per tick. Choosing the Dummy physics backends removes real physics simulation; it does not remove this common main-loop timing machinery.
+
+`MainTimerSync::advance_checked()` consequently runs even though your car moves entirely in `_Process`. It can modify the process delta while trying to keep the physics-step pattern consistent. Its separate setting, `physics/common/physics_jitter_fix`, remains at the default **0.5**. [Source: main_timer_sync.cpp:432](C:/Users/k/Repository/External/Godot_4-7-2/main/main_timer_sync.cpp:432).
+
+**The adjustment carries timing differences across frames.** In simplified terms, the function:
+
+1. Adds an outstanding timing difference, called `time_deficit`, to the newly measured delta.
+2. Determines physics steps and adjusts the process delta using recent physics-step history.
+3. Applies limits for clock deviation, physics-accumulator consistency, and a positive output delta.
+4. Saves the difference between the adjusted input and the returned process delta as the next `time_deficit`.
+
+If it advances the game by less than the elapsed time, that difference can be compensated in later frames. This changes **when simulation time advances**, rather than simply discarding elapsed time.
+
+The value `0.5` is a fraction of a physics tick, not 0.5 milliseconds. One central clamp uses this allowance:
+
+```text
+0.5 * (1 second / 60) = approximately 8.333 milliseconds
+```
+
+That is substantial compared with your usual roughly 0.8 ms frame interval. Other consistency clamps also apply, so this is not a universal promise that every output differs from its raw input by at most 8.333 ms.
+
+**Here is what the isolated test actually produced.** I supplied the extracted Godot algorithm with steady 0.800 ms intervals, one 19.382 ms interval, then steady 0.800 ms intervals again. Delta smoothing was bypassed throughout.
+
+| Update relative to hitch | Measured interval | Process delta, jitter fix 0.5 | Process delta, jitter fix 0 |
+| ------------------------ | ----------------- | ----------------------------- | --------------------------- |
+| Before                   | 0.800 ms          | 0.800 ms                      | 0.800 ms                    |
+| Hitch                    | 19.382 ms         | 11.048667 ms                  | 19.382 ms                   |
+| Next 1                   | 0.800 ms          | 1.388889 ms                   | 0.800 ms                    |
+| Next 2                   | 0.800 ms          | 1.388889 ms                   | 0.800 ms                    |
+| Next 3                   | 0.800 ms          | 1.388889 ms                   | 0.800 ms                    |
+| Next 4                   | 0.800 ms          | 1.388889 ms                   | 0.800 ms                    |
+| Next 5                   | 0.800 ms          | 0.100000 ms                   | 0.800 ms                    |
+
+On the hitch update, the difference is approximately **8.333333 ms**. The next update starts with 0.800 ms of new elapsed time plus that carried difference. The remaining timing rules produce 1.388889 ms and carry the outstanding difference forward again.
+
+Across this scenario, **18 process deltas were altered**, including the hitch update. These numbers depend on the preceding timing history; they are not a fixed recovery sequence for every hitch. Constant 0.800 ms intervals and alternating 0.700/0.900 ms intervals were unchanged in the other tests. [Recorded experiment results](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Documentation/StutterAnalysisEvidence20261004.json).
+
+**This matters directly to your car's motion.** Your position update is:
+
+```csharp
+this.Position += this.Velocity * (float)delta;
+```
+
+For an illustrative constant velocity of 100 units/second, an ordinary 0.800 ms update moves 0.080 units. A supplied delta of 1.388889 ms moves 0.138889 units; a supplied delta of 0.100 ms moves only 0.010 units. Those different movement increments can occur while the measured intervals have already returned to a steady 0.800 ms. Acceleration also uses this delta, so its effect need not be limited to position increments. [CarStateManager.cs:136](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs:136).
+
+This mechanism does **not explain what caused the original long interval**. Its relevance is that it can prolong irregular motion after that interval. The synthetic test was not a replay of the historical capture, and main-loop intervals are not identical to PresentMon presentation intervals.
+
+That is why I suggested testing this setting in your existing `[physics]` section:
+
+```ini
+common/physics_jitter_fix=0.0
+```
+
+With zero, all tested sequences passed through this timer stage without altered deltas. That would remove this particular allowance for clock adjustment; it would not eliminate an actual rendering/input stall. Other engine behavior, such as time scaling or the catch-up limit after a very long stall, can still affect `_Process` delta.
+
+Neither setting has been changed, and the game has not been run.
