@@ -12,6 +12,8 @@ $GodotLogFilePath = "$logFolderPath\Godot.log"
 New-Item -ItemType "Directory" -Path $LogFolderPath
 
 if (($args -notcontains "NoPresentMon") -and (Test-Path $PresentMonPath)) {
+    # This PresentMon process must be manually closed by the user. This is intentional.
+    # "--terminate_on_proc_exit" isn't used because I've observed issues with it.
     Start-Process `
         -FilePath $PresentMonPath `
         -ArgumentList "--process_name `"$($ProcessName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time" `
