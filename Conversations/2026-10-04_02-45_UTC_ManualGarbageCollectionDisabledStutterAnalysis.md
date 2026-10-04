@@ -280,3 +280,45 @@ Seconds = (GC event QPC - first PresentMon CPUStartQPC) / QpcFrequency
 Your latest run reports `QpcFrequency = 10000000`. **Do not align the two captures by their individual "seconds since capture started" values**, because they start at different times. [TraceEvent timestamp implementation](https://github.com/microsoft/perfview/blob/main/src/TraceEvent/TraceEvent.cs).
 
 Then compare GC suspension intervals against the exact QPC ranges of frame-time spikes. An overlapping pause of comparable duration would support GC contributing to the hitch. If complete, loss-free tracing shows no overlapping GC suspension, that rules out a direct GC suspension for that hitch; thread scheduling or graphics tracing would be the next step.
+
+## User
+
+what other things should i do or would you recommend for investigating stutters
+
+## Assistant Commentary
+
+I'll prioritize the next captures around the two patterns we've seen: stalls inside `Present()` and display-timing gaps while the application keeps presenting normally.
+
+## Assistant Final
+
+**My highest-priority recommendation is a Windows scheduling and graphics trace alongside PresentMon and GC tracing.** Your remaining hitches have different signatures, so GC information alone will not explain all of them.
+
+I checked your machine: **WPR, WPA, and GPUView are already installed**, and WPR has GPU and Desktop Composition profiles.
+
+1. **Capture what the game and graphics threads are doing during a hitch.** Include CPU sampling, context switches, thread-ready events, DPC/interrupt activity, hard page faults, and GPU/presentation events. In WPA, distinguish:
+   - **Running:** the thread is executing expensive work.
+   - **Ready:** it could execute but Windows has not scheduled it.
+   - **Waiting:** it is blocked on another thread, graphics synchronization, I/O, or another resource.
+
+   This is the most useful next step for the **13 ms stall inside `Present()`**. PresentMon's pre-present time and time inside `Present()` do not distinguish those states. [Microsoft CPU analysis guide](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/cpu-analysis).
+
+2. **Investigate the display gaps separately.** Capture DXGI, graphics-kernel, and DWM/desktop-composition events. Inspect GPU queues and activity from other processes around:
+   - The **7 ms GPU busy spike**.
+   - Display gaps where your application continues presenting at normal intervals.
+   - Presentation-mode or window-focus changes.
+
+   GPUView is useful for relating CPU execution, GPU submissions, and graphics scheduling. [Microsoft GPUView documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/display/using-gpuview).
+
+3. **Add buffered application timings and event markers.** Record QPC timestamps around input handling, collision checks, resets/car switches, camera updates, and the complete `Process()` callback. Include frame number and thread ID. Use a preallocated buffer and write it after capture; avoid per-frame console output.
+
+   Also record the *reason* for each reset. This would tell us whether a hitch coincides with a collision/reset or whether the callback finished normally before presentation stalled. Preserve symbols for the exact build so sampled stacks can identify application methods.
+
+4. **Make comparisons repeatable.** Keep the same build, track, car, camera, route, resolution, refresh rate, and laptop power conditions. Record the commit, executable hash, graphics-driver version, driver overrides, and whether overlays are active. Repeat runs and compare **hitch counts per minute**, maximum gaps, and percentiles.
+
+   Once a baseline is captured, change one factor at a time. Particularly useful comparisons are overlays enabled/disabled, C# versus GDScript under matched conditions, and normal versus the **High process priority your launcher currently sets**.
+
+5. **Check presentation pacing and the roughly 600 FPS plateau.** Inspect effective driver frame limits, synchronization/VRR settings, and presentation configuration. Godot reporting VSync off and maximum FPS zero does not explain why these runs cluster around 600 FPS. Treat changing those settings as controlled experiments, with the original values recorded.
+
+6. **Connect measurements to what you actually see.** Use your stutter-marker button and note whether the disturbance affects the car, camera, or entire scene, and whether it followed a reset or focus change. A physical-screen recording can help distinguish uneven visible motion from application timing. PresentMon display timestamps with tearing enabled are insufficient to establish exactly what appeared on screen.
+
+For the next affected run, keep **PresentMon.csv, GarbageCollection.etl, a focused Windows performance ETL, application timings, and build/settings metadata** together. Stop the detailed trace soon after the hitch. WPR supports circular memory capture, but its default profiles reserve substantial buffers on your machine; a focused profile would suit longer waits for rare stutters. Check for lost events and compare pacing with and without detailed tracing. [WPR capture modes and status](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/wpr-command-line-options).
