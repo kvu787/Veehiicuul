@@ -1,3 +1,42 @@
+# MyRun capture
+
+`MyRun.cmd` launches the existing `MyBuildOutput` executable and captures .NET GC
+events from before application launch until the application exits. Windows asks
+for elevation for a hidden capture helper; the game keeps the launcher's usual
+permissions. The helper also stops the trace if the launcher exits unexpectedly.
+
+Each timestamped folder in `Veehiicuul/MyLogOutput` contains:
+
+- `GarbageCollection.etl`: the `Microsoft-Windows-DotNETRuntime` GC provider,
+  keyword `0x1`, informational level `4`, with QPC timestamps.
+- `GarbageCollectionCapture.log`: ETW start/stop diagnostics and the unique trace
+  session name.
+- `CaptureMetadata.json`: the game PID, QPC frequency, and GC capture configuration.
+- `Godot.log`, `Launcher.log`, and, when enabled, `PresentMon.csv`.
+- `GarbageCollectionReady.signal`, `GarbageCollectionStop.signal`, and
+  `GarbageCollectionStopped.signal`: helper lifecycle markers. The stopped marker
+  confirms that logman successfully stopped and flushed the trace.
+
+PresentMon still uses `--qpc_time` and must be manually closed after the game
+exits. This behavior is intentional. `MyRun_NoPresentMon.cmd` disables only
+PresentMon; GC capture stays enabled. To disable GC capture for a comparison run:
+
+```powershell
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\Veehiicuul\MyRun.ps1 NoGarbageCollection
+```
+
+Filter GC events to the game PID in `Godot.log` or `CaptureMetadata.json` because
+the provider also records other .NET processes. Align raw GC event QPC values
+with PresentMon using:
+
+```text
+Seconds = (GC event QPC - first PresentMon CPUStartQPC) / QpcFrequency
+```
+
+Measure GC-related runtime suspension/restart intervals, not the entire lifetime
+of a background collection. Preserve the ETL for checking event loss before
+concluding that an absent GC pause rules it out as the cause of a stutter.
+
 # Nvidia settings
 
 Verify nvidia profile settings are as expected using Nvidia Profile Inspector, not the Nvidia App or Nvidia Control Panel.
