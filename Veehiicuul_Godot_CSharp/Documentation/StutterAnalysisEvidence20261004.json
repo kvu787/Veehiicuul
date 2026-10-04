@@ -1,0 +1,998 @@
+{
+  "Audit": {
+    "DateUtc": "2026-10-04T21:54:30.897961+00:00",
+    "RepositoryCommitBeforeAudit": "2e11e1b0ee658c4df6595029aa2a0c048851cbc1",
+    "GodotSourceCommit": "ed1daf0bf001b61586d9930840f2f1394092c079",
+    "ExportPreset": "MyDefaultWindowsDesktop",
+    "BuildDirectory": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\MyBuildOutput",
+    "GameExecuted": false,
+    "GodotExecuted": false,
+    "GameAssemblyLoadedForExecution": false,
+    "ApplicationFilesModified": false,
+    "Scope": "Source, exported binary metadata and packaged data, existing telemetry, isolated collision and timer algorithms."
+  },
+  "Executable": {
+    "Bytes": 109413888,
+    "Machine": "0x8664",
+    "Sha256": "dcb991b28fccd8156b11c4a59c84e2638759f5e177f8d4e571d77cae801c10ee",
+    "LastWriteUtc": "2026-10-04T21:31:32.062950+00:00",
+    "TextSectionMatchesReleaseTemplate": true,
+    "TextSectionMatchesDebugTemplate": false
+  },
+  "Pack": {
+    "Version": 4,
+    "Engine": [
+      4,
+      7,
+      2
+    ],
+    "Flags": 2,
+    "Bytes": 845824,
+    "Sha256": "e7c489a607d6481c3de4a8b968cc94addff0f400cf126b3a6290eb4d2798f567",
+    "EntryCount": 55,
+    "AllEntryMd5HashesMatch": true,
+    "Entries": [
+      {
+        "Path": ".godot/exported/133200997/export-3ac9566b529826007348379a7f292472-Ribeye_Scene.scn",
+        "Bytes": 1942,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": ".godot/exported/133200997/export-60a391c9302a71b166be564c68dc2ab3-Environment.res",
+        "Bytes": 2477,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": ".godot/exported/133200997/export-6ce806f2676645de79cf36bfc55b6c8b-CameraAttributesPractical.res",
+        "Bytes": 664,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": ".godot/exported/133200997/export-bcb0d2eb5949c52b6a65bfe9de3e985b-Main.scn",
+        "Bytes": 687,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": ".godot/exported/133200997/export-ff1242bef3f78447698ada097afaca94-Compositor.res",
+        "Bytes": 270,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": ".godot/global_script_class_cache.cfg",
+        "Bytes": 8,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": ".godot/imported/Ribeye_Model.glb-d7544e4a92c4d8bffe93f1680faa00e5.scn",
+        "Bytes": 721695,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": ".godot/imported/icon.svg-7a4b8200a9399982c2078883e14f22e5.ctex",
+        "Bytes": 3426,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": ".godot/uid_cache.bin",
+        "Bytes": 2450,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": "Main.tscn.remap",
+        "Bytes": 97,
+        "Md5Matches": true,
+        "MatchesLocal": null
+      },
+      {
+        "Path": "Resources/CameraAttributesPractical.tres.remap",
+        "Bytes": 118,
+        "Md5Matches": true,
+        "MatchesLocal": null
+      },
+      {
+        "Path": "Resources/Compositor.tres.remap",
+        "Bytes": 103,
+        "Md5Matches": true,
+        "MatchesLocal": null
+      },
+      {
+        "Path": "Resources/Environment.tres.remap",
+        "Bytes": 104,
+        "Md5Matches": true,
+        "MatchesLocal": null
+      },
+      {
+        "Path": "Resources/icon.svg",
+        "Bytes": 995,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": "Resources/icon.svg.import",
+        "Bytes": 193,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Editor/DisableSpecularImport.gd.remap",
+        "Bytes": 62,
+        "Md5Matches": true,
+        "MatchesLocal": null
+      },
+      {
+        "Path": "Source/Editor/DisableSpecularImport.gdc",
+        "Bytes": 868,
+        "Md5Matches": true,
+        "MatchesLocal": null
+      },
+      {
+        "Path": "Source/Extensions/EnumExtensions.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Extensions/FloatExtensions.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Extensions/IntExtensions.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Extensions/Vector3Extensions.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Camera/CameraFollowManager.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Camera/CameraPanManager.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Camera/CameraYawManager.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Camera/CameraZoomManager.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Car/Car.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Car/CarAccelerationMap.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Car/CarDynamic.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Car/CarStateManager.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Car/CarSwitcher.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/CollisionDetection/ColliderJson.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/CollisionDetection/CollisionManager.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/CollisionDetection/CoordinateXY.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/CollisionDetection/Guard.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/CollisionDetection/Outline.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.ExpandedGrid.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/CollisionDetection/TrackCollisionDetector.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/CollisionDetection/VehicleCollisionFootprint.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Input/DigitalInputMap.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Input/InputManager.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Track/TrackJson.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Track/TrackNodes.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/GameDataAndLogic/Track/TrackSwitcher.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Main.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Main_GodotAdapter.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Utility/GarbageCollectionUtility.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Utility/InputUtility.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Utility/JsonUtility.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Utility/PrintInfoUtility.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Source/Utility/SceneUtility.cs",
+        "Bytes": 1,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Tracks/Ribeye/Ribeye_ColliderData.json",
+        "Bytes": 100524,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": "Tracks/Ribeye/Ribeye_Model.glb.import",
+        "Bytes": 174,
+        "Md5Matches": true,
+        "MatchesLocal": false
+      },
+      {
+        "Path": "Tracks/Ribeye/Ribeye_Scene.tscn.remap",
+        "Bytes": 105,
+        "Md5Matches": true,
+        "MatchesLocal": null
+      },
+      {
+        "Path": "Tracks/Ribeye/Ribeye_Settings.json",
+        "Bytes": 1905,
+        "Md5Matches": true,
+        "MatchesLocal": true
+      },
+      {
+        "Path": "project.binary",
+        "Bytes": 1341,
+        "Md5Matches": true,
+        "MatchesLocal": null
+      }
+    ]
+  },
+  "ExportedProjectSettings": {
+    "_custom_features": "dotnet",
+    "application/config/name": "Veehiicuul_Godot_CSharp",
+    "application/run/main_scene": "res://Main.tscn",
+    "application/config/features": [
+      "4.7",
+      "C#",
+      "Forward Plus"
+    ],
+    "application/run/delta_smoothing": false,
+    "application/config/icon": "res://Resources/icon.svg",
+    "display/window/size/viewport_width": 2560,
+    "display/window/size/viewport_height": 1440,
+    "display/window/size/mode": 4,
+    "display/window/size/window_width_override": 1280,
+    "display/window/size/window_height_override": 720,
+    "display/window/stretch/mode": "viewport",
+    "display/window/vsync/vsync_mode": 0,
+    "dotnet/project/assembly_name": "Veehiicuul_Godot_CSharp",
+    "physics/2d/physics_engine": "Dummy",
+    "physics/3d/physics_engine": "Dummy",
+    "rendering/rendering_device/vsync/swapchain_image_count": 2,
+    "rendering/rendering_device/driver.windows": "d3d12",
+    "rendering/rendering_device/fallback_to_vulkan": false,
+    "rendering/rendering_device/fallback_to_opengl3": false,
+    "rendering/driver/depth_prepass/enable": false,
+    "rendering/anti_aliasing/screen_space_roughness_limiter/enabled": false,
+    "rendering/lights_and_shadows/tighter_shadow_caster_culling": false
+  },
+  "ManagedAssembly": {
+    "Sha256": "D089C5432A72B0DDACBE765FED03816D94DEAD0E33CAFFAA80BCF88C65467DED",
+    "ReadyToRunHeaderBytes": 0,
+    "ModuleVersionId": "90f32bc7-5c31-4d6e-a978-e00e8059d623",
+    "CodeView": [
+      {
+        "Guid": "de451dbe-8941-486b-93be-fb7397aa12f8",
+        "Age": 1,
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\Veehiicuul_Godot_CSharp.pdb"
+      }
+    ],
+    "PortablePdbId": "BE1D45DE41896B4893BEFB7397AA12F8EB8A3795",
+    "AssemblyConfiguration": "ExportRelease",
+    "DebuggableAttributeFlags": 2,
+    "DocumentsWithMatchingAvailableSource": 35,
+    "DocumentsWithMismatchedSource": 0,
+    "DocumentsWithUnavailableGeneratedSource": 8,
+    "Documents": [
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Extensions\\EnumExtensions.cs",
+        "ExpectedHash": "CD34BB46720736DF76745E9BF89AE67485CA15DBA7005BE0A906CD98B4F3A2D7",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Extensions\\FloatExtensions.cs",
+        "ExpectedHash": "ACEB16B6CC9598B711AD4A99455A7A1CB0CFFE6444F8FA5568070C82E6916920",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Extensions\\IntExtensions.cs",
+        "ExpectedHash": "A4F7FA13041150F9BD2C1E2A11653C44D81065DE1BF98061FB67A45AB3F617B2",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Extensions\\Vector3Extensions.cs",
+        "ExpectedHash": "E70EB58DAB517E1B35D6EFA04A8BCE0A28B743BC1C1149DCC0F178B186B7B48F",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Camera\\CameraFollowManager.cs",
+        "ExpectedHash": "4302326550C9033EB6C7920B136DF061ECA15C495B8836938DD98799C228D670",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Camera\\CameraPanManager.cs",
+        "ExpectedHash": "B297D7207919740B087C205D22FCB7D803651803DFA001254B62BCF1EE53C623",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Camera\\CameraYawManager.cs",
+        "ExpectedHash": "EC62D50C5D73B8901F46BF6B0C1D8E5DE0053CAEBA495C96D043A6FFF914D964",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Camera\\CameraZoomManager.cs",
+        "ExpectedHash": "A5DE34BFA0A44B9CB4086FA0A06E7AF0CF6591251696AB88E2C56A9061041D41",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Car\\Car.cs",
+        "ExpectedHash": "CD37CA82CCDEC7F3F57EC9CE0A227C74F896DE38C32FF878817BC4A742627F73",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Car\\CarAccelerationMap.cs",
+        "ExpectedHash": "1EB1B26D53D0B339A0C27721CA75485A3FD6454F305AEC02AEB872DF5EB5D403",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Car\\CarDynamic.cs",
+        "ExpectedHash": "9309817EBE8684DF3FE15C956ABD38DF2575BCF3FABED6C9BF0F6E2BD82D37CF",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Car\\CarStateManager.cs",
+        "ExpectedHash": "F43B631774C9D8C3E2619B44A4F9949C84C7A77BBE75A491A0993043DDB8E1C1",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Car\\CarSwitcher.cs",
+        "ExpectedHash": "E8558076680FC7379D7131395E343D629175AF00B9B7B4B2D5BA7AD33E8A3771",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\CollisionDetection\\ColliderJson.cs",
+        "ExpectedHash": "10043E523E283FC5D318FDA6665DE7C9ADE6B05D38B14F0577A7164F959A6A5A",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\CollisionDetection\\CollisionManager.cs",
+        "ExpectedHash": "96B1630CF1FF02520F2BE09200840EAFF7C05F075D1C7DA673D11DE412467B7A",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\CollisionDetection\\CoordinateXY.cs",
+        "ExpectedHash": "198083B3FE9A024E13B9FF6EB053B1B0850E202D199694269C602CFA44E9A8BD",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\CollisionDetection\\Guard.cs",
+        "ExpectedHash": "5684F77D6711EE1FCD62D4E427A4EED267832D840C6794654DE22A1313DE3D73",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\CollisionDetection\\Outline.cs",
+        "ExpectedHash": "5EF063EE5DD865F875341FAE909FCED92434D88C40E4329EBBB29A9790EC55D7",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\CollisionDetection\\TrackCollisionDetector.cs",
+        "ExpectedHash": "ED01AA6908D3F5C4D60CD5095B34897CC3B4F5A553F1B1DDBC4A5DEB2479CD3C",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\CollisionDetection\\TrackCollisionDetector.ExpandedGrid.cs",
+        "ExpectedHash": "DBD13268F1E7A92B32FFD488E2411FA91072E6702A41CFA14521AD654BE9FDF2",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\CollisionDetection\\VehicleCollisionFootprint.cs",
+        "ExpectedHash": "99636ABBF0B80562E3729E5681C10D75CDE79354855EE32511FB5A7AB3401D65",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Input\\DigitalInputMap.cs",
+        "ExpectedHash": "5CCF7DA0D4D23A8F83AAF99C760AB50FE61176AC419CDDDA4D85281D9CEE9461",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Input\\InputManager.cs",
+        "ExpectedHash": "FB685D7AAF800ACD4CEC80B907A1778E41A8548B66166EFF2F8E67CD24B5AB38",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Track\\TrackJson.cs",
+        "ExpectedHash": "6803EEE7F88394D7CC7FCD32269773E357F39331925E26669E741E89530AF85F",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Track\\TrackNodes.cs",
+        "ExpectedHash": "0622CAB3B4CE2532B1677AADB2CD5B58FA443987279FCE55A129AD9E733713A7",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\GameDataAndLogic\\Track\\TrackSwitcher.cs",
+        "ExpectedHash": "D300F10CFB67702EFFC87C3231D18B7DCA6DF9238DB69DDCE69C9FD1C72319F8",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Main.cs",
+        "ExpectedHash": "4BEF5FB6662241C5337E8D31590F33FD572A58AB36ED15D30118FEF656BE273A",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Main_GodotAdapter.cs",
+        "ExpectedHash": "49C466765E3CD247ABD76EFF1EDECEDBF8026FBDA52F20E9F2D01E8C6402EF7E",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Utility\\GarbageCollectionUtility.cs",
+        "ExpectedHash": "7A5628070170D2C2F6CC9C06BB0FE67B421F261EC36E22FCFFB16B4EDCF2FE8B",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Utility\\InputUtility.cs",
+        "ExpectedHash": "D64CF0FA2B6D1D78B1E089499925A4AFA5D6D9FFE08788CF0BC685C03E5AD8CE",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Utility\\JsonUtility.cs",
+        "ExpectedHash": "FCD5B7EFBDC4AF37E221AE98FA096500581C56CD0A6F86F203CD5A311E027096",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Utility\\PrintInfoUtility.cs",
+        "ExpectedHash": "3FCD8EAD6264045905C375875F1066F50B91A6953E4C2719F84F76D09F8C1B3D",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\Source\\Utility\\SceneUtility.cs",
+        "ExpectedHash": "BC059AF4A606F4AE27D8E3AA8669467B1B57F41585C08B16B4E23C17F36DAF50",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\.NETCoreApp,Version=v10.0.AssemblyAttributes.cs",
+        "ExpectedHash": "93D67476196EBFC80D1D7D8844B91146CFD678D105F5CE635EB900CA40610C9B",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\Veehiicuul_Godot_CSharp.AssemblyInfo.cs",
+        "ExpectedHash": "2EBCB5BB764ECE5651D2355253124D824E83075F911D21D43F208B8B84B34889",
+        "Matches": true
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\Godot.SourceGenerators\\Godot.SourceGenerators.GodotPluginsInitializerGenerator\\GodotPlugins.Game.generated.cs",
+        "ExpectedHash": "7870166B33F91817432F480E7B2707B22005838C67DFD6CEC2256EFA7B88975F",
+        "Matches": null
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\Godot.SourceGenerators\\Godot.SourceGenerators.ScriptMethodsGenerator\\Veehiicuul_Godot_CSharp.Main_GodotAdapter_ScriptMethods.generated.cs",
+        "ExpectedHash": "183922863C80611A2F5AD34B0BF18137C23CA1744F53C5F519356680CD3F3843",
+        "Matches": null
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\Godot.SourceGenerators\\Godot.SourceGenerators.ScriptPathAttributeGenerator\\Veehiicuul_Godot_CSharp.Main_GodotAdapter_ScriptPath.generated.cs",
+        "ExpectedHash": "2B1718C395CFDB7CE096D430D599A7B2E9F488BB865997D714B7A6B683BEA4EB",
+        "Matches": null
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\Godot.SourceGenerators\\Godot.SourceGenerators.ScriptPathAttributeGenerator\\AssemblyScriptTypes.generated.cs",
+        "ExpectedHash": "F23E08AD6FA4B914BF7ED1343F924B1224842B126204ADCEA0126C29229795C0",
+        "Matches": null
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\Godot.SourceGenerators\\Godot.SourceGenerators.ScriptPropertiesGenerator\\Veehiicuul_Godot_CSharp.Main_GodotAdapter_ScriptProperties.generated.cs",
+        "ExpectedHash": "517BDD80E5D04F46CB35EC0F064F859B5C8E0DA19A872D3952BA9B4961F17A62",
+        "Matches": null
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\Godot.SourceGenerators\\Godot.SourceGenerators.ScriptPropertyDefValGenerator\\Veehiicuul_Godot_CSharp.Main_GodotAdapter_ScriptPropertyDefVal.generated.cs",
+        "ExpectedHash": "CE40C74317CC0E4E73D30720846061244599A1A67358513CF33A2B0E0A338C76",
+        "Matches": null
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\Godot.SourceGenerators\\Godot.SourceGenerators.ScriptSerializationGenerator\\Veehiicuul_Godot_CSharp.Main_GodotAdapter_ScriptSerialization.generated.cs",
+        "ExpectedHash": "AE9F87B324B2F2A7BB90FE38E1328BC114204E62A11FBBCB20020A905657CA49",
+        "Matches": null
+      },
+      {
+        "Path": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\.godot\\mono\\temp\\obj\\ExportRelease\\win-x64\\Godot.SourceGenerators\\Godot.SourceGenerators.ScriptSignalsGenerator\\Veehiicuul_Godot_CSharp.Main_GodotAdapter_ScriptSignals.generated.cs",
+        "ExpectedHash": "19081FB3DCF47AF7D8D3A806A0EDB901E65FD7913A4C14A86D4B81BD62AB8731",
+        "Matches": null
+      }
+    ],
+    "RuntimeConfiguration": {
+      "runtimeOptions": {
+        "tfm": "net10.0",
+        "includedFrameworks": [
+          {
+            "name": "Microsoft.NETCore.App",
+            "version": "10.0.12"
+          }
+        ],
+        "configProperties": {
+          "System.Reflection.Metadata.MetadataUpdater.IsSupported": false,
+          "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization": false
+        }
+      }
+    }
+  },
+  "Model": {
+    "SourceSha256": "fc33822b65d097746c73a9ba7096d02770afc0652622a1e0f1e0d177a52897b0",
+    "Nodes": 109,
+    "Meshes": 108,
+    "Primitives": 137,
+    "Vertices": 49849,
+    "Triangles": 52730,
+    "Materials": 28,
+    "Textures": 0,
+    "Images": 0,
+    "Animations": 0,
+    "Limitation": "Source asset totals, not measured visible objects or draw calls."
+  },
+  "CollisionInspection": {
+    "Environment": ".NET 10.0.11",
+    "Method": "Exact collision source compiled with optimization in a separate PowerShell process; no Godot or game execution.",
+    "Bounds": {
+      "MinX": -1.5000005,
+      "MinY": -2.992522,
+      "MaxX": 1.5000002,
+      "MaxY": 3.0000005
+    },
+    "EdgeCount": 800,
+    "OutlineCount": 3,
+    "CellSize": 1.5000003576278687,
+    "GridCellCount": 23904,
+    "OccupiedCellCount": 6499,
+    "StoredGridEdgeReferenceCount": 30328,
+    "UsesExpandedGrid": true,
+    "MaximumCandidatesPerCell": 20,
+    "MedianCandidatesPerCell": 0,
+    "Percentile99CandidatesPerCell": 12,
+    "ConstructionMillisecondsIncludingFirstUseJit": 6.4054,
+    "ConstructionManagedBytes": 447064,
+    "QueryCount": 3059712,
+    "QueryManagedBytes": 0,
+    "QueryMeanMicroseconds": 0.06354594811537817,
+    "HitCountIncludingWarmup": 625042,
+    "RepresentativeSpawnColliding": false
+  },
+  "TimerInspection": {
+    "Method": "Exact MainFrameTime and MainTimerSync algorithms extracted from local Godot source. Engine jitter setting is stubbed; DeltaSmoother returns input because the audited project disables smoothing. Compiled with MSVC /O2; no Godot engine or game linked.",
+    "PhysicsTicksPerSecond": 60,
+    "FixedFps": -1,
+    "ScenarioInputMicroseconds": {
+      "0": "800 every frame",
+      "1": "700, 900 alternating",
+      "2": "800 every frame, except 19382 at frame 20000",
+      "3": "750, 2100 alternating",
+      "4": "7000, 9600 alternating"
+    },
+    "Results": [
+      {
+        "Scenario": 0,
+        "PhysicsJitterFix": 0.5,
+        "FramesAfterWarmup": 49000,
+        "AlteredDeltas": 0,
+        "MaximumDeltaDifferenceMicroseconds": 0,
+        "DeltasMillisecondsNearFrame20000": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      {
+        "Scenario": 0,
+        "PhysicsJitterFix": 0,
+        "FramesAfterWarmup": 49000,
+        "AlteredDeltas": 0,
+        "MaximumDeltaDifferenceMicroseconds": 0,
+        "DeltasMillisecondsNearFrame20000": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      {
+        "Scenario": 1,
+        "PhysicsJitterFix": 0.5,
+        "FramesAfterWarmup": 49000,
+        "AlteredDeltas": 0,
+        "MaximumDeltaDifferenceMicroseconds": 0,
+        "DeltasMillisecondsNearFrame20000": [
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7
+        ]
+      },
+      {
+        "Scenario": 1,
+        "PhysicsJitterFix": 0,
+        "FramesAfterWarmup": 49000,
+        "AlteredDeltas": 0,
+        "MaximumDeltaDifferenceMicroseconds": 0,
+        "DeltasMillisecondsNearFrame20000": [
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7,
+          0.9,
+          0.7
+        ]
+      },
+      {
+        "Scenario": 2,
+        "PhysicsJitterFix": 0.5,
+        "FramesAfterWarmup": 49000,
+        "AlteredDeltas": 18,
+        "MaximumDeltaDifferenceMicroseconds": 8333.33333333,
+        "DeltasMillisecondsNearFrame20000": [
+          0.8,
+          0.8,
+          11.0486666667,
+          1.38888888889,
+          1.38888888889,
+          1.38888888889,
+          1.38888888889,
+          0.0999999974738,
+          1.38888888889,
+          1.38888888889,
+          1.38888888889,
+          1.38888888889,
+          1.38888888889,
+          1.38888888889,
+          1.38888888889
+        ]
+      },
+      {
+        "Scenario": 2,
+        "PhysicsJitterFix": 0,
+        "FramesAfterWarmup": 49000,
+        "AlteredDeltas": 0,
+        "MaximumDeltaDifferenceMicroseconds": 0,
+        "DeltasMillisecondsNearFrame20000": [
+          0.8,
+          0.8,
+          19.382,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      {
+        "Scenario": 3,
+        "PhysicsJitterFix": 0.5,
+        "FramesAfterWarmup": 49000,
+        "AlteredDeltas": 48976,
+        "MaximumDeltaDifferenceMicroseconds": 638.888888889,
+        "DeltasMillisecondsNearFrame20000": [
+          1.38888888889,
+          1.46111111111,
+          1.38888888889,
+          1.46111111111,
+          1.38888888889,
+          1.46111111111,
+          1.38888888889,
+          1.46111111111,
+          1.38888888889,
+          1.46111111111,
+          1.38888888889,
+          1.46111111111,
+          1.38888888889,
+          1.46111111111,
+          1.38888888889
+        ]
+      },
+      {
+        "Scenario": 3,
+        "PhysicsJitterFix": 0,
+        "FramesAfterWarmup": 49000,
+        "AlteredDeltas": 0,
+        "MaximumDeltaDifferenceMicroseconds": 0,
+        "DeltasMillisecondsNearFrame20000": [
+          0.75,
+          2.1,
+          0.75,
+          2.1,
+          0.75,
+          2.1,
+          0.75,
+          2.1,
+          0.75,
+          2.1,
+          0.75,
+          2.1,
+          0.75,
+          2.1,
+          0.75
+        ]
+      },
+      {
+        "Scenario": 4,
+        "PhysicsJitterFix": 0.5,
+        "FramesAfterWarmup": 49000,
+        "AlteredDeltas": 49000,
+        "MaximumDeltaDifferenceMicroseconds": 1266.66666667,
+        "DeltasMillisecondsNearFrame20000": [
+          7.57575757576,
+          9.09090909091,
+          7.57575757576,
+          8.33333333333,
+          7.69090909091,
+          8.33333333333,
+          8.26666666667,
+          8.33333333333,
+          8.26666666667,
+          8.33333333333,
+          8.26666666667,
+          8.33333333333,
+          8.26666666667,
+          8.33333333333,
+          8.26666666667
+        ]
+      },
+      {
+        "Scenario": 4,
+        "PhysicsJitterFix": 0,
+        "FramesAfterWarmup": 49000,
+        "AlteredDeltas": 0,
+        "MaximumDeltaDifferenceMicroseconds": 0,
+        "DeltasMillisecondsNearFrame20000": [
+          7,
+          9.6,
+          7,
+          9.6,
+          7,
+          9.6,
+          7,
+          9.6,
+          7,
+          9.6,
+          7,
+          9.6,
+          7,
+          9.6,
+          7
+        ]
+      }
+    ],
+    "Limitation": "Synthetic timer inputs, not a replay of game frame deltas. Results show delta transformation, not the source of a rendering stall."
+  },
+  "HistoricalInspection": {
+    "Session": "C:\\Users\\k\\Repository\\Veehiicuul\\Veehiicuul_Godot_CSharp\\Veehiicuul\\MyLogOutput\\2026-10-04_05-23-23",
+    "ProcessId": "21696",
+    "CapturedRows": 1193121,
+    "SteadyRowsAfter10Seconds": 1180913,
+    "MedianPresentMilliseconds": 0.7992,
+    "Percentile99PresentMilliseconds": 1.0056879999999888,
+    "MaximumPresentMilliseconds": 19.3824,
+    "PresentModesAfter10Seconds": {
+      "Hardware: Independent Flip": 1180913
+    },
+    "MaximumQpcVsIntervalDifferenceMilliseconds": 0,
+    "PresentGapsAbove3Milliseconds": [
+      {
+        "Line": 30200,
+        "Seconds": 24.4115968,
+        "PresentGapMilliseconds": 19.3824,
+        "PreviousPresentMilliseconds": 0.5475,
+        "BeforeCurrentPresentMilliseconds": 18.8349,
+        "CurrentPresentMilliseconds": 0.2108,
+        "GpuBusyMilliseconds": "0.3814",
+        "GpuWaitMilliseconds": "18.5685",
+        "DisplayGapMilliseconds": "18.94990000000000"
+      },
+      {
+        "Line": 89283,
+        "Seconds": 71.690851,
+        "PresentGapMilliseconds": 11.6798,
+        "PreviousPresentMilliseconds": 0.5649,
+        "BeforeCurrentPresentMilliseconds": 11.1149,
+        "CurrentPresentMilliseconds": 0.2442,
+        "GpuBusyMilliseconds": "0.4852",
+        "GpuWaitMilliseconds": "10.8968",
+        "DisplayGapMilliseconds": "11.38200000000000"
+      }
+    ],
+    "MaximumReportedTraceLoss": {
+      "EventsLost": 0,
+      "BuffersLost": 0,
+      "OverflowedPresents": 0
+    },
+    "ExistingGcXmlEvents": 8390,
+    "GameRuntimeEventIds": {
+      "187": 1,
+      "5": 6
+    },
+    "Limitation": "Historical capture predates the current exported build. GC checks use its existing tracerpt XML export and summary."
+  },
+  "InspectionProgramSha256": {
+    "InspectArtifacts.py": "76d7ce7faccb91d7b1c8850262ff93a85ef46801cd703ccc3821c551a0de8201",
+    "InspectManagedMetadata.cs": "6e1bdfecb41b2fbe45d2c357e42223aa165e5ecb499fd8484b229b3ca5453ab1",
+    "InspectCollision.cs": "466097261ec5c32f5413d4075cab4356da75b5125880ebb24aa15147331c65cc",
+    "PrepareTimerInspection.py": "9ad6662f6cc39498a474ee3f547da983b15692787c147a8ca40284a61d0ec9a3",
+    "InspectTimer.cpp": "394c31c7a291d7ec5ad418ab946b5b052ebb7b655f071881e47842f4c01f3b95",
+    "InspectHistoricalTrace.py": "cceaee45d447ccc9b57d29a0b036696246655f950093449863f8a7076bb1b3a5"
+  },
+  "InspectionProgramsLocation": "C:\\Users\\k\\.codex\\visualizations\\2026\\10\\04\\01a108d7-1475-7133-84d6-ab0b6b438daa"
+}
