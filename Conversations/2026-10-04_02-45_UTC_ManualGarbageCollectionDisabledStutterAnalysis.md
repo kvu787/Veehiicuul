@@ -322,3 +322,112 @@ I checked your machine: **WPR, WPA, and GPUView are already installed**, and WPR
 6. **Connect measurements to what you actually see.** Use your stutter-marker button and note whether the disturbance affects the car, camera, or entire scene, and whether it followed a reset or focus change. A physical-screen recording can help distinguish uneven visible motion from application timing. PresentMon display timestamps with tearing enabled are insufficient to establish exactly what appeared on screen.
 
 For the next affected run, keep **PresentMon.csv, GarbageCollection.etl, a focused Windows performance ETL, application timings, and build/settings metadata** together. Stop the detailed trace soon after the hitch. WPR supports circular memory capture, but its default profiles reserve substantial buffers on your machine; a focused profile would suit longer waits for rare stutters. Check for lost events and compare pacing with and without detailed tracing. [WPR capture modes and status](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/wpr-command-line-options).
+
+## User
+
+<environment_context>
+  <current_date>2026-10-04</current_date>
+  <timezone>America/Los_Angeles</timezone>
+  <filesystem><workspace_roots><root>C:\Users\k\Repository\Veehiicuul</root><root>C:\Users\k\.codex\visualizations\2026\10\04\01a104c9-2d7e-7cc0-a3ff-8dd1c9d97e4d</root></workspace_roots><permission_profile type="managed"><file_system type="restricted"><entry access="read"><special>:root</special></entry><entry access="write"><path>C:\Users\k\Repository\Veehiicuul</path></entry><entry access="write"><path>C:\Users\k\.codex\visualizations\2026\10\04\01a104c9-2d7e-7cc0-a3ff-8dd1c9d97e4d</path></entry><entry access="write"><special>:slash_tmp</special></entry><entry access="write"><special>:tmpdir</special></entry><entry access="read"><path>C:\Users\k\Repository\Veehiicuul\.git</path></entry><entry access="read"><path>C:\Users\k\.codex\visualizations\2026\10\04\01a104c9-2d7e-7cc0-a3ff-8dd1c9d97e4d\.git</path></entry><entry access="read"><path>C:\Users\k\Repository\Veehiicuul\.agents</path></entry><entry access="read"><path>C:\Users\k\.codex\visualizations\2026\10\04\01a104c9-2d7e-7cc0-a3ff-8dd1c9d97e4d\.agents</path></entry><entry access="read"><path>C:\Users\k\Repository\Veehiicuul\.codex</path></entry><entry access="read"><path>C:\Users\k\.codex\visualizations\2026\10\04\01a104c9-2d7e-7cc0-a3ff-8dd1c9d97e4d\.codex</path></entry><entry access="read"><path>C:\Users\k\Repository\Veehiicuul\.aws</path></entry><entry access="read"><path>C:\Users\k\.codex\visualizations\2026\10\04\01a104c9-2d7e-7cc0-a3ff-8dd1c9d97e4d\.aws</path></entry></file_system></permission_profile></filesystem>
+</environment_context>
+
+## User
+
+implement this for the myrun.ps1 flow:
+**Capture .NET GC events with Windows ETW while PresentMon runs.** For your setup, this gives the cleanest correlation: both captures can use the same QPC clock, and no application changes are needed.
+
+Windows already has `logman`; I verified that the `Microsoft-Windows-DotNETRuntime` provider is available on your machine.
+
+1. Launch the application through your existing `MyRun.cmd`, which starts PresentMon with `--qpc_time`.
+2. Before reproducing the stutter, open **PowerShell as administrator** and run:
+
+```powershell
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$logRoot = "$env:UserProfile\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyLogOutput"
+$sessionFolder = Get-ChildItem -LiteralPath $logRoot -Directory |
+    Sort-Object Name -Descending |
+    Select-Object -First 1
+
+$tracePath = Join-Path $sessionFolder.FullName 'GarbageCollection.etl'
+
+logman create trace VeehiicuulGarbageCollection -p Microsoft-Windows-DotNETRuntime 0x1 4 -ct perf -bs 64 -nb 16 128 -o "$tracePath" -ets
+if ($LASTEXITCODE -ne 0) {
+    throw 'Starting the GC trace failed.'
+}
+```
+
+This selects the newest session folder. `0x1` enables GC events, `4` selects informational events, and `-ct perf` selects QPC timestamps. This focused configuration avoids allocation sampling and CPU stack sampling. [Logman documentation](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/logman-create-trace).
+
+3. Play until you observe a stutter. Press your existing left-stick stutter-marker button if possible.
+4. After exiting the game, stop and flush the GC trace:
+
+```powershell
+logman stop VeehiicuulGarbageCollection -ets
+if ($LASTEXITCODE -ne 0) {
+    throw 'Stopping the GC trace failed.'
+}
+```
+
+Keep `GarbageCollection.etl`, `PresentMon.csv`, and `Godot.log` together. This procedure captures gameplay after tracing starts; capturing initialization would require starting ETW before launching the game.
+
+For analysis, filter the ETL to the **game's PID from Godot.log**. The provider captures other .NET processes too. Extract:
+
+- GC start/end, collection number, generation, reason, and blocking/background type.
+- Runtime suspension and restart events.
+- Heap statistics and finalizer start/end events.
+
+**The suspension intervals are the crucial measurement.** A background collection can last much longer than the time it pauses managed execution. Measure each GC-related suspension from `GCSuspendEEBegin` through `GCRestartEEEnd`, rather than treating the entire GC start/end interval as a pause. [Microsoft's GC pause explanation](https://devblogs.microsoft.com/dotnet/gc-etw-events-3/).
+
+Using an ETL reader such as Microsoft's TraceEvent library, retain each event's raw `TimeStampQPC`. Convert it to the same timeline used in my PresentMon analysis:
+
+```text
+Seconds = (GC event QPC - first PresentMon CPUStartQPC) / QpcFrequency
+```
+
+Your latest run reports `QpcFrequency = 10000000`. **Do not align the two captures by their individual "seconds since capture started" values**, because they start at different times. [TraceEvent timestamp implementation](https://github.com/microsoft/perfview/blob/main/src/TraceEvent/TraceEvent.cs).
+
+Then compare GC suspension intervals against the exact QPC ranges of frame-time spikes. An overlapping pause of comparable duration would support GC contributing to the hitch. If complete, loss-free tracing shows no overlapping GC suspension, that rules out a direct GC suspension for that hitch; thread scheduling or graphics tracing would be the next step.
+
+## Assistant Commentary
+
+I'll add GC capture to the C# `MyRun.ps1` flow, start it before the game launches, and stop it when the game exits. I'll verify that the capture files land in the same session folder.
+
+## Assistant Commentary
+
+The launcher intentionally leaves PresentMon open for manual shutdown, so I'll preserve that behavior. An elevated helper will manage GC capture while the game keeps its usual permissions. I'll also make GC cleanup run if the game fails to launch or the launcher exits unexpectedly.
+
+## Assistant Commentary
+
+The lifecycle checks pass in Windows PowerShell, including startup failure, canceled elevation, game launch failure, and cleanup after the launcher exits. I'll now test a short real ETW capture; Windows may show its usual elevation prompt for the helper.
+
+## Assistant Commentary
+
+The live test is waiting at Windows' elevation step. The automated checks confirm that the game waits for GC capture to be ready, cleanup runs on launch failure, and `NoPresentMon` still keeps GC capture enabled.
+
+## Assistant Question
+
+The live ETW smoke test needs Windows administrator permission. If a UAC prompt is visible on your desktop, please approve it so I can verify the real GC event file.
+
+Suggested answers:
+
+- Approve the Windows UAC prompt
+- Finish with automated checks only
+
+## Assistant Commentary
+
+The implementation is committed as `e83328c`. Each run will save `GarbageCollection.etl` and clock/PID metadata beside the other logs. GC shutdown uses the already-elevated helper, so it needs no second elevation prompt.
+
+## Assistant Final
+
+Implemented in [MyRun.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyRun.ps1), committed as `e83328c`.
+
+- Starts GC capture before the game and flushes it on exit.
+- Saves `GarbageCollection.etl` and QPC/PID metadata in the same session folder.
+- Uses an elevated helper with cleanup on launcher failure or termination.
+- Preserves PresentMon's manual shutdown.
+
+Run `MyRun.cmd` as usual and approve the GC helper's UAC prompt.
+
+Seven Windows PowerShell lifecycle checks passed. The live ETW test was not completed because its UAC prompt was canceled.
