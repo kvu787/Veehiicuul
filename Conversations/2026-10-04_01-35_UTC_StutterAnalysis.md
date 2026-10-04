@@ -214,3 +214,27 @@ Saved [timing chart](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Ve
 - :codex-followup[Investigate display irregularity]{prompt="Investigate why the 18:19:04 capture develops frequent uneven display timestamps after about five minutes despite steady presentation. Inspect PresentMon source and available graphics settings without changing them."}
 - :codex-followup[Prepare a scheduling trace]{prompt="Set up a Windows performance trace for the next affected run to distinguish presentation blocking, thread descheduling, GPU delays, and GC pauses. Preserve my existing changes."}
 
+## User
+
+if C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp were to be fully rewritten in gdscript and built/run with the non-.NET version of godot 4.7.2, would that eliminate garbage collection entirely?
+
+## Assistant Commentary
+
+I'll check Godot 4.7.2's memory-management code to distinguish .NET garbage collection from the cleanup GDScript would still perform.
+
+## Assistant Final
+
+**Yes: a complete GDScript rewrite running in standard, non-.NET Godot 4.7.2 would eliminate .NET garbage collection from the application.** GDScript does not introduce another tracing garbage collector.
+
+Godot instead uses:
+
+- **Reference counting:** `RefCounted` objects, including resources, are released when their last reference disappears.
+- **Explicit or scene-owned destruction:** Nodes are deleted through `free()`, `queue_free()`, or deletion of their parent.
+
+Godot documents this distinction in its [GDScript memory-management reference](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#memory-management). I also checked your local 4.7.2 source.
+
+**It would eliminate GC pauses, but would not guarantee stutter-free execution.** Allocating memory, destroying many objects, releasing resources, and flushing queued node deletions can still take time. Reference counting can also trigger a chain of immediate destructions; it does not make cleanup cost disappear.
+
+For your captures, that rewrite would remove the current per-frame `GC.Collect()` and managed-runtime GC as possible causes. Presentation stalls, GPU delays, and thread scheduling delays would remain possible. The logs have not established that GC caused the earlier 257 ms hitch.
+
+
