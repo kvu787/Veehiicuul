@@ -111,12 +111,13 @@ public class Main {
             this.CameraFollowManager.ResetEvents();
         }
 
-        if (this.RunInitialForceGarbageCollection) {
-            GarbageCollectionUtility.ForceGarbageCollection();
-            this.RunInitialForceGarbageCollection = false;
-        } else if (wasTrackSwitched || wasCarReset) {
-            GarbageCollectionUtility.ForceGarbageCollection();
-        }
+        GC.Collect();
+        // if (this.RunInitialForceGarbageCollection) {
+        //     GarbageCollectionUtility.ForceGarbageCollection();
+        //     this.RunInitialForceGarbageCollection = false;
+        // } else if (wasTrackSwitched || wasCarReset) {
+        //     GarbageCollectionUtility.ForceGarbageCollection();
+        // }
     }
 
     private bool InCarControlTimeout() {
