@@ -1,9 +1,10 @@
 # MyRun capture
 
 `MyRun.cmd` launches the existing `MyBuildOutput` executable and captures .NET GC
-events from before application launch until the application exits. Windows asks
-for elevation for a hidden capture helper; the game keeps the launcher's usual
-permissions. The helper also stops the trace if the launcher exits unexpectedly.
+events from before application launch until capture shutdown after the application
+exits. Windows asks for elevation for the hidden GC and PresentMon capture
+helpers; the game keeps the launcher's usual permissions. Both helpers also stop
+capture if the launcher exits unexpectedly.
 
 Each timestamped folder in `Veehiicuul/MyLogOutput` contains:
 
@@ -12,13 +13,21 @@ Each timestamped folder in `Veehiicuul/MyLogOutput` contains:
 - `GarbageCollectionCapture.log`: ETW start/stop diagnostics and the unique trace
   session name.
 - `CaptureMetadata.json`: the game PID, QPC frequency, and GC capture configuration.
-- `Godot.log`, `Launcher.log`, and, when enabled, `PresentMon.csv`.
+- `MyRun.log`: all launcher console output, including startup and shutdown errors.
+- `Godot.log` and `Console.log`: the game's Godot log and combined console stdout
+  and stderr.
+- `PresentMon.csv`, `PresentMon.log`, and `PresentMonCapture.log`, when enabled:
+  frame data, combined PresentMon stdout and stderr, and helper diagnostics.
 - `GarbageCollectionReady.signal`, `GarbageCollectionStop.signal`, and
   `GarbageCollectionStopped.signal`: helper lifecycle markers. The stopped marker
   confirms that logman successfully stopped and flushed the trace.
+- `PresentMonReady.signal`, `PresentMonStop.signal`, and `PresentMonStopped.signal`,
+  when enabled: PresentMon helper lifecycle markers. The stopped marker confirms
+  successful process exit and console output flush.
 
-PresentMon still uses `--qpc_time` and must be manually closed after the game
-exits. This behavior is intentional. `MyRun_NoPresentMon.cmd` disables only
+PresentMon uses `--qpc_time` and `--track_etw_status`. Five seconds after the game
+exits, the launcher requests a real Ctrl+C event in PresentMon's private console
+and waits for it to stop and flush. `MyRun_NoPresentMon.cmd` disables only
 PresentMon; GC capture stays enabled. To disable GC capture for a comparison run:
 
 ```powershell
