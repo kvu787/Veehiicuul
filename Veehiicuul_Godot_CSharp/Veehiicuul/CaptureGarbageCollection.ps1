@@ -26,7 +26,7 @@ try {
     $ParentProcess = [Diagnostics.Process]::GetProcessById($ParentProcessId)
     $null = $ParentProcess.Handle
     $TracePath = Join-Path $LogFolderPath 'GarbageCollection.etl'
-    & $LogmanPath create trace $SessionName -p Microsoft-Windows-DotNETRuntime 0x1 4 -ct perf -bs 64 -nb 16 128 -o $TracePath -ets
+    & $LogmanPath create trace $SessionName -p Microsoft-Windows-DotNETRuntime 0x1 4 -ct perf -bs 64 -nb 16 128 -o $TracePath -ets 2>&1 | Out-Host
     if ($LASTEXITCODE -ne 0) {
         throw "Starting the GC trace failed (logman exit code $LASTEXITCODE)."
     }
@@ -40,19 +40,19 @@ try {
         if ($ParentProcess.WaitForExit(250)) { break }
     }
 } catch {
-    Write-Host $_.Exception.Message -ForegroundColor Red
+    Write-Host ($_ | Out-String) -ForegroundColor Red
     $ResultCode = 1
 } finally {
     if ($TraceStarted) {
         try {
-            & $LogmanPath stop $SessionName -ets
+            & $LogmanPath stop $SessionName -ets 2>&1 | Out-Host
             if ($LASTEXITCODE -ne 0) {
                 throw "Stopping the GC trace failed (logman exit code $LASTEXITCODE). Session: $SessionName"
             }
             Set-Content -LiteralPath (Join-Path $LogFolderPath 'GarbageCollectionStopped.signal') -Value ''
             Write-Host 'GC trace stopped and flushed.'
         } catch {
-            Write-Host $_.Exception.Message -ForegroundColor Red
+            Write-Host ($_ | Out-String) -ForegroundColor Red
             $ResultCode = 1
         }
     }

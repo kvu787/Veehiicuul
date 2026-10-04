@@ -6,22 +6,27 @@ $ProcessPath = Join-Path $PSScriptRoot 'MyBuildOutput\Veehiicuul_Godot_CSharp.ex
 $PresentMonPath = "$env:UserProfile\Program\PresentMon-2.6.0-x64.exe"
 
 $LogFolderPath = Join-Path $PSScriptRoot ('MyLogOutput\' + (Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'))
-$PresentMonLogFilePath = "$LogFolderPath\PresentMon.csv"
 $GodotLogFilePath = "$LogFolderPath\Godot.log"
 $GarbageCollectionSessionName = 'VeehiicuulGarbageCollection_' + [Guid]::NewGuid().ToString('N')
 $GarbageCollectionProcess = $null
+$PresentMonProcess = $null
+$ApplicationCapture = $null
 $ApplicationProcess = $null
+$ApplicationExitTimer = $null
 $TranscriptStarted = $false
 $ResultCode = 0
 
 try {
+    New-Item -ItemType Directory -Path $LogFolderPath | Out-Null
+    Set-Content -LiteralPath (Join-Path $PSScriptRoot 'MyLogOutput\.gdignore') -Value ''
+    Start-Transcript -LiteralPath (Join-Path $LogFolderPath 'MyRun.log') | Out-Null
+    $TranscriptStarted = $true
+    Write-Host "Session logs: $LogFolderPath"
+    . (Join-Path $PSScriptRoot 'ConsoleProcess.ps1')
     if (-not (Test-Path -LiteralPath $ProcessPath -PathType Leaf)) {
         throw "Application build is missing: $ProcessPath"
     }
-    New-Item -ItemType Directory -Path $LogFolderPath | Out-Null
-    Start-Transcript -LiteralPath (Join-Path $LogFolderPath 'Launcher.log') | Out-Null
-    $TranscriptStarted = $true
-    Write-Host "Session logs: $LogFolderPath"
+    $Principal = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
 
     if ($args -notcontains 'NoGarbageCollection') {
         $CaptureScriptPath = Join-Path $PSScriptRoot 'CaptureGarbageCollection.ps1'
@@ -32,7 +37,6 @@ try {
             WindowStyle = 'Hidden'
             PassThru = $true
         }
-        $Principal = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
         if (-not $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
             $CaptureStartParameters.Verb = 'RunAs'
         }
@@ -50,22 +54,47 @@ try {
         Write-Host "GC capture started: $GarbageCollectionSessionName"
     }
 
-    if (($args -notcontains 'NoPresentMon') -and (Test-Path -LiteralPath $PresentMonPath)) {
-        # This PresentMon process must be manually closed by the user. This is intentional.
-        # "--terminate_on_proc_exit" isn't used because I've observed issues with it.
-        Start-Process `
-            -FilePath $PresentMonPath `
-            -ArgumentList "--process_name `"$($ProcessName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time" `
-            -Verb 'RunAs'
+    if ($args -notcontains 'NoPresentMon') {
+        if (-not (Test-Path -LiteralPath $PresentMonPath -PathType Leaf)) {
+            throw "PresentMon is missing: $PresentMonPath"
+        }
+        # The elevated helper owns a separate, hidden console for a safe Ctrl+C broadcast.
+        # Do not use --terminate_on_proc_exit because it has caused capture issues.
+        $CaptureScriptPath = Join-Path $PSScriptRoot 'CapturePresentMon.ps1'
+        $CaptureArguments = '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -PresentMonPath "{1}" -ProcessName "{2}" -LogFolderPath "{3}" -ParentProcessId {4}' -f $CaptureScriptPath, $PresentMonPath, $ProcessName, $LogFolderPath, $PID
+        $CaptureStartParameters = @{
+            FilePath = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+            ArgumentList = $CaptureArguments
+            WindowStyle = 'Hidden'
+            PassThru = $true
+        }
+        if (-not $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            $CaptureStartParameters.Verb = 'RunAs'
+        }
+        $PresentMonProcess = Start-Process @CaptureStartParameters
+        $StartupTimer = [Diagnostics.Stopwatch]::StartNew()
+        $ReadyPath = Join-Path $LogFolderPath 'PresentMonReady.signal'
+        while (-not (Test-Path -LiteralPath $ReadyPath)) {
+            if ($PresentMonProcess.WaitForExit(100)) {
+                throw 'The PresentMon helper exited before capture started. See PresentMonCapture.log and PresentMon.log.'
+            }
+            if ($StartupTimer.Elapsed.TotalSeconds -ge 30) {
+                throw 'Timed out starting PresentMon. See PresentMonCapture.log and PresentMon.log.'
+            }
+        }
+        Write-Host "PresentMon capture started with PID=$(Get-Content -LiteralPath $ReadyPath)."
     }
 
-    $ApplicationProcess = Start-Process -FilePath $ProcessPath -ArgumentList "--log-file `"$GodotLogFilePath`"" -PassThru
+    $ApplicationCapture = [VeehiicuulWorkflow.ConsoleProcess]::new($ProcessPath, ('--log-file "{0}"' -f $GodotLogFilePath), (Join-Path $LogFolderPath 'Console.log'), $true)
+    $ApplicationProcess = $ApplicationCapture.Process
     if (-not $ApplicationProcess.HasExited) {
         $ApplicationProcess.PriorityClass = [Diagnostics.ProcessPriorityClass]::High
     }
     Write-Host "Launched with PID=$($ApplicationProcess.Id)"
     [ordered]@{
         ProcessId = $ApplicationProcess.Id
+        PresentMonEnabled = ($null -ne $PresentMonProcess)
+        PresentMonShutdownDelaySeconds = 5
         QpcFrequency = [Diagnostics.Stopwatch]::Frequency
         GarbageCollectionSessionName = $GarbageCollectionSessionName
         GarbageCollectionEnabled = ($null -ne $GarbageCollectionProcess)
@@ -74,11 +103,38 @@ try {
         GarbageCollectionLevel = 4
         GarbageCollectionClock = 'QPC'
     } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $LogFolderPath 'CaptureMetadata.json') -Encoding UTF8
-    $ApplicationProcess.WaitForExit()
+    # The timed overload returns when the process exits, without waiting for pipe callbacks.
+    while (-not $ApplicationProcess.WaitForExit(250)) { }
+    $ApplicationExitTimer = [Diagnostics.Stopwatch]::StartNew()
+    $ApplicationCapture.FlushOutput()
+    $ResultCode = $ApplicationProcess.ExitCode
+    Write-Host "Application exited with code $ResultCode."
 } catch {
-    Write-Host $_.Exception.Message -ForegroundColor Red
+    Write-Host ($_ | Out-String) -ForegroundColor Red
     $ResultCode = 1
 } finally {
+    if ($null -ne $PresentMonProcess) {
+        try {
+            if ($null -ne $ApplicationExitTimer) {
+                Write-Host 'Waiting until five seconds after the application exited before sending Ctrl+C to PresentMon.'
+                $RemainingMilliseconds = [Math]::Max(0, 5000 - [int]$ApplicationExitTimer.ElapsedMilliseconds)
+                if ($RemainingMilliseconds -gt 0) { Start-Sleep -Milliseconds $RemainingMilliseconds }
+            }
+            Set-Content -LiteralPath (Join-Path $LogFolderPath 'PresentMonStop.signal') -Value ''
+            if (-not $PresentMonProcess.WaitForExit(35000)) {
+                throw 'PresentMon has not finished shutting down. See PresentMonCapture.log and PresentMon.log.'
+            }
+            if (-not (Test-Path -LiteralPath (Join-Path $LogFolderPath 'PresentMonStopped.signal'))) {
+                throw 'PresentMon capture did not stop successfully. See PresentMonCapture.log and PresentMon.log.'
+            }
+            Write-Host 'PresentMon stopped with Ctrl+C and flushed its output.'
+        } catch {
+            Write-Host ($_ | Out-String) -ForegroundColor Red
+            $ResultCode = 1
+        } finally {
+            $PresentMonProcess.Dispose()
+        }
+    }
     if ($null -ne $GarbageCollectionProcess) {
         try {
             # Signal the already-elevated helper so stopping ETW requires no second UAC prompt.
@@ -91,13 +147,13 @@ try {
             }
             Write-Host 'GC capture stopped and flushed to GarbageCollection.etl.'
         } catch {
-            Write-Host $_.Exception.Message -ForegroundColor Red
+            Write-Host ($_ | Out-String) -ForegroundColor Red
             $ResultCode = 1
         } finally {
             $GarbageCollectionProcess.Dispose()
         }
     }
-    if ($null -ne $ApplicationProcess) { $ApplicationProcess.Dispose() }
+    if ($null -ne $ApplicationCapture) { $ApplicationCapture.Dispose() }
     if ($TranscriptStarted) { Stop-Transcript | Out-Null }
 }
 
