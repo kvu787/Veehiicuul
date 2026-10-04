@@ -188,3 +188,27 @@ Updated [MyRun.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Vee
 The session directory now contains PresentMon.log, MyRun.log, Console.log, and all Godot, GC, and helper logs.
 
 Windows fixture tests passed, including a 5.12-second shutdown delay. A live game/ETW capture was not run.
+
+## User
+
+do live tests/validations and fix issues if there are any. i will approve uac prompts.
+
+## Assistant Commentary
+
+I'll run the actual game with PresentMon and GC capture, then check shutdown timing and the session logs. The capture helpers will show UAC prompts for you to approve.
+
+## Assistant Commentary
+
+The live run passed: the game closed normally, PresentMon received its stop request 5.03 seconds later and exited with code 0, and both captures flushed successfully. PresentMon.log contains ETW status output and "Stopped recording." No capture sessions remain active. I also corrected the README's obsolete manual-shutdown instructions; I'll now check that the CSV and GC trace are readable.
+
+## Assistant Final
+
+Live validation passed with the actual game, PresentMon, and GC capture.
+
+- Ctrl+C requested **5.03 seconds** after normal game exit; PresentMon exited cleanly.
+- **36,337 frames** recorded; zero reported event/buffer loss.
+- All logs and traces flushed; no workflow processes or ETW sessions remained.
+
+No runtime fixes were needed. Updated the stale README instructions.
+
+[Validation report](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-10-04_05-19-03/LiveValidationReport.txt)
