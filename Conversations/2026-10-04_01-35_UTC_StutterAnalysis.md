@@ -237,4 +237,56 @@ Godot documents this distinction in its [GDScript memory-management reference](h
 
 For your captures, that rewrite would remove the current per-frame `GC.Collect()` and managed-runtime GC as possible causes. Presentation stalls, GPU delays, and thread scheduling delays would remain possible. The logs have not established that GC caused the earlier 257 ms hitch.
 
+## User
 
+do an end-to-end rewrite of C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp using gdscript only and the non-.NET version of godot 4.7.2 at C:\Users\k\Program\Godot_v4.7.2-stable_win64.exe and put this in C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_GDScript
+
+## Assistant Commentary
+
+I'll inspect the C# application, port its gameplay and build/run workflow into the new GDScript folder, then verify the export with your Godot 4.7.2 executable.
+
+## Assistant Commentary
+
+The standard Godot 4.7.2 installation and matching Windows release templates are present. Your path names a folder containing the executable, so the build script will use the console executable inside it.
+
+The port will preserve the track and car assets, controller mappings, vehicle dynamics, camera behavior, and custom collision detection. I'll also keep the DirectX 12/Forward+ settings and session logging.
+
+## Assistant Commentary
+
+The input, vehicle, camera, and track-loading code is now ported. I'm working through collision detection next, preserving its mesh-derived footprints and expanded grid so normal frames continue to query nearby edges.
+
+## Assistant Commentary
+
+The standard-Godot release export succeeds, and the EXE passes a headless startup test through the Windows PowerShell launcher. Its collision index matches the C# run: 800 edges, 23,904 cells, and 30,328 stored edge references.
+
+I'll now check movement, camera controls, switching and resets, collision results against an independent reference, and DirectX 12 rendering.
+
+## Assistant Commentary
+
+All 1,054 behavior and integration checks pass, including 960 collision comparisons covering all six cars. The exported application also runs on DirectX 12 with Forward+, VSync off, and no FPS limit, and I've inspected the fixed and follow camera captures.
+
+I'll finish the launch and capture checks, document the workflow, and split the changes into reviewable commits.
+
+## Assistant Commentary
+
+The PresentMon test produced a capture, but PresentMon stayed running after the game exited. I'll give each launch its own named capture session and stop that session explicitly, so `MyRun.cmd` finishes cleanly.
+
+## Assistant Commentary
+
+The PresentMon launcher now stops its capture session cleanly when the game exits. The final checks and camera captures pass. I'll finish reviewing the source and commit the rewrite in separate pieces.
+
+## Assistant Commentary
+
+The new application contains no C# files or managed assemblies. The rewrite is committed in five pieces. I'll now record the conversation and check that the working tree is clean.
+
+## Assistant Final
+
+Completed in [Veehiicuul_Godot_GDScript](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_GDScript/README.md), using GDScript only and standard Godot 4.7.2. The release build is ready.
+
+- [Build.cmd](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_GDScript/Build.cmd) builds and exports.
+- [Run.cmd](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_GDScript/Run.cmd) launches it.
+- [MyRun.cmd](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_GDScript/MyRun.cmd) launches with PresentMon capture.
+
+Preserved gameplay, assets, controls, cameras, and collision behavior. All **1,054 checks passed**; verified DirectX 12/Forward+, VSync off, unlimited FPS, and capture shutdown.
+
+Stutter markers now use estimated QPC timestamps, documented in the README. Committed in five implementation commits; the original C# application is unchanged.
