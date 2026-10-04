@@ -270,3 +270,34 @@ Other caveats:
 For your first comparison, keep **LLM Ultra, VRR off, and all VSync off**, and compare NVCP MFR at a chosen rate with Godot at that same rate and MFR off. Choose a rate comfortably below the machine's sustained capacity and your observed 1250 FPS ceiling. Compare frame-time distributions, GPU busy time, CPU usage/power, and perceived responsiveness.
 
 The limiter contains **no special 1250 FPS ceiling**, and your project has no configured Godot cap. Your existing startup log prints `Engine.MaxFps`, making that easy to verify. A value of zero alongside measured 1250 FPS rules out this Godot limiter as the source of that ceiling; the exact NVIDIA-side cause remains unproven by this source analysis. [Startup logging](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Utility/PrintInfoUtility.cs:23).
+
+## User
+
+what is --fixed-fps?
+
+## Assistant
+
+I'll check the exact behavior of `--fixed-fps` in your Godot 4.7.2 source.
+
+## Assistant
+
+**`--fixed-fps N` makes Godot advance game time as though each frame took exactly `1 / N` seconds, regardless of how much real time passed.** It is primarily useful for offline movie rendering and controlled simulation timing.
+
+For example, with `--fixed-fps 60`, each frame advances the simulation by approximately 16.667 ms:
+
+| Actual rendering rate | Resulting simulation speed |
+| --------------------- | -------------------------- |
+| 60 FPS                | Normal speed               |
+| 120 FPS               | Twice normal speed         |
+| 30 FPS                | Half normal speed          |
+
+The distinction is:
+
+- **`--max-fps 60`:** wait when necessary to limit real frame throughput; game time follows elapsed time.
+- **`--fixed-fps 60`:** advance a prescribed amount of game time per frame; actual throughput still depends on CPU/GPU performance and any VSync or driver cap.
+
+In your Godot source, it replaces the measured timestep with `1.0 / fixed_fps`, and the main loop skips the usual end-of-frame limiter. Consequently, it also bypasses the Windows limiter used by `Engine.MaxFps`. [Timestep replacement](C:/Users/k/Repository/External/Godot_4-7-2/main/main_timer_sync.cpp:432), [limiter bypass](C:/Users/k/Repository/External/Godot_4-7-2/main/main.cpp:5170).
+
+For movie recording, this lets Godot spend as much real time as necessary rendering each frame while producing a video with consistent simulation steps.
+
+**It is unsuitable as your gameplay FPS cap.** Your car movement uses `delta`, while the 350 ms reset timeout uses `DateTime.Now`. With fixed FPS, those two clocks can advance at different rates. [Game timing](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs:103).
