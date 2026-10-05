@@ -239,3 +239,80 @@ I would also define the comparison reference as **an uncached render using the s
 
 These specs are a sound basis for implementation. They give the clearest performance benefit with a stationary camera and static background; supporting exact output across camera following and all quality settings makes the implementation substantially more involved.
 
+## User
+
+explain in greater detail how standard godot msaa is supposed to work
+
+## Assistant
+
+I'll trace Godot's standard MSAA path and explain how it samples geometry edges, stores color and depth, and resolves the final pixels. I'll also connect that to your background-cache design.
+
+## Assistant
+
+Godot uses separate color and depth storage for each MSAA sample, while normally shading each triangle fragment once per pixel and copying that color to the samples it covers. I'll use the visualize skill to show those coverage decisions as an edge moves through a pixel.
+
+## Assistant
+
+The key step is the resolve: Godot averages the stored sample colors into one color per pixel after rendering the scene. That averaging loses which color belonged to each sample. I'll show a numerical example of why that matters when the vehicle covers only part of a pixel.
+
+## Assistant
+
+Godot's standard 3D MSAA smooths geometry edges by **tracking several visibility samples inside each pixel, then combining their colors into one pixel color**. Godot offers 2x, 4x, and 8x MSAA. [Godot documentation](https://docs.godotengine.org/en/latest/tutorials/3d/3d_antialiasing.html#multisample-antialiasing-msaa)
+
+Consider **4x MSAA**. Each pixel in the internal 3D render has four sample positions. At a render scale of 1.0, a 2560 x 1440 image still has 2560 x 1440 output pixels; each of those pixels temporarily holds information for four samples.
+
+Move the geometry edge below to see how coverage changes. This example assumes uniform foreground and background colors, with the foreground in front.
+
+visualize{"path":"C:/Users/k/.codex/visualizations/2026/10/05/01a10ca5-8774-78b0-8dbb-507be7f22ecd/GodotMultisampleAntialiasing.html"}
+
+The rendering process works as follows:
+
+1. **Allocate color and depth storage for each sample.** With 4x MSAA, each pixel logically contains four color values and four depth values. Godot allocates multisampled color and depth textures, plus ordinary textures used for resolved results. You can see this in your local [Godot 4.7.2 buffer allocation](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/storage_rd/render_scene_buffers_rd.cpp:185).
+
+2. **Determine which samples a triangle covers.** After projecting a triangle onto the screen, the GPU tests its edges against the four sample positions. A triangle passing through part of a pixel might cover two samples and leave two uncovered. This produces a coverage mask identifying exactly which samples belong to that triangle. [Microsoft's rasterization rules](https://learn.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage-rules#multisample-anti-aliasing-rasterization-rules)
+
+3. **Calculate the triangle's material color.** Normally, the fragment shader calculates one color for that triangle at that pixel: texture lookup, material evaluation, lighting, and so on. That color can be copied to several covered samples. If another triangle contributes to the same pixel, it can have its own shader calculation and color. Thus, a pixel can contain several different stored colors even though shading was shared across samples of each triangle. [Microsoft's rasterization rules](https://learn.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage-rules#multisample-anti-aliasing-rasterization-rules)
+
+4. **Perform depth testing and color writes per sample.** Each covered sample has its own depth test. For ordinary opaque geometry, a nearer surface replaces a farther surface at the samples it covers. Other samples retain their previous colors. The GPU can perform depth testing early to avoid shading hidden fragments. [Microsoft's multisampling specification](https://microsoft.github.io/DirectX-Specs/d3d/archive/D3D11_3_FunctionalSpec.htm)
+
+5. **Resolve the samples into one color per pixel.** Conceptually, the ordinary color resolve computes:
+
+   ```text
+   PixelColor = (SampleA + SampleB + SampleC + SampleD) / 4
+   ```
+
+   For example, if three samples contain vehicle color and one contains road color, the resolved color is 75% vehicle and 25% road. This intermediate color makes the vehicle's silhouette look smoother.
+
+These are logical operations; the GPU can arrange their execution for efficiency.
+
+In your Forward+ renderer, Godot performs the final color resolve after the transparent geometry pass, before subsequent temporal processing and final post-processing. Additional intermediate resolves can occur for effects that need them. The DirectX 12 backend uses the hardware's `ResolveSubresource` operation. See the local [Forward+ resolve](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/renderer_rd/forward_clustered/render_forward_clustered.cpp:2438) and [DirectX 12 resolve](C:/Users/k/Repository/External/Godot_4-7-2/drivers/d3d12/rendering_device_driver_d3d12.cpp:3934).
+
+The averaging happens on the rendering buffer's color values. Later tone mapping and display color conversion affect what appears on the screen, so a 50% linear color value need not appear as display RGB 128.
+
+MSAA is especially useful for silhouettes and boundaries between geometric surfaces. Fine texture patterns and specular highlights can still alias because their shading generally receives one evaluation per triangle per pixel. Materials with cutout transparency can use Godot's alpha-to-coverage feature to turn alpha into sample coverage. [Godot's material documentation](https://docs.godotengine.org/en/latest/tutorials/3d/standard_material_3d.html#alpha-antialiasing)
+
+The cost comes from extra sample storage, depth tests, color writes, memory bandwidth, and resolving. A 4x multisampled attachment logically stores four samples per pixel, but the total GPU time has no fixed 4x multiplier.
+
+For your cache, **the important information loss happens at the resolve**. Here is a constructed example using linear grayscale values, where 0 is black and 1 is white:
+
+```text
+Background samples:                   A=0, B=1, C=0, D=1
+Resolved background:                  0.5
+
+White vehicle covers samples A and C:
+Correct combined samples:             A=1, B=1, C=1, D=1
+Correct resolved result:               1.0
+```
+
+If we retain only the resolved background, then blend a separately resolved vehicle over it using 50% coverage, we instead get:
+
+```text
+0.5 * VehicleColor + 0.5 * BackgroundColor
+= 0.5 * 1 + 0.5 * 0.5
+= 0.75
+```
+
+The cached average cannot tell us that the vehicle specifically covered the background's two black samples. It has lost their positions.
+
+My conclusion for your design is that preserving standard MSAA exactly generally requires **caching the background's individual sample colors**, restoring those colors into the current multisampled buffer, rendering the foreground into that buffer, and then resolving the combined result. Your foreground-over-background rule would apply per sample: the vehicle replaces the background samples it covers, while uncovered samples continue showing the background. Foreground depth can be handled separately to preserve the vehicle's own visibility.
+
