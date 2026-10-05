@@ -17,7 +17,7 @@ public sealed class TrackNodes {
         }
 
         this.PlaceholderCarNode = trackSwitcher.CurrentTrackScene.GetNode<MeshInstance3D>("Model/SlopeCarPlaceholder") ?? throw new InvalidOperationException();
-        ValidatePlaceholderCar(this.PlaceholderCarNode);
+        ValidateVehicleTransform(this.PlaceholderCarNode);
         this.PlaceholderCarNode.Visible = false;
 
         this.CameraPanAndYaw = trackSwitcher.CurrentTrackScene.GetNode<Node3D>("CameraPanAndYaw") ?? throw new InvalidOperationException();
@@ -28,25 +28,31 @@ public sealed class TrackNodes {
         foreach (Car car in trackSwitcher.CurrentTrackJson.Cars) {
             Node3D carDecorationNode = trackSwitcher.CurrentTrackScene.FindChild(car.GameObjectName, recursive: true, owned: false) as MeshInstance3D
                 ?? throw new InvalidOperationException($"Car model MeshInstance3D name='{car.GameObjectName}' was not found in sceneName='{trackSwitcher.CurrentTrackScene.Name}'");
-            // TODO: Check if these are properly cleaned up when switching tracks
+            ValidateVehicleTransform(carDecorationNode);
             Node3D carGameNode = carDecorationNode.Duplicate(0) as MeshInstance3D ?? throw new InvalidOperationException();
+            ValidateVehicleTransform(carGameNode);
             trackSwitcher.CurrentTrackScene.AddChild(carGameNode);
             carGameNode.Visible = false;
             car.Node = carGameNode;
         }
     }
 
-    private static void ValidatePlaceholderCar(Node3D placeholderCar) {
+    private static void ValidateVehicleTransform(Node3D node3D) {
         const float tolerance = 0.00001f;
-        const float rotationToleranceRadians = 1.7453293e-7f;
-
-        if (placeholderCar.Position.Y != 0f
-            || Mathf.Abs(placeholderCar.Rotation.X) >= rotationToleranceRadians
-            || Mathf.Abs(placeholderCar.Rotation.Z) >= rotationToleranceRadians
-            || Mathf.Abs(placeholderCar.Scale.X - 1f) >= tolerance
-            || Mathf.Abs(placeholderCar.Scale.Y - 1f) >= tolerance
-            || Mathf.Abs(placeholderCar.Scale.Z - 1f) >= tolerance) {
-            throw new InvalidOperationException("SlopeCarPlaceholder must be at ground height with only yaw rotation and unit local scale.");
+        if (node3D.Position.Y != 0f
+            || node3D.Rotation.X != 0f
+            || node3D.Rotation.Z != 0f
+            || Mathf.Abs(node3D.Scale.X - 1f) >= tolerance
+            || Mathf.Abs(node3D.Scale.Y - 1f) >= tolerance
+            || Mathf.Abs(node3D.Scale.Z - 1f) >= tolerance) {
+            GD.PrintErr(node3D.Name);
+            GD.PrintErr(node3D.Position.Y.ToExactDecimalString(preserveNegativeZero: true));
+            GD.PrintErr(node3D.Rotation.X.ToExactDecimalString(preserveNegativeZero: true));
+            GD.PrintErr(node3D.Rotation.Z.ToExactDecimalString(preserveNegativeZero: true));
+            GD.PrintErr(node3D.Scale.X.ToExactDecimalString(preserveNegativeZero: true));
+            GD.PrintErr(node3D.Scale.Y.ToExactDecimalString(preserveNegativeZero: true));
+            GD.PrintErr(node3D.Scale.Z.ToExactDecimalString(preserveNegativeZero: true));
+            throw new InvalidOperationException($"Vehicle with name='{node3D.Name}' must be at ground height with only yaw rotation and unit local scale.");
         }
     }
 
