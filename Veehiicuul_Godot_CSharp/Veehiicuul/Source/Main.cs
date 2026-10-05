@@ -13,7 +13,6 @@ public class Main {
     private DateTime CarControlTimeoutStart = DateTime.MinValue;
     private bool IsReadyDone;
     private readonly Node MainNode;
-    private bool RunInitialForceGarbageCollection = true;
 
     private DigitalInputMap DigitalInputMap = null!;
     private InputManager InputManager = null!;
@@ -82,15 +81,12 @@ public class Main {
             return;
         }
 
-        bool wasTrackSwitched = this.TrackSwitcher.ReadInputAndSwitchTracks();
-        bool wasCarReset = false;
-        if (wasTrackSwitched) {
+        if (this.TrackSwitcher.ReadInputAndSwitchTracks()) {
             this.InitializeTrack();
         } else {
             if (this.CarSwitcher.ReadInputAndSwitchCar()
                 || this.InputManager.ResetCar
                 || this.CollisionManager.IsCarColliding(this.CarStateManager.Position, this.CarStateManager.Rotation)) {
-                wasCarReset = true;
                 this.CarControlTimeoutStart = DateTime.Now;
                 this.CarStateManager.Reset_PositionRotationVelocity();
             }
