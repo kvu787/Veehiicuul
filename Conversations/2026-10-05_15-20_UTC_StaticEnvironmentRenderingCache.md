@@ -418,3 +418,51 @@ So the requirement is more specific than "MSAA cannot work with images":
 
 Those colors can still be cached in GPU textures. They need to preserve the multisample information, instead of retaining only the final averaged image.
 
+## User
+
+what would happen if you did msaa 8x to the background, saved that as an image, rendered the foreground car in front of that, and then applied msaa 8x to that?
+
+## Assistant
+
+I'll walk through that sequence and distinguish MSAA on the car from antialiasing already present in the cached background.
+
+## Assistant
+
+**That would give you an already-antialiased background plus an 8x-antialiased car. It could look very good, but it would not generally match rendering their geometry together.**
+
+MSAA operates while geometry is rendered. For your proposed sequence, the second stage would draw the background image and car into an 8x MSAA render target, then resolve it. [Godot's MSAA explanation](https://docs.godotengine.org/en/latest/tutorials/3d/3d_antialiasing.html#multisample-antialiasing-msaa)
+
+For a background image displayed 1:1 and aligned with the pixels:
+
+1. The background's original eight samples have already been averaged into one cached color.
+2. Drawing that image places the cached color into all eight sample slots of the new render target.
+3. The car replaces whichever sample slots its triangles cover.
+4. Resolving averages those eight slots into the final pixel.
+
+The car receives proper geometric antialiasing. The background keeps its baked antialiasing, but its original individual sample colors remain unavailable.
+
+For example, consider a pixel at a background geometry edge. Using linear grayscale values:
+
+```text
+Original background samples:  0, 0, 0, 0, 1, 1, 1, 1
+Cached background color:      0.5
+```
+
+Now a white car covers exactly the first four sample positions.
+
+Rendering the geometry together produces:
+
+```text
+Combined samples:             1, 1, 1, 1, 1, 1, 1, 1
+Resolved color:                1.0
+```
+
+Your proposed sequence produces:
+
+```text
+Combined samples:             1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5
+Resolved color:                0.75
+```
+
+**Over a uniform background, the two approaches can match.** Differences arise where the car partially covers pixels whose original background samples contained different colors. Applying 8x MSAA during the second render cannot reconstruct the sample information lost when the background was first averaged.
+
