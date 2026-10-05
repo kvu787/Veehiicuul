@@ -64,6 +64,13 @@ try {
                 }
             }
             $presentMonProcess.WaitForExit()
+            # Convert redirected output after PresentMon has finished writing, including failed runs.
+            $utf8WithoutBom = [System.Text.UTF8Encoding]::new($false)
+            foreach ($fileName in 'PresentMonOutput_Standard.log', 'PresentMonOutput_Error.log') {
+                $filePath = Join-Path $LogFolderPath $fileName
+                $content = [System.IO.File]::ReadAllText($filePath)
+                [System.IO.File]::WriteAllText($filePath, $content, $utf8WithoutBom)
+            }
             if ($presentMonProcess.ExitCode -ne 0) {
                 throw "PresentMon exited with code $($presentMonProcess.ExitCode). See PresentMonOutput_Error.log."
             }
