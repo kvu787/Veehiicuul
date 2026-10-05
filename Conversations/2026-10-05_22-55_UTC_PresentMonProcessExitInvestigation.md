@@ -238,3 +238,19 @@ Updated [MyRun_Simple.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSh
 Also fixed the existing `NoPresentMon` argument handling.
 
 Live Windows PowerShell 5.1 validation passed: PresentMon exited cleanly after **5.16 seconds**, saving **9,144 frames**. `NoPresentMon` ran without the shutdown delay.
+
+## User
+
+what does this mean: `$null = $PresentMonProcess.Handle`
+
+## Assistant Commentary
+
+I'll check why that line reads the handle before the launcher waits for PresentMon.
+
+## Assistant Final
+
+`$PresentMonProcess.Handle` makes .NET obtain and retain a **Windows process handle**, which Windows uses to access information about that process.
+
+Assigning the returned value to `$null` discards it so PowerShell doesn't print it. The process object still retains the handle.
+
+I added this so information such as `ExitCode` remains available after PresentMon exits, for the later shutdown checks. [Microsoft documentation](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.hasexited?view=netframework-4.8.1).
