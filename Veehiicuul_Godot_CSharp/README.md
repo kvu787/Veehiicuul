@@ -46,6 +46,36 @@ Measure GC-related runtime suspension/restart intervals, not the entire lifetime
 of a background collection. Preserve the ETL for checking event loss before
 concluding that an absent GC pause rules it out as the cause of a stutter.
 
+# WIP Recommended system configuration
+
+## Hardware
+
+Lenovo Legion 9i
+Asus ROG Strix G18
+
+## Nvidia driver version
+
+I have validated these Nvidia driver versions:
+- 596.49
+- 596.11
+  - This driver version is specific to the Lenovo Legion 9i and isn't available through https://www.nvidia.com/en-us/drivers/
+
+I have tried the later driver series of 610.x, 616.x, and 617.x.
+They cause issues with my system such as:
+- Night light causing a washed out cursor
+- Inability to change laptop's built-in display brightness
+- Laptop display not turning off when closing lid
+However, I don't recall any issues with any games when using those driver series.
+
+## G-SYNC Off
+
+In Nvidia Control Panel, set these:
+- Low Low Latency mode = Ultra
+
+## G-SYNC On
+
+todo
+
 # Nvidia settings
 
 Verify nvidia profile settings are as expected using Nvidia Profile Inspector, not the Nvidia App or Nvidia Control Panel.
