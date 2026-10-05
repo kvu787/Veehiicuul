@@ -254,3 +254,24 @@ I'll check why that line reads the handle before the launcher waits for PresentM
 Assigning the returned value to `$null` discards it so PowerShell doesn't print it. The process object still retains the handle.
 
 I added this so information such as `ExitCode` remains available after PresentMon exits, for the later shutdown checks. [Microsoft documentation](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.hasexited?view=netframework-4.8.1).
+
+## User
+
+okay, but that doesn't really explain why it's necessary
+
+## Assistant Commentary
+
+I'll check how `Start-Process -PassThru` retains the process handle, and whether the later exit checks make this line redundant.
+
+## Assistant Final
+
+It's needed here to work around a **Windows PowerShell 5.1 bug affecting `ExitCode`**.
+
+With `Start-Process -PassThru` and redirected output, the returned object can track the PID without retaining a Windows process handle. After the process exits, `WaitForExit()` can complete while `ExitCode` returns `$null`. Reading `.Handle` while the process is alive forces .NET to retain that handle, preserving access to its exit code. [Known PowerShell issue](https://github.com/PowerShell/PowerShell/issues/5421).
+
+I reproduced this on your machine using a process that exits with code `23`:
+
+- Without that line: `WaitForExit()` completed, but `ExitCode` was `$null`.
+- With that line: `ExitCode` correctly returned `23`.
+
+Without it, our later `ExitCode -ne 0` check could incorrectly report a successful PresentMon shutdown as a failure.
