@@ -184,3 +184,33 @@ Your latest two launches also failed because the earlier "PresentMon" trace sess
 For reliable shutdown, use the explicit Ctrl+C flow already implemented by [MyRun.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyRun.ps1). Adding `--terminate_on_proc_exit` alone is insufficient.
 
 [Detailed findings and test evidence](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyLogOutput/2026-10-05_15-53-33/InvestigationReport.txt). Your staged change is intact.
+
+## User
+
+is there a simple way to programmatically and properly shutdown the presentmon process a few seconds after `Wait-Process -Id $process.Id` returns? 
+
+## Assistant Commentary
+
+I'll check PresentMon's shutdown controls and the existing helper for a simple way to request a clean exit.
+
+## Assistant Final
+
+Yes. **PresentMon's `--terminate_existing_session` provides a clean shutdown:**
+
+```powershell
+Wait-Process -Id $process.Id
+Start-Sleep -Seconds 5
+
+& $PresentMonPath --terminate_existing_session
+if ($LASTEXITCODE -ne 0) {
+    throw "PresentMon shutdown failed with exit code $LASTEXITCODE."
+}
+```
+
+This stops the default "PresentMon" ETW session. The original capture process then drains events, flushes its CSV, and exits normally. [Shutdown implementation](https://github.com/GameTechDev/PresentMon/blob/v2.6.0/PresentMon/ConsumerThread.cpp).
+
+I tested this with your actual game: shutdown was requested **5.03 seconds** after game exit, and PresentMon exited successfully **0.14 seconds** later. It saved **8,837 frames**.
+
+To wait explicitly for completion, retain the original PresentMon process using `-PassThru`, then call its `WaitForExit()` after the shutdown command.
+
+If you give the capture a unique `--session_name`, supply that same name to the shutdown command. This prevents stopping another capture.
