@@ -206,3 +206,31 @@ Rendering performance is essentially identical. The first run has more display t
 - :codex-followup[Investigate display timing batches]{prompt="Investigate the repeated display timestamps and roughly 4 ms display gaps in these two PresentMon sessions. Compare neighboring CPU, GPU, render-completion, and display metrics and inspect PresentMon's relevant source without changing application or driver settings."}
 - :codex-followup[Investigate the 1,250 FPS plateau]{prompt="Investigate why both of these captures run at approximately 1,250 FPS despite Godot reporting VSync disabled and Maximum FPS 0. Inspect application presentation settings and available NVIDIA settings without changing them."}
 - :codex-followup[Run a longer version comparison]{prompt="Capture longer controlled sessions using PresentMon 2.6.0 and 2.5.1 with the same application build and settings, then compare frame pacing, repeated display timestamps, display latency, and capture health. Preserve my existing changes."}
+
+## User
+
+Rare display timing batches: 47 rows in the first session and 17 in the second share the preceding frame's display timestamp. These account for every NA display-change interval; display latency is still recorded. PresentMon writes zero display-change deltas as NA. PresentMon CSV writer.
+
+is this something i should be concerned about or deserves deeper investigation?
+
+## Assistant Commentary
+
+I'll check the timing around those batches and how PresentMon records them to judge whether they suggest a visible problem or a measurement limitation.
+
+## Assistant Commentary
+
+In the largest batches, frames keep arriving about every 0.8 ms and GPU work finishes roughly 0.55 ms after each present, yet five frames receive the same later display timestamp. That points toward display scheduling or timestamp reporting. The CSV can't distinguish those causes or confirm what was visible on screen.
+
+## Assistant Final
+
+**Low concern, but worth a focused follow-up if you're chasing very smooth motion.** I wouldn't change application code or driver settings based on this alone.
+
+The reassuring evidence is that rendering continues normally during these events: presents arrive about every 0.8 ms, GPU work completes promptly, and ETW reports no lost events. The largest recorded display gaps are about 4.5 ms.
+
+However, the 47 and 17 repeated rows form **26 separate clusters and 6 separate clusters** in roughly 13 seconds. The first capture therefore has about two clusters per second. Their small percentage of total frames doesn't establish that they're imperceptible.
+
+In the largest clusters, GPU work finishes about 0.55 ms after presenting, but the reported display latency reaches roughly 4 ms, followed by several identical display timestamps. My inference is that this involves the display pipeline or its reporting. **The CSV cannot distinguish an actual presentation delay from grouped or inaccurate display timestamps.** PresentMon derives these timestamps from Windows graphics events. [PresentMon event handling](https://github.com/GameTechDev/PresentMon/blob/v2.6.0/PresentData/PresentMonTraceConsumer.cpp).
+
+One qualification to my earlier answer: writing a zero delta as `NA` explains the file format; it doesn't establish that the underlying event is harmless. A recorded display latency also doesn't prove that each frame was visibly scanned out separately.
+
+I'd first collect a 2-3 minute capture while watching continuous motion and mark any perceived stutters. If these clusters coincide with visible stutters, deeper investigation using a raw ETW trace would be justified. If motion looks smooth and their frequency and duration stay similar, I'd leave this as a low-priority observation.
