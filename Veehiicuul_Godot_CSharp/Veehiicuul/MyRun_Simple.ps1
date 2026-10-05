@@ -19,7 +19,7 @@ if (($args -notcontains "NoPresentMon") -and (Test-Path $PresentMonPath)) {
         throw "Trying to run PresentMon, but user '$($identity.Name)' must belong to the 'Performance Log Users' group."
     }
 
-    # This PresentMon process must be manually closed by the user. This is intentional.
+    # This PresentMon process must be manually closed by the user by pressing `CTRL + C` in the PresentMon console window. This is intentional.
     # "--terminate_on_proc_exit" isn't used because I've observed issues with it.
     Start-Process `
         -FilePath $PresentMonPath `
