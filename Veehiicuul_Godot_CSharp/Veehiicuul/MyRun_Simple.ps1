@@ -20,7 +20,7 @@ try {
         Write-Host "ProcessPath = $($ProcessPath)"
         Write-Host "PresentMonPath = $($PresentMonPath)"
 
-        $PresentMonProcess = $null
+        $presentMonProcess = $null
         if ($UsePresentMon -and (Test-Path $PresentMonPath)) {
             $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
             $principal = [System.Security.Principal.WindowsPrincipal]::new($identity)
@@ -30,19 +30,22 @@ try {
             }
 
             $PresentMonSessionName = 'Veehiicuul' + [Guid]::NewGuid().ToString('N')
-            $PresentMonProcess = Start-Process `
+
+            # `--terminate_on_proc_exit` isn't used because I've observed it not stopping PresentMon even after the game exits.
+            $presentMonProcess = Start-Process `
                 -FilePath $PresentMonPath `
                 -ArgumentList "--process_name `"$($ProcessName)`" --session_name $PresentMonSessionName --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status" `
-                -WindowStyle Hidden `
+                -WindowStyle "Hidden" `
                 -PassThru `
                 -RedirectStandardOutput "$LogFolderPath\PresentMonOutput_Standard.log" `
                 -RedirectStandardError "$LogFolderPath\PresentMonOutput_Error.log"
+
             # Work around Windows PowerShell 5.1 returning a null ExitCode for redirected
             # Start-Process output, even after WaitForExit(). Retain the handle while the
             # process is running so the later exit-code check can read the actual result.
             # https://github.com/PowerShell/PowerShell/issues/5421
-            $null = $PresentMonProcess.Handle
-            Write-Host "PresentMon launched with PID=$($PresentMonProcess.Id), session=$PresentMonSessionName"
+            $null = $presentMonProcess.Handle
+            Write-Host "PresentMon launched with PID=$($presentMonProcess.Id), session=$PresentMonSessionName"
         }
 
         $process = Start-Process -FilePath $ProcessPath -ArgumentList "--log-file `"$GodotLogFilePath`"" -PassThru -RedirectStandardOutput 'NUL' -RedirectStandardError '\\.\NUL'
@@ -51,18 +54,18 @@ try {
 
         Wait-Process -Id $process.Id
 
-        if ($null -ne $PresentMonProcess) {
+        if ($null -ne $presentMonProcess) {
             Start-Sleep -Seconds 5
-            if (-not $PresentMonProcess.HasExited) {
+            if (-not $presentMonProcess.HasExited) {
                 Write-Host "Stopping PresentMon session $PresentMonSessionName"
                 & $PresentMonPath --terminate_existing_session --session_name $PresentMonSessionName
                 if ($LASTEXITCODE -ne 0) {
                     throw "PresentMon shutdown failed with exit code $LASTEXITCODE."
                 }
             }
-            $PresentMonProcess.WaitForExit()
-            if ($PresentMonProcess.ExitCode -ne 0) {
-                throw "PresentMon exited with code $($PresentMonProcess.ExitCode). See PresentMonOutput_Error.log."
+            $presentMonProcess.WaitForExit()
+            if ($presentMonProcess.ExitCode -ne 0) {
+                throw "PresentMon exited with code $($presentMonProcess.ExitCode). See PresentMonOutput_Error.log."
             }
             Write-Host 'PresentMon exited; capture output flushed.'
         }
