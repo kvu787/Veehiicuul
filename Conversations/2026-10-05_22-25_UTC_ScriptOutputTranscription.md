@@ -185,3 +185,15 @@ For your script, there are two boundaries:
 
 This gives you `ScriptOutput.log` alongside the existing application logs.
 
+
+## User
+
+why does Stop-Transcript need to be called
+
+## Assistant
+
+`Start-Transcript` starts recording the **PowerShell session**, so recording doesn't automatically stop when your script finishes.
+
+`Stop-Transcript` closes the transcript and writes its ending information. Without it, commands and output after your script returns can continue going into that file.
+
+If the PowerShell process exits immediately afterward, explicitly stopping it is usually unnecessary. The `finally` block is useful when the script runs in an existing PowerShell window: it ends recording even if the script fails.
