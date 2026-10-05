@@ -549,3 +549,47 @@ For the strongest result, filtering and blending should use **linear color**, wi
 **For your current project, I would begin with approach 2:** retain the existing 2.0 render scale for the car and improve the background bake independently. Then compare approach 1 as the faster alternative. Cropping the supersampled car region is the most promising further optimization if the full-resolution buffers remain expensive.
 
 All these approaches can retain only the current configuration's caches, regenerate them on zoom or rendering-setting changes, and discard the old caches. None requires reusing cached zoom levels through scaling.
+
+## User
+
+what about maxing everything out with supersampled+msaa_x8 bg and supersampled+msaa_x8 fg?
+
+## Assistant
+
+I'll check how Godot combines supersampling with 8x MSAA, including what improves visually and what still costs time every frame.
+
+## Assistant
+
+Godot supports that combination. At a 2.0 render scale, 8x MSAA gives 32 coverage positions across each output pixel's area, while supersampling provides four shading positions. The main performance concern is the foreground's render buffers: their storage and resolve costs can remain large even when only the car's geometry is drawn.
+
+## Assistant
+
+**Yes. That is a valid, very high-quality version of approach 2.** Supersampling and MSAA complement each other, so adding 8x MSAA is not redundant.
+
+With a **2.0 render scale + 8x MSAA**:
+
+- Supersampling renders four internal pixels for each output pixel, improving texture and shading detail as well as edges.
+- MSAA tests eight coverage positions inside each internal pixel, further refining triangle edges.
+- Together, that gives **32 coverage positions across an output pixel's area**, but typically only four independent shading positions for a single surface. It is not equivalent to 32x supersampling. [Godot's antialiasing explanation](https://docs.godotengine.org/en/latest/tutorials/3d/3d_antialiasing.html)
+
+I would expect smooth silhouettes and well-resolved small details, without temporal ghosting from these techniques. The improvement over supersampling alone will be most visible on thin geometry and sloping edges. How noticeable it is in your game needs an actual comparison.
+
+**The composition order still matters.** For the strongest practical result:
+
+1. Render the background with supersampling and 8x MSAA.
+2. Resolve its MSAA samples, retaining a cache at the **high working resolution**.
+3. Render the foreground with 8x MSAA at that same working resolution.
+4. Resolve and combine the foreground with the cached background, using correct linear-color and alpha handling.
+5. Downsample the combined image once to the output resolution.
+
+Downsampling both layers separately before combining them loses some of the benefit at their shared boundary. Resolving the background's MSAA samples still loses the sample information we discussed earlier, but supersampling makes that approximation occur at a finer spatial scale.
+
+**For the background, this fits your priorities well.** Its expensive MSAA buffers can be released after baking; the persistent cache can be an ordinary high-resolution texture.
+
+**For the foreground, performance is the deciding factor.** At your 2560x1440 output resolution, scale 2.0 means a 5120x2880 render target. With 8x MSAA, that is approximately **118 million sample slots per multisampled attachment**. This does not imply 32 times the frame time, but it does mean substantial memory and bandwidth costs. Drawing only one car reduces geometry and shading work; full-screen buffer allocation and resolving can still be expensive.
+
+A cropped high-resolution render target around the car would make this combination considerably more attractive.
+
+Godot's standard render-scale setting tops out at 2.0, and its MSAA setting at 8x. Larger background bakes would require larger viewports, tiling, or another custom baking method.
+
+**I would use this as the quality reference, then compare foreground 4x MSAA against 8x.** Keep whichever produces a visible benefit within your frame-time budget. The background can retain the more expensive bake either way.
