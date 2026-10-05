@@ -278,3 +278,34 @@ Start-Process `
 
 This keeps a window open for manual shutdown and writes both console streams to `PresentMonConsole.log`. The CSV remains separate. `--no_console_stats` still suppresses frame statistics; remove it if you want those included too.
 
+## User
+
+can you do the below but use powershell instead of cmd.exe:
+$PresentMonArguments = "--process_name `"$ProcessName`" --output_file `"$PresentMonLogFilePath`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status"
+
+$CommandLine = '/d /s /k ""{0}" {1} > "{2}" 2>&1"' -f `
+    $PresentMonPath, $PresentMonArguments, "$LogFolderPath\PresentMonConsole.log"
+
+Start-Process `
+    -FilePath "$env:SystemRoot\System32\cmd.exe" `
+    -ArgumentList $CommandLine `
+    -WindowStyle Normal
+
+## Assistant
+
+I'll update the launcher to use a separate PowerShell process and capture both console streams in one file.
+
+## Assistant
+
+Windows PowerShell 5.1 can treat redirected stderr as a PowerShell error. I'll handle that in the child process so a PresentMon warning doesn't stop capture, and keep the window open for manual shutdown.
+
+## Assistant
+
+The updated launcher captures stdout and stderr in `PresentMonConsole.log`. I verified it with PresentMon's help output and a test that writes to both streams, including output after a stderr message.
+
+## Assistant
+
+Updated [MyRun_Simple.ps1](/C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyRun_Simple.ps1:25) to launch `powershell.exe` and merge stdout and stderr into `PresentMonConsole.log`.
+
+The PowerShell window stays open for manual shutdown. Verified both streams are captured, including output after stderr messages.
+
