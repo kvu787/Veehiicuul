@@ -139,6 +139,24 @@ def Main():
             else:
                 print(f"Warning: Unapplied modifier of type '{modifier.type}' on object '{obj.name}'")
 
+    # Validate vehicles
+    errors = []
+    for obj in bpy.data.objects:
+        if obj.type == "MESH" and obj.name.startswith("SlopeCar"):
+            issues = []
+            if obj.location.z != 0.0:
+                issues.append(f"Z position = {obj.location.z}")
+            if obj.rotation_euler.x != 0.0:
+                issues.append(f"X rotation = {obj.rotation_euler.x}")
+            if obj.rotation_euler.y != 0.0:
+                issues.append(f"Y rotation = {obj.rotation_euler.y}")
+            if tuple(obj.scale) != (1.0, 1.0, 1.0):
+                issues.append(f"scale = {tuple(obj.scale)}")
+            if issues:
+                errors.append(f"{obj.name}: {', '.join(issues)}")
+    if errors:
+        raise RuntimeError("Invalid SlopeCar transforms:\n" + "\n".join(errors))
+
     # Check for non-uniform scales
     rel_tol = 1e-5
     abs_tol = 1e-4
