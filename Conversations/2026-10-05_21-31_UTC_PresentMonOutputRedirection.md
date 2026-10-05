@@ -230,3 +230,51 @@ If you want to keep elevation limited to PresentMon **and** keep one combined lo
 
 I checked your installed PresentMon 2.6.0 help: it has no built-in option for a separate console log.
 
+## User
+
+<external_codex_apps_open_page>{"page_id":null}</external_codex_apps_open_page>
+
+## User
+
+```
+c:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyRun_Simple.ps1:25:1-27:185
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
+```
+```
+    Start-Process `
+        -FilePath $PresentMonPath `
+        -ArgumentList "--process_name `"$($ProcessName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status"
+```
+how do i redirect all of the output of the presentmon process to a file
+
+## Assistant
+
+I'll check the updated call to confirm whether it still uses elevation.
+
+## Assistant
+
+Now that `-Verb "RunAs"` is gone, the simplest approach is to add these parameters to your `Start-Process` call:
+
+```powershell
+    -RedirectStandardOutput "$LogFolderPath\PresentMonOutput.log" `
+    -RedirectStandardError "$LogFolderPath\PresentMonErrors.log"
+```
+
+Add a trailing backtick to your existing `-ArgumentList` line. This captures stdout and stderr into **two separate files**; `Start-Process` cannot use the same file for both.
+
+For **one combined file**, use `cmd.exe` redirection instead:
+
+```powershell
+$PresentMonArguments = "--process_name `"$ProcessName`" --output_file `"$PresentMonLogFilePath`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status"
+
+$CommandLine = '/d /s /k ""{0}" {1} > "{2}" 2>&1"' -f `
+    $PresentMonPath, $PresentMonArguments, "$LogFolderPath\PresentMonConsole.log"
+
+Start-Process `
+    -FilePath "$env:SystemRoot\System32\cmd.exe" `
+    -ArgumentList $CommandLine `
+    -WindowStyle Normal
+```
+
+This keeps a window open for manual shutdown and writes both console streams to `PresentMonConsole.log`. The CSV remains separate. `--no_console_stats` still suppresses frame statistics; remove it if you want those included too.
+
