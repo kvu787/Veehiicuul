@@ -710,3 +710,64 @@ Your orthographic camera helps because translation preserves projected object si
 - **Keep continuous movement and strict pixel equivalence.** We need a richer representation that retains enough geometry/material information to compute the new samples, or rerender the background when its sampling alignment changes. For ordinary follow movement, that could mean every frame.
 
 Disabling AA simplifies composition, but a finished background color image still cannot generally supply the new samples required by continuous camera movement.
+
+## User
+
+list options for this approach: Keep continuous camera movement and accept pixel differences. Cached-image resampling becomes practical, with the visual differences depending on the chosen filtering.
+
+## Assistant
+
+I'll compare resampling options for a continuously moving follow camera, keeping the no-AA restriction in mind.
+
+## Assistant
+
+A denser cache with nearest-neighbor lookup is also an option. It can reduce the sampling-position error while keeping hard edges: each output pixel selects one cached texel, with no averaging. The main added costs are bake time and cache memory.
+
+## User
+
+also, does this approach include simply having a flat image on the ground plane and keeping the existing orthographic camera and 3d vehicle?
+
+the approach: Keep continuous camera movement and accept pixel differences. Cached-image resampling becomes practical, with the visual differences depending on the chosen filtering.
+
+## Assistant
+
+Yes. A textured plane on the ground can display the cached background while you keep the orthographic follow camera and live 3D vehicle. Godot would resample the texture as the camera moves. The plane's size and texture mapping must account for the camera angle, and the vehicle must be drawn over it regardless of depth to preserve your foreground rule.
+
+## Assistant
+
+**Yes. A flat textured plane on the ground is one practical implementation of this approach.** You can keep the existing orthographic follow camera and render the vehicle as live 3D geometry. As the camera moves, the GPU samples the background texture at the corresponding fractional positions.
+
+The setup would be:
+
+1. Bake the background, excluding the active vehicle.
+2. Display that cache on one plane, or multiple textured tiles covering the track.
+3. Render the active vehicle over it.
+4. Regenerate the cache when zoom or other relevant configuration changes.
+
+With fixed camera orientation and orthographic projection, camera translation shifts the projected background uniformly. That lets even raised background objects be represented by their baked appearance on the plane. Their height is encoded in where their image appears; their original meshes do not need to be drawn every frame.
+
+There are three important details:
+
+- **Match the camera projection.** An ordinary screenshot stretched onto an arbitrary ground rectangle will be distorted by the camera angle. Size, orient, and map the plane so its projected texture reproduces the intended baked view.
+- **Preserve the baked appearance.** Use an unshaded display material and arrange color processing so lighting and postprocessing are not applied twice. Godot supports unshaded materials and configurable texture filtering. [Godot's material documentation](https://docs.godotengine.org/en/latest/classes/class_basematerial3d.html)
+- **Enforce the foreground rule.** The vehicle must always appear over the cached background. Ordinary depth testing against a ground plane does not guarantee that rule for every vehicle position.
+
+The plane uses the same resampling choices as a screen-space background compositor:
+
+| Option                | Appearance during camera movement                                    | Main cost                         |
+| --------------------- | -------------------------------------------------------------------- | --------------------------------- |
+| Nearest-neighbor      | Crisp colors; background advances in whole cached-texel steps         | Very low                          |
+| Bilinear              | Smooth fractional movement; edges soften as alignment changes         | Very low; built-in filtering      |
+| Bicubic               | Can retain more sharpness; some kernels produce faint edge halos      | More filtering; custom shader     |
+| Lanczos               | Sharp reconstruction; can produce ringing beside high-contrast edges | More filtering; custom shader     |
+| Denser cache + nearest | Hard edges with finer sampling-position steps                         | More bake time and cache memory   |
+
+**Nearest-neighbor** selects one cached texel. **Bilinear** blends four neighboring texels. Both are built-in Godot material options. [Godot's texture filters](https://docs.godotengine.org/en/latest/classes/class_basematerial3d.html#enum-basematerial3d-texturefilter)
+
+**Bicubic** is a family of filters: Catmull-Rom favors sharpness, while other kernels favor smoother transitions. **Lanczos** is another reconstruction filter worth comparing, but its halos can be conspicuous on flat-colored graphics. Neither guarantees better results than bilinear for your scene. [Filter comparisons](https://usage.imagemagick.org/filter/)
+
+**A denser cache with nearest-neighbor is particularly relevant to your no-AA preference.** For example, four times the width and height stores 16 times as many texels over the same world area. Sampling-position steps become one-quarter of an output pixel. Each output pixel still selects one texel, without averaging multiple samples together. It remains approximate and can still shimmer.
+
+Bilinear, bicubic, and Lanczos blend colors spatially. If your no-AA rule also excludes that smoothing, choose a nearest-neighbor option.
+
+**For your priorities, I would compare a plane with bilinear filtering against a denser cache with nearest-neighbor.** The first favors smooth-looking movement at low cost; the second favors crisp edges using more cache memory. Both can keep continuous camera movement and retain only the current configuration's caches. Zoom changes still rebuild the caches.
