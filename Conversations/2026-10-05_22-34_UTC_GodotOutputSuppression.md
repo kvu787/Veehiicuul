@@ -209,3 +209,28 @@ $process = Start-Process `
 ```
 
 This preserves Godot's own log and separately captures stdout/stderr, including direct C# console writes. Some Godot messages will appear in both.
+
+## User
+
+instead of doing this:
+    -RedirectStandardOutput "$LogFolderPath\GodotStandardOutput.log" `
+    -RedirectStandardError "$LogFolderPath\GodotStandardError.log" `
+
+can they be redirected to null or something that omits them
+
+## Assistant
+
+I'll check whether `Start-Process` can send both streams to Windows' `NUL` device.
+
+## Assistant
+
+Yes. Replace those two lines with:
+
+```powershell
+    -RedirectStandardOutput 'NUL' `
+    -RedirectStandardError '\\.\NUL' `
+```
+
+Both refer to Windows' null device and discard the output. The different spellings avoid `Start-Process` rejecting identical stdout/stderr destinations. I tested this successfully with PowerShell 7.6 and Windows PowerShell 5.1. [Windows device names](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).
+
+Keep `--log-file`, omit `--quiet`, and leave `run/disable_stdout` and `run/disable_stderr` set to `false` so Godot can still write its log file.
