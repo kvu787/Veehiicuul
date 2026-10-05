@@ -396,3 +396,25 @@ Diagonal placement gives separation along **both axes**:
 - A purely vertical pair has the same X coordinate, so a perfectly vertical edge covers both points or neither.
 - A diagonal pair lets either kind of edge cover just one point, producing the intermediate 50% coverage value.
 
+## User
+
+okay, so the overall issue is that msaa doesn't really work with a pixel image because there are no longer any triangles?
+
+## Assistant
+
+I'll clarify the distinction between antialiasing an image's contents and antialiasing the geometry used to display it.
+
+## Assistant
+
+**Yes, for the image's internal edges, that's essentially correct.** Once the scene has been resolved into an ordinary image, its original triangle boundaries and individual MSAA samples are gone.
+
+When Godot draws that image on a rectangle, MSAA can smooth the **rectangle's geometric edges**. The vehicle silhouettes, barriers, and other shapes inside the image are now texture content, so standard MSAA does not give them new coverage samples. Their existing antialiasing remains baked into the image.
+
+For your optimization, though, **an already-antialiased background image is fine wherever it is displayed unchanged**. The difficulty is combining it with the moving vehicle at partially covered pixels: the resolved background no longer tells us which background colors belong to the particular samples the vehicle covers.
+
+So the requirement is more specific than "MSAA cannot work with images":
+
+> To preserve standard MSAA exactly when combining background and foreground, retain the background's individual sample colors until after the foreground has been rendered.
+
+Those colors can still be cached in GPU textures. They need to preserve the multisample information, instead of retaining only the final averaged image.
+
