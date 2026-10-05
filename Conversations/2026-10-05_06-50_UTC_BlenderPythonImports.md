@@ -319,3 +319,30 @@ from . import MathLibrary
 That assumes `MathLibrary.py` is also in `Libraries` and `GeometryLibrary` is loaded as part of the package. [Python modules and packages](https://docs.python.org/3/tutorial/modules.html)
 
 Python imports use module names, not filesystem strings: `import "../GeometryLibrary.py"` is invalid. For files outside your project/package structure, direct loading with `importlib` remains an option.
+
+## User
+
+why doesn't that approach work with blender python
+
+## Assistant
+
+I'll check how Blender runs a Text Editor script, since that determines which folders Python searches for imports.
+
+## Assistant
+
+Because **adding the main script's folder is something Python does when starting up with `python Main.py`**. It is not something `import` does for every file being executed. [Python documentation](https://docs.python.org/3/library/sys_path_init.html)
+
+Blender already has a running Python interpreter. When you click **Run Script**, Blender compiles and executes the Text Editor's contents inside that interpreter. It does not perform the startup step that adds the script's folder to `sys.path`. Saving the script on disk does not change that execution method. [Blender 4.5 implementation](https://github.com/blender/blender/blob/v4.5.0/source/blender/python/intern/bpy_interface_run.cc#L120-L154)
+
+So with:
+
+```text
+MyProject/
+    Main.py
+    GeometryLibrary.py
+```
+
+- **`python Main.py`:** Python automatically includes `MyProject` in its import search path.
+- **Blender's Run Script:** `MyProject` is not automatically included, so `import GeometryLibrary` fails unless that folder is already searchable.
+
+Once you add that folder to Blender's `sys.path`, the same ordinary imports and subfolder packages work. Package-relative imports such as `from . import MathLibrary` still require the importing module to be loaded as part of a package.
