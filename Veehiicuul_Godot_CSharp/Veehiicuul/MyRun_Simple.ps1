@@ -34,7 +34,7 @@ try {
             # `--terminate_on_proc_exit` isn't used because I've observed it not stopping PresentMon even after the game exits.
             $presentMonProcess = Start-Process `
                 -FilePath $PresentMonPath `
-                -ArgumentList "--process_name `"$($ProcessName)`" --session_name $PresentMonSessionName --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status" `
+                -ArgumentList "--process_name `"$($ProcessName)`" --session_name `"$($PresentMonSessionName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status" `
                 -WindowStyle "Hidden" `
                 -PassThru `
                 -RedirectStandardOutput "$LogFolderPath\PresentMonOutput_Standard.log" `
@@ -45,17 +45,17 @@ try {
             # process is running so the later exit-code check can read the actual result.
             # https://github.com/PowerShell/PowerShell/issues/5421
             $null = $presentMonProcess.Handle
-            Write-Host "PresentMon launched with PID=$($presentMonProcess.Id), session=$PresentMonSessionName"
+            Write-Host "PresentMon launched with PID='$($presentMonProcess.Id)', session_name='$($PresentMonSessionName)'"
         }
 
         $process = Start-Process -FilePath $ProcessPath -ArgumentList "--log-file `"$GodotLogFilePath`"" -PassThru -RedirectStandardOutput 'NUL' -RedirectStandardError '\\.\NUL'
         $process.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::High
-        Write-Host "Launched with PID=$($process.Id)"
+        Write-Host "'$($ProcessPath)' launched with PID='$($process.Id)'"
 
         Wait-Process -Id $process.Id
 
         if ($null -ne $presentMonProcess) {
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 1
             if (-not $presentMonProcess.HasExited) {
                 Write-Host "Stopping PresentMon session $PresentMonSessionName"
                 & $PresentMonPath --terminate_existing_session --session_name $PresentMonSessionName
