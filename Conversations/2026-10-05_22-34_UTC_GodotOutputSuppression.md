@@ -177,3 +177,35 @@ run/disable_stderr=true
 ```
 
 These settings suppress Godot printing, including its error and warning messages. They do not control direct writes from other code, such as C# `Console.WriteLine`. [Godot project settings](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-application-run-disable-stdout).
+
+## User
+
+```
+c:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyRun_Simple.ps1:35:72-35:102
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
+```
+```
+--log-file `"$GodotLogFilePath
+```
+is this sufficient to capture all log output that would be omitted if --quiet and run/disable_stdout=true and run/disable_stderr=true are used
+
+## Assistant
+
+I'll check whether Godot's file logger still receives messages when stdout and stderr are disabled.
+
+## Assistant
+
+No. **Those options also suppress messages from Godot's file logger.** `--quiet` / `run/disable_stdout=true` disable normal logging, and `run/disable_stderr=true` disables error logging. The file logger checks the same flags, so `--log-file` cannot recover the suppressed messages. [Godot initialization](https://github.com/godotengine/godot/blob/master/main/main.cpp), [file logger implementation](https://github.com/godotengine/godot/blob/master/core/io/logger.cpp).
+
+To keep the logs while keeping the console quiet, leave both settings `false`, omit `--quiet`, and redirect the process streams to files:
+
+```powershell
+$process = Start-Process `
+    -FilePath $ProcessPath `
+    -ArgumentList "--log-file `"$GodotLogFilePath`"" `
+    -RedirectStandardOutput "$LogFolderPath\GodotStandardOutput.log" `
+    -RedirectStandardError "$LogFolderPath\GodotStandardError.log" `
+    -PassThru
+```
+
+This preserves Godot's own log and separately captures stdout/stderr, including direct C# console writes. Some Godot messages will appear in both.
