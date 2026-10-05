@@ -275,3 +275,15 @@ I reproduced this on your machine using a process that exits with code `23`:
 - With that line: `ExitCode` correctly returned `23`.
 
 Without it, our later `ExitCode -ne 0` check could incorrectly report a successful PresentMon shutdown as a failure.
+
+## User
+
+okay, add a comment above `$null = $PresentMonProcess.Handle` explaining this
+
+## Assistant Commentary
+
+I'll add a comment explaining the Windows PowerShell 5.1 exit-code workaround.
+
+## Assistant Final
+
+Added the comment above the handle access in [MyRun_Simple.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyRun_Simple.ps1:40), explaining the bug, why the handle must be retained, and linking the PowerShell issue.
