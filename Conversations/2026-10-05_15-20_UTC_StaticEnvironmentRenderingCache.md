@@ -593,3 +593,62 @@ A cropped high-resolution render target around the car would make this combinati
 Godot's standard render-scale setting tops out at 2.0, and its MSAA setting at 8x. Larger background bakes would require larger viewports, tiling, or another custom baking method.
 
 **I would use this as the quality reference, then compare foreground 4x MSAA against 8x.** Keep whichever produces a visible benefit within your frame-time budget. The background can retain the more expensive bake either way.
+
+## User
+
+okay, for now i will just disallow all anti-aliasing
+
+here is the updated spec: 
+- Occlusion is ignored, which means that any object considered "foreground" will simply occlude any object considered "background"
+- Currently, the only fg object is the active vehicle
+- Currently, the bg objects are everything except for the active vehicle
+- Every post-optimization rendered frame should exact-pixel equivalent to how the frame would be rendered regularly
+  - This requirement should be interpreted with obvious/reasonable exceptions, such as the occlusion exception, and, for examples, if shadows are rendered, then bg shadows will naturally not apply to fg objects.
+  - Disallowed: Any anti-aliasing (e.g. TAA, MSAA, SSAA, SMAA)
+  - Disallowed: Anything that depends on anything other than just the current frame
+  - This means that things like upscaling, msaa, taa, rendering quality, etc settings should apply to the cached image.
+  - This means that zooming the camera must recompute all the images.
+- The only images that are persisted must be for the current configuration. This means that after changing the camera zoom or other rendering settings, all required images must be recomputed and the old images must be discarded.
+- Don't support this: A few cached resolutions could support smooth zoom through scaling.
+
+what do you think?
+
+## Assistant
+
+I'll check the camera behavior and render settings against this revised spec, especially what could still prevent exact pixels with antialiasing disabled.
+
+## Assistant
+
+The fixed-camera case is much simpler now. The main remaining issue is follow mode: it moves the camera continuously, and fractional-pixel movement changes which background triangles cover pixel centers even without AA. Shifting a cached image cannot generally reproduce those changes exactly.
+
+## Assistant
+
+**This is a sensible first version. Disabling AA and temporal rendering removes the sample-combination and history problems we discussed. However, exact pixels still require more than keeping the zoom unchanged.**
+
+The main remaining issue is **camera movement**. Your follow mode moves the camera continuously with the vehicle. Without AA, triangle coverage is tested at pixel centers. Moving the camera by, say, one-quarter of an internal rendering pixel can change which triangles cover those centers. A cached image cannot generally reproduce that by shifting its existing pixels. [Direct3D's rasterization rules](https://learn.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage-rules#triangle-rasterization-rules-without-multisampling)
+
+Consequently:
+
+- **Fixed camera:** background caching is a strong fit, provided its appearance stays unchanged.
+- **Camera movement in whole internal-pixel steps:** a larger image or tiles can potentially be copied exactly, provided shading and clipping also remain compatible.
+- **Your existing continuous follow camera:** exactness generally requires rerendering the background when its subpixel alignment changes. Disabling AA does not eliminate this requirement.
+
+Snapping the camera to the rendering pixel grid would be another option, but it changes camera behavior and would need to apply to both regular and optimized rendering.
+
+I would also tighten these parts of the spec:
+
+1. **Define everything that invalidates the cache.** Besides zoom and rendering settings, include internal render resolution, viewport aspect ratio, camera orientation, background geometry/material/lighting changes, and foreground/background membership changes. Switching the active vehicle changes that membership.
+
+2. **Specify foreground/background interactions.** A moving vehicle's shadow or reflection can change background pixels even when the background meshes stay still. Those interactions need an explicit exception or a live rendering stage.
+
+3. **Apply shared image processing at the correct stage.** A current-frame effect can still depend on both layers. For example, glow can spread a bright vehicle's light into neighboring background pixels. Such processing should operate on the combined frame rather than being permanently baked into the background. [Godot's glow documentation](https://docs.godotengine.org/en/latest/tutorials/3d/environment_and_post_processing.html#glow)
+
+4. **Remove the leftover MSAA/TAA examples.** Replace that sentence with: "All permitted rendering settings must produce the same pixels as regular rendering." SSAA is forbidden, so render scale must not exceed 1.0. Spatial upscaling can remain permitted, but it should process the combined image using the same pipeline as regular rendering; temporal upscaling is excluded.
+
+I interpret "current frame only" as forbidding temporal rendering history. Reusing a background cache remains allowed because it represents the unchanged background result for the current configuration.
+
+The basic pipeline becomes straightforward: **reuse the background at the internal rendering resolution, render the vehicle over it, then perform the permitted final processing and scaling.** Preserve the relevant buffer precision and avoid extra filtering or color conversions.
+
+While rebuilding, render the current configuration normally or pause rendering; displaying an old configuration's cache would violate the spec.
+
+**I would start with fixed-camera caching and verify it with a zero-difference pixel comparison against an uncached reference using the same foreground-over-background policy.** Continuous follow mode is the main unresolved constraint before promising the same optimization there.
