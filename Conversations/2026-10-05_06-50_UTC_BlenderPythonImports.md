@@ -206,3 +206,53 @@ GeometryLibrary.CreateCube()
 ```
 
 Reloading a module does not automatically reload other modules it imports.
+
+## User
+
+can a saved script reference another saved script using a relative path without adding anything to sys.path
+
+## Assistant
+
+I'll check how Blender handles script paths and Python's file-based module loading.
+
+## Assistant
+
+**Yes.** Use `importlib` to load a module directly from a file path, without changing `sys.path`. [Python documentation](https://docs.python.org/3.11/library/importlib.html#importing-a-source-file-directly)
+
+For two saved files beside each other:
+
+```text
+Blender/
+    Main.py
+    GeometryLibrary.py
+```
+
+Run this from `Main.py` in Blender's Text Editor:
+
+```python
+import bpy
+import importlib.util
+import sys
+from pathlib import Path
+
+# Get the saved location of the script in the active Text Editor.
+scriptPath = bpy.context.space_data.text.filepath
+if not scriptPath:
+    raise RuntimeError("Save this script to disk first.")
+
+scriptFolder = Path(bpy.path.abspath(scriptPath)).resolve().parent
+libraryPath = scriptFolder / "GeometryLibrary.py"
+
+spec = importlib.util.spec_from_file_location("GeometryLibrary", libraryPath)
+library = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = library
+spec.loader.exec_module(library)
+
+library.CreateCube()
+```
+
+You can also use `scriptFolder / "Libraries" / "GeometryLibrary.py"` or `scriptFolder / ".." / "GeometryLibrary.py"`.
+
+The `sys.modules` assignment registers the loaded module; it does **not** change the search path. This code executes the library again each time you run the main script, picking up saved edits.
+
+Ordinary `import GeometryLibrary` does not automatically search beside a script run in Blender's Text Editor. Also, loading one file this way does not automatically make its neighboring files available to its own ordinary imports.
