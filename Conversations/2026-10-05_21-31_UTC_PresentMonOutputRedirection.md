@@ -196,3 +196,37 @@ if (($args -notcontains "NoPresentMon") -and (Test-Path $PresentMonPath)) {
 
 The window stays open for you to stop PresentMon manually. Its console output goes to `PresentMonConsole.log`, while measurement data still goes to `PresentMon.csv`. Keep `--no_console_stats` only if you want those statistics suppressed in the log too.
 
+## User
+
+are there less cumbersome ways of doing this overall thing
+
+## Assistant
+
+I'll check whether PresentMon has a built-in console log option that would simplify this.
+
+## Assistant
+
+Yes. The awkward part is combining **elevation and redirection**.
+
+The simplest options are:
+
+- **Run the whole launcher as administrator.** Remove `-Verb "RunAs"` from the PresentMon call and use ordinary redirection. This also runs your game as administrator.
+- **Add your account to "Performance Log Users" once**, then sign out and back in. PresentMon can capture without elevation, so you can remove `-Verb "RunAs"` while keeping the game unelevated. This is the approach I would choose for your setup. [PresentMon documentation](https://github.com/GameTechDev/PresentMon#user-access-denied).
+
+With either option, keep your existing argument string and use:
+
+```powershell
+Start-Process `
+    -FilePath $PresentMonPath `
+    -ArgumentList $PresentMonArguments `
+    -RedirectStandardOutput "$LogFolderPath\PresentMonOutput.log" `
+    -RedirectStandardError "$LogFolderPath\PresentMonErrors.log" `
+    -WindowStyle Normal
+```
+
+That produces two console log files. `Start-Process` requires different files for stdout and stderr; combining them into one still needs a wrapper such as the `cmd.exe` example. [Start-Process documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-process).
+
+If you want to keep elevation limited to PresentMon **and** keep one combined log, a small dedicated `RunPresentMon.ps1` helper would make the main launcher cleaner.
+
+I checked your installed PresentMon 2.6.0 help: it has no built-in option for a separate console log.
+
