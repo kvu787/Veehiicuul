@@ -37,6 +37,10 @@ try {
                 -PassThru `
                 -RedirectStandardOutput "$LogFolderPath\PresentMonOutput_Standard.log" `
                 -RedirectStandardError "$LogFolderPath\PresentMonOutput_Error.log"
+            # Work around Windows PowerShell 5.1 returning a null ExitCode for redirected
+            # Start-Process output, even after WaitForExit(). Retain the handle while the
+            # process is running so the later exit-code check can read the actual result.
+            # https://github.com/PowerShell/PowerShell/issues/5421
             $null = $PresentMonProcess.Handle
             Write-Host "PresentMon launched with PID=$($PresentMonProcess.Id), session=$PresentMonSessionName"
         }
