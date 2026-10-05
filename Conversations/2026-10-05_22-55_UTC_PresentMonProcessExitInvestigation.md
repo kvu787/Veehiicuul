@@ -214,3 +214,27 @@ I tested this with your actual game: shutdown was requested **5.03 seconds** aft
 To wait explicitly for completion, retain the original PresentMon process using `-PassThru`, then call its `WaitForExit()` after the shutdown command.
 
 If you give the capture a unique `--session_name`, supply that same name to the shutdown command. This prevents stopping another capture.
+
+## User
+
+implement the --terminate_existing_session approach with the WaitForExit() wait
+
+## Assistant Commentary
+
+I'll update the simple launcher to stop PresentMon's session five seconds after the game exits, then wait for PresentMon to finish flushing.
+
+## Assistant Commentary
+
+The updated launcher passed the live test: PresentMon exited successfully 5.11 seconds after the game and saved 9,105 frames. It uses a unique session name to target that capture. I'm checking the `NoPresentMon` path before committing.
+
+## Assistant Commentary
+
+The check found an existing issue: the inner script block was reading an empty `$args`, so `NoPresentMon` was ignored. I've moved that argument check to the script's outer scope and will verify both paths again.
+
+## Assistant Final
+
+Updated [MyRun_Simple.ps1](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/MyRun_Simple.ps1:50) to wait five seconds, stop its unique PresentMon session, then call `WaitForExit()`.
+
+Also fixed the existing `NoPresentMon` argument handling.
+
+Live Windows PowerShell 5.1 validation passed: PresentMon exited cleanly after **5.16 seconds**, saving **9,144 frames**. `NoPresentMon` ran without the shutdown delay.
