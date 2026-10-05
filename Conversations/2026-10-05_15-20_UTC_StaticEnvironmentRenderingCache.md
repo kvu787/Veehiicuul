@@ -363,3 +363,36 @@ More sample positions give a finer estimate of how much of the pixel the vehicle
 
 The GPU stores color and depth per sample, while normally sharing a triangle's material-shading calculation across the samples it covers. [Microsoft's rasterization explanation](https://learn.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage-rules#multisample-anti-aliasing-rasterization-rules)
 
+## User
+
+so, for 2x msaa, can the sample points be stacked vertically or horizontally?
+
+## Assistant
+
+I'll check the sample layout Godot requests from DirectX 12.
+
+## Assistant
+
+**Yes, in principle. "2x" specifies two sample points per pixel; it does not specify their alignment.** A sample pattern could put them vertically, horizontally, or diagonally.
+
+In your **Godot DirectX 12 setup**, Godot requests the standard pattern, whose two points are arranged diagonally:
+
+```text
+One pixel:
++-----------+
+|           |
+|  o        |
+|           |
+|        o  |
+|           |
++-----------+
+```
+
+Their coordinates within the pixel are `(0.25, 0.25)` and `(0.75, 0.75)`, measured from its top-left corner. See [Microsoft's standard patterns](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_standard_multisample_quality_levels) and [Godot's pattern selection](C:/Users/k/Repository/External/Godot_4-7-2/drivers/d3d12/rendering_device_driver_d3d12.cpp:5220).
+
+Diagonal placement gives separation along **both axes**:
+
+- A purely horizontal pair has the same Y coordinate, so a perfectly horizontal edge covers both points or neither.
+- A purely vertical pair has the same X coordinate, so a perfectly vertical edge covers both points or neither.
+- A diagonal pair lets either kind of edge cover just one point, producing the intermediate 50% coverage value.
+
