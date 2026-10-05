@@ -256,3 +256,66 @@ You can also use `scriptFolder / "Libraries" / "GeometryLibrary.py"` or `scriptF
 The `sys.modules` assignment registers the loaded module; it does **not** change the search path. This code executes the library again each time you run the main script, picking up saved edits.
 
 Ordinary `import GeometryLibrary` does not automatically search beside a script run in Blender's Text Editor. Also, loading one file this way does not automatically make its neighboring files available to its own ordinary imports.
+
+## User
+
+what about python scripts in general (not tied to blender)? can they use any simpler ways?
+
+## Assistant
+
+For a normal Python script, importing a file beside it is much simpler. I'll show the basic layout and how subfolders work.
+
+## Assistant
+
+**Yes. For a normal script launched with `python Main.py`, a plain import is enough for files beside it.** Python automatically puts the main script's folder on `sys.path`; you don't need to modify it yourself. [Python documentation](https://docs.python.org/3/library/sys_path_init.html)
+
+```text
+MyProject/
+    Main.py
+    GeometryLibrary.py
+```
+
+In `Main.py`:
+
+```python
+import GeometryLibrary
+
+GeometryLibrary.CreateCube()
+```
+
+Or import a particular function:
+
+```python
+from GeometryLibrary import CreateCube
+
+CreateCube()
+```
+
+For a subfolder, make it a package:
+
+```text
+MyProject/
+    Main.py
+    Libraries/
+        __init__.py
+        GeometryLibrary.py
+```
+
+The `__init__.py` file can be empty. In `Main.py`:
+
+```python
+from Libraries import GeometryLibrary
+
+GeometryLibrary.CreateCube()
+```
+
+Inside that package, one module can import a sibling using a **package-relative import**:
+
+```python
+# Inside Libraries/GeometryLibrary.py:
+from . import MathLibrary
+```
+
+That assumes `MathLibrary.py` is also in `Libraries` and `GeometryLibrary` is loaded as part of the package. [Python modules and packages](https://docs.python.org/3/tutorial/modules.html)
+
+Python imports use module names, not filesystem strings: `import "../GeometryLibrary.py"` is invalid. For files outside your project/package structure, direct loading with `importlib` remains an option.
