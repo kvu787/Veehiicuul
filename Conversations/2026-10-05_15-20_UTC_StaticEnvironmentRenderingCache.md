@@ -198,3 +198,44 @@ Your zoom is continuous, so I would initially render the environment normally wh
 
 This should reduce environment draw calls and shading work. I'd measure the improvement first in fixed-camera mode, then add the larger image or tiles needed for follow mode.
 
+## User
+
+okay, here are some specs:
+- Occlusion is ignored, which means that any object considered "foreground" will simply occlude any object considered "background"
+- Currently, the only fg object is the active vehicle
+- Currently, the bg objects are everything except for the active vehicle
+- Post-optimization every rendered frame should exact-pixel equivalent to how the frame would be rendered regularly
+  - This requirement should be interpreted with obvious/reasonable exceptions, such as the occlusion exception, and, for examples, if shadows are rendered, then bg shadows will naturally not apply to fg objects.
+  - This means that things like upscaling, msaa, taa, rendering quality, etc settings should apply to the cached image.
+  - This means that zooming the camera must recompute all the images.
+- The only images that are persisted must be for the current configuration. This means that after changing the camera zoom or other rendering settings, all required images must be recomputed and the old images must be discarded.
+- Don't support this: A few cached resolutions could support smooth zoom through scaling.
+
+what do you think?
+
+## Assistant
+
+These specs make the intended behavior much clearer. I'll check what pixel equivalence implies for camera movement, antialiasing, and compositing in Godot, since those determine whether a cached image can match the regular render.
+
+## Assistant
+
+The cache lifetime rules are sound. Exact pixel equivalence adds two constraints: subpixel camera movement can require a fresh background render, and TAA depends on changing samples and frame history. Separately processing the background and vehicle also may change their edge pixels, so compositing needs to happen at the appropriate stage of the rendering pipeline.
+
+## Assistant
+
+I agree with the foreground/background split and the cache lifetime rules. **Every zoom or relevant settings change should invalidate the background cache, and the next displayed frame must use the current configuration.** No images from previous zoom levels need to be retained.
+
+The exact-pixel requirement adds three important constraints:
+
+- **Camera movement can invalidate the cache too.** Orthographic projection makes scrolling geometrically correct, but fractional-pixel movement changes how geometry is sampled. Shifting a cached image generally cannot reproduce those new samples exactly. My earlier scrolling suggestion therefore does not, by itself, meet this requirement. Rebuilding on camera movement is the conservative solution, which would greatly reduce the benefit while the camera follows the vehicle.
+- **The rendering stage where we cache matters.** Separately applying upscaling or post-processing to background and foreground, then combining their finished images, can change pixels around the vehicle. We should combine them before effects that need the complete scene. Exact MSAA edges can also require retaining individual background samples and combining them with foreground samples before resolving MSAA. [Godot's antialiasing documentation](https://docs.godotengine.org/en/latest/tutorials/3d/3d_antialiasing.html)
+- **TAA requires special handling.** It changes the sampling positions each frame and uses previous frames. A single frozen image with TAA already applied cannot reproduce every subsequent regular TAA frame. Preserving equivalence requires appropriate background samples and live temporal processing, or background regeneration when necessary. Temporal upscalers have similar requirements. [Godot's Viewport documentation](https://docs.godotengine.org/en/latest/classes/class_viewport.html#class-viewport-property-use-taa)
+
+So I would add this rule to the specification:
+
+> Reuse cached background data only when doing so preserves the required output pixels; otherwise regenerate it. Foreground movement alone does not invalidate the background, except through explicitly supported interactions.
+
+I would also define the comparison reference as **an uncached render using the same foreground-over-background rule**, with the same camera, settings, and temporal history. That gives us a meaningful target for pixel comparisons.
+
+These specs are a sound basis for implementation. They give the clearest performance benefit with a stationary camera and static background; supporting exact output across camera following and all quality settings makes the implementation substantially more involved.
+
