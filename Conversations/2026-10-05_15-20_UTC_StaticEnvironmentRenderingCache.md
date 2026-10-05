@@ -652,3 +652,61 @@ The basic pipeline becomes straightforward: **reuse the background at the intern
 While rebuilding, render the current configuration normally or pause rendering; displaying an old configuration's cache would violate the spec.
 
 **I would start with fixed-camera caching and verify it with a zero-difference pixel comparison against an uncached reference using the same foreground-over-background policy.** Continuous follow mode is the main unresolved constraint before promising the same optimization there.
+
+## User
+
+explain the camera movement movement issue in greater detail. i kind of understand it in that if you have a pixel art image that is displayed "pixel-perfect", as in one image pixel per display pixel, and then you translate that image by a non-integer such as 0.27, then you need a way to decide what color is in each display pixel because it will contain parts of multiple different image pixels.
+
+the primary play experience will be with the follow camera, so camera movement should be assumed.
+
+## Assistant
+
+I'll treat continuous follow-camera movement as a requirement. I'll use a small visual example to show the difference between sampling the original geometry at a new camera position and shifting its cached pixels.
+
+## Assistant
+
+The cache also loses where an edge lay between the original pixel centers. Two different edge positions can produce identical cached pixels, then produce different pixels after the same camera movement. A filtering rule cannot recover that missing position from the cached colors.
+
+## Assistant
+
+**Your pixel-art analogy captures the fractional-translation problem. The additional issue is that the cached image has lost the original geometry's exact boundaries.** Regular rendering still knows those boundaries and can sample them at the new camera position.
+
+With AA disabled, a triangle generally covers a pixel when the **pixel's center** falls inside it. The renderer does not average the portions of different surfaces inside the pixel. A tiny camera movement can therefore change a pixel completely from one surface's color to another. [Direct3D's rasterization rules](https://learn.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage-rules#triangle-rasterization-rules-without-multisampling)
+
+Consider a vertical edge with black on its left and white on its right. Two neighboring pixel centers are at coordinates 0.5 and 1.5.
+
+The edge could be at **0.60** or **0.90**. In either case, the original render produces exactly the same cached pixels:
+
+```text
+Pixel center:     0.5    1.5
+Cached color:     black  white
+```
+
+The cache does not tell us which edge position produced those colors.
+
+Now move the camera right so the scene moves left by **0.27 pixels**:
+
+- The edge originally at 0.60 moves to 0.33. The center at 0.5 is now on the white side.
+- The edge originally at 0.90 moves to 0.63. The center at 0.5 remains on the black side.
+
+**Identical cached pixels plus identical camera movement require different correct results.** That is why a filtering rule cannot generally recover the regular render: the necessary information is missing.
+
+Nearest-neighbor sampling chooses an existing cached color. Bilinear sampling blends cached colors. Neither tells us where the original edge actually was.
+
+For a diagonal edge, this happens at different movement amounts along different rows. Regular rendering changes the staircase pattern as the geometry crosses pixel centers. Shifting cached pixels preserves the old staircase until the texture sampling switches to neighboring pixels.
+
+The comparison below illustrates this with two flat-colored surfaces. Move the camera offset between 0 and 1; crosses mark differences from freshly sampling the geometry.
+
+visualize{"path":"C:/Users/k/.codex/visualizations/2026/10/05/01a10ca5-8774-78b0-8dbb-507be7f22ecd/CameraMovementSampling.html"}
+
+Whole-pixel movement can reuse the original sampling positions by changing which cached pixel maps to each screen pixel, assuming the background's shading and other rendering conditions remain compatible. With a movement of 10.27 pixels, the whole 10 pixels can be handled this way; the remaining 0.27 is still the problem. These distances refer to **internal rendering pixels**, rather than world units.
+
+Your orthographic camera helps because translation preserves projected object sizes and orientation. A larger cache or tiles can cover the newly visible track area. They still contain colors sampled at the original alignment, so extra coverage alone does not solve fractional movement.
+
+**Given that follow mode is the primary experience, we need to address this directly.** The practical choices are:
+
+- **Snap the camera to whole rendering-pixel steps.** This enables straightforward image reuse under suitable background conditions, but changes how following moves. Both regular and optimized modes must use that same camera behavior for an exact comparison.
+- **Keep continuous camera movement and accept pixel differences.** Cached-image resampling becomes practical, with the visual differences depending on the chosen filtering.
+- **Keep continuous movement and strict pixel equivalence.** We need a richer representation that retains enough geometry/material information to compute the new samples, or rerender the background when its sampling alignment changes. For ordinary follow movement, that could mean every frame.
+
+Disabling AA simplifies composition, but a finished background color image still cannot generally supply the new samples required by continuous camera movement.
