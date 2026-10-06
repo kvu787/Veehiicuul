@@ -456,3 +456,262 @@ Thus, **600 -> 960 FPS saves only about 0.31 ms** of average input-sampling dela
 The remaining uncertainty is the **NVCP limiter and frame queue**. The capture was uncapped, so it does not establish their behavior at 600 FPS. If an additional frame of delay exists at that cap, **add 1.67 ms to every 600 FPS estimate**; two frames add 3.33 ms. These numbers also exclude your thumb's travel through a deadzone and human perception/reaction time.
 
 For your current controller and cap, **the ASUS OLED is my preferred output device for responsiveness and motion clarity**. The model places it around 3.5 ms, with better supporting panel measurements. The Acer is a close candidate under its advertised response-time assumption; its exact latency advantage over your ProArt needs optical testing to establish.
+
+## User
+
+let's say the fps cap is at 480. here is capture data for that:
+"C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\SavedLogOutput\2026-10-06_14-31-36"
+i use the GameSir G7 Pro 8K via wireless dongle connection.
+provide a comparison of estimated end2end latency between a variety of the lowest, middle, and highest tier ips and oled monitors
+
+## Assistant Commentary
+
+I will use this 480 FPS capture to update the PC portion of the estimate, then compare IPS and OLED monitors across performance tiers. I will also account for the G7 Pro 8K dongle's measured stick delay, which may be a substantial part of the total.
+
+## Assistant Question
+
+What firmware version and wireless polling rate is your GameSir G7 Pro 8K using? The published dongle stick-latency result I found is about 10 ms on firmware 1.9.7 at 8 kHz, so a different configuration could shift every end-to-end estimate.
+
+## User
+
+# AGENTS.md instructions for C:\Users\k\Repository\Veehiicuul
+
+<INSTRUCTIONS>
+# Base template
+
+## Style
+
+For single and double quotes, only use the ASCII forms: ', "
+Never use these: “, ”, ‘, ’, etc.
+
+## Development platform compatibility
+
+Support Windows 11 x64 as the only development platform.
+
+## Folder and file naming
+
+This only applies to things that we have the freedom to name as wanted.
+Use CamelCase.
+Use complete proper words. Don't use typical shortenings. Good: Source, Documentation. Bad: src, docs.
+
+## External tools
+
+You may use the tools in `%UserProfile%\Program`.
+You may refer to local copies of source repos in `%UserProfile%\Repository\External`.
+
+## Git
+
+When implementing stuff, avoid difficult-to-review "mega-commits".
+Split large work into multiple commits to make it easier to review.
+Separate commits that record conversations from other commits.
+
+## Markdown tables
+
+Tables in Markdown must be padded and aligned in a way to make them easy to read in a plaintext editor, not only in a Markdown viewer.
+
+## Mathematical notation in Markdown
+
+Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must display properly in VSCode's Markdown previewer, GitHub.com's Markdown displayer, and the markdown viewer in the Windows 11 ChatGPT app.
+
+## PowerShell
+
+All PowerShell scripts must use:
+
+- Set-StrictMode -Version Latest
+- $ErrorActionPreference = 'Stop'
+
+## Godot
+
+When creating a Godot application:
+
+- Use Godot 4.7.2 .NET
+- Use C#
+- Don't use GDScript
+- Halt if you don't find a portable/self-contained install of Godot 4.7.2 .NET at `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`
+- Halt if that install of Godot doesn't have export templates installed
+- Build.cmd must do all building/exporting using release configuration with optimizations fully enabled and use Godot's export via the command-line to create an EXE
+- Use DirectX 12
+- Keep vsync off
+- Keep max fps limiter off
+- Set rendering_device/vsync/swapchain_image_count=2
+- Set rendering_device/fallback_to_vulkan=false
+- Set rendering_device/fallback_to_opengl3=false
+- Use Forward+ renderer
+
+The Godot csproj must include this:
+
+```xml
+<PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+
+    <!-- Enables nullable reference annotations and warnings to catch potential null errors. -->
+    <Nullable>enable</Nullable>
+
+    <!-- Enforces the repository's configured code-style rules during builds. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!--
+        Required for IDE0005 to work.
+        Enables the build-time IDE0005 check for unused using directives by generating XML documentation.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!--
+        Required in Godot .NET/C# projects.
+        Prepares the C# library and its dependencies for dynamic loading by Godot.
+    -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+
+    <!--
+        Required to properly export a Godot .NET/C# project using the command-line (instead of the Godot Editor export GUI).
+        Prevents an idle compiler server from keeping Godot's Windows console wrapper waiting after export.
+        See https://github.com/godotengine/godot/issues/110101 for more information.
+    -->
+    <UseSharedCompilation>false</UseSharedCompilation>
+<PropertyGroup>
+```
+
+## Applications
+
+### Running
+
+If you create a runnable application, create files called `Build.cmd` and `Run.cmd` that respectively build and run the application when double-clicked from File Explorer.
+These must be located at the root of the application's folder in the Git repo.
+These must be simple wrappers for PowerShell scripts named `Build.ps1` and `Run.ps1` which contain the actual logic to minimize the amount of batch code written.
+Run.cmd must exit if it doesn't discover a build of the application at the place that Build.cmd outputs to.
+If the application doesn't need to be "built" for it to be run (such as a PowerShell script), then omit Build.cmd and Build.ps1.
+
+### Logging
+
+When creating an application, create a folder called `MyLogOutput` at the root of the application's folder in the git repo.
+For each run of the application, a folder must be created in MyLogOutput and named with the current timestamp. This PowerShell code shows what the name of the folder should be:
+
+```powershell
+$logFolderPath = "$env:UserProfile\Repository\Godot\VsyncStutterTest\MyLogOutput\$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")"
+New-Item -ItemType "Directory" -Path $logFolderPath
+```
+
+Any logs for that application session must be put in that log folder.
+`MyLogOutput/` must be gitignored.
+
+# Base template additions
+
+## Conversations
+
+Record verbatim and commit all conversations in a folder named `Conversations` located at the root of this Git repo.
+Use one file per conversation.
+Prefix these files with the PowerShell evaluation of `[DateTime]::UtcNow.ToString("yyyy-MM-dd_HH-mm") + "_UTC"`.
+Prefix these commits with `[cnv]`.
+If I attach images to prompts, save and record these in the conversation logs.
+If the conversation begins with `dnr`, then do not record the conversation.
+
+## Application compatibility
+
+Do not attempt to maintain any sort of application compatibility between different commits of the repo. This creates unwanted complexity.
+
+## Target platform compatibility
+
+Support Windows 11 x64 as the only target platform.
+
+</INSTRUCTIONS><environment_context>
+  <cwd>C:\Users\k\Repository\Veehiicuul</cwd>
+  <shell>powershell</shell>
+  <current_date>2026-10-06</current_date>
+  <timezone>America/Los_Angeles</timezone>
+  <filesystem><workspace_roots><root>C:\Users\k\Repository\Veehiicuul</root><root>C:\Users\k\.codex\visualizations\2026\10\06\01a1121b-1d43-7622-88b2-50d130185934</root></workspace_roots><permission_profile type="managed"><file_system type="restricted"><entry access="read"><special>:root</special></entry><entry access="write"><path>C:\Users\k\Repository\Veehiicuul</path></entry><entry access="write"><path>C:\Users\k\.codex\visualizations\2026\10\06\01a1121b-1d43-7622-88b2-50d130185934</path></entry><entry access="write"><special>:slash_tmp</special></entry><entry access="write"><special>:tmpdir</special></entry><entry access="read"><path>C:\Users\k\Repository\Veehiicuul\.git</path></entry><entry access="read"><path>C:\Users\k\.codex\visualizations\2026\10\06\01a1121b-1d43-7622-88b2-50d130185934\.git</path></entry><entry access="read"><path>C:\Users\k\Repository\Veehiicuul\.agents</path></entry><entry access="read"><path>C:\Users\k\.codex\visualizations\2026\10\06\01a1121b-1d43-7622-88b2-50d130185934\.agents</path></entry><entry access="read"><path>C:\Users\k\Repository\Veehiicuul\.codex</path></entry><entry access="read"><path>C:\Users\k\.codex\visualizations\2026\10\06\01a1121b-1d43-7622-88b2-50d130185934\.codex</path></entry></file_system></permission_profile></filesystem>
+</environment_context>
+
+## User
+
+<send_user_message_question_reply>
+[{"questionItemId":"[\"request_user_input_async\",\"call_38enjqUKJpOCPD7oY8fdQFrK\",0]","question":"What firmware version and wireless polling rate is your GameSir G7 Pro 8K using? The published dongle stick-latency result I found is about 10 ms on firmware 1.9.7 at 8 kHz, so a different configuration could shift every end-to-end estimate.","answer":"it is the latest firmware of controller=2.2.9 and dongle=1.3.5"}]
+</send_user_message_question_reply>
+
+## Assistant Commentary
+
+The capture averages 480.03 FPS. It also shows more presentation delay than the uncapped run: the estimated time from the CPU-frame boundary to the display event is about 2.20 ms, including the limiter's wait.
+
+Your firmware versions matter here. The published 10 ms dongle result uses controller firmware 1.9.7, so I will check for newer measurements before applying it to your 2.2.9 controller and 1.3.5 dongle.
+
+## Assistant Commentary
+
+I found newer verified G7 Pro 8K Aimlabs tests with roughly 3.6-4.2 ms of wireless stick delay. I will use 4 ms as a provisional estimate; I did not find a hardware measurement for your exact 2.2.9/1.3.5 firmware combination.
+
+The monitor comparison is clearer: moving from 120 Hz IPS to 240 Hz OLED offers a large improvement. Beyond 360-480 Hz OLED, the remaining latency gains are small at your 480 FPS cap.
+
+## Assistant Commentary
+
+The working estimates are about 17 ms for your ProArt, 10 ms for an entry-level 240 Hz gaming OLED, and 8.5-9 ms for a 480-540 Hz OLED. These include the provisional controller delay and the PC timing from your new capture.
+
+The Acer estimate needs a qualification: its advertised 1 ms response time is not an independently measured average. Another tested 540 Hz IPS has 6-8 ms pixel transitions, so refresh rate alone cannot establish how it compares with OLED.
+
+## Assistant Final
+
+**At 480 FPS, my working estimate is about 17 ms with your PA278QGV, 10 ms with a good 240 Hz gaming OLED, and 8.5-9 ms with a 480-540 Hz OLED.** These are complete controller-to-screen estimates, including pixel response.
+
+Your firmware is controller **2.2.9**, dongle **1.3.5**. I did not find hardware latency measurements for that exact combination. I use **4 ms wireless stick latency** as a provisional value, based on verified G7 Pro 8K Aimlabs measurements of 3.56-4.24 ms on firmware 2.1.0. Those results do not establish your unit's exact latency. The older 10 ms result I mentioned should not be treated as a measurement of your current configuration. [Controller tests](https://gamepadla.com/gamesir-g7-pro-8k.html).
+
+Assumptions: dongle configured for 8 kHz XInput, VSync off, fixed monitor refresh, normal operation without strobing/BFI, and similar game workload. The endpoint is a substantially changed pixel; first detectable light can appear sooner.
+
+**The new capture gives this common latency budget:**
+
+| Contribution                                   | Average delay |
+| ---------------------------------------------- | ------------- |
+| Controller stick actuation to host             | 4.00 ms proxy |
+| Wait until the game samples input              | 1.04 ms model |
+| Game work, rendering and presentation          | 2.20 ms proxy |
+| **Subtotal before the monitor's contribution** | **7.24 ms**   |
+
+The capture averages **480.03 FPS**. The 2.20 ms is the mean of `MsCPUBusy + MsUntilDisplayed`: approximately 0.50 + 1.70 ms. This uses PresentMon's derived CPU-frame boundary as a proxy for input sampling. Your game reads controls near the beginning of each rendered update. I use the captured pipeline with your NVCP settings, rather than applying a separate assumed reduction for Ultra. The capture's 1.59 ms spent inside Present is already included; adding it again would double-count the limiter's wait. [Capture](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/SavedLogOutput/2026-10-06_14-31-36/PresentMon.csv:1), [game input update](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs:67).
+
+For each monitor, I add:
+
+**Monitor contribution = average wait for the relevant pixel's next scan + signal processing + pixel transition.**
+
+The scan wait is modeled as **500 / refresh rate** milliseconds. This is a phase-averaged estimate for asynchronous presentation, rather than an optical measurement.
+
+**IPS comparisons, with the same controller and 480 FPS cap:**
+
+| Monitor / performance tier                     | Refresh | Monitor contribution | Estimated complete E2E |
+| ---------------------------------------------- | ------- | -------------------- | ---------------------- |
+| Basic office/budget IPS, illustrative          | 60 Hz   | 13.8-22.3 ms         | **21-30 ms**           |
+| Budget IPS, illustrative                       | 120 Hz  | 8.7-13.7 ms          | **16-21 ms**           |
+| Your ASUS PA278QGV                             | 120 Hz  | 9.7 ms               | **17.0 ms***           |
+| ASUS XG27ACS, mainstream gaming                | 180 Hz  | 7.8 ms               | **15.0 ms**            |
+| Fast gaming IPS, illustrative                  | 240 Hz  | 5.3-7.7 ms           | **12.5-15.0 ms**       |
+| ASUS PG27AQN, high-performance gaming          | 360 Hz  | 4.3 ms               | **11.5 ms**            |
+| Acer XV273U F5, optimistic specification model | 540 Hz  | 2.1 ms               | **9.4 ms***            |
+| Acer XV273U F5, same optimistic model          | 1000 Hz | 1.7 ms               | **8.9 ms***            |
+| Philips 27M2N5500XD, high Hz but slow pixels   | 540 Hz  | 7.4-8.9 ms           | **14.7-16.2 ms**       |
+
+\*The ProArt uses its advertised 5 ms GtG response plus an assumed 0.5 ms processing delay. The Acer uses its advertised 1 ms GtG plus an assumed 0.2 ms processing delay. Their totals have substantially weaker evidence than the independently tested examples. The Acer's 1000 Hz mode reduces resolution to 1280 x 720. [ProArt specifications](https://www.asus.com/uk/displays-desktops/monitors/proart/proart-display-pa278qv-gen2-pa278qgv/techspec/), [Acer specifications](https://www.acer.com/us-en/monitors/gaming/nitro-xv3/pdp/UM.HX3AA.506), [Acer display modes](https://news.acer.com/acers-new-predator-and-nitro-monitors-bring-gaming-experiences-to-life).
+
+The measured inputs are 4.5 ms pixel response / 0.5 ms processing for the XG27ACS; approximately 2.3 / 0.6 ms for the PG27AQN; and 6.3-7.8 / 0.2 ms for the Philips, depending on overdrive. The Philips illustrates why **540 Hz does not guarantee lower complete latency than 240 Hz OLED**. Its slow transitions also create substantial ghosting. This does not establish the Acer's actual transition performance. [XG27ACS measurements](https://www.techspot.com/review/2858-asus-rog-strix-xg27acs/), [PG27AQN processing](https://tftcentral.co.uk/reviews/asus-rog-swift-pg27aqn), [PG27AQN response and Philips measurements](https://www.techspot.com/review/3137-philips-evnia-1000hz/).
+
+The generic IPS rows are scenarios, not measurements of every budget monitor: they assume respectively 5-12, 4-8, and 3-5 ms pixel response, with modest processing delay.
+
+**OLED comparisons:**
+
+| Monitor / performance tier             | Refresh | Monitor contribution | Estimated complete E2E |
+| -------------------------------------- | ------- | -------------------- | ---------------------- |
+| AOC AG276QZD2, entry gaming OLED       | 240 Hz  | 2.6 ms               | **9.8 ms**             |
+| Alienware AW2725DF, middle tier        | 360 Hz  | 2.5 ms               | **9.7 ms**             |
+| ASUS PG27AQDP, high performance        | 480 Hz  | 1.6 ms               | **8.8 ms**             |
+| ASUS PG27AQWP-W, highest tier at 1440p | 540 Hz  | 1.3 ms               | **8.5 ms**             |
+| ASUS PG27AQWP-W, 720p performance mode | 720 Hz  | 1.0 ms               | **8.3 ms**             |
+
+These use measured pixel response / processing of approximately 0.50 / 0 ms for the AOC, 0.49 / 0.59 ms for the Alienware, 0.44 / 0.09 ms for the PG27AQDP, and 0.25 / 0.10 ms for the PG27AQWP-W. Review methods differ, so tenths of a millisecond should not be treated as precise rankings. [AOC measurements](https://tftcentral.co.uk/reviews/aoc-agon-pro-ag276qzd2), [Alienware measurements](https://tftcentral.co.uk/reviews/dell-alienware-aw2725df), [480 Hz ASUS measurements](https://tftcentral.co.uk/reviews/asus-rog-swift-pg27aqdp), [540/720 Hz ASUS measurements](https://www.techspot.com/review/3049-asus-rog-swift-pg27aqwp/).
+
+**What those differences mean for your game:**
+
+- **ProArt -> 240 Hz OLED:** approximately **7 ms less complete latency**, with much cleaner moving edges.
+- **ProArt -> 480-540 Hz OLED:** approximately **8-8.5 ms less latency**, while displaying substantially more frequent motion updates.
+- **240 -> 480 Hz OLED:** around **1 ms less latency** in these examples, plus better motion clarity at your sustained 480 FPS.
+- **480 -> 540 Hz OLED:** the refresh-rate benefit alone is only **0.12 ms**. These belong in essentially the same responsiveness tier for your setup.
+- **540 -> 720 Hz:** only **0.23 ms** less average scan wait. At 480 FPS, it cannot supply more than 480 distinct game states per second, and the ASUS mode sacrifices resolution.
+
+For your setup, **a good 480-540 Hz OLED is the strongest combination of responsiveness and motion quality**. A 240 Hz OLED already captures most of the estimated latency improvement over your ProArt. I would not choose the Acer over OLED based on its optimistic 9.4 ms estimate without independently measured transitions.
+
+The controller uncertainty shifts every total equally: if your actual stick delay is 6 ms, add 2 ms; if it is 10 ms, add 6 ms. Using a cable could also be consequential: the verified Aimlabs test measured about 0.69 ms wired versus 3.56 ms wireless, a roughly **2.9 ms improvement**, larger than the refresh-only benefit of moving from 240 to 540 Hz. That remains a firmware/variant proxy for your controller. [Controller measurements](https://gamepadla.com/gamesir-g7-pro-8k.html).
+
+Finally, PresentMon's 2.57 ms `AllInputToPhotonLatency` is **not your physical controller-to-pixel latency**. The source computes an associated OS input timestamp to a derived display-event timestamp; it does not measure your stick electronics or panel light output. The tables estimate those missing stages. Absolute values remain provisional, especially for the ProArt and Acer; a synchronized controller/photodiode test would establish the actual totals. [PresentMon calculation](C:/Users/k/Repository/External/PresentMon_2-6-0/IntelPresentMon/CommonUtilities/mc/MetricsCalculatorInput.cpp:59).
