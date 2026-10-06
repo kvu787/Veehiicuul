@@ -5,6 +5,8 @@ $MainProcessPath = "$env:UserProfile\Repository\Veehiicuul\Veehiicuul_Godot_CSha
 $MainProcessName = Split-Path -Path $MainProcessPath -Leaf
 $PresentMonPath = "$env:UserProfile\Program\PresentMon-2.6.0-x64.exe"
 $UsePresentMon = $args -notcontains 'NoPresentMon'
+$PresentMonStandardLogFileName = "PresentMonOutput_Standard.log"
+$PresentMonErrorLogFileName = "PresentMonOutput_Error.log"
 
 $LogFolderPath = "$env:UserProfile\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyLogOutput\$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")"
 $GodotLogFilePath = "$logFolderPath\Godot.log"
@@ -48,15 +50,16 @@ try {
                 -FilePath $PresentMonPath `
                 -ArgumentList "--process_name `"$($MainProcessName)`" --session_name `"$($PresentMonSessionName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status" `
                 -PassThru `
-                -RedirectStandardOutput "$LogFolderPath\PresentMonOutput_Standard.log" `
-                -RedirectStandardError "$LogFolderPath\PresentMonOutput_Error.log"
+                -RedirectStandardOutput "$($LogFolderPath)\$($PresentMonStandardLogFileName)" `
+                -RedirectStandardError "$($LogFolderPath)\$($PresentMonErrorLogFileName)"
 
             # Work around Windows PowerShell 5.1 returning a null ExitCode for redirected
             # Start-Process output, even after WaitForExit(). Retain the handle while the
             # process is running so the later exit-code check can read the actual result.
             # https://github.com/PowerShell/PowerShell/issues/5421
             $null = $presentMonProcess.Handle
-            Write-Host "PresentMon launched with PID='$($presentMonProcess.Id)', session_name='$($PresentMonSessionName)'"
+
+            Write-Host "'$($PresentMonPath)' launched with PID='$($presentMonProcess.Id)', session_name='$($PresentMonSessionName)'"
         } else {
             Write-Host "PresentMon=Off"
         }
@@ -83,9 +86,9 @@ try {
                 }
             }
             $presentMonProcess.WaitForExit()
-            # Convert redirected output after PresentMon has finished writing, including failed runs.
+
             $utf8WithoutBom = [System.Text.UTF8Encoding]::new($false)
-            foreach ($fileName in 'PresentMonOutput_Standard.log', 'PresentMonOutput_Error.log') {
+            foreach ($fileName in $PresentMonStandardLogFileName, $PresentMonErrorLogFileName) {
                 $filePath = Join-Path $LogFolderPath $fileName
                 $content = [System.IO.File]::ReadAllText($filePath)
                 [System.IO.File]::WriteAllText($filePath, $content, $utf8WithoutBom)
@@ -93,7 +96,6 @@ try {
             if ($presentMonProcess.ExitCode -ne 0) {
                 throw "PresentMon exited with code $($presentMonProcess.ExitCode). See PresentMonOutput_Error.log."
             }
-            Write-Host 'PresentMon exited; capture output flushed.'
         }
     } | Out-Default
 } finally {
