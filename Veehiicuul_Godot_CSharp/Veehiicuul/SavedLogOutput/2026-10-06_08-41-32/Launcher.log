@@ -1,0 +1,29 @@
+**********************
+PowerShell transcript start
+Start time: 20261006084132
+Username: DESKTOP-9H66NOJ\k
+RunAs User: DESKTOP-9H66NOJ\k
+Configuration Name: 
+Machine: DESKTOP-9H66NOJ (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.6.0_x64__8wekyb3d8bbwe\pwsh.dll -NoLogo -NoProfile -ExecutionPolicy Bypass -File C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyRun_Simple.ps1
+Process ID: 30036
+PSVersion: 7.6.6
+PSEdition: Core
+GitCommitId: 7.6.6
+OS: Microsoft Windows 10.0.26200
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+Transcript started, output file is C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyLogOutput\2026-10-06_08-41-32\Launcher.log
+ProcessPath = C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyBuildOutput\Veehiicuul_Godot_CSharp.exe
+PresentMonPath = C:\Users\k\Program\PresentMon-2.6.0-x64.exe
+'C:\Users\k\Program\PresentMon-2.6.0-x64.exe' launched with PID='29564', session_name='Veehiicuul_Godot_CSharp_0c15b2585f314736b89958fe5e584c1c'
+'C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyBuildOutput\Veehiicuul_Godot_CSharp.exe' launched with PID='23368'
+warning: --terminate_existing_session exits without capturing anything; ignoring all other options.
+**********************
+PowerShell transcript end
+End time: 20261006084240
+**********************
