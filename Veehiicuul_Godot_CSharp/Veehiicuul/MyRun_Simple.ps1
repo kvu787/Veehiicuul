@@ -47,7 +47,6 @@ try {
             $presentMonProcess = Start-Process `
                 -FilePath $PresentMonPath `
                 -ArgumentList "--process_name `"$($ProcessName)`" --session_name `"$($PresentMonSessionName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status" `
-                -WindowStyle "Hidden" `
                 -PassThru `
                 -RedirectStandardOutput "$LogFolderPath\PresentMonOutput_Standard.log" `
                 -RedirectStandardError "$LogFolderPath\PresentMonOutput_Error.log"
