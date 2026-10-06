@@ -21,7 +21,13 @@ try {
         Write-Host "PresentMonPath = $($PresentMonPath)"
 
         $presentMonProcess = $null
-        if ($UsePresentMon -and (Test-Path $PresentMonPath)) {
+        if ($UsePresentMon) {
+            Write-Host "PresentMon=On"
+
+            if (-not (Test-Path $PresentMonPath)) {
+                throw "PresentMon exe not found at '$($PresentMonPath)'"
+            }
+
             $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
             $principal = [System.Security.Principal.WindowsPrincipal]::new($identity)
             $groupSid = [System.Security.Principal.SecurityIdentifier]::new('S-1-5-32-559') # S-1-5-32-559 is the stable identifier for the "Performance Log Users" group
@@ -46,6 +52,8 @@ try {
             # https://github.com/PowerShell/PowerShell/issues/5421
             $null = $presentMonProcess.Handle
             Write-Host "PresentMon launched with PID='$($presentMonProcess.Id)', session_name='$($PresentMonSessionName)'"
+        } else {
+            Write-Host "PresentMon=Off"
         }
 
         $process = Start-Process -FilePath $ProcessPath -ArgumentList "--log-file `"$GodotLogFilePath`"" -PassThru -RedirectStandardOutput 'NUL' -RedirectStandardError '\\.\NUL'
