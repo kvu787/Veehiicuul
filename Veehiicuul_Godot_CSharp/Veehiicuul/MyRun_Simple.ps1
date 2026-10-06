@@ -40,7 +40,7 @@ try {
             $principal = [System.Security.Principal.WindowsPrincipal]::new($identity)
             $groupSid = [System.Security.Principal.SecurityIdentifier]::new('S-1-5-32-559') # S-1-5-32-559 is the stable identifier for the "Performance Log Users" group
             if (-not $principal.IsInRole($groupSid)) {
-                throw "Trying to run PresentMon, but user '$($identity.Name)' must belong to the 'Performance Log Users' group."
+                throw "Trying to run PresentMon, but user '$($identity.Name)' must belong to the 'Performance Log Users' (S-1-5-32-559) group."
             }
 
             # `--terminate_on_proc_exit` isn't used because I've observed it not stopping PresentMon even after the game exits.
