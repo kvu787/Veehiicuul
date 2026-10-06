@@ -73,7 +73,6 @@ try {
         Wait-Process -Id $mainProcess.Id
 
         if ($null -ne $presentMonProcess) {
-            Start-Sleep -Seconds 1
             if (-not $presentMonProcess.HasExited) {
                 & $PresentMonPath --terminate_existing_session --session_name $PresentMonSessionName
                 if ($LASTEXITCODE -ne 0) {
