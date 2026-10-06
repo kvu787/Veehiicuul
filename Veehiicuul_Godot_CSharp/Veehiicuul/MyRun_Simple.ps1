@@ -1,14 +1,15 @@
 Set-StrictMode -Version "Latest"
 $ErrorActionPreference = "Stop"
 
-$ProcessName = "Veehiicuul_Godot_CSharp.exe"
 $ProcessPath = "$env:UserProfile\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyBuildOutput\Veehiicuul_Godot_CSharp.exe"
+$ProcessName = Split-Path -Path $ProcessPath -Leaf
 $PresentMonPath = "$env:UserProfile\Program\PresentMon-2.6.0-x64.exe"
 $UsePresentMon = $args -notcontains 'NoPresentMon'
 
 $LogFolderPath = "$env:UserProfile\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyLogOutput\$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")"
 $GodotLogFilePath = "$logFolderPath\Godot.log"
 $PresentMonLogFilePath = "$LogFolderPath\PresentMon.csv"
+$PresentMonSessionName = "$([System.IO.Path]::GetFileNameWithoutExtension($ProcessPath))_$([Guid]::NewGuid().ToString('N'))"
 
 New-Item -ItemType "Directory" -Path $LogFolderPath
 
@@ -16,16 +17,23 @@ Start-Transcript -Path "$LogFolderPath\ScriptOutput.log"
 
 try {
     . {
-        Write-Host "ProcessName = $($ProcessName)"
         Write-Host "ProcessPath = $($ProcessPath)"
         Write-Host "PresentMonPath = $($PresentMonPath)"
+
+        if (-not (Test-Path $ProcessPath)) {
+            throw "Invalid ProcessPath='$($ProcessPath)'"
+        }
+
+        if (@(Get-Process | Select-Object -ExpandProperty Path | Where-Object { $_ -and (Split-Path -Path $_ -Leaf) -eq $ProcessName }).Count -gt 0) {
+            throw "Error: Multiple processes have the target process name of '$ProcessName'"
+        }
 
         $presentMonProcess = $null
         if ($UsePresentMon) {
             Write-Host "PresentMon=On"
 
             if (-not (Test-Path $PresentMonPath)) {
-                throw "PresentMon exe not found at '$($PresentMonPath)'"
+                throw "Invalid PresentMonPath='$($PresentMonPath)'"
             }
 
             $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
@@ -34,8 +42,6 @@ try {
             if (-not $principal.IsInRole($groupSid)) {
                 throw "Trying to run PresentMon, but user '$($identity.Name)' must belong to the 'Performance Log Users' group."
             }
-
-            $PresentMonSessionName = 'Veehiicuul' + [Guid]::NewGuid().ToString('N')
 
             # `--terminate_on_proc_exit` isn't used because I've observed it not stopping PresentMon even after the game exits.
             $presentMonProcess = Start-Process `
