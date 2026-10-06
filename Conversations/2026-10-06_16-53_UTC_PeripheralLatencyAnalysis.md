@@ -370,3 +370,89 @@ For your current **PA278QGV + DeathAdder**, I would prioritize the **monitor** o
 Finally, **960 FPS looks feasible on average, but this capture does not prove a reliable 960 FPS lock**: about **1.71%** of its steady-state present intervals exceed the 1.042 ms budget, versus approximately **0.004%** exceeding the 2.083 ms budget for 480 FPS. Those are uncapped observations, not predictions of capped pacing, and actual driving should be tested. Keep Ultra enabled as part of the comparison baseline; this single run cannot quantify its benefit or prove a zero-length queue. The decisive follow-up is physical controller-to-visible-response measurement during gameplay at each cap, with the monitor kept at its intended refresh mode.
 
 Conversation recorded and committed in [PeripheralLatencyAnalysis.md](C:/Users/k/Repository/Veehiicuul/Conversations/2026-10-06_16-53_UTC_PeripheralLatencyAnalysis.md).
+
+
+## User (Interrupted Turn)
+
+okay, this still doesn't give me a understanding of how different peripheral choices affect the estimated *end to end latency*. you need to provide a clearer answer of how changing the input device, output device, and fps cap affects the end to end latency.
+
+for example, i am currently using the GameSir Tarantula 8K PC and an nvcp max frame rate of 600 fps. what is the estimated end to end latency for each of these output device options:
+ASUS PA278QGV 120hzAcer XV273U F5 540 hz vs ASUS ROG Swift OLED PG27AQWP-W at 540 hz.
+
+## User
+
+okay, this still doesn't give me a understanding of how different peripheral choices affect the estimated end to end latency. you need to provide a clearer answer of how changing the input device, output device, and fps cap affects the end to end latency.
+
+for example, i am currently using the GameSir Tarantula 8K PC and an nvcp max frame rate of 600 fps. what is the estimated end to end latency for each of these output device options:
+ASUS PA278QGV 120hz
+Acer XV273U F5 540 hz
+ASUS ROG Swift OLED PG27AQWP-W at 540 hz
+
+## Assistant Commentary
+
+I will estimate physical stick-to-visible-response latency for those three monitors at 600 FPS, with a single comparison table. I will include panel response and monitor processing, and make the uncertainty from the unmeasured 600 FPS run explicit.
+
+## Assistant Commentary
+
+At 600 FPS, the controller, average frame wait, and captured presentation timing add up to roughly 1.9 ms before the monitor's contribution. Moving from 120 to 540 Hz reduces the average wait for a particular pixel to update by about 3.24 ms.
+
+The OLED has measured processing delay of about 0.1 ms and pixel transitions around 0.2-0.3 ms. The PA278QGV and Acer estimates are less certain because their advertised response times do not establish their actual pixel-response and processing delays.
+
+## Assistant Commentary
+
+I am also including about 0.3 ms of game work before Present. That brings the common input-and-PC subtotal to about 2.2 ms at 600 FPS.
+
+The resulting low-queue estimates are approximately 12 ms for the ProArt, 4-5 ms for the Acer, and 3.5 ms for the OLED, counting a substantially completed pixel transition. Any additional delay introduced by the NVCP limiter would raise all three estimates.
+
+## Assistant Final
+
+I gave you component comparisons instead of complete estimates.
+
+**With your Tarantula 8K and a genuine 600 FPS lock, my working estimates are approximately 12 ms on the PA278QGV, 4-5 ms on the Acer, and 3.5 ms on the ASUS OLED.** These estimate average time from a registered stick actuation to a substantially completed pixel change. The LCD estimates are considerably less certain than the OLED estimate.
+
+Assumptions: wired 8 kHz controller, VSync off, ordinary display operation without strobing, Ultra enabled, and no additional queued frames. First detectable pixel movement can occur sooner than the endpoint used here.
+
+Here is the complete budget, in milliseconds:
+
+| Contribution                          | PA278QGV 120 Hz | Acer XV273U F5 540 Hz | PG27AQWP-W OLED 540 Hz |
+| ------------------------------------- | --------------- | --------------------- | ---------------------- |
+| Tarantula stick-to-host delay         | 0.49            | 0.49                  | 0.49                   |
+| Average wait for game input sampling  | 0.83            | 0.83                  | 0.83                   |
+| Game work, rendering and presentation | 0.90            | 0.90                  | 0.90                   |
+| Average wait for the pixel to update  | 4.17            | 0.93                  | 0.93                   |
+| Monitor processing                    | 0.50 assumed    | 0.20 assumed          | 0.10 measured          |
+| Pixel transition                      | 5.00 proxy      | 1.00 proxy            | 0.25 measured typical  |
+| **Estimated end-to-end total**        | **11.9 ms**     | **4.3 ms**            | **3.5 ms**             |
+
+The inputs to that table have different levels of evidence:
+
+- **Controller:** 0.49 ms comes from Tarantula testing at 8 kHz, firmware 2.2.9, raw 12-bit stick mode. Default circle mode measured 0.62 ms, which would add about 0.13 ms to each total. These tests use a large stick movement; small corrections can behave differently. [Controller measurements](https://gamepadla.com/gamesir-tarantula-8k.html).
+- **PC:** approximately 0.30 ms before Present plus 0.60 ms from Present to the derived display timestamp, based on your uncapped capture. This is a provisional estimate for the capped run. I have not added the capture's 1.31 ms input metric again. [Capture](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/SavedLogOutput/2026-10-06_08-41-32/PresentMon.csv:1).
+- **Monitors:** the ProArt's 5 ms and Acer's 1 ms are advertised GtG values used as modeling proxies, not measured delays for your game's colors. Their processing values above are explicit assumptions. The OLED has independent measurements of approximately 0.1 ms processing and 0.2-0.3 ms pixel transitions. [ProArt specifications](https://www.asus.com/uk/displays-desktops/monitors/proart/proart-display-pa278qv-gen2-pa278qgv/techspec/), [Acer specifications](https://news.acer.com/acers-new-predator-and-nitro-monitors-bring-gaming-experiences-to-life), [OLED measurements](https://www.techspot.com/review/3049-asus-rog-swift-pg27aqwp/).
+
+**Changing only the monitor**, this model predicts:
+
+- PA278QGV -> Acer: approximately **7.5 ms faster**.
+- PA278QGV -> ASUS OLED: approximately **8.4 ms faster**.
+- Acer -> ASUS OLED: approximately **0.9 ms faster**, with cleaner pixel transitions.
+
+Of those improvements, **3.24 ms comes from changing 120 to 540 Hz alone**. The rest depends on actual panel transitions and processing. Consequently, I am more confident in the refresh-rate benefit than in the precise 7.5/8.4 ms totals or the exact Acer-versus-OLED gap.
+
+**Changing only the FPS cap**, while keeping the same controller and monitor assumptions, gives these estimated end-to-end totals:
+
+| Game FPS | PA278QGV 120 Hz | Acer 540 Hz | ASUS OLED 540 Hz |
+| -------- | --------------- | ----------- | ---------------- |
+| 60       | 19.4 ms         | 11.8 ms     | 11.0 ms          |
+| 120      | 15.2 ms         | 7.7 ms      | 6.8 ms           |
+| 240      | 13.1 ms         | 5.6 ms      | 4.7 ms           |
+| 480      | 12.1 ms         | 4.6 ms      | 3.7 ms           |
+| **600**  | **11.9 ms**     | **4.3 ms**  | **3.5 ms**       |
+| 960      | 11.6 ms         | 4.0 ms      | 3.2 ms           |
+
+Thus, **600 -> 960 FPS saves only about 0.31 ms** of average input-sampling delay. At your current frame rate, a monitor upgrade offers a much larger potential improvement.
+
+**Changing only the controller** shifts every total by the difference in measured controller delay. For example, replacing the Tarantula's 0.49 ms stick implementation with the tested wired Xbox Series implementation at 8.30 ms adds approximately **7.8 ms**. At 600 FPS, the three totals would become approximately **19.7, 12.2, and 11.3 ms**, respectively. [Xbox measurements](https://gamepadla.com/xbox-core-controller.html).
+
+The remaining uncertainty is the **NVCP limiter and frame queue**. The capture was uncapped, so it does not establish their behavior at 600 FPS. If an additional frame of delay exists at that cap, **add 1.67 ms to every 600 FPS estimate**; two frames add 3.33 ms. These numbers also exclude your thumb's travel through a deadzone and human perception/reaction time.
+
+For your current controller and cap, **the ASUS OLED is my preferred output device for responsiveness and motion clarity**. The model places it around 3.5 ms, with better supporting panel measurements. The Acer is a close candidate under its advertised response-time assumption; its exact latency advantage over your ProArt needs optical testing to establish.
