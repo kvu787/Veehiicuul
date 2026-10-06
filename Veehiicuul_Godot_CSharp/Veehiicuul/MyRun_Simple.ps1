@@ -1,15 +1,15 @@
 Set-StrictMode -Version "Latest"
 $ErrorActionPreference = "Stop"
 
-$ProcessPath = "$env:UserProfile\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyBuildOutput\Veehiicuul_Godot_CSharp.exe"
-$ProcessName = Split-Path -Path $ProcessPath -Leaf
+$MainProcessPath = "$env:UserProfile\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyBuildOutput\Veehiicuul_Godot_CSharp.exe"
+$MainProcessName = Split-Path -Path $MainProcessPath -Leaf
 $PresentMonPath = "$env:UserProfile\Program\PresentMon-2.6.0-x64.exe"
 $UsePresentMon = $args -notcontains 'NoPresentMon'
 
 $LogFolderPath = "$env:UserProfile\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyLogOutput\$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")"
 $GodotLogFilePath = "$logFolderPath\Godot.log"
 $PresentMonLogFilePath = "$LogFolderPath\PresentMon.csv"
-$PresentMonSessionName = "$([System.IO.Path]::GetFileNameWithoutExtension($ProcessPath))_$([Guid]::NewGuid().ToString('N'))"
+$PresentMonSessionName = "$([System.IO.Path]::GetFileNameWithoutExtension($MainProcessPath))_$([Guid]::NewGuid().ToString('N'))"
 
 New-Item -ItemType "Directory" -Path $LogFolderPath
 
@@ -17,15 +17,15 @@ Start-Transcript -Path "$LogFolderPath\ScriptOutput.log"
 
 try {
     . {
-        Write-Host "ProcessPath = $($ProcessPath)"
+        Write-Host "ProcessPath = $($MainProcessPath)"
         Write-Host "PresentMonPath = $($PresentMonPath)"
 
-        if (-not (Test-Path $ProcessPath)) {
-            throw "Invalid ProcessPath='$($ProcessPath)'"
+        if (-not (Test-Path $MainProcessPath)) {
+            throw "Invalid ProcessPath='$($MainProcessPath)'"
         }
 
-        if (@(Get-Process | Select-Object -ExpandProperty Path | Where-Object { $_ -and (Split-Path -Path $_ -Leaf) -eq $ProcessName }).Count -gt 0) {
-            throw "Error: Multiple processes have the target process name of '$ProcessName'"
+        if (@(Get-Process | Select-Object -ExpandProperty Path | Where-Object { $_ -and (Split-Path -Path $_ -Leaf) -eq $MainProcessName }).Count -gt 0) {
+            throw "Error: Multiple processes have the target process name of '$MainProcessName'"
         }
 
         $presentMonProcess = $null
@@ -46,7 +46,7 @@ try {
             # `--terminate_on_proc_exit` isn't used because I've observed it not stopping PresentMon even after the game exits.
             $presentMonProcess = Start-Process `
                 -FilePath $PresentMonPath `
-                -ArgumentList "--process_name `"$($ProcessName)`" --session_name `"$($PresentMonSessionName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status" `
+                -ArgumentList "--process_name `"$($MainProcessName)`" --session_name `"$($PresentMonSessionName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status" `
                 -PassThru `
                 -RedirectStandardOutput "$LogFolderPath\PresentMonOutput_Standard.log" `
                 -RedirectStandardError "$LogFolderPath\PresentMonOutput_Error.log"
@@ -61,11 +61,11 @@ try {
             Write-Host "PresentMon=Off"
         }
 
-        $process = Start-Process -FilePath $ProcessPath -ArgumentList "--log-file `"$GodotLogFilePath`"" -PassThru -RedirectStandardOutput 'NUL' -RedirectStandardError '\\.\NUL'
-        $process.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::High
-        Write-Host "'$($ProcessPath)' launched with PID='$($process.Id)'"
+        $mainProcess = Start-Process -FilePath $MainProcessPath -ArgumentList "--log-file `"$GodotLogFilePath`"" -PassThru -RedirectStandardOutput 'NUL' -RedirectStandardError '\\.\NUL'
+        $mainProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::High
+        Write-Host "'$($MainProcessPath)' launched with PID='$($mainProcess.Id)'"
 
-        Wait-Process -Id $process.Id
+        Wait-Process -Id $mainProcess.Id
 
         if ($null -ne $presentMonProcess) {
             Start-Sleep -Seconds 1
