@@ -13,9 +13,9 @@ $GodotLogFilePath = "$logFolderPath\Godot.log"
 $PresentMonLogFilePath = "$LogFolderPath\PresentMon.csv"
 $PresentMonSessionName = "$([System.IO.Path]::GetFileNameWithoutExtension($MainProcessPath))_$([Guid]::NewGuid().ToString('N'))"
 
-New-Item -ItemType "Directory" -Path $LogFolderPath
+New-Item -ItemType "Directory" -Path $LogFolderPath | Out-Null
 
-Start-Transcript -Path "$LogFolderPath\ScriptOutput.log"
+Start-Transcript -Path "$LogFolderPath\Launcher.log"
 
 try {
     . {
@@ -32,8 +32,6 @@ try {
 
         $presentMonProcess = $null
         if ($UsePresentMon) {
-            Write-Host "PresentMon=On"
-
             if (-not (Test-Path $PresentMonPath)) {
                 throw "Invalid PresentMonPath='$($PresentMonPath)'"
             }
@@ -60,8 +58,6 @@ try {
             $null = $presentMonProcess.Handle
 
             Write-Host "'$($PresentMonPath)' launched with PID='$($presentMonProcess.Id)', session_name='$($PresentMonSessionName)'"
-        } else {
-            Write-Host "PresentMon=Off"
         }
 
         $mainProcess = Start-Process `
@@ -79,7 +75,6 @@ try {
         if ($null -ne $presentMonProcess) {
             Start-Sleep -Seconds 1
             if (-not $presentMonProcess.HasExited) {
-                Write-Host "Stopping PresentMon session $PresentMonSessionName"
                 & $PresentMonPath --terminate_existing_session --session_name $PresentMonSessionName
                 if ($LASTEXITCODE -ne 0) {
                     throw "PresentMon shutdown failed with exit code $LASTEXITCODE."
@@ -98,6 +93,9 @@ try {
             }
         }
     } | Out-Default
+} catch {
+    Write-Error -Message $_.Exception.ToString() -ErrorAction Continue
+    Read-Host "Launcher threw an exception. Read the console output. Press ENTER to exit"
 } finally {
     Stop-Transcript
 }
