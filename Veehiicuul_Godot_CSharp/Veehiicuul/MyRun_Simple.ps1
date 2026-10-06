@@ -61,7 +61,13 @@ try {
             Write-Host "PresentMon=Off"
         }
 
-        $mainProcess = Start-Process -FilePath $MainProcessPath -ArgumentList "--log-file `"$GodotLogFilePath`"" -PassThru -RedirectStandardOutput 'NUL' -RedirectStandardError '\\.\NUL'
+        $mainProcess = Start-Process `
+            -FilePath $MainProcessPath `
+            -ArgumentList "--log-file `"$GodotLogFilePath`"" `
+            -PassThru `
+            -RedirectStandardOutput 'NUL' `
+            -RedirectStandardError '\\.\NUL'
+
         $mainProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::High
         Write-Host "'$($MainProcessPath)' launched with PID='$($mainProcess.Id)'"
 
