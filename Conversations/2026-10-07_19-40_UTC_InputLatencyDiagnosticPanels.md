@@ -299,3 +299,18 @@ Recorded the **1280 x 1400 minimum**, single unscaled font, and layout flow requ
 Both boxes now use vertical `Label = value` lists. All six tests pass in Release and Debug.
 
 [View the updated layout](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/LogOutput/2026-10-07_13-24-56/Dashboard.png)
+
+## User
+
+change the application requirement to:
+Assume at least 1280 width * 1300 height of pixel space
+
+## Assistant Commentary
+
+I'll change the requirement to 1280 x 1300 and update the window dimensions and verification expectations to match.
+
+## Assistant Final
+
+Updated the requirement to **1280 x 1300**, along with window sizing and verification expectations.
+
+Release build and all six tests passed; layout verified at 1280 x 1300.
