@@ -37,3 +37,19 @@ Controller-state tests cover multiple eligible devices, keeping a connected sele
 ## Grayscale palette
 
 The grayscale update passed the optimized Release build and all three existing tests. The dashboard capture at `LogOutput/2026-10-06_18-12-05/Dashboard.png` was visually inspected for readability. All 1,100,800 pixels were also checked numerically: zero pixels had unequal red, green, and blue values. Backgrounds, text, stick markers, trigger bars, device indicators, and warning colors all use grayscale. The modified Build and Run PowerShell scripts passed parsing checks.
+
+## Reading-to-display measurement
+
+The application now links a self-contained PresentMon v2.6.0 display decoder and correlates its own frame submissions with Windows display events. Unit tests cover different QPC/GameInput epochs, frequency conversion, calibration uncertainty, preempted clock samples, overflow, frame/thread/swap-chain matching, and invalid reading/sample/Present/display ordering.
+
+Both Release and Debug passed all four tests: MeasurementTests, ControllerStateTests, DisplayTimingTests, and ApplicationSmoke. The application's Debug configuration retains DX12 debug validation. An upstream decoder CRT assertion initially blocked Debug shutdown with a modal dialog; using the upstream production decoder behavior in both configurations resolved that timeout. Decoder warnings still have explicit counters.
+
+The visible hardware-adapter run in `LogOutput/2026-10-06_23-23-41` submitted 14956 frames and matched 14928 displayed frames plus 28 discarded frames. It had zero unresolved frames, unmatched events, ETW event/buffer loss, queue drops, invalid clocks, decoder warnings, or decoder overflows. Maximum accepted clock-bracket uncertainty was 3.45 microseconds. The dashboard capture was visually inspected for readability and grayscale appearance.
+
+The WARP smoke run in `LogOutput/2026-10-06_23-20-01` also exercised composition tracking: 98 displayed frames, 1334 discarded frames, and 18 unresolved frames. Unresolved results were recorded as missing display events and contributed no display latency. Its maximum accepted clock-bracket uncertainty was 1.1 microseconds, with zero trace loss, queue drops, or invalid clocks.
+
+`Tools/VerifyDisplayTracking.ps1` ran in `LogOutput/2026-10-06_23-29-37`, matching 295 displayed frames with zero trace loss, queue drops, or clock errors. This machine's GameInput path did not expose the synthetic mouse input, so it collected no fresh input-to-display observations. No controller was connected during these new runs. Physical mouse, keyboard, and gamepad motion remain manual checks; these runs establish frame/display correlation and clock conversion, not a physical latency benchmark.
+
+The final Release/Debug suites also cover the strengthened input timeline checks and the shutdown-only 100-millisecond trace drain. Build, Run, and VerifyDisplayTracking PowerShell scripts passed parser checks. The render thread never waits for display-event delivery; the original uncapped, tearing-enabled, single-GPU-frame policy remains active.
+
+The final hardware verification in `LogOutput/2026-10-06_23-36-59` matched 276 displayed and 9734 discarded frames out of 10010 submissions, with zero unresolved frames, unmatched events, trace loss, queue drops, clock errors, decoder warnings, or decoder overflows. Its maximum accepted clock-bracket uncertainty was 1.1 microseconds. Fresh synthetic input remained unavailable through this GameInput path.

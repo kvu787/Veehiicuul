@@ -1,6 +1,6 @@
 # Input latency / C++ / DirectX 12
 
-A standalone Windows 11 x64 application using Microsoft's GameInput v3 API to measure software input delivery and frame submission delay for connected mice, keyboards, and gamepads.
+A standalone Windows 11 x64 application using Microsoft's GameInput v3 API to measure reading-to-display latency for connected mice, keyboards, and gamepads. A bundled PresentMon v2.6.0 decoder tracks Windows display events asynchronously.
 
 Double-click `Build.cmd`, then `Run.cmd`. The Release executable is `BuildOutput\Release\InputLatency.exe`. The application, source, dependencies, build output, and session logs all live within this folder. It does not reference or modify another application in the repository. This folder can be copied and used independently.
 
@@ -22,6 +22,10 @@ The GameInput SDK and unmodified x64 runtime are included in `ThirdParty/GameInp
 
 For distribution, copy `InputLatency.exe`, `GameInputRedist.dll`, `GameInputBridge.dll`, `GameInputRawInputProxy.exe`, `GameInputLicense.txt`, and `GameInputNotice.txt` together. Windows supplies the DirectX 12, DXGI, and font services. See [GameInput provenance](ThirdParty/GameInput/Provenance.md) for the package version, checksum, and license locations.
 
+Include `PresentMonLicense.txt` in that package as well. The display decoder is linked into the executable; no PresentMon installation, service, or external executable is needed. See [decoder provenance](ThirdParty/PresentMon/Provenance.md).
+
+Windows display-event tracing requires administrator or Performance Log Users permissions. `Run.cmd` requests Windows UAC elevation only when neither permission is present. Direct executable launches without tracing permission retain the analog dashboard and explicitly show that display latency is unavailable. The app never substitutes Present timing for a missing display event.
+
 ## Use
 
 Activate the application window, then move or click each mouse, press keyboard keys, and use gamepad buttons, sticks, and triggers. Each device has its own statistics. Device connection and disconnection are tracked throughout the session.
@@ -36,9 +40,9 @@ The persistent controller panel selects one connected gamepad automatically. It 
 
 Both analog sticks have position diagrams and signed X/Y values. Both triggers have fill bars and normalized numeric values. Stick values use -1..+1 with positive Y pointing up; trigger values use 0..1. Numeric values show four decimal places. The application adds no deadzone, smoothing, or filtering to the displayed values. If the controller disconnects or has no available gamepad reading, values are shown as `--` instead of retaining stale analog states.
 
-Controller diagrams and numeric values use the latest gamepad reading every rendered frame, sampled after the GPU and presentation waits. Composite controllers are polled specifically for their gamepad stream. The controller panel stays visible independently of the latency rows. An accepted frame that visualizes the selected gamepad contributes to its Present-begin statistics even when its latency row is outside the visible list.
+Controller diagrams and numeric values use one gamepad reading every rendered frame, sampled after the GPU and presentation waits. Both sticks, both triggers, and buttons share that reading's original timestamp. Composite controllers are polled specifically for their gamepad stream. The controller panel stays visible independently of the latency rows. Displayed frames that visualize the selected gamepad contribute to its display statistics even when its latency row is outside the visible list.
 
-Latency rows show callback, late sample, and Present-begin statistics in milliseconds. Their right-hand indicators change immediately for new input and held buttons/keys; mouse position also has a visual indicator. Latency statistics text and controller identity/selection refresh four times per second. The window's minimum client size is 1024x720 to keep the controller data and complete identifier readable.
+Latency rows show callback, late sample, and reading-to-display statistics in milliseconds. Their right-hand indicators change immediately for new input and held buttons/keys; mouse position also has a visual indicator. Latency statistics text and controller identity/selection refresh four times per second. The window's minimum client size is 1024x720 to keep the controller data and complete identifier readable. Display statistics arrive asynchronously after Windows reports presentation, typically with an ETW buffer delay. That reporting delay is excluded from the measured latency.
 
 The dashboard uses only grayscale colors, with equal red, green, and blue components. Text, controller markers, activity indicators, and warnings use brightness differences against dark gray backgrounds.
 
@@ -48,19 +52,30 @@ Composite or virtual devices may expose several input kinds. The list preserves 
 
 ## What is measured
 
-The beginning of each measurement is `IGameInputReading::GetTimestamp()`. All measurement endpoints use `IGameInput::GetCurrentTimestamp()`, on the same microsecond clock. QPC/steady-clock time is used only for the displayed FPS, UI refresh, and optional automatic exit.
+The beginning of each input measurement is `IGameInputReading::GetTimestamp()`. Callback, sample, and Present endpoints use `IGameInput::GetCurrentTimestamp()` directly. The display endpoint is the matched frame's Windows display-event QPC timestamp, converted into the GameInput clock.
+
+Each frame brackets its pre-Present GameInput clock observation with two QPC calls. Conversion uses the midpoint of that bracket and `QueryPerformanceFrequency()`, without assuming equal clock epochs. The reported uncertainty is half the bracket duration plus one microsecond for GameInput quantization. Brackets with uncertainty above 100 microseconds are rejected. Clock progression is checked approximately once per second; a discrepancy above 200 microseconds rejects measurements until validation recovers. This validates the observed clock relationship rather than asserting an undocumented API clock origin. Calibration uncertainty does not cover every possible Windows event or driver timing error.
 
 | Metric                   | Endpoint / meaning                                            |
 | ------------------------ | ------------------------------------------------------------- |
 | Reading to callback      | Entry into GameInput's reading callback                       |
 | State-change interval    | Time between consecutive callback readings for the device     |
 | Reading to late sample   | Return from the render thread's fresh per-device reading poll |
+| Reading to display       | First matched Windows display event for a visualized reading  |
 | Reading to Present begin | Immediately before the frame's CPU call to DXGI `Present`     |
 | Present call duration    | Time spent inside that CPU `Present` call                     |
 
 These are **software timings**, not physical switch-to-photon measurements. They do not identify when a switch physically closed, a USB report was emitted, or a displayed pixel changed. Hardware debounce, firmware processing, USB/Bluetooth transport, display scanout, and panel response are not separately measurable through this application. Do not use these results to rank the complete hardware latency of different peripherals. External synchronized input and optical instrumentation is required for that measurement.
 
-Present-begin statistics only include new readings for devices visualized in the controller panel or a visible latency row, with an accepted presentation. A successful `Present` does not prove the frame was displayed; zero-sync-interval frames can be superseded. Late-sample statistics cover all connected devices, including rows outside the visible viewport. Fresh readings supersede older readings for rendering, while callback logs preserve all callback-delivered state changes.
+The render thread records the exact per-device reading used by each frame. The background decoder tracks the app's process, including DWM composition dependencies. Correlation requires the same swap-chain identity and render thread, with the DXGI Present-start event inside that frame's recorded Present-call QPC interval. Matching does not assume that the nth rendered frame is the nth displayed frame.
+
+Reading-to-display statistics include each eligible reading once, when it first appears in a matched displayed frame and is visualized in the controller panel or a visible latency row. A discarded frame contributes no display latency. If its reading is reused by a later displayed frame, that later event can measure the reading. Unchanged snapshots retain their original timestamp; repeated displays are logged as state age but do not repeatedly count the same reading as new input latency. Input updates superseded before any rendered frame uses them have no reading-to-display measurement.
+
+Present-begin statistics remain in the CSV logs and only include new readings for visualized devices with an accepted presentation. A successful `Present` does not prove the frame was displayed. Late-sample statistics cover all connected devices. Callback logs preserve all callback-delivered state changes.
+
+Missing, lost, unmatched, and discarded presentation results are recorded separately. Unresolved frames expire after five seconds or at shutdown. There is no fallback to Present time. ETW loss, decoder overflow, and queue loss appear in diagnostics and the dashboard; measurements are rejected while ETW loss is known. The display event is a Windows presentation boundary, not an optical measurement of panel response or of the particular pixel's scan-out time. Tearing can display only part of a frame.
+
+Shutdown allows 100 milliseconds for the final submitted image to reach presentation before disabling tracing. This wait does not affect rendering or input acquisition during measurement.
 
 Initial cached readings are baselines, not latency observations. Repeated current readings are deduplicated by COM object identity, retaining the previous reading reference. Equal timestamps can belong to distinct readings and remain valid. Future timestamps are rejected instead of subtracting unsigned values. Percentiles use the nearest-rank method over the latest 8192 accepted observations for each metric; count, minimum, mean, and maximum cover the entire session.
 
@@ -80,6 +95,7 @@ The rendering policy follows the reference scene's `MinimizeInputLatency` config
 - Fresh input sampling after readiness waits and command setup, immediately before the small dashboard draw.
 - Above-normal render-thread scheduling, without real-time scheduling or forced affinity.
 - Preallocated, separate callback-to-logger and render-to-logger queues. Disk writes and percentile sorting run on a background thread.
+- Frame-to-display correlation and ETW decoding use separate background workers. Rendering never waits for a display-event result. The extra clock observations are three QPC calls around each Present.
 
 This policy aims to reduce software backlog. It cannot guarantee the lowest physical input latency on every machine. Spin polling intentionally uses CPU time while waiting. OS scheduling, CPU contention, graphics drivers, display configuration, and the Windows presentation path can influence results. Avoid unrelated load when comparing sessions.
 
@@ -87,22 +103,27 @@ This policy aims to reduce software backlog. It cannot guarantee the lowest phys
 
 Every launch creates `LogOutput/yyyy-MM-dd_HH-mm-ss/`. Direct executable launches locate this application's folder relative to the executable, without hard-coded repository paths. Build invocations also write a timestamped `Build.log`. `LogOutput/` and `BuildOutput/` are ignored by Git.
 
-| File                       | Contents                                                       |
-| -------------------------- | -------------------------------------------------------------- |
-| Application.log            | Runtime, graphics policy, adapter, selected controller, errors |
-| Launcher.log               | PowerShell launcher transcript                                 |
-| Devices.csv                | Device identities and connection/disconnection events          |
-| Readings.csv               | Reading/callback timestamps and state-change intervals         |
-| Presentations.csv          | New-reading sample and Present timestamps, visibility flag     |
-| Summary.csv                | Per-device statistics for all five metrics, written at exit    |
-| MeasurementDiagnostics.txt | Dropped records, invalid clocks, device and polling errors     |
-| Dashboard.png              | Optional GPU frame capture for verification                    |
+| File                       | Contents                                                         |
+| -------------------------- | ---------------------------------------------------------------- |
+| Application.log            | Runtime, graphics policy, adapter, selected controller, errors   |
+| Launcher.log               | PowerShell launcher transcript                                   |
+| Devices.csv                | Device identities and connection/disconnection events            |
+| Readings.csv               | Reading/callback timestamps and state-change intervals           |
+| Presentations.csv          | New-reading sample and Present timestamps, visibility flag       |
+| DisplayFrames.csv          | Frame, Present QPC, display QPC, mapped timestamp, result status |
+| DisplayReadings.csv        | Reading/frame identity, display latency, clock uncertainty       |
+| DisplayDiagnostics.txt     | Display counts, trace loss, correlation errors, clock errors     |
+| Summary.csv                | Per-device statistics for all six metrics, written at exit       |
+| MeasurementDiagnostics.txt | Dropped records, invalid clocks, device and polling errors       |
+| Dashboard.png              | Optional GPU frame capture for verification                      |
 
 Raw measurement units are microseconds. Device indexes join the CSV files to `Devices.csv`. The logs record timings and device metadata, without recording typed characters or key contents. Both queues have 65536 records. Queue overflow drops measurement records, increments diagnostic counters, and never delays live rendering. Any nonzero drop count means the logs are incomplete. Logging failures appear in the dashboard and cause a nonzero application exit.
 
 ## Verification
 
-`Build.ps1 -Test` runs arithmetic/statistics/queue tests, controller selection/disconnect/analog coordinate/value tests, and a short hidden DirectX 12 WARP/GameInput smoke test. Debug builds enable the DirectX 12 debug layer when available and fail if it reports errors or corruption. The smoke test uses actual GameInput device enumeration, without claiming an automated physical input-latency test.
+`Build.ps1 -Test` runs arithmetic/statistics/queue tests, controller-state tests, display clock conversion/correlation tests, and a short hidden DirectX 12 WARP/GameInput smoke test. Debug builds enable the DirectX 12 debug layer when available and fail if it reports errors or corruption. The bundled event decoder uses its production behavior in both configurations to avoid upstream modal assertion dialogs on a background tracing thread.
+
+`Tools/VerifyDisplayTracking.ps1` performs a short visible hardware-adapter test with bounded synthetic mouse movement and restores the pointer afterward. It checks display correlation and timestamp subtraction. Some GameInput device paths do not expose synthetic input; the script reports that case without claiming physical input verification.
 
 See the [verification record](Documentation/Verification.md) for the completed checks and remaining manual checks.
 
@@ -119,5 +140,6 @@ The hidden and software-adapter options are for functional tests. Use a visible,
 - [GameInput readings and polling](https://learn.microsoft.com/en-us/xbox/gdk/docs/features/common/input/overviews/input-readings).
 - [GameInput callbacks and serialized dispatch](https://learn.microsoft.com/en-us/gaming/gdk/docs/features/common/input/advanced/input-callbacks).
 - [Reading timestamps](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinputreading/methods/igameinputreading_gettimestamp).
+- [PresentMon v2.6.0 decoder](https://github.com/GameTechDev/PresentMon/tree/v2.6.0/PresentData).
 - [DXGI Present behavior](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present).
 - [DXGI maximum frame latency](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency).
