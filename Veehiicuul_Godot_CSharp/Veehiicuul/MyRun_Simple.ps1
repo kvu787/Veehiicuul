@@ -67,7 +67,6 @@ try {
             -RedirectStandardOutput 'NUL' `
             -RedirectStandardError '\\.\NUL'
 
-        $mainProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::High
         Write-Host "'$($MainProcessPath)' launched with PID='$($mainProcess.Id)'"
 
         Wait-Process -Id $mainProcess.Id
