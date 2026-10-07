@@ -6,6 +6,7 @@
 
 #include "Measurement.h"
 #include "ControllerState.h"
+#include "DisplayTracker.h"
 
 #include <filesystem>
 #include <mutex>
@@ -41,6 +42,7 @@ struct DeviceSnapshot
     StatisticSnapshot sampleDelay;
     StatisticSnapshot presentDelay;
     StatisticSnapshot presentCallDuration;
+    StatisticSnapshot displayDelay;
 };
 
 struct MonitorSnapshot
@@ -48,6 +50,7 @@ struct MonitorSnapshot
     std::vector<DeviceSnapshot> devices;
     std::uint64_t droppedCallbacks{}, droppedFrames{}, invalidTimestamps{}, deviceLimitEvents{}, pollErrors{};
     bool loggingFailed{};
+    DisplayTrackingSnapshot displayTracking;
 };
 
 struct VisualState
@@ -58,6 +61,8 @@ struct VisualState
     ControllerAnalogState controller;
     bool controllerReadingAvailable{};
     std::uint64_t timestamp{}, sampledAt{};
+    std::uint64_t readingSerial{};
+    bool measurementEligible{};
     Input::GameInputKind kind{};
 };
 
@@ -74,7 +79,8 @@ public:
     const DeviceSlot& Device(std::size_t index) const noexcept { return devices[index]; }
     void SampleLatest(std::array<VisualState, MaximumDevices>& states);
     void RecordPresentation(const std::array<VisualState, MaximumDevices>& states,
-        std::uint64_t frame, std::uint64_t beginning, std::uint64_t ending, bool presented) noexcept;
+        std::uint64_t frame, std::uint64_t beginning, std::uint64_t ending, bool presented,
+        std::uint64_t firstQpc, std::uint64_t lastQpc, std::uint64_t endQpc, std::uint64_t swapChain, std::uint32_t thread) noexcept;
     MonitorSnapshot Snapshot() const;
 private:
     enum class EventType : std::uint8_t { Reading, Connection, Presentation };
@@ -103,6 +109,7 @@ private:
     std::atomic<std::uint64_t> droppedCallbacks{}, droppedFrames{}, deviceLimitEvents{}, pollErrors{};
     std::atomic<bool> foreground{}, stopping{}, loggingFailed{};
     std::thread loggingThread;
+    std::unique_ptr<DisplayTracker> displayTracker;
     mutable std::mutex snapshotMutex;
     MonitorSnapshot publishedSnapshot;
 };

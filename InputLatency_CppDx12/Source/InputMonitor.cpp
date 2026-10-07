@@ -57,6 +57,8 @@ void InputMonitor::Initialize(const std::filesystem::path& executableDirectory, 
     gameInput->SetFocusPolicy(Input::GameInputDefaultFocusPolicy);
     sessionBeginning = Now();
     focusBeginning.store(sessionBeginning, std::memory_order_relaxed);
+    displayTracker = std::make_unique<DisplayTracker>(logDirectory);
+    displayTracker->Start();
     // The logger must be started before registering callbacks. All its writes
     // and percentile sorting run outside both the input and rendering paths.
     loggingThread = std::thread(&InputMonitor::LogWorker, this, logDirectory);
@@ -88,6 +90,7 @@ void InputMonitor::Stop()
         gameInput->UnregisterCallback(deviceToken);
         deviceRegistered = false;
     }
+    if (displayTracker) displayTracker->Stop();
     stopping.store(true, std::memory_order_release);
     if (loggingThread.joinable()) loggingThread.join();
 }
@@ -160,6 +163,7 @@ void InputMonitor::SampleLatest(std::array<VisualState, MaximumDevices>& states)
         state.connected = slot.connected.load(std::memory_order_relaxed);
         if (!state.connected) {
             state.active = false; state.controller = {}; state.controllerReadingAvailable = false;
+            state.measurementEligible = false;
             previousFrameReadings[index].Reset(); continue;
         }
         ComPtr<Input::IGameInputReading> reading;
@@ -171,6 +175,7 @@ void InputMonitor::SampleLatest(std::array<VisualState, MaximumDevices>& states)
         if (FAILED(result)) {
             if (result != Input::GAMEINPUT_E_READING_NOT_FOUND && result != Input::GAMEINPUT_E_DEVICE_DISCONNECTED) ++pollErrors;
             state.controller = {}; state.controllerReadingAvailable = false;
+            state.measurementEligible = false;
             previousFrameReadings[index].Reset();
             continue;
         }
@@ -179,13 +184,15 @@ void InputMonitor::SampleLatest(std::array<VisualState, MaximumDevices>& states)
         const bool changed = identity.Get() != previousFrameReadings[index].Get();
         const bool hadBaseline = previousFrameReadings[index] != nullptr;
         previousFrameReadings[index] = identity;
+        state.sampledAt = sampled;
         if (!changed) continue;
         state.timestamp = reading->GetTimestamp();
-        state.sampledAt = sampled;
+        ++state.readingSerial;
         state.kind = reading->GetInputKind();
         // Establish a baseline instead of measuring a reading cached before
         // connection/focus. Held state is still shown immediately.
         state.newReading = hadBaseline && state.timestamp >= focusBeginning.load(std::memory_order_relaxed) && foreground.load(std::memory_order_relaxed);
+        state.measurementEligible = state.newReading;
         state.buttons = 0;
         state.keys = reading->GetKeyCount();
         Input::GameInputMouseState mouse{};
@@ -207,17 +214,24 @@ void InputMonitor::SampleLatest(std::array<VisualState, MaximumDevices>& states)
 }
 
 void InputMonitor::RecordPresentation(const std::array<VisualState, MaximumDevices>& states,
-    std::uint64_t frame, std::uint64_t beginning, std::uint64_t ending, bool presented) noexcept
+    std::uint64_t frame, std::uint64_t beginning, std::uint64_t ending, bool presented,
+    std::uint64_t firstQpc, std::uint64_t lastQpc, std::uint64_t endQpc, std::uint64_t swapChain, std::uint32_t thread) noexcept
 {
+    DisplayFrameSubmission submission{.frame = frame, .swapChain = swapChain, .clockFirstQpc = firstQpc,
+        .clockLastQpc = lastQpc, .presentEndQpc = endQpc, .gameInputTime = beginning, .thread = thread, .accepted = presented};
     const auto count = DeviceCount();
     for (std::size_t index = 0; index < count; ++index) {
         const auto& state = states[index];
+        if (state.connected && state.visualized && state.measurementEligible && foreground.load(std::memory_order_relaxed)) {
+            submission.inputs[submission.inputCount++] = {static_cast<std::uint16_t>(index), state.timestamp, state.readingSerial, state.sampledAt};
+        }
         if (!state.newReading) continue;
         const Event event{.type = EventType::Presentation, .device = static_cast<std::uint16_t>(index),
             .foreground = true, .presented = presented, .visualized = state.visualized, .reading = state.timestamp, .observed = state.sampledAt,
             .presentBeginning = beginning, .presentEnding = ending, .frame = frame};
         if (!frameEvents.Push(event)) ++droppedFrames;
     }
+    if (displayTracker) displayTracker->Submit(submission);
 }
 
 MonitorSnapshot InputMonitor::Snapshot() const
@@ -230,7 +244,7 @@ void InputMonitor::LogWorker(const std::filesystem::path& logDirectory) noexcept
 {
     try {
         SetThreadDescription(GetCurrentThread(), L"InputLatency statistics and logging");
-        struct DeviceStatistics { Statistics callback, interval, sample, present, presentCall; };
+        struct DeviceStatistics { Statistics callback, interval, sample, present, presentCall, display; };
         std::vector<DeviceStatistics> statistics;
         std::ofstream readings(logDirectory / L"Readings.csv");
         std::ofstream presentations(logDirectory / L"Presentations.csv");
@@ -256,7 +270,7 @@ void InputMonitor::LogWorker(const std::filesystem::path& logDirectory) noexcept
                 snapshot.devices.push_back({slot.name, slot.identifier, KindName(slot.kinds), slot.vendor, slot.product,
                     slot.connected.load(std::memory_order_relaxed), (slot.kinds & Input::GameInputKindGamepad) != 0,
                     value.callback.Snapshot(), value.interval.Snapshot(),
-                    value.sample.Snapshot(), value.present.Snapshot(), value.presentCall.Snapshot()});
+                    value.sample.Snapshot(), value.present.Snapshot(), value.presentCall.Snapshot(), value.display.Snapshot()});
             }
             snapshot.droppedCallbacks = droppedCallbacks.load(std::memory_order_relaxed);
             snapshot.droppedFrames = droppedFrames.load(std::memory_order_relaxed);
@@ -264,6 +278,10 @@ void InputMonitor::LogWorker(const std::filesystem::path& logDirectory) noexcept
             snapshot.deviceLimitEvents = deviceLimitEvents.load(std::memory_order_relaxed);
             snapshot.pollErrors = pollErrors.load(std::memory_order_relaxed);
             snapshot.loggingFailed = loggingFailed.load(std::memory_order_relaxed);
+            if (displayTracker) {
+                snapshot.displayTracking = displayTracker->Snapshot();
+                snapshot.loggingFailed = snapshot.loggingFailed || snapshot.displayTracking.loggingFailed;
+            }
             std::lock_guard guard(snapshotMutex);
             publishedSnapshot = std::move(snapshot);
         };
@@ -316,6 +334,11 @@ void InputMonitor::LogWorker(const std::filesystem::path& logDirectory) noexcept
                 if (duration) presentations << *duration;
                 presentations << ',' << event.presented << ',' << event.visualized << ',' << valid << '\n';
             }
+            DisplayMeasurement displayMeasurement;
+            for (std::size_t batch = 0; batch < 8192 && displayTracker && displayTracker->PopMeasurement(displayMeasurement); ++batch) {
+                work = true; ensureDevices();
+                statistics[displayMeasurement.device].display.Add(displayMeasurement.duration);
+            }
             const auto now = std::chrono::steady_clock::now();
             if (now >= nextSnapshot) { publish(); nextSnapshot = now + std::chrono::milliseconds(250); }
             if (!work && stopping.load(std::memory_order_acquire)) break;
@@ -329,10 +352,10 @@ void InputMonitor::LogWorker(const std::filesystem::path& logDirectory) noexcept
         const auto finalSnapshot = Snapshot();
         for (std::size_t index = 0; index < finalSnapshot.devices.size(); ++index) {
             const auto& device = finalSnapshot.devices[index];
-            const std::array<std::pair<const char*, StatisticSnapshot>, 5> metrics{{
+            const std::array<std::pair<const char*, StatisticSnapshot>, 6> metrics{{
                 {"ReadingToCallback", device.callbackDelay}, {"StateChangeInterval", device.inputInterval},
                 {"ReadingToLateSample", device.sampleDelay}, {"ReadingToPresentBegin", device.presentDelay},
-                {"PresentCallDuration", device.presentCallDuration}}};
+                {"PresentCallDuration", device.presentCallDuration}, {"ReadingToDisplay", device.displayDelay}}};
             for (const auto& [name, value] : metrics) {
                 summary << index << ',' << device.kind << ',' << CsvString(device.name) << ',' << name << ',' << value.count
                     << ',' << value.percentileCount << ',' << value.last << ',' << value.minimum << ',' << value.mean << ','

@@ -9,7 +9,13 @@
 
 struct Color { float red{}, green{}, blue{}, alpha{1}; };
 struct DashboardVertex { float x{}, y{}, u{}, v{}; Color color; };
-struct PresentationResult { std::uint64_t beginning{}, ending{}; bool accepted{}; };
+struct PresentationResult
+{
+    std::uint64_t beginning{}, ending{};
+    bool accepted{};
+    std::uint64_t firstQpc{}, lastQpc{}, endQpc{}, swapChain{};
+    std::uint32_t thread{};
+};
 
 class Renderer final
 {

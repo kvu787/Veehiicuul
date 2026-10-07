@@ -220,7 +220,8 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int)
             }
             if (!renderer.PrepareFrame(serviceMessages)) continue;
             const auto presentation = renderer.DrawAndPresent(*monitor, visualStates, displayedFirstDevice);
-            monitor->RecordPresentation(visualStates, frames, presentation.beginning, presentation.ending, presentation.accepted);
+            monitor->RecordPresentation(visualStates, frames, presentation.beginning, presentation.ending, presentation.accepted,
+                presentation.firstQpc, presentation.lastQpc, presentation.endQpc, presentation.swapChain, presentation.thread);
             ++frames; ++rateFrames;
         }
         monitor->Stop();
@@ -234,6 +235,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int)
         }
         applicationLog << "FramesSubmitted=" << frames << "\nDevicesEnumerated=" << monitor->DeviceCount()
             << "\nDurationSeconds=" << std::chrono::duration<double>(std::chrono::steady_clock::now() - beginning).count()
+            << "\nDisplayTrackingError=" << finalSnapshot.displayTracking.error << "\nDisplayedFrames=" << finalSnapshot.displayTracking.displayed
             << "\nLoggingFailed=" << finalSnapshot.loggingFailed << "\nInputLatency shutdown\n";
         applicationLog.flush();
         if (finalSnapshot.loggingFailed) throw std::runtime_error("Measurement logging failed. Check session storage permissions and free space.");

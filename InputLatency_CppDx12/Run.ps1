@@ -22,7 +22,15 @@ try {
     if ($Hidden) { $applicationArguments += '--hidden' }
     if ($CaptureFrame) { $applicationArguments += '--capture-frame' }
     $windowStyle = if ($Hidden) { 'Hidden' } else { 'Normal' }
-    $applicationProcess = Start-Process -FilePath $executable -WorkingDirectory $PSScriptRoot -ArgumentList $applicationArguments -WindowStyle $windowStyle -Wait -PassThru
+    $launchOptions = @{}
+    $principal = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
+    $hasTracingPermission = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -or
+        $principal.IsInRole([Security.Principal.SecurityIdentifier]::new('S-1-5-32-559'))
+    if (-not $hasTracingPermission) {
+        Write-Host 'Windows display-event tracing requires elevation. Approve the Windows UAC prompt to measure reading-to-display latency.'
+        $launchOptions.Verb = 'RunAs'
+    }
+    $applicationProcess = Start-Process -FilePath $executable -WorkingDirectory $PSScriptRoot -ArgumentList $applicationArguments -WindowStyle $windowStyle -Wait -PassThru @launchOptions
     if ($applicationProcess.ExitCode -ne 0) { throw "Application exited with code $($applicationProcess.ExitCode). See Application.log." }
 }
 catch { Write-Host $_.Exception.Message -ForegroundColor White; exit 1 }

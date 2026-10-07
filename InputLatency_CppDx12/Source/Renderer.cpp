@@ -435,12 +435,13 @@ void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t first
 {
     vertices.clear();
     Text(24, 18, "INPUT LATENCY / GAMEINPUT / DIRECTX 12", Accent);
-    Text(24, 46, "Software timing from GameInput readings. Physical latency needs external hardware.", Muted);
+    Text(24, 46, "Reading-to-display latency: GameInput snapshot to Windows display event (milliseconds).", Muted);
     Text(24, 78, std::format("VSync OFF | Uncapped | GPU 1 | Present 1 | Buffers 2 | Spin | Tearing {} | {:.0f} FPS",
         tearing ? "ON" : "unavailable", framesPerSecond), Foreground);
-    Text(24, 106, foreground ? "Move/click each mouse, press keyboard keys, or use gamepad buttons/sticks." : "UNFOCUSED: measurement statistics pause. Activate this window to measure.", foreground ? Muted : Accent);
+    Text(24, 106, foreground ? snapshot.displayTracking.status : "UNFOCUSED: measurement statistics pause. Activate this window to measure.",
+        foreground && !snapshot.displayTracking.error ? Muted : Accent);
     ControllerPanel(snapshot);
-    Text(24, deviceRowsBeginning - 28, "Each device: callback delay / late frame sample / Present begin (milliseconds)", Muted);
+    Text(24, deviceRowsBeginning - 28, "Each device: callback delay / late frame sample / DISPLAY event (milliseconds)", Muted);
     float y = deviceRowsBeginning;
     for (std::size_t index = firstDevice; index < snapshot.devices.size() && y + 130 < static_cast<float>(height) - 66; ++index) {
         const auto& value = snapshot.devices[index];
@@ -454,7 +455,8 @@ void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t first
         };
         Text(32, y + 30, row("Callback", value.callbackDelay), Muted);
         Text(32, y + 56, row("Sample  ", value.sampleDelay), Muted);
-        Text(32, y + 82, row("Present ", value.presentDelay), Accent);
+        Text(32, y + 82, value.displayDelay.count ? row("Display ", value.displayDelay)
+            : snapshot.displayTracking.error ? "Display unavailable: display tracing requires permission." : "Display waiting for new input in a displayed frame", Accent);
         y += 136;
     }
     if (snapshot.devices.empty()) Text(32, y + 16, "Waiting for GameInput devices. Connect a mouse, keyboard, or gamepad.", Foreground);
@@ -522,9 +524,13 @@ PresentationResult Renderer::DrawAndPresent(InputMonitor& monitor, std::array<Vi
     commands->ResourceBarrier(1, &barrier);
     Check(commands->Close(), "Close frame commands");
     ID3D12CommandList* lists[]{commands.Get()}; queue->ExecuteCommandLists(1, lists);
+    LARGE_INTEGER firstQpc{}, lastQpc{}, endQpc{};
+    QueryPerformanceCounter(&firstQpc);
     const auto beginning = monitor.Now();
+    QueryPerformanceCounter(&lastQpc);
     const auto result = swapChain->Present(0, tearing ? DXGI_PRESENT_ALLOW_TEARING : 0);
     const auto ending = monitor.Now();
+    QueryPerformanceCounter(&endQpc);
     if (FAILED(result)) {
         if (result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET) Check(device->GetDeviceRemovedReason(), "GPU device removed");
         Check(result, "Present");
@@ -532,7 +538,9 @@ PresentationResult Renderer::DrawAndPresent(InputMonitor& monitor, std::array<Vi
     lastFence = nextFence++;
     Check(queue->Signal(fence.Get(), lastFence), "Signal frame completion");
     presentationAdmitted = false;
-    return {beginning, ending, result == S_OK};
+    return {beginning, ending, result == S_OK, static_cast<std::uint64_t>(firstQpc.QuadPart),
+        static_cast<std::uint64_t>(lastQpc.QuadPart), static_cast<std::uint64_t>(endQpc.QuadPart),
+        reinterpret_cast<std::uint64_t>(swapChain.Get()), GetCurrentThreadId()};
 }
 
 std::string Renderer::Description() const
