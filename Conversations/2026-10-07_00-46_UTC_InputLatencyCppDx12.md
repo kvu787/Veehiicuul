@@ -500,3 +500,31 @@ For comparisons within the same device, input path, and GameInput version, readi
 There is also a distinction between **state freshness** and **response to a particular input change**. With continuous 8,000 Hz reports, a game fetching input only 60 times per second can still select a very recent reading each time. A small reading-age measurement therefore does not establish that every movement was acted on within 125 microseconds; intermediate updates may be superseded.
 
 For InputLatency_CppDx12, I would retain the GameInput timestamp as the practical starting point. To assess game input-to-display latency, the next improvement would be correlating the reading actually used by a frame with that frame's display event. Lower-level receipt timestamps become necessary when the question specifically concerns delays before the GameInput timestamp boundary, or comparing the complete PC input paths.
+
+## User
+
+by GameInput's timestamp, do you mean `IGameInputReading::GetTimestamp`?
+
+## Assistant Commentary
+
+I'll confirm the API name against the app's code and record this clarification.
+
+## Turn Interruption
+
+The user interrupted the turn before a final response was sent.
+
+## User
+
+For your app's reading-to-callback, reading-to-sample, and reading-to-Present measurements, GameInput's timestamp is sufficient.
+
+by GameInput's timestamp, do you mean `IGameInputReading::GetTimestamp`?
+
+## Assistant Commentary
+
+Yes. I mean `IGameInputReading::GetTimestamp()`, the timestamp attached to the input reading.
+
+## Assistant Final
+
+Yes - **`IGameInputReading::GetTimestamp()`**. It returns the timestamp associated with that input reading, not the time you call the method.
+
+The app compares it with `IGameInput::GetCurrentTimestamp()` at callback entry, sampling, or Present to measure elapsed time.
