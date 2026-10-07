@@ -34,10 +34,15 @@ inline std::optional<DisplayTimestamp> MapDisplayTimestamp(const DisplayFrameSub
     const double uncertainty = static_cast<double>(span) * 500000.0 / static_cast<double>(frequency) + 1.0;
     if (uncertainty > 100.0) return std::nullopt; // Reject preempted calibration calls.
     const auto midpoint = frame.clockFirstQpc + span / 2;
-    const long double mapped = static_cast<long double>(frame.gameInputTime)
-        + static_cast<long double>(displayQpc - midpoint) * 1000000.0L / static_cast<long double>(frequency);
-    if (mapped < 0 || mapped >= static_cast<long double>((std::numeric_limits<std::uint64_t>::max)())) return std::nullopt;
-    return DisplayTimestamp{static_cast<std::uint64_t>(std::round(mapped)), uncertainty};
+    // MSVC's long double has double precision. Keep the large GameInput epoch
+    // in integer arithmetic so timestamps above 2^53 retain their low bits.
+    const long double delta = std::round(static_cast<long double>(displayQpc - midpoint)
+        * 1000000.0L / static_cast<long double>(frequency));
+    const auto maximum = (std::numeric_limits<std::uint64_t>::max)();
+    if (delta < 0 || delta >= static_cast<long double>(maximum)) return std::nullopt;
+    const auto elapsed = static_cast<std::uint64_t>(delta);
+    if (elapsed > maximum - frame.gameInputTime) return std::nullopt;
+    return DisplayTimestamp{frame.gameInputTime + elapsed, uncertainty};
 }
 
 inline bool MatchesDisplayFrame(const DisplayFrameSubmission& frame, std::uint64_t presentQpc,

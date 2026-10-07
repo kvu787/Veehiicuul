@@ -19,6 +19,18 @@ int main()
         Require(display && display->microseconds == 7020000, "QPC epoch and frequency conversion failed");
         Require(display->uncertaintyMicroseconds == 2.0, "Calibration uncertainty incorrect");
         Require(display->microseconds - 6999875 == 20125, "Reading-to-display duration incorrect");
+        auto largeEpoch = frame;
+        largeEpoch.gameInputTime = 13435841900187963ull;
+        const auto largeDisplay = MapDisplayTimestamp(largeEpoch, 1000200010, 10000000);
+        Require(largeDisplay && largeDisplay->microseconds == largeEpoch.gameInputTime + 20000,
+            "Large GameInput epochs must retain single-microsecond precision");
+        const auto singleMicrosecond = MapDisplayTimestamp(largeEpoch, largeEpoch.clockLastQpc, 10000000);
+        Require(singleMicrosecond && singleMicrosecond->microseconds == largeEpoch.gameInputTime + 1,
+            "A one-microsecond delta must remain exact at large epochs");
+        largeEpoch.gameInputTime = (std::numeric_limits<std::uint64_t>::max)() - 20000;
+        const auto boundaryDisplay = MapDisplayTimestamp(largeEpoch, 1000200010, 10000000);
+        Require(boundaryDisplay && boundaryDisplay->microseconds == (std::numeric_limits<std::uint64_t>::max)(),
+            "The largest representable mapped timestamp must not be mistaken for overflow");
         DisplayFrameInput input{.reading = 6999875, .serial = 1, .sampled = 6999990};
         Require(ReadingToDisplayDuration(input, frame, *display) == 20125, "Valid input timeline was rejected");
         input.reading = input.sampled + 1;
