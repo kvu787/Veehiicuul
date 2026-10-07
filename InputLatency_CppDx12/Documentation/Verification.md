@@ -33,3 +33,7 @@ The controller panel follow-up passed all three tests in both Release and Debug:
 The Release dashboard capture from `LogOutput/2026-10-06_18-05-11/Dashboard.png` was inspected. It displayed the connected Xbox Controller's name, complete GameInput identifier, both stick diagrams with signed X/Y values, and both trigger bars with normalized values. The actual cached controller reading was neutral. The panel and identifier were readable without clipping, and the session reported zero dropped records, invalid timestamps, metadata errors, or unexpected polling errors.
 
 Controller-state tests cover multiple eligible devices, keeping a connected selection, selecting another gamepad after disconnection, clearing unavailable selections, stick direction mapping, preserving small drift, trigger range mapping, and signed numeric precision. Automated checks did not exercise physical stick/trigger motion or physically disconnect multiple gamepads; those remain visible-session checks.
+
+## Grayscale palette
+
+The grayscale update passed the optimized Release build and all three existing tests. The dashboard capture at `LogOutput/2026-10-06_18-12-05/Dashboard.png` was visually inspected for readability. All 1,100,800 pixels were also checked numerically: zero pixels had unequal red, green, and blue values. Backgrounds, text, stick markers, trigger bars, device indicators, and warning colors all use grayscale. The modified Build and Run PowerShell scripts passed parsing checks.

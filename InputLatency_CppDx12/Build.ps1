@@ -51,5 +51,5 @@ try {
     if ($Test) { Invoke-Checked (Join-Path (Split-Path $cmake) 'ctest.exe') --preset $Configuration }
     Write-Host "Executable: $PSScriptRoot\BuildOutput\$Configuration\InputLatency.exe"
 }
-catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }
+catch { Write-Host $_.Exception.Message -ForegroundColor White; exit 1 }
 finally { if ($transcriptStarted) { Stop-Transcript | Out-Null } }

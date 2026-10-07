@@ -17,7 +17,8 @@ namespace
 {
 constexpr DXGI_FORMAT BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 constexpr UINT AtlasWidth = 192, AtlasHeight = 144, GlyphWidth = 12, GlyphHeight = 24;
-constexpr Color Foreground{0.87f, 0.92f, 0.96f}, Muted{0.49f, 0.59f, 0.66f}, Accent{0.29f, 0.87f, 0.72f};
+constexpr Color Gray(float brightness) { return {brightness, brightness, brightness}; }
+constexpr Color Foreground = Gray(0.92f), Muted = Gray(0.64f), Accent = Gray(1.0f), SecondaryAccent = Gray(0.76f);
 
 void Check(HRESULT result, const char* operation)
 {
@@ -359,7 +360,7 @@ void Renderer::ControllerPanel(const MonitorSnapshot& snapshot)
     const auto count = std::min(snapshot.devices.size(), candidates.size());
     for (std::size_t index = 0; index < count; ++index) candidates[index] = {snapshot.devices[index].connected, snapshot.devices[index].gamepad};
     selectedController = SelectController(std::span(candidates).first(count), selectedController);
-    Rectangle(20, 142, static_cast<float>(width) - 40, 334, {0.065f, 0.10f, 0.13f});
+    Rectangle(20, 142, static_cast<float>(width) - 40, 334, Gray(0.10f));
     if (selectedController) {
         const auto& controller = snapshot.devices[*selectedController];
         Text(32, 152, std::format("SELECTED CONTROLLER #{} | {:04X}:{:04X}", *selectedController, controller.vendor, controller.product), Accent);
@@ -372,7 +373,7 @@ void Renderer::ControllerPanel(const MonitorSnapshot& snapshot)
         Text(32, 204, "Name / GameInput ID: unavailable", Muted);
     }
     Text(32, 230, "Sticks -1..+1 (positive Y up) | Triggers 0..1 | Raw values, no added deadzone", Muted);
-    const Color guide{0.18f, 0.28f, 0.32f}, inside{0.085f, 0.14f, 0.17f};
+    const Color guide = Gray(0.30f), inside = Gray(0.15f);
     for (const float centerX : {150.0f, 390.0f}) {
         Rectangle(centerX - 58, 296, 116, 116, guide);
         Rectangle(centerX - 56, 298, 112, 112, inside);
@@ -408,10 +409,10 @@ void Renderer::DrawControllerState(VisualState& state)
     }
     const auto left = MapStickPosition(analog.leftStickX, analog.leftStickY, 150, 354, 56);
     const auto right = MapStickPosition(analog.rightStickX, analog.rightStickY, 390, 354, 56);
-    Circle(left.x, left.y, 7, Accent); Circle(right.x, right.y, 7, Color{1, 0.72f, 0.27f});
+    Circle(left.x, left.y, 7, Accent); Circle(right.x, right.y, 7, SecondaryAccent);
     const float barWidth = std::max(1.0f, static_cast<float>(width) - 624);
     Rectangle(584, 314, barWidth * TriggerFill(analog.leftTrigger), 22, Accent);
-    Rectangle(584, 410, barWidth * TriggerFill(analog.rightTrigger), 22, Color{1, 0.72f, 0.27f});
+    Rectangle(584, 410, barWidth * TriggerFill(analog.rightTrigger), 22, SecondaryAccent);
 }
 
 void Renderer::Text(float x, float y, std::string_view text, Color color)
@@ -437,13 +438,13 @@ void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t first
     Text(24, 46, "Software timing from GameInput readings. Physical latency needs external hardware.", Muted);
     Text(24, 78, std::format("VSync OFF | Uncapped | GPU 1 | Present 1 | Buffers 2 | Spin | Tearing {} | {:.0f} FPS",
         tearing ? "ON" : "unavailable", framesPerSecond), Foreground);
-    Text(24, 106, foreground ? "Move/click each mouse, press keyboard keys, or use gamepad buttons/sticks." : "UNFOCUSED: measurement statistics pause. Activate this window to measure.", foreground ? Muted : Color{1, 0.7f, 0.3f});
+    Text(24, 106, foreground ? "Move/click each mouse, press keyboard keys, or use gamepad buttons/sticks." : "UNFOCUSED: measurement statistics pause. Activate this window to measure.", foreground ? Muted : Accent);
     ControllerPanel(snapshot);
     Text(24, deviceRowsBeginning - 28, "Each device: callback delay / late frame sample / Present begin (milliseconds)", Muted);
     float y = deviceRowsBeginning;
     for (std::size_t index = firstDevice; index < snapshot.devices.size() && y + 130 < static_cast<float>(height) - 66; ++index) {
         const auto& value = snapshot.devices[index];
-        Rectangle(20, y, static_cast<float>(width) - 40, 124, {0.075f, 0.11f, 0.14f});
+        Rectangle(20, y, static_cast<float>(width) - 40, 124, Gray(0.10f));
         Text(32, y + 4, std::format("#{} {} | {} | {:04X}:{:04X} | {}", index, value.kind,
             value.connected ? "connected" : "disconnected", value.vendor, value.product, value.name), Foreground);
         const auto row = [&](const char* name, const StatisticSnapshot& statistic) {
@@ -459,9 +460,9 @@ void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t first
     if (snapshot.devices.empty()) Text(32, y + 16, "Waiting for GameInput devices. Connect a mouse, keyboard, or gamepad.", Foreground);
     Text(24, static_cast<float>(height) - 60, std::format("Dropped: callback={} frame={} | invalid clocks={} | poll errors={} | device errors={}",
         snapshot.droppedCallbacks, snapshot.droppedFrames, snapshot.invalidTimestamps, snapshot.pollErrors, snapshot.deviceLimitEvents),
-        snapshot.droppedCallbacks || snapshot.droppedFrames || snapshot.loggingFailed ? Color{1, 0.5f, 0.3f} : Muted);
+        snapshot.droppedCallbacks || snapshot.droppedFrames || snapshot.loggingFailed ? Accent : Muted);
     Text(24, static_cast<float>(height) - 32, snapshot.loggingFailed ? "LOGGING FAILED: inspect storage permissions/free space. Timing is incomplete."
-        : "F11 fullscreen | PageUp/PageDown devices | Esc quit | CSV logs saved at exit", snapshot.loggingFailed ? Color{1, 0.5f, 0.3f} : Muted);
+        : "F11 fullscreen | PageUp/PageDown devices | Esc quit | CSV logs saved at exit", snapshot.loggingFailed ? Accent : Muted);
     dashboardVertexCount = vertices.size();
     dashboardDeviceCount = snapshot.devices.size();
 }
@@ -474,7 +475,7 @@ PresentationResult Renderer::DrawAndPresent(InputMonitor& monitor, std::array<Vi
     auto barrier = Transition(targets[backBuffer].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     commands->ResourceBarrier(1, &barrier);
     commands->OMSetRenderTargets(1, &handle, FALSE, nullptr);
-    const float background[]{0.035f, 0.055f, 0.075f, 1}; commands->ClearRenderTargetView(handle, background, 0, nullptr);
+    const float background[]{0.04f, 0.04f, 0.04f, 1}; commands->ClearRenderTargetView(handle, background, 0, nullptr);
     const D3D12_VIEWPORT viewport{0, 0, static_cast<float>(width), static_cast<float>(height), 0, 1};
     const D3D12_RECT scissor{0, 0, static_cast<LONG>(width), static_cast<LONG>(height)};
     commands->RSSetViewports(1, &viewport); commands->RSSetScissorRects(1, &scissor);
@@ -504,7 +505,7 @@ PresentationResult Renderer::DrawAndPresent(InputMonitor& monitor, std::array<Vi
         state.visualized = true;
         const auto now = frameNow;
         const bool recent = state.timestamp && now >= state.timestamp && now - state.timestamp < 80000;
-        const Color activity = !state.connected ? Muted : state.active ? Color{1, 0.72f, 0.27f} : recent ? Accent : Color{0.13f, 0.25f, 0.29f};
+        const Color activity = !state.connected ? Muted : state.active ? SecondaryAccent : recent ? Accent : Gray(0.24f);
         Rectangle(static_cast<float>(width) - 54, y + 34, 18, 64, activity);
         if (state.kind & Input::GameInputKindMouse) {
             const float position = static_cast<float>((state.mouseX % 500 + 500) % 500) / 500.0f;

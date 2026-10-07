@@ -40,6 +40,8 @@ Controller diagrams and numeric values use the latest gamepad reading every rend
 
 Latency rows show callback, late sample, and Present-begin statistics in milliseconds. Their right-hand indicators change immediately for new input and held buttons/keys; mouse position also has a visual indicator. Latency statistics text and controller identity/selection refresh four times per second. The window's minimum client size is 1024x720 to keep the controller data and complete identifier readable.
 
+The dashboard uses only grayscale colors, with equal red, green, and blue components. Text, controller markers, activity indicators, and warnings use brightness differences against dark gray backgrounds.
+
 The foreground application records measurement statistics. Unfocused input, if delivered by GameInput, is marked in raw logs and excluded from callback statistics. Focus transitions establish fresh baselines. Minimized windows wait for window availability and do not render.
 
 Composite or virtual devices may expose several input kinds. The list preserves GameInput's device identities instead of assuming that every HID interface is a distinct physical peripheral. Up to 128 device identities are retained per session, including disconnected devices. Additional device/metadata errors are reported explicitly.
