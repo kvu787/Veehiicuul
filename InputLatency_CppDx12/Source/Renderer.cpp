@@ -363,7 +363,7 @@ float Renderer::ControllerPanel(const MonitorSnapshot& snapshot, float y)
     const auto count = std::min(snapshot.devices.size(), candidates.size());
     for (std::size_t index = 0; index < count; ++index) candidates[index] = {snapshot.devices[index].connected, snapshot.devices[index].gamepad};
     selectedController = SelectController(std::span(candidates).first(count), selectedController);
-    Rectangle(20, y, static_cast<float>(width) - 40, 334, Gray(0.10f));
+    Rectangle(20, y, static_cast<float>(ContentWidth) - 40, 334, Gray(0.10f));
     if (selectedController) {
         const auto& controller = snapshot.devices[*selectedController];
         Text(32, 152 + offset, std::format("SELECTED CONTROLLER #{} | {:04X}:{:04X}", *selectedController, controller.vendor, controller.product), Accent);
@@ -389,7 +389,7 @@ float Renderer::ControllerPanel(const MonitorSnapshot& snapshot, float y)
     Text(96, 418 + offset, "X", Muted); Text(96, 442 + offset, "Y", Muted);
     Text(336, 418 + offset, "X", Muted); Text(336, 442 + offset, "Y", Muted);
     Text(584, 282 + offset, "LEFT TRIGGER", Foreground); Text(584, 378 + offset, "RIGHT TRIGGER", Foreground);
-    const float barWidth = std::max(1.0f, static_cast<float>(width) - 624);
+    const float barWidth = std::max(1.0f, static_cast<float>(ContentWidth) - 624);
     Rectangle(584, 314 + offset, barWidth, 22, guide); Rectangle(584, 410 + offset, barWidth, 22, guide);
     return y + 334 + PanelGap;
 }
@@ -414,7 +414,7 @@ void Renderer::DrawControllerState(VisualState& state)
     const auto left = MapStickPosition(analog.leftStickX, analog.leftStickY, 150, 354 + offset, 56);
     const auto right = MapStickPosition(analog.rightStickX, analog.rightStickY, 390, 354 + offset, 56);
     Circle(left.x, left.y, 7, Accent); Circle(right.x, right.y, 7, Accent);
-    const float barWidth = std::max(1.0f, static_cast<float>(width) - 624);
+    const float barWidth = std::max(1.0f, static_cast<float>(ContentWidth) - 624);
     Rectangle(584, 314 + offset, barWidth * TriggerFill(analog.leftTrigger), 22, Accent);
     Rectangle(584, 410 + offset, barWidth * TriggerFill(analog.rightTrigger), 22, SecondaryAccent);
 }
@@ -423,7 +423,7 @@ float Renderer::StatisticsPanel(float y, std::string_view title,
     const std::array<std::string_view, 5>& labels, const std::array<std::string, 5>& values,
     const std::array<bool, 5>& warnings)
 {
-    const float panelWidth = static_cast<float>(width) - 40;
+    const float panelWidth = static_cast<float>(ContentWidth) - 40;
     Rectangle(20, y, panelWidth, StatisticsPanelHeight, Gray(0.30f));
     Rectangle(21, y + 1, panelWidth - 2, StatisticsPanelHeight - 2, Gray(0.10f));
     Text(32, y + 12, title, Foreground);
@@ -437,7 +437,7 @@ float Renderer::StatisticsPanel(float y, std::string_view title,
 void Renderer::Text(float x, float y, std::string_view text, Color color)
 {
     for (unsigned char character : text) {
-        if (x + GlyphWidth > static_cast<float>(width) - 16) break;
+        if (x + GlyphWidth > static_cast<float>(ContentWidth) - 16) break;
         if (character < 32 || character > 126) character = '?';
         if (character != ' ') {
             const UINT index = character - 32;
@@ -483,10 +483,10 @@ void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t first
     deviceRowsBeginning = y;
     visibleDeviceCount = 0;
     // Leave room for diagnostics and shortcuts following the visible device rows.
-    const float deviceRowsEnding = static_cast<float>(height) - StatisticsPanelHeight - 2 * PanelGap - 28;
+    const float deviceRowsEnding = static_cast<float>(ContentHeight) - StatisticsPanelHeight - 2 * PanelGap - 28;
     for (std::size_t index = firstDevice; index < snapshot.devices.size() && y + 124 <= deviceRowsEnding; ++index) {
         const auto& value = snapshot.devices[index];
-        Rectangle(20, y, static_cast<float>(width) - 40, 124, Gray(0.10f));
+        Rectangle(20, y, static_cast<float>(ContentWidth) - 40, 124, Gray(0.10f));
         Text(32, y + 4, std::format("#{} {} | {} | {:04X}:{:04X} | {}", index, value.kind,
             value.connected ? "connected" : "disconnected", value.vendor, value.product, value.name), Foreground);
         const auto row = [&](const char* name, const StatisticSnapshot& statistic) {
@@ -527,7 +527,9 @@ PresentationResult Renderer::DrawAndPresent(InputMonitor& monitor, std::array<Vi
     commands->OMSetRenderTargets(1, &handle, FALSE, nullptr);
     const float background[]{0.04f, 0.04f, 0.04f, 1}; commands->ClearRenderTargetView(handle, background, 0, nullptr);
     const D3D12_VIEWPORT viewport{0, 0, static_cast<float>(width), static_cast<float>(height), 0, 1};
-    const D3D12_RECT scissor{0, 0, static_cast<LONG>(width), static_cast<LONG>(height)};
+    // Keep content at its original pixel coordinates. Only the background fills
+    // the full target; smaller windows clip the fixed content space.
+    const D3D12_RECT scissor{0, 0, static_cast<LONG>(std::min(width, ContentWidth)), static_cast<LONG>(std::min(height, ContentHeight))};
     commands->RSSetViewports(1, &viewport); commands->RSSetScissorRects(1, &scissor);
     commands->SetGraphicsRootSignature(rootSignature.Get());
     const float screen[]{static_cast<float>(width), static_cast<float>(height)};
@@ -558,7 +560,7 @@ PresentationResult Renderer::DrawAndPresent(InputMonitor& monitor, std::array<Vi
         const auto now = frameNow;
         const bool recent = state.timestamp && now >= state.timestamp && now - state.timestamp < 80000;
         const Color activity = !state.connected ? Muted : state.active ? SecondaryAccent : recent ? Accent : Gray(0.24f);
-        Rectangle(static_cast<float>(width) - 54, y + 34, 18, 64, activity);
+        Rectangle(static_cast<float>(ContentWidth) - 54, y + 34, 18, 64, activity);
         y += 136;
     }
     const auto vertexBytes = vertices.size() * sizeof(DashboardVertex);

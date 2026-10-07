@@ -20,6 +20,7 @@ struct PresentationResult
 class Renderer final
 {
 public:
+    static constexpr std::uint32_t ContentWidth = 1200, ContentHeight = 1300;
     ~Renderer();
     void Initialize(HWND window, std::uint32_t width, std::uint32_t height, bool softwareAdapter);
     bool PrepareFrame(const std::function<bool()>& serviceMessages);
