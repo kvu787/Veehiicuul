@@ -335,3 +335,23 @@ The captures confirm that the layout stays fixed: the larger window adds backgro
 Recorded and implemented: fixed **1200 x 1300** content, no responsive layout, and resizable windows. Extra space shows background; smaller windows clip content.
 
 All six tests passed in Release and Debug.
+
+## User
+
+set these application requirements:
+- Disallow window resizing.
+- This means that the only window modes should be borderless fullscreen and a non-resizable 1200 px width * 1300 px height window.
+
+## Assistant Commentary
+
+I'll record this requirement and make F11 switch between borderless fullscreen and a fixed, non-resizable 1200 x 1300 client area.
+
+## Assistant Commentary
+
+F11 now switches between the two specified modes. Verification confirmed that the windowed client area stays at 1200 x 1300 and rejects resize and maximize attempts. All six tests passed in both Release and Debug.
+
+## Assistant Final
+
+Recorded and implemented. F11 switches between borderless fullscreen and a fixed, non-resizable **1200 x 1300** window. Resize and maximize attempts are blocked.
+
+All six tests passed in Release and Debug; mode switching and resize rejection were verified.
