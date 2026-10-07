@@ -10,6 +10,15 @@
 
 namespace
 {
+constexpr DWORD WindowedStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+
+RECT WindowedRectangle(UINT dpi)
+{
+    RECT rectangle{0, 0, Renderer::ContentWidth, Renderer::ContentHeight};
+    AdjustWindowRectExForDpi(&rectangle, WindowedStyle, FALSE, 0, dpi);
+    return rectangle;
+}
+
 struct WindowState
 {
     bool running{true}, minimized{}, foreground{}, borderless{};
@@ -31,8 +40,10 @@ void ToggleFullscreen(HWND window, WindowState& state)
             SWP_FRAMECHANGED | SWP_NOOWNERZORDER);
     }
     else {
-        SetWindowLongPtrW(window, GWL_STYLE, WS_OVERLAPPEDWINDOW | visibility);
-        SetWindowPlacement(window, &state.placement);
+        SetWindowLongPtrW(window, GWL_STYLE, WindowedStyle | visibility);
+        auto placement = state.placement;
+        if (!visibility) placement.showCmd = SW_HIDE;
+        SetWindowPlacement(window, &placement);
         SetWindowPos(window, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOOWNERZORDER);
     }
     state.borderless = !state.borderless;
@@ -47,6 +58,36 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM first, LPARAM
     }
     if (!state) return DefWindowProcW(window, message, first, second);
     switch (message) {
+    case WM_GETMINMAXINFO:
+        if (GetWindowLongPtrW(window, GWL_STYLE) & WS_CAPTION) {
+            const auto rectangle = WindowedRectangle(GetDpiForWindow(window));
+            auto* limits = reinterpret_cast<MINMAXINFO*>(second);
+            limits->ptMinTrackSize = limits->ptMaxTrackSize = {rectangle.right - rectangle.left, rectangle.bottom - rectangle.top};
+            return 0;
+        }
+        return DefWindowProcW(window, message, first, second);
+    case WM_WINDOWPOSCHANGING:
+        if (GetWindowLongPtrW(window, GWL_STYLE) & WS_CAPTION) {
+            auto* position = reinterpret_cast<WINDOWPOS*>(second);
+            if (!(position->flags & SWP_NOSIZE) && !IsIconic(window)) {
+                const auto rectangle = WindowedRectangle(GetDpiForWindow(window));
+                position->cx = rectangle.right - rectangle.left;
+                position->cy = rectangle.bottom - rectangle.top;
+            }
+        }
+        return DefWindowProcW(window, message, first, second);
+    case WM_SYSCOMMAND:
+        if ((first & 0xFFF0) == SC_SIZE || (first & 0xFFF0) == SC_MAXIMIZE) return 0;
+        return DefWindowProcW(window, message, first, second);
+    case WM_DPICHANGED:
+        if (GetWindowLongPtrW(window, GWL_STYLE) & WS_CAPTION) {
+            const auto* suggested = reinterpret_cast<const RECT*>(second);
+            const auto rectangle = WindowedRectangle(LOWORD(first));
+            SetWindowPos(window, nullptr, suggested->left, suggested->top, rectangle.right - rectangle.left,
+                rectangle.bottom - rectangle.top, SWP_NOZORDER | SWP_NOOWNERZORDER);
+            return 0;
+        }
+        return DefWindowProcW(window, message, first, second);
     case WM_CLOSE: state->running = false; return 0;
     case WM_DESTROY: state->running = false; PostQuitMessage(0); return 0;
     case WM_SIZE:
@@ -177,9 +218,9 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int)
         windowClass.hInstance = instance; windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
         windowClass.lpszClassName = L"InputLatencyDirectX12";
         if (!RegisterClassExW(&windowClass)) throw std::runtime_error("Cannot register application window class.");
-        RECT rectangle{0, 0, Renderer::ContentWidth, Renderer::ContentHeight}; AdjustWindowRectEx(&rectangle, WS_OVERLAPPEDWINDOW, FALSE, 0);
+        const auto rectangle = WindowedRectangle(GetDpiForSystem());
         WindowOwner window;
-        window.handle = CreateWindowExW(0, windowClass.lpszClassName, L"Gamepad latency - GameInput / DirectX 12", WS_OVERLAPPEDWINDOW,
+        window.handle = CreateWindowExW(0, windowClass.lpszClassName, L"Gamepad latency - GameInput / DirectX 12", WindowedStyle,
             CW_USEDEFAULT, CW_USEDEFAULT, rectangle.right - rectangle.left, rectangle.bottom - rectangle.top,
             nullptr, nullptr, instance, &windowState);
         if (!window.handle) throw std::runtime_error("Cannot create application window.");

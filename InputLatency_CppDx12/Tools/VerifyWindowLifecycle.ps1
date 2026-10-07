@@ -68,7 +68,7 @@ try {
     Record-Action 'StartupFullscreen'
     [WindowLifecycleVerification]::PostMessageW($window, 0x100, [UIntPtr]0x7A, [IntPtr]0) | Out-Null
     Start-Sleep -Seconds 2
-    if (([WindowLifecycleVerification]::GetWindowLongPtrW($window, -16).ToInt64() -band 0x00CF0000) -ne 0x00CF0000) { throw 'F11 did not restore startup windowed mode.' }
+    if (([WindowLifecycleVerification]::GetWindowLongPtrW($window, -16).ToInt64() -band 0x00CF0000) -ne 0x00CA0000) { throw 'F11 did not restore the fixed window style.' }
     $client = [WindowLifecycleVerification+Rectangle]::new()
     if (-not [WindowLifecycleVerification]::GetClientRect($window, [ref]$client) -or
         $client.Right -ne 1200 -or $client.Bottom -ne 1300) { throw 'F11 did not restore the original windowed client size.' }
@@ -89,19 +89,17 @@ try {
     }
     if ([WindowLifecycleVerification]::GetForegroundWindow() -ne $window) { throw 'The restored application did not regain focus.' }
     Record-Action 'RestoredAndFocused'
-    [WindowLifecycleVerification]::ShowWindow($window, 3) | Out-Null
+    [WindowLifecycleVerification]::PostMessageW($window, 0x112, [UIntPtr]0xF030, [IntPtr]0) | Out-Null
     Start-Sleep -Seconds 2
-    if (-not [WindowLifecycleVerification]::IsZoomed($window)) { throw 'Maximize did not take effect.' }
-    Record-Action 'Maximized'
-    [WindowLifecycleVerification]::ShowWindow($window, 9) | Out-Null
-    Start-Sleep -Seconds 2
+    if ([WindowLifecycleVerification]::IsZoomed($window)) { throw 'Maximize was not rejected.' }
+    Record-Action 'MaximizeRejected'
     [WindowLifecycleVerification]::PostMessageW($window, 0x100, [UIntPtr]0x7A, [IntPtr]0) | Out-Null
     Start-Sleep -Seconds 2
     if (([WindowLifecycleVerification]::GetWindowLongPtrW($window, -16).ToInt64() -band 0x00CF0000) -ne 0) { throw 'F11 did not enter borderless fullscreen.' }
     Record-Action 'Fullscreen'
     [WindowLifecycleVerification]::PostMessageW($window, 0x100, [UIntPtr]0x7A, [IntPtr]0) | Out-Null
     Start-Sleep -Seconds 2
-    if (([WindowLifecycleVerification]::GetWindowLongPtrW($window, -16).ToInt64() -band 0x00CF0000) -ne 0x00CF0000) { throw 'F11 did not restore windowed mode.' }
+    if (([WindowLifecycleVerification]::GetWindowLongPtrW($window, -16).ToInt64() -band 0x00CF0000) -ne 0x00CA0000) { throw 'F11 did not restore the fixed window style.' }
     Record-Action 'Windowed'
     $client = [WindowLifecycleVerification+Rectangle]::new()
     $bounds = [WindowLifecycleVerification+Rectangle]::new()
@@ -112,8 +110,8 @@ try {
     if (-not [WindowLifecycleVerification]::SetWindowPos($window, [IntPtr]::Zero, 0, 0, $width, $height, 0x16)) { throw 'Resize failed.' }
     Start-Sleep -Seconds 2
     [WindowLifecycleVerification]::GetClientRect($window, [ref]$client) | Out-Null
-    if ($client.Right -ne 800 -or $client.Bottom -ne 600) { throw 'Clipped client-size verification failed.' }
-    Record-Action 'ClippedClientSize'
+    if ($client.Right -ne 1200 -or $client.Bottom -ne 1300) { throw 'Resize changed the fixed client size.' }
+    Record-Action 'ResizeRejected'
     if (-not $application.WaitForExit(20000)) { throw 'Application did not finish window verification.' }
     if ($application.ExitCode -ne 0) { throw "Application exited with $($application.ExitCode)." }
     $actions | Export-Csv -LiteralPath (Join-Path $logDirectory 'WindowActions.csv') -NoTypeInformation -Encoding utf8

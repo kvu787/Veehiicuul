@@ -32,14 +32,15 @@ Windows display-event tracing requires administrator or Performance Log Users pe
 
 - Use a content space of exactly 1200 px width * 1300 px height.
 - Don't make the application contents responsive at all, except for the background color. This means that it should always render the content to the 1200*1300 content space and then fill the full window with the background color. If the window dimensions cut off content, that is fine.
-- Allow window resizing.
+- Disallow window resizing.
+- This means that the only window modes should be borderless fullscreen and a non-resizable 1200 px width * 1300 px height window.
 - Use only one size of font. No upscaling/downscaling either.
 - Use a simple layout flow in which things stack from left to right and top to bottom.
 - Display tracking and input diagnostics use one textual item per line, such as `Shown frames = value` and `Callback drops = value`.
 
 These requirements are also recorded in [AGENTS.md](AGENTS.md) for future application changes.
 
-The application starts in borderless fullscreen on its startup monitor. Press F11 to switch to a resizable window or back to borderless fullscreen.
+The application starts in borderless fullscreen on its startup monitor. Press F11 to switch to a non-resizable window with an exact 1200x1300 client area or back to borderless fullscreen. The windowed mode allows moving and minimizing the window, but has no resize border or maximize button. Resize and maximize commands are blocked.
 
 Activate the application window, then use gamepad buttons, sticks, and triggers. Each gamepad has its own statistics. Gamepad connection and disconnection are tracked throughout the session. Only the gamepad input kind is registered for device and reading callbacks and sampled per frame; mouse and keyboard inputs do not contribute measurements. Keyboard shortcuts below control the window.
 
@@ -55,7 +56,7 @@ Both analog sticks have position diagrams and signed X/Y values. Both triggers h
 
 Controller diagrams and numeric values use one gamepad reading every rendered frame, sampled after the GPU and presentation waits. Both sticks, both triggers, and buttons share that reading's original timestamp. Composite controllers are polled specifically for their gamepad stream. The controller panel stays visible independently of the latency rows. Displayed frames that visualize the selected gamepad contribute to its display statistics even when its latency row is outside the visible list.
 
-Latency rows show callback, late sample, and reading-to-display statistics in milliseconds. Their right-hand indicators change immediately for new gamepad input and held gamepad buttons. Latency statistics text and controller identity/selection refresh four times per second. The content space is fixed at 1200x1300 pixels, anchored at the top left. Resizing changes neither content coordinates, panel widths, trigger bar widths, font size, nor the number of laid-out gamepad rows. Larger windows show extra background; smaller windows clip content. The initial windowed client size is 1200x1300, and there is no application-enforced minimum window size. Display statistics arrive asynchronously after Windows reports presentation, typically with an ETW buffer delay. That reporting delay is excluded from the measured latency.
+Latency rows show callback, late sample, and reading-to-display statistics in milliseconds. Their right-hand indicators change immediately for new gamepad input and held gamepad buttons. Latency statistics text and controller identity/selection refresh four times per second. The content space is fixed at 1200x1300 pixels, anchored at the top left. Switching window modes changes neither content coordinates, panel widths, trigger bar widths, font size, nor the number of laid-out gamepad rows. Fullscreen uses the monitor dimensions, with extra background or clipped content as needed. Windowed mode always uses an exact 1200x1300 client area. Display statistics arrive asynchronously after Windows reports presentation, typically with an ETW buffer delay. That reporting delay is excluded from the measured latency.
 
 Display tracking and input diagnostics have separate bordered panels containing vertical `Label = value` lists. All text uses the same fixed font size, with no scaling. The header, display tracking, controller panel, visible gamepad latency rows, input diagnostics, and shortcuts follow one top-to-bottom flow. Controls inside the controller panel are arranged from left to right. Diagnostics follow the visible gamepad data instead of being anchored to the bottom of the window. The display panel retains tracing-permission, lost-record, and unfocused messages; unavailable display counters show `--`.
 
@@ -142,7 +143,7 @@ Raw measurement units are microseconds. Device indexes join the CSV files to `De
 
 `Tools/VerifyDisplayTracking.ps1` performs a short visible hardware-adapter test. Use gamepad buttons, sticks, and triggers during its eight-second session. It checks that all logged devices/statistics are gamepads, checks display correlation and timestamp subtraction, and reports when no fresh gamepad readings were displayed. Physical gamepad input remains a manual check when no such readings are collected.
 
-`Tools/VerifyWindowLifecycle.ps1` runs a 35-second visible Debug session that checks borderless fullscreen startup and restoration of the 1200x1300 windowed client area, minimizes/restores, maximizes, toggles F11 fullscreen, and resizes to an 800x600 client area with clipped content. Click the application after restore if Windows blocks programmatic activation. It records action QPC timestamps, verifies that presentation pauses while minimized and resumes afterward, captures the clipped dashboard, and validates the session logs.
+`Tools/VerifyWindowLifecycle.ps1` runs a 35-second visible Debug session that checks borderless fullscreen startup, restoration of the fixed 1200x1300 windowed client area, minimize/restore, rejection of maximize and resize attempts, and F11 transitions in both directions. Click the application after restore if Windows blocks programmatic activation. It records action QPC timestamps, verifies that presentation pauses while minimized and resumes afterward, captures the dashboard, and validates the session logs.
 
 `Tools/ValidateSession.ps1` independently checks device identities, timestamp subtraction/order, frame joins, first-display deduplication, and every summary count/aggregate/rolling percentile against the CSV records. By default, any clock error fails validation. `-AllowRejectedClockFrames` permits explicitly recorded clock-rejection frames only when they have no accepted conversion or display-reading observation; other diagnostic errors still fail validation.
 
