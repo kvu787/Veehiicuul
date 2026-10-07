@@ -21,7 +21,8 @@ try {
     if ($SoftwareAdapter) { $applicationArguments += '--software-adapter' }
     if ($Hidden) { $applicationArguments += '--hidden' }
     if ($CaptureFrame) { $applicationArguments += '--capture-frame' }
-    $applicationProcess = Start-Process -FilePath $executable -WorkingDirectory $PSScriptRoot -ArgumentList $applicationArguments -WindowStyle Hidden -Wait -PassThru
+    $windowStyle = if ($Hidden) { 'Hidden' } else { 'Normal' }
+    $applicationProcess = Start-Process -FilePath $executable -WorkingDirectory $PSScriptRoot -ArgumentList $applicationArguments -WindowStyle $windowStyle -Wait -PassThru
     if ($applicationProcess.ExitCode -ne 0) { throw "Application exited with code $($applicationProcess.ExitCode). See Application.log." }
 }
 catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }
