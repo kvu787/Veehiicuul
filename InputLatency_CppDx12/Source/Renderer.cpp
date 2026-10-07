@@ -435,8 +435,8 @@ void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t first
 {
     vertices.clear();
     Text(24, 18, "GAMEPAD LATENCY / GAMEINPUT / DIRECTX 12", Accent);
-    Text(24, 46, "Reading-to-display latency: GameInput snapshot to Windows display event (milliseconds).", Muted);
-    Text(24, 78, std::format("VSync OFF | Uncapped | GPU 1 | Present 1 | Buffers 2 | Spin | Tearing {} | {:.0f} FPS",
+    Text(24, 46, "Latency: GameInput reading to Windows display event (ms).", Muted);
+    Text(24, 78, std::format("VSync OFF | Uncapped | GPU 1 | Present 1 | Buffers 2 | Tearing {} | {:.0f} FPS",
         tearing ? "ON" : "unavailable", framesPerSecond), Foreground);
     Text(24, 106, foreground ? snapshot.displayTracking.status : "UNFOCUSED: measurement statistics pause. Activate this window to measure.",
         foreground && !snapshot.displayTracking.error ? Muted : Accent);

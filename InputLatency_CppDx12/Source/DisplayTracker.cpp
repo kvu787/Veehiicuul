@@ -183,7 +183,7 @@ struct DisplayTracker::Implementation
                 else if (value.error) value.status = std::format("Display tracking unavailable: Windows error {}.", value.error);
                 else if (value.lostEvents || value.lostBuffers || value.droppedSubmissions || value.droppedCompletions || value.droppedMeasurements || value.decoderOverflows)
                     value.status = "Display tracking incomplete: lost records; inspect DisplayDiagnostics.txt.";
-                else value.status = std::format("Display: {} shown | {} discarded | {} unresolved | {} bad clocks | <= {:.1f} us uncertainty",
+                else value.status = std::format("Display: {} shown, {} discarded, {} unresolved | Clock errors {} | <= {:.1f} us",
                     value.displayed, value.discarded, value.unresolved, value.invalidClocks, value.maximumClockUncertainty);
                 std::lock_guard guard(snapshotMutex); snapshot = value;
             };
