@@ -460,3 +460,43 @@ That still represents a Windows software boundary. It is not a universal per-pac
 **Getting closer to your proposed start point is possible through lower-level tracing or driver instrumentation.** For example, Windows USB tracing can expose transfer-completion events. A measurement system would need to identify the relevant device/endpoint, timestamp a defined reception/completion boundary, and correlate that report with the state the game consumes. The available events and correlation would need verification for the specific device and driver path. [Microsoft's USB trace documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/usbcon/how-to-examining-a-trace-file-by-using-netmon).
 
 Starting at PC report receipt would measure the subsequent PC software delay. It would deliberately exclude the controller's sensor/firmware processing and transmission delay before receipt.
+
+## User
+
+for the purposes of measuring software-side input latency for video games, to what extent is each of these timestamps "sufficient"?
+
+## Assistant Commentary
+
+I'll compare what each timestamp can reliably measure and where it leaves part of the game's software latency unmeasured.
+
+## Assistant Commentary
+
+The key is the measurement's scope. GameInput's timestamp is useful for measuring reading age and later processing; a poll timestamp misses any wait before the game fetches input. For input-to-display latency, the measurement also needs to identify the frame that used that input and when it was displayed.
+
+## Assistant Final
+
+**For your app's stated reading-to-callback, reading-to-sample, and reading-to-Present measurements, GameInput's timestamp is sufficient.** Those are useful software measurements. They cover a smaller interval than complete PC-receipt-to-display latency.
+
+"Sufficient" depends on which part of the pipeline you want to evaluate:
+
+| Starting timestamp          | Sufficient for                                                    | Main limitation                                                   |
+| --------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Defined USB/driver receipt  | Measuring subsequent input-stack and game processing              | Must identify the report and validate the exact capture boundary  |
+| Windows input-read event    | Keyboard/mouse input-to-frame/display analysis on supported paths | Does not cover work before that event or native gamepad input     |
+| GameInput reading timestamp | Reading freshness, delivery delay, and subsequent game work       | Exact relationship to hardware receipt is not established         |
+| App callback entry          | Processing after callback delivery                                | Excludes delay before the callback runs                           |
+| App poll/sample time        | Processing after the game fetches input                           | Excludes time the input waited before that fetch                  |
+
+GameInput explicitly supports comparing a reading's timestamp with its current timestamp. That provides a sound basis for the app's named metrics, without claiming that the start is exact USB arrival. [Microsoft's timestamp contract](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinputreading/methods/igameinputreading_gettimestamp).
+
+PresentMon's Windows timestamp provides a useful starting point for its supported keyboard/mouse path. Its usefulness also depends on correctly associating that input with a frame; it is not equivalent to tracking every physical report individually. [PresentMon's input-event handling](C:/Users/k/Repository/External/PresentMon_2-6-0/PresentData/PresentMonTraceConsumer.cpp:1782).
+
+**A callback or poll timestamp is insufficient as the sole starting point when evaluating input acquisition latency.** For example, suppose input is available at time zero, the game waits 10 ms before fetching it, then calls Present 1 ms later. Poll-to-Present reports 1 ms; it hides the preceding 10 ms. Such a timestamp is still useful for measuring the work after the fetch.
+
+For comparisons within the same device, input path, and GameInput version, reading timestamps are practical for testing changes such as earlier/later sampling, callback handling, and frame scheduling. A stable difference between the timestamp boundary and hardware receipt can leave these comparisons useful. You should not assume that difference remains unchanged when switching input APIs, driver paths, or device configurations.
+
+**The ending timestamp matters just as much.** Reading-to-Present-begin measures CPU submission timing. To evaluate the later GPU, presentation queue, and display scheduling delays, the endpoint must be the relevant frame's reported display time. PresentMon provides display tracking, but your current app stops at Present. [PresentMon metric definitions](https://github.com/GameTechDev/PresentMon/blob/v2.6.0/README-ConsoleApplication.md#csv-columns).
+
+There is also a distinction between **state freshness** and **response to a particular input change**. With continuous 8,000 Hz reports, a game fetching input only 60 times per second can still select a very recent reading each time. A small reading-age measurement therefore does not establish that every movement was acted on within 125 microseconds; intermediate updates may be superseded.
+
+For InputLatency_CppDx12, I would retain the GameInput timestamp as the practical starting point. To assess game input-to-display latency, the next improvement would be correlating the reading actually used by a frame with that frame's display event. Lower-level receipt timestamps become necessary when the question specifically concerns delays before the GameInput timestamp boundary, or comparing the complete PC input paths.
