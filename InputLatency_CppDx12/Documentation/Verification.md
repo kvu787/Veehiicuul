@@ -98,4 +98,14 @@ The isolated Release package in LogOutput/2026-10-07_03-45-48/PortablePackage pa
 
 These checks validate software reading-to-display timing and controller handling. They do not measure physical switch-to-photon latency. Selection among multiple simultaneously connected gamepads was covered by the selection tests, but only one physical controller was available for these live runs.
 
-The final precision-corrected visible run in LogOutput/2026-10-07_03-53-05 remained unfocused and produced no fresh input observations or matched display events. A focused live reading-to-display check of the corrected build remains pending user activation. The successful unit tests establish the corrected large-epoch conversion; that empty live run must not be treated as positive input/display validation.
+The precision-corrected visible run in LogOutput/2026-10-07_03-53-05 remained unfocused and produced no fresh input observations or matched display events. That empty run was excluded from positive input/display validation. The final focused run below completes the previously pending live check.
+
+## Final focused validation
+
+Completed on October 7, 2026 in `LogOutput/2026-10-07_11-38-16` using the final Release build and connected Xbox 360 Controller for Windows. The visible run lasted 60.1436 seconds. A native foreground-window check confirmed that the application was focused during the run. The user was instructed to exercise both sticks, triggers, and buttons; the earlier physical-control and unplug/reconnect checks already passed.
+
+Strict `ValidateSession.ps1 -RequireGamepad -RequireDisplayMeasurements` validation passed: one gamepad, 445318 callback readings, 68308 presentation readings, 68714 display-reading rows, and 68298 distinct first-display readings. All six summaries matched independently reconstructed observations, including timestamp subtraction, ordering, frame/device joins, first-display deduplication, cumulative statistics, and rolling nearest-rank percentiles.
+
+All 72053 submitted frames were resolved: 69034 displayed and 3019 discarded. Discarded frames contributed no latency. There were zero rejected clocks, unmatched events, ETW event/buffer losses, queue/record drops, decoder warnings/overflows, invalid input timestamps, metadata errors, polling errors, or logging failures. Maximum accepted clock-bracket uncertainty was 92.35 microseconds. The final reading-to-display cumulative mean was 0.886343 milliseconds; the last 8192 observations had p95 1.677 milliseconds and p99 1.795 milliseconds. These remain software reading-to-display measurements, rather than physical switch-to-photon measurements.
+
+The saved dashboard was visually inspected: gamepad-only labels, complete controller identity, both stick panels, trigger bars, and measurement rows were readable. The application exited normally, with no remaining application process or `InputLatencyDisplay` ETW session. The final live check is complete.
