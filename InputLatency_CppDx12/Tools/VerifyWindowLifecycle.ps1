@@ -71,7 +71,7 @@ try {
     if (([WindowLifecycleVerification]::GetWindowLongPtrW($window, -16).ToInt64() -band 0x00CF0000) -ne 0x00CF0000) { throw 'F11 did not restore startup windowed mode.' }
     $client = [WindowLifecycleVerification+Rectangle]::new()
     if (-not [WindowLifecycleVerification]::GetClientRect($window, [ref]$client) -or
-        $client.Right -ne 1280 -or $client.Bottom -ne 860) { throw 'F11 did not restore the original windowed client size.' }
+        $client.Right -ne 1280 -or $client.Bottom -ne 1400) { throw 'F11 did not restore the original windowed client size.' }
     Record-Action 'StartupWindowed'
     Record-Action 'BeforeMinimize'
     [WindowLifecycleVerification]::ShowWindow($window, 6) | Out-Null
@@ -107,12 +107,12 @@ try {
     $bounds = [WindowLifecycleVerification+Rectangle]::new()
     [WindowLifecycleVerification]::GetClientRect($window, [ref]$client) | Out-Null
     [WindowLifecycleVerification]::GetWindowRect($window, [ref]$bounds) | Out-Null
-    $width = 1200 + ($bounds.Right - $bounds.Left) - $client.Right
-    $height = 680 + ($bounds.Bottom - $bounds.Top) - $client.Bottom
+    $width = 1280 + ($bounds.Right - $bounds.Left) - $client.Right
+    $height = 1400 + ($bounds.Bottom - $bounds.Top) - $client.Bottom
     if (-not [WindowLifecycleVerification]::SetWindowPos($window, [IntPtr]::Zero, 0, 0, $width, $height, 0x16)) { throw 'Resize failed.' }
     Start-Sleep -Seconds 2
     [WindowLifecycleVerification]::GetClientRect($window, [ref]$client) | Out-Null
-    if ($client.Right -ne 1200 -or $client.Bottom -ne 680) { throw 'Minimum client-size verification failed.' }
+    if ($client.Right -ne 1280 -or $client.Bottom -ne 1400) { throw 'Minimum client-size verification failed.' }
     Record-Action 'MinimumClientSize'
     if (-not $application.WaitForExit(20000)) { throw 'Application did not finish window verification.' }
     if ($application.ExitCode -ne 0) { throw "Application exited with $($application.ExitCode)." }

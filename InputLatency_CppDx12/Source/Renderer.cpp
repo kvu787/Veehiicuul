@@ -17,6 +17,7 @@ namespace
 {
 constexpr DXGI_FORMAT BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 constexpr UINT AtlasWidth = 192, AtlasHeight = 144, GlyphWidth = 12, GlyphHeight = 24;
+constexpr float StatisticsPanelHeight = 196, PanelGap = 12;
 constexpr Color Gray(float brightness) { return {brightness, brightness, brightness}; }
 constexpr Color Foreground = Gray(0.92f), Muted = Gray(0.64f), Accent = Gray(1.0f), SecondaryAccent = Gray(0.76f);
 
@@ -354,16 +355,15 @@ void Renderer::Circle(float x, float y, float radius, Color color)
     }
 }
 
-void Renderer::ControllerPanel(const MonitorSnapshot& snapshot)
+float Renderer::ControllerPanel(const MonitorSnapshot& snapshot, float y)
 {
-    const float offset = controllerPanelOffset;
-    const float analogOffset = offset + controllerAnalogOffset;
-    const float valueOffset = offset + controllerValueOffset;
+    controllerPanelBeginning = y;
+    const float offset = y - 142;
     std::array<ControllerAvailability, MaximumDevices> candidates{};
     const auto count = std::min(snapshot.devices.size(), candidates.size());
     for (std::size_t index = 0; index < count; ++index) candidates[index] = {snapshot.devices[index].connected, snapshot.devices[index].gamepad};
     selectedController = SelectController(std::span(candidates).first(count), selectedController);
-    Rectangle(20, 142 + offset, static_cast<float>(width) - 40, 334 + controllerValueOffset, Gray(0.10f));
+    Rectangle(20, y, static_cast<float>(width) - 40, 334, Gray(0.10f));
     if (selectedController) {
         const auto& controller = snapshot.devices[*selectedController];
         Text(32, 152 + offset, std::format("SELECTED CONTROLLER #{} | {:04X}:{:04X}", *selectedController, controller.vendor, controller.product), Accent);
@@ -375,33 +375,28 @@ void Renderer::ControllerPanel(const MonitorSnapshot& snapshot)
         Text(32, 178 + offset, "Connect a gamepad. The first connected gamepad will be selected automatically.", Foreground);
         Text(32, 204 + offset, "Name / GameInput ID: unavailable", Muted);
     }
-    if (controllerAnalogOffset == 0)
-        Text(32, 230 + offset, "Sticks -1..+1 (positive Y up) | Triggers 0..1 | Raw values, no added deadzone", Muted);
+    Text(32, 230 + offset, "Sticks -1..+1 (positive Y up) | Triggers 0..1 | Raw values, no added deadzone", Muted);
     const Color guide = Gray(0.30f), inside = Gray(0.15f);
-    const float centerY = 354 + analogOffset + controllerStickRadius - 56;
     for (const float centerX : {150.0f, 390.0f}) {
-        Rectangle(centerX - controllerStickRadius - 2, centerY - controllerStickRadius - 2,
-            2 * controllerStickRadius + 4, 2 * controllerStickRadius + 4, guide);
-        Rectangle(centerX - controllerStickRadius, centerY - controllerStickRadius,
-            2 * controllerStickRadius, 2 * controllerStickRadius, inside);
-        Circle(centerX, centerY, controllerStickRadius, guide);
-        Circle(centerX, centerY, controllerStickRadius - 2, inside);
-        Rectangle(centerX - controllerStickRadius, centerY - 1, 2 * controllerStickRadius, 2, guide);
-        Rectangle(centerX - 1, centerY - controllerStickRadius, 2, 2 * controllerStickRadius, guide);
+        Rectangle(centerX - 58, 296 + offset, 116, 116, guide);
+        Rectangle(centerX - 56, 298 + offset, 112, 112, inside);
+        Circle(centerX, 354 + offset, 56, guide);
+        Circle(centerX, 354 + offset, 54, inside);
+        Rectangle(centerX - 56, 353 + offset, 112, 2, guide);
+        Rectangle(centerX - 1, 298 + offset, 2, 112, guide);
     }
-    Text(90, 268 + analogOffset, "LEFT STICK", Foreground); Text(324, 268 + analogOffset, "RIGHT STICK", Foreground);
-    Text(96, 418 + valueOffset, "X", Muted); Text(96, 442 + valueOffset, "Y", Muted);
-    Text(336, 418 + valueOffset, "X", Muted); Text(336, 442 + valueOffset, "Y", Muted);
-    Text(584, 282 + analogOffset, "LEFT TRIGGER", Foreground); Text(584, 378 + valueOffset, "RIGHT TRIGGER", Foreground);
+    Text(90, 268 + offset, "LEFT STICK", Foreground); Text(324, 268 + offset, "RIGHT STICK", Foreground);
+    Text(96, 418 + offset, "X", Muted); Text(96, 442 + offset, "Y", Muted);
+    Text(336, 418 + offset, "X", Muted); Text(336, 442 + offset, "Y", Muted);
+    Text(584, 282 + offset, "LEFT TRIGGER", Foreground); Text(584, 378 + offset, "RIGHT TRIGGER", Foreground);
     const float barWidth = std::max(1.0f, static_cast<float>(width) - 624);
-    Rectangle(584, 314 + analogOffset, barWidth, 22, guide); Rectangle(584, 410 + valueOffset, barWidth, 22, guide);
-    deviceRowsBeginning = 512 + valueOffset;
+    Rectangle(584, 314 + offset, barWidth, 22, guide); Rectangle(584, 410 + offset, barWidth, 22, guide);
+    return y + 334 + PanelGap;
 }
 
 void Renderer::DrawControllerState(VisualState& state)
 {
-    const float analogOffset = controllerPanelOffset + controllerAnalogOffset;
-    const float valueOffset = controllerPanelOffset + controllerValueOffset;
+    const float offset = controllerPanelBeginning - 142;
     const bool available = state.connected && state.controllerReadingAvailable;
     state.visualized = available;
     const auto& analog = state.controller;
@@ -409,92 +404,87 @@ void Renderer::DrawControllerState(VisualState& state)
         const auto text = FormatAnalogValue(number, signedValue);
         Text(x, y, available ? text.View() : std::string_view("--"), available ? Accent : Muted);
     };
-    value(120, 418 + valueOffset, analog.leftStickX, true); value(120, 442 + valueOffset, analog.leftStickY, true);
-    value(360, 418 + valueOffset, analog.rightStickX, true); value(360, 442 + valueOffset, analog.rightStickY, true);
-    value(776, 282 + analogOffset, analog.leftTrigger, false); value(776, 378 + valueOffset, analog.rightTrigger, false);
+    value(120, 418 + offset, analog.leftStickX, true); value(120, 442 + offset, analog.leftStickY, true);
+    value(360, 418 + offset, analog.rightStickX, true); value(360, 442 + offset, analog.rightStickY, true);
+    value(776, 282 + offset, analog.leftTrigger, false); value(776, 378 + offset, analog.rightTrigger, false);
     if (!available) {
-        Text(584, 442 + valueOffset, "Waiting for gamepad state", Muted);
+        Text(584, 442 + offset, "Waiting for gamepad state", Muted);
         return;
     }
-    const float centerY = 354 + analogOffset + controllerStickRadius - 56;
-    const auto left = MapStickPosition(analog.leftStickX, analog.leftStickY, 150, centerY, controllerStickRadius);
-    const auto right = MapStickPosition(analog.rightStickX, analog.rightStickY, 390, centerY, controllerStickRadius);
+    const auto left = MapStickPosition(analog.leftStickX, analog.leftStickY, 150, 354 + offset, 56);
+    const auto right = MapStickPosition(analog.rightStickX, analog.rightStickY, 390, 354 + offset, 56);
     Circle(left.x, left.y, 7, Accent); Circle(right.x, right.y, 7, Accent);
     const float barWidth = std::max(1.0f, static_cast<float>(width) - 624);
-    Rectangle(584, 314 + analogOffset, barWidth * TriggerFill(analog.leftTrigger), 22, Accent);
-    Rectangle(584, 410 + valueOffset, barWidth * TriggerFill(analog.rightTrigger), 22, SecondaryAccent);
+    Rectangle(584, 314 + offset, barWidth * TriggerFill(analog.leftTrigger), 22, Accent);
+    Rectangle(584, 410 + offset, barWidth * TriggerFill(analog.rightTrigger), 22, SecondaryAccent);
 }
 
-void Renderer::StatisticsPanel(float y, float panelHeight, std::string_view title,
+float Renderer::StatisticsPanel(float y, std::string_view title,
     const std::array<std::string_view, 5>& labels, const std::array<std::string, 5>& values,
     const std::array<bool, 5>& warnings)
 {
     const float panelWidth = static_cast<float>(width) - 40;
-    Rectangle(20, y, panelWidth, panelHeight, Gray(0.30f));
-    Rectangle(21, y + 1, panelWidth - 2, panelHeight - 2, Gray(0.10f));
-    Text(32, y + (panelHeight == 32 ? 4 : 8), title, Foreground);
-    if (panelHeight == 32) return;
-    const float columnWidth = (panelWidth - 24) / 5;
-    const float valueY = y + panelHeight - 48;
+    Rectangle(20, y, panelWidth, StatisticsPanelHeight, Gray(0.30f));
+    Rectangle(21, y + 1, panelWidth - 2, StatisticsPanelHeight - 2, Gray(0.10f));
+    Text(32, y + 12, title, Foreground);
     for (std::size_t index = 0; index < labels.size(); ++index) {
-        const float x = 32 + static_cast<float>(index) * columnWidth;
-        if (index) Rectangle(x - 8, y + 36, 1, panelHeight - 48, Gray(0.24f));
-        Text(x, valueY - 28, labels[index], Muted);
-        const float scale = std::min(1.5f, (columnWidth - 16) / (static_cast<float>(values[index].size()) * GlyphWidth));
-        Text(x, valueY, values[index], warnings[index] ? Accent : Foreground, scale);
+        Text(32, y + 44 + static_cast<float>(index) * 28,
+            std::format("{} = {}", labels[index], values[index]), warnings[index] ? Accent : Foreground);
     }
+    return y + StatisticsPanelHeight + PanelGap;
 }
 
-void Renderer::Text(float x, float y, std::string_view text, Color color, float scale)
+void Renderer::Text(float x, float y, std::string_view text, Color color)
 {
     for (unsigned char character : text) {
-        if (x + GlyphWidth * scale > static_cast<float>(width) - 16) break;
+        if (x + GlyphWidth > static_cast<float>(width) - 16) break;
         if (character < 32 || character > 126) character = '?';
         if (character != ' ') {
             const UINT index = character - 32;
             const float u = static_cast<float>((index % 16) * GlyphWidth) / AtlasWidth;
             const float v = static_cast<float>((index / 16) * GlyphHeight) / AtlasHeight;
-            Quad(x, y, GlyphWidth * scale, GlyphHeight * scale, u, v, u + static_cast<float>(GlyphWidth) / AtlasWidth,
+            Quad(x, y, GlyphWidth, GlyphHeight, u, v, u + static_cast<float>(GlyphWidth) / AtlasWidth,
                 v + static_cast<float>(GlyphHeight) / AtlasHeight, color);
         }
-        x += GlyphWidth * scale;
+        x += GlyphWidth;
     }
 }
 
 void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t firstDevice, double framesPerSecond, bool foreground)
 {
     vertices.clear();
-    Text(24, 18, "GAMEPAD LATENCY / GAMEINPUT / DIRECTX 12", Accent);
-    Text(24, 46, "Latency: GameInput reading to Windows display event (ms).", Muted);
-    Text(24, 78, std::format("VSync OFF | Uncapped | GPU 1 | Present 1 | Buffers 2 | Tearing {} | {:.0f} FPS",
+    float y = 18;
+    Text(24, y, "GAMEPAD LATENCY / GAMEINPUT / DIRECTX 12", Accent);
+    y += 28;
+    Text(24, y, "Latency: GameInput reading to Windows display event (ms).", Muted);
+    y += 28;
+    Text(24, y, std::format("VSync OFF | Uncapped | GPU 1 | Present 1 | Buffers 2 | Tearing {} | {:.0f} FPS",
         tearing ? "ON" : "unavailable", framesPerSecond), Foreground);
-    const float panelHeight = height >= 1000 ? 128.0f : height >= 860 ? 104.0f : 32.0f;
-    controllerPanelOffset = panelHeight - 32;
-    controllerAnalogOffset = height < 760 ? -26.0f : 0;
-    controllerValueOffset = height < 760 ? -46.0f : 0;
-    controllerStickRadius = height < 760 ? 46.0f : 56.0f;
-    diagnosticsPanelBeginning = static_cast<float>(height) - 36 - panelHeight;
+    y += 36;
     const auto& display = snapshot.displayTracking;
     const bool displayIncomplete = display.lostEvents || display.lostBuffers || display.droppedSubmissions
         || display.droppedCompletions || display.droppedMeasurements || display.decoderOverflows;
-    std::string displayTitle = "DISPLAY TRACKING";
-    if (!foreground) displayTitle = "UNFOCUSED: measurement statistics pause. Activate this window to measure.";
-    else if (display.error || displayIncomplete) displayTitle = display.status;
-    else if (!display.active) displayTitle += " / waiting for Windows display events";
-    else if (panelHeight == 32) displayTitle = std::format(
-        "Display: {} shown | {} discarded | {} unresolved | Clock errors: {} | <= {:.1f} us",
-        display.displayed, display.discarded, display.unresolved, display.invalidClocks, display.maximumClockUncertainty);
     const bool displayAvailable = display.active && !display.error;
-    StatisticsPanel(106, panelHeight, displayTitle,
-        {"SHOWN FRAMES", "DISCARDED", "UNRESOLVED", "CLOCK ERRORS", "UNCERTAINTY"},
+    y = StatisticsPanel(y, "DISPLAY TRACKING",
+        {"Shown frames", "Discarded frames", "Unresolved frames", "Clock errors", "Clock uncertainty"},
         {displayAvailable ? std::to_string(display.displayed) : "--", displayAvailable ? std::to_string(display.discarded) : "--",
             displayAvailable ? std::to_string(display.unresolved) : "--", std::to_string(display.invalidClocks),
             displayAvailable ? std::format("<= {:.1f} us", display.maximumClockUncertainty) : "--"},
         {false, false, false, display.invalidClocks != 0, false});
-    ControllerPanel(snapshot);
-    Text(24, deviceRowsBeginning - 28, "Each gamepad: callback delay / late frame sample / DISPLAY event (milliseconds)", Muted);
-    float y = deviceRowsBeginning;
-    for (std::size_t index = firstDevice; index < snapshot.devices.size() && y + 124 <= diagnosticsPanelBeginning - 12; ++index) {
+    const std::string_view displayStatus = !foreground
+        ? "UNFOCUSED: measurement statistics pause. Activate this window to measure."
+        : display.error || displayIncomplete ? std::string_view(display.status)
+        : !display.active ? "Waiting for Windows display events." : "Tracking Windows display events.";
+    Text(24, y, displayStatus, foreground && !display.error && !displayIncomplete ? Muted : Accent);
+    y += 36;
+    y = ControllerPanel(snapshot, y);
+    Text(24, y, "Each gamepad: callback delay / late frame sample / DISPLAY event (milliseconds)", Muted);
+    y += 28;
+    deviceRowsBeginning = y;
+    visibleDeviceCount = 0;
+    // Leave room for diagnostics and shortcuts following the visible device rows.
+    const float deviceRowsEnding = static_cast<float>(height) - StatisticsPanelHeight - 2 * PanelGap - 28;
+    for (std::size_t index = firstDevice; index < snapshot.devices.size() && y + 124 <= deviceRowsEnding; ++index) {
         const auto& value = snapshot.devices[index];
         Rectangle(20, y, static_cast<float>(width) - 40, 124, Gray(0.10f));
         Text(32, y + 4, std::format("#{} {} | {} | {:04X}:{:04X} | {}", index, value.kind,
@@ -509,19 +499,19 @@ void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t first
         Text(32, y + 82, value.displayDelay.count ? row("Display ", value.displayDelay)
             : snapshot.displayTracking.error ? "Display unavailable: display tracing requires permission." : "Display waiting for new input in a displayed frame", Accent);
         y += 136;
+        ++visibleDeviceCount;
     }
-    if (snapshot.devices.empty()) Text(32, y + 16, "Waiting for GameInput gamepads. Connect a gamepad.", Foreground);
-    const auto diagnosticsTitle = panelHeight == 32
-        ? std::format("Dropped: callback={} frame={} | invalid clocks={} | poll errors={} | device errors={}",
-            snapshot.droppedCallbacks, snapshot.droppedFrames, snapshot.invalidTimestamps, snapshot.pollErrors, snapshot.deviceLimitEvents)
-        : snapshot.loggingFailed ? std::string("INPUT DIAGNOSTICS / LOGGING FAILED") : std::string("INPUT DIAGNOSTICS");
-    StatisticsPanel(diagnosticsPanelBeginning, panelHeight, diagnosticsTitle,
-        {"CALLBACK DROPS", "FRAME DROPS", "INVALID CLOCKS", "POLL ERRORS", "DEVICE ERRORS"},
+    if (snapshot.devices.empty()) {
+        Text(32, y + 16, "Waiting for GameInput gamepads. Connect a gamepad.", Foreground);
+        y += 52;
+    }
+    y = StatisticsPanel(y, "INPUT DIAGNOSTICS",
+        {"Callback drops", "Frame drops", "Invalid clocks", "Poll errors", "Device errors"},
         {std::to_string(snapshot.droppedCallbacks), std::to_string(snapshot.droppedFrames), std::to_string(snapshot.invalidTimestamps),
             std::to_string(snapshot.pollErrors), std::to_string(snapshot.deviceLimitEvents)},
         {snapshot.droppedCallbacks != 0, snapshot.droppedFrames != 0, snapshot.invalidTimestamps != 0,
             snapshot.pollErrors != 0, snapshot.deviceLimitEvents != 0});
-    Text(24, static_cast<float>(height) - 32, snapshot.loggingFailed ? "LOGGING FAILED: inspect storage permissions/free space. Timing is incomplete."
+    Text(24, y, snapshot.loggingFailed ? "LOGGING FAILED: inspect storage permissions/free space. Timing is incomplete."
         : "F11 fullscreen | PageUp/PageDown devices | Esc quit | CSV logs saved at exit", snapshot.loggingFailed ? Accent : Muted);
     dashboardVertexCount = vertices.size();
     dashboardDeviceCount = snapshot.devices.size();
@@ -555,14 +545,14 @@ PresentationResult Renderer::DrawAndPresent(InputMonitor& monitor, std::array<Vi
     const auto frameNow = monitor.Now();
     if (selectedController && *selectedController < monitor.DeviceCount()) DrawControllerState(states[*selectedController]);
     else {
-        const float valueOffset = controllerPanelOffset + controllerValueOffset;
-        for (const auto position : {StickPosition{120, 418 + valueOffset}, StickPosition{120, 442 + valueOffset}, StickPosition{360, 418 + valueOffset},
-            StickPosition{360, 442 + valueOffset}, StickPosition{776, 282 + controllerPanelOffset + controllerAnalogOffset},
-            StickPosition{776, 378 + valueOffset}}) Text(position.x, position.y, "--", Muted);
+        const float offset = controllerPanelBeginning - 142;
+        for (const auto position : {StickPosition{120, 418 + offset}, StickPosition{120, 442 + offset}, StickPosition{360, 418 + offset},
+            StickPosition{360, 442 + offset}, StickPosition{776, 282 + offset},
+            StickPosition{776, 378 + offset}}) Text(position.x, position.y, "--", Muted);
     }
     float y = deviceRowsBeginning;
     const auto count = std::min(monitor.DeviceCount(), dashboardDeviceCount);
-    for (std::size_t index = firstDevice; index < count && y + 124 <= diagnosticsPanelBeginning - 12; ++index) {
+    for (std::size_t index = firstDevice; index < count && index - firstDevice < visibleDeviceCount; ++index) {
         auto& state = states[index];
         state.visualized = true;
         const auto now = frameNow;

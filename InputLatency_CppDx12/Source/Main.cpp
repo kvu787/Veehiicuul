@@ -49,7 +49,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM first, LPARAM
     switch (message) {
     case WM_GETMINMAXINFO: {
         auto* limits = reinterpret_cast<MINMAXINFO*>(second);
-        RECT minimum{0, 0, 1200, 680};
+        RECT minimum{0, 0, 1280, 1400};
         AdjustWindowRectEx(&minimum, WS_OVERLAPPEDWINDOW, FALSE, 0);
         limits->ptMinTrackSize = {minimum.right - minimum.left, minimum.bottom - minimum.top};
         return 0;
@@ -184,7 +184,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int)
         windowClass.hInstance = instance; windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
         windowClass.lpszClassName = L"InputLatencyDirectX12";
         if (!RegisterClassExW(&windowClass)) throw std::runtime_error("Cannot register application window class.");
-        RECT rectangle{0, 0, 1280, 860}; AdjustWindowRectEx(&rectangle, WS_OVERLAPPEDWINDOW, FALSE, 0);
+        RECT rectangle{0, 0, 1280, 1400}; AdjustWindowRectEx(&rectangle, WS_OVERLAPPEDWINDOW, FALSE, 0);
         WindowOwner window;
         window.handle = CreateWindowExW(0, windowClass.lpszClassName, L"Gamepad latency - GameInput / DirectX 12", WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT, rectangle.right - rectangle.left, rectangle.bottom - rectangle.top,

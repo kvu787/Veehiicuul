@@ -28,6 +28,15 @@ Windows display-event tracing requires administrator or Performance Log Users pe
 
 ## Use
 
+### Application requirements
+
+- Assume at least 1280 width * 1400 height of pixel space.
+- Use only one size of font. No upscaling/downscaling either.
+- Use a simple layout flow in which things stack from left to right and top to bottom.
+- Display tracking and input diagnostics use one textual item per line, such as `Shown frames = value` and `Callback drops = value`.
+
+These requirements are also recorded in [AGENTS.md](AGENTS.md) for future application changes.
+
 The application starts in borderless fullscreen on its startup monitor. Press F11 to switch to a resizable window or back to borderless fullscreen.
 
 Activate the application window, then use gamepad buttons, sticks, and triggers. Each gamepad has its own statistics. Gamepad connection and disconnection are tracked throughout the session. Only the gamepad input kind is registered for device and reading callbacks and sampled per frame; mouse and keyboard inputs do not contribute measurements. Keyboard shortcuts below control the window.
@@ -44,9 +53,9 @@ Both analog sticks have position diagrams and signed X/Y values. Both triggers h
 
 Controller diagrams and numeric values use one gamepad reading every rendered frame, sampled after the GPU and presentation waits. Both sticks, both triggers, and buttons share that reading's original timestamp. Composite controllers are polled specifically for their gamepad stream. The controller panel stays visible independently of the latency rows. Displayed frames that visualize the selected gamepad contribute to its display statistics even when its latency row is outside the visible list.
 
-Latency rows show callback, late sample, and reading-to-display statistics in milliseconds. Their right-hand indicators change immediately for new gamepad input and held gamepad buttons. Latency statistics text and controller identity/selection refresh four times per second. The window's minimum client size is 1200x680 to keep the controller data and complete identifier readable. Display statistics arrive asynchronously after Windows reports presentation, typically with an ETW buffer delay. That reporting delay is excluded from the measured latency.
+Latency rows show callback, late sample, and reading-to-display statistics in milliseconds. Their right-hand indicators change immediately for new gamepad input and held gamepad buttons. Latency statistics text and controller identity/selection refresh four times per second. The window's minimum client size is 1280x1400. Display statistics arrive asynchronously after Windows reports presentation, typically with an ETW buffer delay. That reporting delay is excluded from the measured latency.
 
-Display tracking and input diagnostics have separate full-width bordered panels. At client heights of 860 pixels or more, each panel presents five labeled columns with enlarged values. Taller windows add more padding. Shorter windows use compact summaries inside the same borders; below 760 pixels, the controller panel uses smaller stick diagrams and omits the explanatory range line so at least one complete latency row fits above diagnostics. Input values and sampling behavior are unchanged. The display panel retains tracing-permission, lost-record, and unfocused messages; unavailable display counters show `--` in the expanded layout.
+Display tracking and input diagnostics have separate bordered panels containing vertical `Label = value` lists. All text uses the same fixed font size, with no scaling. The header, display tracking, controller panel, visible gamepad latency rows, input diagnostics, and shortcuts follow one top-to-bottom flow. Controls inside the controller panel are arranged from left to right. Diagnostics follow the visible gamepad data instead of being anchored to the bottom of the window. The display panel retains tracing-permission, lost-record, and unfocused messages; unavailable display counters show `--`.
 
 The dashboard uses only grayscale colors, with equal red, green, and blue components. Text, controller markers, activity indicators, and warnings use brightness differences against dark gray backgrounds.
 
@@ -131,7 +140,7 @@ Raw measurement units are microseconds. Device indexes join the CSV files to `De
 
 `Tools/VerifyDisplayTracking.ps1` performs a short visible hardware-adapter test. Use gamepad buttons, sticks, and triggers during its eight-second session. It checks that all logged devices/statistics are gamepads, checks display correlation and timestamp subtraction, and reports when no fresh gamepad readings were displayed. Physical gamepad input remains a manual check when no such readings are collected.
 
-`Tools/VerifyWindowLifecycle.ps1` runs a 35-second visible Debug session that checks borderless fullscreen startup and F11 windowed restoration, minimizes/restores, maximizes, toggles F11 fullscreen, and resizes to a 1200x680 client area. Click the application after restore if Windows blocks programmatic activation. It records action QPC timestamps, verifies that presentation pauses while minimized and resumes afterward, captures the minimum-size dashboard, and validates the session logs.
+`Tools/VerifyWindowLifecycle.ps1` runs a 35-second visible Debug session that checks borderless fullscreen startup and F11 windowed restoration, minimizes/restores, maximizes, toggles F11 fullscreen, and resizes to a 1280x1400 client area. Click the application after restore if Windows blocks programmatic activation. It records action QPC timestamps, verifies that presentation pauses while minimized and resumes afterward, captures the minimum-size dashboard, and validates the session logs.
 
 `Tools/ValidateSession.ps1` independently checks device identities, timestamp subtraction/order, frame joins, first-display deduplication, and every summary count/aggregate/rolling percentile against the CSV records. By default, any clock error fails validation. `-AllowRejectedClockFrames` permits explicitly recorded clock-rejection frames only when they have no accepted conversion or display-reading observation; other diagnostic errors still fail validation.
 
