@@ -20,10 +20,14 @@ Use complete proper words. Don't use typical shortenings. Good: Source, Document
 You may use the tools in `%UserProfile%\Program`.
 You may refer to local copies of source repos in `%UserProfile%\Repository\External`.
 
+# PowerShell
+
+Use modern PowerShell whose command should be `pwsh`, not legacy PowerShell.
+
 ## Git
 
 When implementing stuff, avoid difficult-to-review "mega-commits".
-Split large work into multiple commits to make it easier to review.
+When it makes sense, split large work into multiple commits to make it easier to review.
 Separate commits that record conversations from other commits.
 
 ## Markdown tables
@@ -104,16 +108,16 @@ If the application doesn't need to be "built" for it to be run (such as a PowerS
 
 ### Logging
 
-When creating an application, create a folder called `MyLogOutput` at the root of the application's folder in the git repo.
-For each run of the application, a folder must be created in MyLogOutput and named with the current timestamp. This PowerShell code shows what the name of the folder should be:
+When creating an application, create a folder called `LogOutput` at the root of the application's folder in the git repo.
+For each run of the application, a folder must be created in LogOutput and named with the current timestamp. This PowerShell code shows what the name of the folder should be:
 
 ```powershell
-$logFolderPath = "$env:UserProfile\Repository\Godot\VsyncStutterTest\MyLogOutput\$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")"
+$logFolderPath = "$env:UserProfile\Repository\Godot\VsyncStutterTest\LogOutput\$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")"
 New-Item -ItemType "Directory" -Path $logFolderPath
 ```
 
 Any logs for that application session must be put in that log folder.
-`MyLogOutput/` must be gitignored.
+`LogOutput/` must be gitignored.
 
 # Base template additions
 
