@@ -314,3 +314,24 @@ I'll change the requirement to 1280 x 1300 and update the window dimensions and 
 Updated the requirement to **1280 x 1300**, along with window sizing and verification expectations.
 
 Release build and all six tests passed; layout verified at 1280 x 1300.
+
+## User
+
+set these application requirements:
+- Use a content space of exactly 1200 px width * 1300 px height
+- Don't make the application contents responsive at all, except for the background color. This means that it should always render the content to the 1200*1300 content space and then fill the full window with the background color. If the window dimensions cut off content, that is fine.
+- Allow window resizing.
+
+## Assistant Commentary
+
+I'll record these requirements and make the dashboard use a fixed 1200 x 1300 content area in a resizable window, with the background filling the full window.
+
+## Assistant Commentary
+
+The captures confirm that the layout stays fixed: the larger window adds background, and the 800 x 600 window clips the content without scaling or rearranging it. Release and Debug both passed all six tests.
+
+## Assistant Final
+
+Recorded and implemented: fixed **1200 x 1300** content, no responsive layout, and resizable windows. Extra space shows background; smaller windows clip content.
+
+All six tests passed in Release and Debug.
