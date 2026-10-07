@@ -411,3 +411,52 @@ Consequently, **8,000 Hz does not guarantee that the stick value returned to the
 Under ideal periodic reporting, a change already ready for transmission waits between approximately zero and one report interval for the next opportunity. At 8,000 Hz that portion is up to about 125 microseconds; sensor sampling, firmware, transport, and software processing are additional parts of the path.
 
 InputLatency_CppDx12 fetches the latest available GameInput reading once per rendered frame. It can therefore skip intermediate reports while still using the newest available state. Its existing timing statistics do not verify that every hardware report reaches the PC exactly 125 microseconds apart.
+
+## User
+
+ideally, to measure input latency from the software side, the software should know the timestamp of every input event or state for when the hardware report that sent that event/state arrived at the pc. is that possible to get? does InputLatency_CppDx12 or presentmon get that timestamp?
+
+## Assistant Commentary
+
+I'll check what GameInput and PresentMon's input timestamps represent, especially how close they are to the report arriving at the PC.
+
+## Assistant Commentary
+
+Both use timestamps that already exist before the app or PresentMon processes the input. The limit is their meaning: GameInput supplies a reading timestamp, while PresentMon uses a Windows input-read event timestamp. Neither establishes the exact USB-bus arrival time for every report.
+
+## Assistant Final
+
+**You can obtain a timestamp supplied by the input system before your application reads the state. Both tools use such timestamps. However, neither currently provides a verified timestamp for the exact instant every hardware report arrives at the PC's USB controller.**
+
+The distinction is the point where you start the clock:
+
+| Timestamp boundary                       | What it measures from                        |
+| ---------------------------------------- | -------------------------------------------- |
+| USB transfer received/completed          | A boundary in the USB/controller/driver path |
+| Windows input-read event                 | A boundary in Windows' input processing      |
+| GameInput reading timestamp              | The timestamp assigned to an input reading   |
+| Your application's callback or poll      | When your application observes the input     |
+
+These boundaries can have delays between them. A timestamp taken in your own callback includes the time spent getting to that callback; an earlier timestamp supplied with the input lets you measure that delay.
+
+**InputLatency_CppDx12 already retrieves the GameInput reading timestamp**, using:
+
+`reading->GetTimestamp()`
+
+It records that as `ReadingTimestampUs`, separately from the current timestamps taken at callback entry, polling, and Present. Its latency calculations subtract the reading timestamp from those later endpoints. See [InputMonitor.cpp](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Source/InputMonitor.cpp:128).
+
+Microsoft documents `GetTimestamp()` as the reading's microsecond input timestamp. The public API description does **not establish that it equals the precise USB transfer-arrival/completion time for your controller**. Therefore, I can accurately call the app's starting point a GameInput reading timestamp; I cannot claim a verified USB-arrival starting point. [Microsoft's timestamp documentation](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinputreading/methods/igameinputreading_gettimestamp).
+
+The app also captures GameInput updates rather than a complete raw USB packet trace. Its callback logs delivered reading timestamps, while its render thread selects only the newest reading each frame. This does not establish a one-to-one record of all 8,000 hardware reports per second.
+
+**PresentMon 2.6.0 uses a Windows event timestamp for its standard keyboard/mouse input tracking.** Specifically, the code handles the Win32k `InputDeviceRead_Stop` ETW event and saves its event-header QPC timestamp:
+
+`mLastInputDeviceReadTime = hdr.TimeStamp.QuadPart;`
+
+This is the timestamp of that Windows event, rather than the time PresentMon eventually processes it. PresentMon then associates input with application frames. See [the local implementation](C:/Users/k/Repository/External/PresentMon_2-6-0/PresentData/PresentMonTraceConsumer.cpp:1782) and [Microsoft's ETW timestamp definition](https://learn.microsoft.com/en-us/windows/win32/api/evntcons/ns-evntcons-event_header).
+
+That still represents a Windows software boundary. It is not a universal per-packet USB-arrival timestamp, and this standard tracking path does not provide equivalent native GameInput gamepad report timestamps.
+
+**Getting closer to your proposed start point is possible through lower-level tracing or driver instrumentation.** For example, Windows USB tracing can expose transfer-completion events. A measurement system would need to identify the relevant device/endpoint, timestamp a defined reception/completion boundary, and correlate that report with the state the game consumes. The available events and correlation would need verification for the specific device and driver path. [Microsoft's USB trace documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/usbcon/how-to-examining-a-trace-file-by-using-netmon).
+
+Starting at PC report receipt would measure the subsequent PC software delay. It would deliberately exclude the controller's sensor/firmware processing and transmission delay before receipt.
