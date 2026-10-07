@@ -308,3 +308,31 @@ Testing found and fixed **three issues**: timestamp precision loss, colliding se
 [Validation record](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Documentation/Verification.md).
 
 One final check remains: a focused live run of the corrected build. Windows left the last run unfocused; the readiness question is pending.
+
+## User
+
+let's do a final live validation now. ensure that it doesn't take more than 10 minutes of my time.
+
+## Assistant Commentary
+
+I'll run a focused 60-second test, then validate the logs and stop. Your part should take about a minute: activate the app, move both sticks and triggers, and press several buttons. I'll keep the whole validation within 10 minutes.
+
+## Assistant Commentary
+
+The 60-second run is open now. Click the app window, keep it focused, move both sticks, squeeze both triggers, and press several buttons. It will close automatically; you can stop testing when it closes.
+
+## Assistant Commentary
+
+The live run finished successfully with the app focused. It logged the controller and 69,034 displayed frames, with zero lost records, clock errors, or unmatched events. Your hands-on testing is done; I'm checking the latency calculations and saved dashboard.
+
+## Assistant Commentary
+
+Final validation passed: 68,298 first-display readings checked successfully, and all six statistical summaries matched the raw data. The dashboard is readable. I'll save the results and finish within the 10-minute limit.
+
+## Assistant Final
+
+Final live validation passed within 10 minutes.
+
+The 60-second controller run produced **68,298 validated reading-to-display samples**. All six statistical summaries matched, with **zero clock errors, dropped records, or unmatched events**. The app shut down cleanly.
+
+[Validation record](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Documentation/Verification.md).
