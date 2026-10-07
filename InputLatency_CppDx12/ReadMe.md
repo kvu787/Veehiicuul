@@ -1,6 +1,6 @@
 # Input latency / C++ / DirectX 12
 
-A standalone Windows 11 x64 application using Microsoft's GameInput v3 API to measure reading-to-display latency for connected mice, keyboards, and gamepads. A bundled PresentMon v2.6.0 decoder tracks Windows display events asynchronously.
+A standalone Windows 11 x64 application using Microsoft's GameInput v3 API to measure reading-to-display latency for connected gamepads. A bundled PresentMon v2.6.0 decoder tracks Windows display events asynchronously.
 
 Double-click `Build.cmd`, then `Run.cmd`. The Release executable is `BuildOutput\Release\InputLatency.exe`. The application, source, dependencies, build output, and session logs all live within this folder. It does not reference or modify another application in the repository. This folder can be copied and used independently.
 
@@ -28,7 +28,7 @@ Windows display-event tracing requires administrator or Performance Log Users pe
 
 ## Use
 
-Activate the application window, then move or click each mouse, press keyboard keys, and use gamepad buttons, sticks, and triggers. Each device has its own statistics. Device connection and disconnection are tracked throughout the session.
+Activate the application window, then use gamepad buttons, sticks, and triggers. Each gamepad has its own statistics. Gamepad connection and disconnection are tracked throughout the session. Only the gamepad input kind is registered for device and reading callbacks and sampled per frame; mouse and keyboard inputs do not contribute measurements. Keyboard shortcuts below control the window.
 
 | Control           | Action                                        |
 | ----------------- | --------------------------------------------- |
@@ -42,13 +42,13 @@ Both analog sticks have position diagrams and signed X/Y values. Both triggers h
 
 Controller diagrams and numeric values use one gamepad reading every rendered frame, sampled after the GPU and presentation waits. Both sticks, both triggers, and buttons share that reading's original timestamp. Composite controllers are polled specifically for their gamepad stream. The controller panel stays visible independently of the latency rows. Displayed frames that visualize the selected gamepad contribute to its display statistics even when its latency row is outside the visible list.
 
-Latency rows show callback, late sample, and reading-to-display statistics in milliseconds. Their right-hand indicators change immediately for new input and held buttons/keys; mouse position also has a visual indicator. Latency statistics text and controller identity/selection refresh four times per second. The window's minimum client size is 1024x720 to keep the controller data and complete identifier readable. Display statistics arrive asynchronously after Windows reports presentation, typically with an ETW buffer delay. That reporting delay is excluded from the measured latency.
+Latency rows show callback, late sample, and reading-to-display statistics in milliseconds. Their right-hand indicators change immediately for new gamepad input and held gamepad buttons. Latency statistics text and controller identity/selection refresh four times per second. The window's minimum client size is 1024x720 to keep the controller data and complete identifier readable. Display statistics arrive asynchronously after Windows reports presentation, typically with an ETW buffer delay. That reporting delay is excluded from the measured latency.
 
 The dashboard uses only grayscale colors, with equal red, green, and blue components. Text, controller markers, activity indicators, and warnings use brightness differences against dark gray backgrounds.
 
 The foreground application records measurement statistics. Unfocused input, if delivered by GameInput, is marked in raw logs and excluded from callback statistics. Focus transitions establish fresh baselines. Minimized windows wait for window availability and do not render.
 
-Composite or virtual devices may expose several input kinds. The list preserves GameInput's device identities instead of assuming that every HID interface is a distinct physical peripheral. Up to 128 device identities are retained per session, including disconnected devices. Additional device/metadata errors are reported explicitly.
+Composite or virtual devices may expose several input kinds. Only devices supporting gamepad input are listed, and only their gamepad stream is measured. The list preserves GameInput's device identities instead of assuming that every HID interface is a distinct physical peripheral. Up to 128 gamepad device identities are retained per session, including disconnected devices. Additional device/metadata errors are reported explicitly.
 
 ## What is measured
 
@@ -79,7 +79,7 @@ Shutdown allows 100 milliseconds for the final submitted image to reach presenta
 
 Initial cached readings are baselines, not latency observations. Repeated current readings are deduplicated by COM object identity, retaining the previous reading reference. Equal timestamps can belong to distinct readings and remain valid. Future timestamps are rejected instead of subtracting unsigned values. Percentiles use the nearest-rank method over the latest 8192 accepted observations for each metric; count, minimum, mean, and maximum cover the entire session.
 
-State-change intervals are **not USB polling rates**. GameInput reports state changes; idle periods, keyboard presses, and stick motion affect their distribution. Reading callbacks run on GameInput's worker and include callback scheduling delay. Rendering directly polls the cached stream instead of waiting for these callbacks.
+State-change intervals are **not USB polling rates**. GameInput reports state changes; idle periods, button presses, and stick motion affect their distribution. Reading callbacks run on GameInput's worker and include callback scheduling delay. Rendering directly polls the cached stream instead of waiting for these callbacks.
 
 ## Low-latency configuration
 
@@ -117,13 +117,13 @@ Every launch creates `LogOutput/yyyy-MM-dd_HH-mm-ss/`. Direct executable launche
 | MeasurementDiagnostics.txt | Dropped records, invalid clocks, device and polling errors       |
 | Dashboard.png              | Optional GPU frame capture for verification                      |
 
-Raw measurement units are microseconds. Device indexes join the CSV files to `Devices.csv`. The logs record timings and device metadata, without recording typed characters or key contents. Both queues have 65536 records. Queue overflow drops measurement records, increments diagnostic counters, and never delays live rendering. Any nonzero drop count means the logs are incomplete. Logging failures appear in the dashboard and cause a nonzero application exit.
+Raw measurement units are microseconds. Device indexes join the CSV files to `Devices.csv`. The logs record gamepad timings and device metadata. `Application.log` records `MeasuredInputKind=Gamepad`, and device/summary kind fields contain `Gamepad`. Both queues have 65536 records. Queue overflow drops measurement records, increments diagnostic counters, and never delays live rendering. Any nonzero drop count means the logs are incomplete. Logging failures appear in the dashboard and cause a nonzero application exit.
 
 ## Verification
 
 `Build.ps1 -Test` runs arithmetic/statistics/queue tests, controller-state tests, display clock conversion/correlation tests, and a short hidden DirectX 12 WARP/GameInput smoke test. Debug builds enable the DirectX 12 debug layer when available and fail if it reports errors or corruption. The bundled event decoder uses its production behavior in both configurations to avoid upstream modal assertion dialogs on a background tracing thread.
 
-`Tools/VerifyDisplayTracking.ps1` performs a short visible hardware-adapter test with bounded synthetic mouse movement and restores the pointer afterward. It checks display correlation and timestamp subtraction. Some GameInput device paths do not expose synthetic input; the script reports that case without claiming physical input verification.
+`Tools/VerifyDisplayTracking.ps1` performs a short visible hardware-adapter test. Use gamepad buttons, sticks, and triggers during its eight-second session. It checks that all logged devices/statistics are gamepads, checks display correlation and timestamp subtraction, and reports when no fresh gamepad readings were displayed. Physical gamepad input remains a manual check when no such readings are collected.
 
 See the [verification record](Documentation/Verification.md) for the completed checks and remaining manual checks.
 

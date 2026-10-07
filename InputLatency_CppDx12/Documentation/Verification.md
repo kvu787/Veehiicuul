@@ -53,3 +53,13 @@ The WARP smoke run in `LogOutput/2026-10-06_23-20-01` also exercised composition
 The final Release/Debug suites also cover the strengthened input timeline checks and the shutdown-only 100-millisecond trace drain. Build, Run, and VerifyDisplayTracking PowerShell scripts passed parser checks. The render thread never waits for display-event delivery; the original uncapped, tearing-enabled, single-GPU-frame policy remains active.
 
 The final hardware verification in `LogOutput/2026-10-06_23-36-59` matched 276 displayed and 9734 discarded frames out of 10010 submissions, with zero unresolved frames, unmatched events, trace loss, queue drops, clock errors, decoder warnings, or decoder overflows. Its maximum accepted clock-bracket uncertainty was 1.1 microseconds. Fresh synthetic input remained unavailable through this GameInput path.
+
+## Gamepad-only measurement
+
+Verified on October 7, 2026. Device and reading callback registration and per-frame polling now request only `GameInputKindGamepad`. Device enumeration rejects metadata without gamepad support, and reading callbacks reject readings without the gamepad input kind. Mouse/keyboard state extraction and the mouse-position visual have been removed. Keyboard window-control shortcuts remain available.
+
+The optimized Release and Debug builds each passed all four existing tests. The updated `VerifyDisplayTracking.ps1` passed its PowerShell parser check and hardware-adapter run in `LogOutput/2026-10-07_02-57-49`. It checks that device and summary rows contain only the `Gamepad` kind and verifies display timestamp subtraction without generating synthetic mouse input.
+
+That hardware session matched 297 displayed frames and 9585 discarded frames, with 121 unresolved frames and 121 unmatched events. Trace loss, queue drops, clock errors, decoder warnings, decoder overflows, and input measurement diagnostics were all zero. Maximum accepted clock-bracket uncertainty was 1.15 microseconds. Its dashboard capture was inspected: gamepad-only labels and the no-controller state were readable without clipping.
+
+No gamepad was connected during these runs; no devices or input observations were logged. Physical gamepad button/stick/trigger motion and connection/disconnection remain manual checks. The runs verify the builds, empty-device behavior, and display tracking, without establishing a physical gamepad latency result.

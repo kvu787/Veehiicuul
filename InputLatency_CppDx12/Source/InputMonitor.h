@@ -16,8 +16,7 @@
 
 namespace Input = GameInput::v3;
 inline constexpr std::size_t MaximumDevices = 128;
-inline constexpr Input::GameInputKind MeasuredKinds = static_cast<Input::GameInputKind>(
-    Input::GameInputKindMouse | Input::GameInputKindKeyboard | Input::GameInputKindGamepad);
+inline constexpr Input::GameInputKind MeasuredKinds = Input::GameInputKindGamepad;
 
 struct DeviceSlot
 {
@@ -56,14 +55,11 @@ struct MonitorSnapshot
 struct VisualState
 {
     bool connected{}, active{}, newReading{}, visualized{};
-    std::uint32_t buttons{}, keys{};
-    std::int64_t mouseX{}, mouseY{};
     ControllerAnalogState controller;
     bool controllerReadingAvailable{};
     std::uint64_t timestamp{}, sampledAt{};
     std::uint64_t readingSerial{};
     bool measurementEligible{};
-    Input::GameInputKind kind{};
 };
 
 class InputMonitor final

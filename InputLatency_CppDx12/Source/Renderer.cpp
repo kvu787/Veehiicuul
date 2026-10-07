@@ -434,14 +434,14 @@ void Renderer::Text(float x, float y, std::string_view text, Color color)
 void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t firstDevice, double framesPerSecond, bool foreground)
 {
     vertices.clear();
-    Text(24, 18, "INPUT LATENCY / GAMEINPUT / DIRECTX 12", Accent);
+    Text(24, 18, "GAMEPAD LATENCY / GAMEINPUT / DIRECTX 12", Accent);
     Text(24, 46, "Reading-to-display latency: GameInput snapshot to Windows display event (milliseconds).", Muted);
     Text(24, 78, std::format("VSync OFF | Uncapped | GPU 1 | Present 1 | Buffers 2 | Spin | Tearing {} | {:.0f} FPS",
         tearing ? "ON" : "unavailable", framesPerSecond), Foreground);
     Text(24, 106, foreground ? snapshot.displayTracking.status : "UNFOCUSED: measurement statistics pause. Activate this window to measure.",
         foreground && !snapshot.displayTracking.error ? Muted : Accent);
     ControllerPanel(snapshot);
-    Text(24, deviceRowsBeginning - 28, "Each device: callback delay / late frame sample / DISPLAY event (milliseconds)", Muted);
+    Text(24, deviceRowsBeginning - 28, "Each gamepad: callback delay / late frame sample / DISPLAY event (milliseconds)", Muted);
     float y = deviceRowsBeginning;
     for (std::size_t index = firstDevice; index < snapshot.devices.size() && y + 130 < static_cast<float>(height) - 66; ++index) {
         const auto& value = snapshot.devices[index];
@@ -459,7 +459,7 @@ void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t first
             : snapshot.displayTracking.error ? "Display unavailable: display tracing requires permission." : "Display waiting for new input in a displayed frame", Accent);
         y += 136;
     }
-    if (snapshot.devices.empty()) Text(32, y + 16, "Waiting for GameInput devices. Connect a mouse, keyboard, or gamepad.", Foreground);
+    if (snapshot.devices.empty()) Text(32, y + 16, "Waiting for GameInput gamepads. Connect a gamepad.", Foreground);
     Text(24, static_cast<float>(height) - 60, std::format("Dropped: callback={} frame={} | invalid clocks={} | poll errors={} | device errors={}",
         snapshot.droppedCallbacks, snapshot.droppedFrames, snapshot.invalidTimestamps, snapshot.pollErrors, snapshot.deviceLimitEvents),
         snapshot.droppedCallbacks || snapshot.droppedFrames || snapshot.loggingFailed ? Accent : Muted);
@@ -509,10 +509,6 @@ PresentationResult Renderer::DrawAndPresent(InputMonitor& monitor, std::array<Vi
         const bool recent = state.timestamp && now >= state.timestamp && now - state.timestamp < 80000;
         const Color activity = !state.connected ? Muted : state.active ? SecondaryAccent : recent ? Accent : Gray(0.24f);
         Rectangle(static_cast<float>(width) - 54, y + 34, 18, 64, activity);
-        if (state.kind & Input::GameInputKindMouse) {
-            const float position = static_cast<float>((state.mouseX % 500 + 500) % 500) / 500.0f;
-            Rectangle(32 + position * (static_cast<float>(width) - 130), y + 116, 18, 4, Accent);
-        }
         y += 136;
     }
     const auto vertexBytes = vertices.size() * sizeof(DashboardVertex);

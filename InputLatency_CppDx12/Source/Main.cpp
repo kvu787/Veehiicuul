@@ -143,6 +143,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int)
         applicationLog.open(logDirectory / L"Application.log");
         applicationLog.exceptions(std::ios::failbit | std::ios::badbit);
         applicationLog << "InputLatency startup\nGameInputPackage=3.5.283\nGameInputRuntime=Bundled v3 (explicit local loading)\n"
+            << "MeasuredInputKind=Gamepad\n"
             << "Measurement=GameInput reading timestamp to software milestones; no physical input-to-photon claim\n"
             << "Percentiles=Nearest rank over the last 8192 observations of each metric\n";
         if (!SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) && GetLastError() != ERROR_ACCESS_DENIED) {
@@ -161,7 +162,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int)
         if (!RegisterClassExW(&windowClass)) throw std::runtime_error("Cannot register application window class.");
         RECT rectangle{0, 0, 1280, 860}; AdjustWindowRectEx(&rectangle, WS_OVERLAPPEDWINDOW, FALSE, 0);
         WindowOwner window;
-        window.handle = CreateWindowExW(0, windowClass.lpszClassName, L"Input latency - GameInput / DirectX 12", WS_OVERLAPPEDWINDOW,
+        window.handle = CreateWindowExW(0, windowClass.lpszClassName, L"Gamepad latency - GameInput / DirectX 12", WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT, rectangle.right - rectangle.left, rectangle.bottom - rectangle.top,
             nullptr, nullptr, instance, &windowState);
         if (!window.handle) throw std::runtime_error("Cannot create application window.");

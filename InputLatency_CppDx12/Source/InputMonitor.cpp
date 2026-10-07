@@ -26,11 +26,7 @@ std::string CsvString(const std::string& value)
 
 std::string KindName(Input::GameInputKind kind)
 {
-    std::string result;
-    if (kind & Input::GameInputKindMouse) result = "Mouse";
-    if (kind & Input::GameInputKindKeyboard) result += result.empty() ? "Keyboard" : "+Keyboard";
-    if (kind & Input::GameInputKindGamepad) result += result.empty() ? "Gamepad" : "+Gamepad";
-    return result;
+    return kind & MeasuredKinds ? "Gamepad" : "";
 }
 
 InputMonitor::~InputMonitor()
@@ -107,6 +103,7 @@ void CALLBACK InputMonitor::DeviceCallback(Input::GameInputCallbackToken, void* 
             if (count == MaximumDevices) { ++monitor.deviceLimitEvents; return; }
             const Input::GameInputDeviceInfo* information{};
             if (FAILED(device->GetDeviceInfo(&information)) || !information) return;
+            if (!(information->supportedInput & MeasuredKinds)) return;
             auto& slot = monitor.devices[index];
             slot.device = device;
             slot.name = information->displayName && information->displayName[0] ? information->displayName : KindName(information->supportedInput);
@@ -133,6 +130,7 @@ void CALLBACK InputMonitor::ReadingCallback(Input::GameInputCallbackToken, void*
     auto& monitor = *static_cast<InputMonitor*>(context);
     // Capture before resolving device identity or doing any other work.
     const auto observed = monitor.Now();
+    if (!(reading->GetInputKind() & MeasuredKinds)) return;
     const auto timestamp = reading->GetTimestamp();
     if (timestamp < monitor.sessionBeginning) return;
     ComPtr<Input::IGameInputDevice> device;
@@ -167,10 +165,8 @@ void InputMonitor::SampleLatest(std::array<VisualState, MaximumDevices>& states)
             previousFrameReadings[index].Reset(); continue;
         }
         ComPtr<Input::IGameInputReading> reading;
-        // Composite controllers can advertise mouse/keyboard input as well.
-        // Request their gamepad stream so the analog panel gets gamepad state.
-        const auto requestedKinds = slot.kinds & Input::GameInputKindGamepad ? Input::GameInputKindGamepad : slot.kinds;
-        const auto result = gameInput->GetCurrentReading(requestedKinds, slot.device.Get(), &reading);
+        // Use only the gamepad stream, including on composite controllers.
+        const auto result = gameInput->GetCurrentReading(MeasuredKinds, slot.device.Get(), &reading);
         const auto sampled = Now();
         if (FAILED(result)) {
             if (result != Input::GAMEINPUT_E_READING_NOT_FOUND && result != Input::GAMEINPUT_E_DEVICE_DISCONNECTED) ++pollErrors;
@@ -188,28 +184,18 @@ void InputMonitor::SampleLatest(std::array<VisualState, MaximumDevices>& states)
         if (!changed) continue;
         state.timestamp = reading->GetTimestamp();
         ++state.readingSerial;
-        state.kind = reading->GetInputKind();
         // Establish a baseline instead of measuring a reading cached before
         // connection/focus. Held state is still shown immediately.
         state.newReading = hadBaseline && state.timestamp >= focusBeginning.load(std::memory_order_relaxed) && foreground.load(std::memory_order_relaxed);
         state.measurementEligible = state.newReading;
-        state.buttons = 0;
-        state.keys = reading->GetKeyCount();
-        Input::GameInputMouseState mouse{};
-        if (reading->GetMouseState(&mouse)) {
-            state.buttons |= mouse.buttons;
-            state.mouseX = mouse.positionX;
-            state.mouseY = mouse.positionY;
-        }
         Input::GameInputGamepadState gamepad{};
         state.controllerReadingAvailable = reading->GetGamepadState(&gamepad);
         state.controller = {};
         if (state.controllerReadingAvailable) {
-            state.buttons |= gamepad.buttons;
             state.controller = {gamepad.leftThumbstickX, gamepad.leftThumbstickY,
                 gamepad.rightThumbstickX, gamepad.rightThumbstickY, gamepad.leftTrigger, gamepad.rightTrigger};
         }
-        state.active = state.buttons != 0 || state.keys != 0;
+        state.active = gamepad.buttons != 0;
     }
 }
 
@@ -289,7 +275,7 @@ void InputMonitor::LogWorker(const std::filesystem::path& logDirectory) noexcept
             ensureDevices();
             Event event;
             bool work = false;
-            // Bounded batches prevent continuous mouse input from starving
+            // Bounded batches prevent continuous gamepad input from starving
             // presentation records, publication, or graceful shutdown.
             for (std::size_t batch = 0; batch < 8192 && callbackEvents.Pop(event); ++batch) {
                 work = true;
