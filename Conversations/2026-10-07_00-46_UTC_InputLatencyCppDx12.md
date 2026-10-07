@@ -587,3 +587,15 @@ For clock compatibility, the first option needs no conversion: Microsoft explici
 For the other options, **raw GPU or QPC timestamps cannot simply be subtracted from GameInput timestamps**. We would establish and validate a mapping between QPC and GameInput using closely paired current-time measurements, account for calibration uncertainty, and convert the frame event into the GameInput clock before subtraction.
 
 For your measurement goal, I would use the **display-event timestamp, collected asynchronously**, while retaining the exact reading used by that frame. This would require additional tracking in the app. It measures a Windows display boundary; monitor processing, pixel response, and the scan-out position of the particular visual change remain outside that timestamp.
+
+## User
+
+which option number is "display-event timestamp"
+
+## Assistant Commentary
+
+That is option 3.
+
+## Assistant Final
+
+**Option 3** - when Windows reports the frame becoming displayed.
