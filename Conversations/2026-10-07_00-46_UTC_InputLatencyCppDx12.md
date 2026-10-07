@@ -242,3 +242,21 @@ Implemented a persistent controller panel showing one gamepad's name and full id
 It keeps the same gamepad selected until it disconnects, then picks another. Release and Debug tests passed.
 
 Launch with [Run.cmd](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Run.cmd).
+
+## User
+
+change the color scheme to grayscale, as in only colors between pure black and pure white
+
+## Assistant Commentary
+
+I'll change the dashboard to grayscale, keeping the controller states and latency data readable through brightness differences.
+
+## Assistant Commentary
+
+The rebuilt app passed all Release tests. I inspected the dashboard and checked all 1,100,800 captured pixels: every pixel has equal red, green, and blue values.
+
+## Assistant Final
+
+Changed the app to grayscale. Rebuilt Release, passed all tests, and verified the captured dashboard contains no colored pixels.
+
+Launch with [Run.cmd](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Run.cmd).
