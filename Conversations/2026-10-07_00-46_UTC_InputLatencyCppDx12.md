@@ -528,3 +528,31 @@ Yes. I mean `IGameInputReading::GetTimestamp()`, the timestamp attached to the i
 Yes - **`IGameInputReading::GetTimestamp()`**. It returns the timestamp associated with that input reading, not the time you call the method.
 
 The app compares it with `IGameInput::GetCurrentTimestamp()` at callback entry, sampling, or Present to measure elapsed time.
+
+
+## User
+
+for each frame, all the input data for that frame should have the same timestamp from `IGameInputReading::GetTimestamp`. does this make sense? is this currently the case?
+
+## Assistant Commentary
+
+I'll check how the app samples input for each frame and whether the values share a reading timestamp.
+
+## Assistant Final
+
+**Yes, for all values taken from one controller snapshot. The app already does this for the selected gamepad.**
+
+Each frame, it obtains one `IGameInputReading` for that controller, then takes both of these from the same reading:
+
+- `GetTimestamp()` for the snapshot's timestamp.
+- `GetGamepadState()` for both sticks, both triggers, and the buttons.
+
+Those values therefore share one reading timestamp. They are not fetched through separate `GetCurrentReading()` calls for each stick or trigger. See [the sampling code](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Source/InputMonitor.cpp:153).
+
+If the next frame receives the same reading, the app retains both its state and its original timestamp. It does not assign a newer timestamp to unchanged cached data. Sampling happens once per device per rendered frame, shortly before drawing the input visuals and presenting. [Rendering code](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Source/Renderer.cpp:489).
+
+**Across different devices, their timestamps should remain separate.** A mouse, keyboard, and gamepad report independently. One rendered frame can use readings with different timestamps; forcing them to share a timestamp would misrepresent their ages. They can share the frame's Present timestamp as the measurement endpoint.
+
+Also, the dashboard's latency statistics are historical aggregates, not measurements exclusively from the current frame's reading.
+
+A shared timestamp establishes that the controller values belong to the same GameInput snapshot. It does not establish that the controller hardware sampled every sensor simultaneously. [Microsoft's reading documentation](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinputreading/igameinputreading).
