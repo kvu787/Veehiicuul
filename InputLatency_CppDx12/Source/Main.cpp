@@ -108,18 +108,40 @@ Options ParseOptions()
     return options;
 }
 
+void ReserveApplicationLog(const std::filesystem::path& directory)
+{
+    const auto path = directory / L"Application.log";
+    const auto file = CreateFileW(path.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE) throw std::runtime_error(std::format(
+        "Cannot reserve a new Application.log (Windows error {}). Use an unused session log directory.", GetLastError()));
+    CloseHandle(file);
+}
+
 std::filesystem::path MakeSessionDirectory(const std::filesystem::path& executableDirectory, const Options& options)
 {
-    if (!options.logs.empty()) { std::filesystem::create_directories(options.logs); return options.logs; }
+    if (!options.logs.empty()) {
+        std::filesystem::create_directories(options.logs);
+        ReserveApplicationLog(options.logs);
+        return options.logs;
+    }
     // Keep the app relocatable: locate its own root from its executable, with
     // no compiled absolute path or dependency on the containing Git repo.
     auto applicationDirectory = executableDirectory;
     if (executableDirectory.parent_path().filename() == L"BuildOutput") applicationDirectory = executableDirectory.parent_path().parent_path();
-    SYSTEMTIME time{}; GetLocalTime(&time);
-    const auto name = std::format(L"{:04}-{:02}-{:02}_{:02}-{:02}-{:02}", time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
-    const auto directory = applicationDirectory / L"LogOutput" / name;
-    std::filesystem::create_directories(directory);
-    return directory;
+    const auto logs = applicationDirectory / L"LogOutput";
+    std::filesystem::create_directories(logs);
+    for (;;) {
+        SYSTEMTIME time{}; GetLocalTime(&time);
+        const auto name = std::format(L"{:04}-{:02}-{:02}_{:02}-{:02}-{:02}", time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
+        const auto directory = logs / name;
+        if (std::filesystem::create_directory(directory)) {
+            ReserveApplicationLog(directory);
+            return directory;
+        }
+        // Startup only: wait for an unused timestamp instead of mixing two
+        // sessions' logs. This never runs on the rendering or input paths.
+        Sleep(10);
+    }
 }
 
 class WindowOwner final
