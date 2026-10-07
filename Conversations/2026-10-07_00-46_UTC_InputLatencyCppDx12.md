@@ -260,3 +260,60 @@ The rebuilt app passed all Release tests. I inspected the dashboard and checked 
 Changed the app to grayscale. Rebuilt Release, passed all tests, and verified the captured dashboard contains no colored pixels.
 
 Launch with [Run.cmd](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Run.cmd).
+
+## User
+
+explain how "C:\Users\k\Repository\Veehiicuul\InputLatency_CppDx12" measures input latency and how it compares to presentmon 2.6.0 ("C:\Users\k\Repository\External\PresentMon_2-6-0")
+
+## Assistant Commentary
+
+I'll inspect both applications' measurement paths and compare where their latency clocks start and stop.
+
+## Assistant Commentary
+
+The main difference is the endpoint: this app stops at the CPU's `Present` call, while PresentMon can follow a frame through to its reported display time. PresentMon's standard input metrics also cover keyboard and mouse events; this app tracks GameInput readings separately for each mouse, keyboard, and gamepad.
+
+## Assistant Final
+
+**InputLatency_CppDx12 measures the age of GameInput readings when your app receives, samples, and submits them for presentation. PresentMon follows frames further, through to their reported display time.** Their latency numbers therefore describe different parts of the pipeline.
+
+Every GameInput reading has a timestamp from `IGameInputReading::GetTimestamp()`. Your app records its measurement endpoints using `IGameInput::GetCurrentTimestamp()`, keeping both ends on the same clock. Timestamps and CSV differences use microseconds; the dashboard converts them to milliseconds. Microsoft's [timestamp documentation](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinputreading/methods/igameinputreading_gettimestamp) describes this comparison.
+
+Your app calculates these metrics:
+
+| Metric                | Calculation                                  | What it tells you                                  |
+| --------------------- | -------------------------------------------- | -------------------------------------------------- |
+| Callback              | Callback entry minus reading timestamp       | GameInput delivery and callback scheduling delay   |
+| Sample                | Fresh poll return minus reading timestamp    | Age of the reading used by the render thread       |
+| Present               | CPU Present entry minus reading timestamp    | Reading age when the app calls DXGI Present        |
+| State-change interval | Current reading timestamp minus previous one | Spacing between reported input changes             |
+| Present call duration | CPU Present return minus entry               | Time spent inside the Present API call             |
+
+The calculations are in [InputMonitor.cpp](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Source/InputMonitor.cpp:285). **Callback, Sample, and Present share the same starting timestamp; do not add them together.** State-change intervals also depend on your activity, so they are not measurements of USB polling frequency.
+
+The callback records each delivered change. Independently, the renderer polls the newest reading for each device, allowing intermediate readings to be superseded. Rendering does not wait for the callback. Consequently, callback and rendering statistics can have different sample counts.
+
+Cached initial readings establish baselines, repeated readings are deduplicated, and measurements exclude unfocused activity. Present statistics require an accepted presentation and a visualized device: either a visible latency row or the selected controller panel. Means cover the session; p95/p99 cover the latest 8192 observations.
+
+To reduce delay, the app waits for GPU/presentation readiness **before sampling input**, then draws and submits the dashboard. It uses one GPU frame in flight, two swap-chain buffers, presentation latency one, spin waits, VSync off, tearing when available, and no FPS limit. Logging and percentile calculations run on another thread. See [Renderer.cpp](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Source/Renderer.cpp:285).
+
+PresentMon 2.6.0 observes Windows ETW events and associates input, rendering, presentation, and display events with a target process's frames. Its relevant metrics are:
+
+| PresentMon metric       | Start                           | End                          |
+| ----------------------- | ------------------------------- | ---------------------------- |
+| ClickToPhotonLatency    | Associated mouse-click event    | Reported frame display time  |
+| AllInputToPhotonLatency | Associated keyboard/mouse input | Reported frame display time  |
+| DisplayLatency          | Frame CPU start                 | Reported frame display time  |
+| MsUntilDisplayed        | Present start                   | Reported frame display time  |
+| MsInPresentAPI          | Present entry                   | Present return               |
+| InstrumentedLatency     | Instrumented frame start        | Reported frame display time  |
+
+These definitions are documented in the [PresentMon 2.6.0 metric reference](https://github.com/GameTechDev/PresentMon/blob/v2.6.0/README-ConsoleApplication.md#csv-columns). `MsInPresentAPI` is the closest equivalent to your app's Present call duration. `MsUntilDisplayed` covers the later presentation-to-display portion that your app currently does not measure.
+
+PresentMon's standard input tracking uses Windows keyboard/mouse input events and message retrieval, rather than per-device GameInput readings. Native GameInput gamepad sticks and triggers are outside that standard path. Its input-to-frame association is reconstructed from events, whereas your app directly knows which gamepad reading it draws. See the local [ETW input tracking code](C:/Users/k/Repository/External/PresentMon_2-6-0/PresentData/PresentMonTraceConsumer.cpp:1782).
+
+Instrumented metrics require suitable application/driver markers; your app currently emits none. PresentMon's `MsPCLatency` additionally uses input/simulation markers and a smoothed input-to-frame-start estimate, so it is another distinct measurement. See [its calculation](C:/Users/k/Repository/External/PresentMon_2-6-0/IntelPresentMon/CommonUtilities/mc/MetricsCalculatorInstrumented.cpp:130).
+
+**Neither your app's Present value nor ordinary PresentMon "photon" metrics directly measure physical switch-to-visible-pixel latency.** Your app stops before display tracking; ordinary PresentMon uses reported display events, without observing actual panel light output. PresentMon also supports optional hardware-measured data when separate measurement equipment is supplied.
+
+Use your app to inspect GameInput delivery and reading freshness per device. Use PresentMon to examine a target application's frame and display pipeline. Comparing their averages directly can mislead because their starting timestamps, endpoints, input selection, and treatment of undisplayed frames differ. Your app's lightweight dashboard also represents its own workload, rather than the latency of a heavier game.
