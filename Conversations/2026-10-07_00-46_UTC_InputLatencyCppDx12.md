@@ -556,3 +556,34 @@ If the next frame receives the same reading, the app retains both its state and 
 Also, the dashboard's latency statistics are historical aggregates, not measurements exclusively from the current frame's reading.
 
 A shared timestamp establishes that the controller values belong to the same GameInput snapshot. It does not establish that the controller hardware sampled every sensor simultaneously. [Microsoft's reading documentation](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinputreading/igameinputreading).
+
+
+## User
+
+for a given frame, what is the latest point at which a timestamp can be retrieved for it before it is send to the display? that timestamp must be comparable to IGameInputReading::GetTimestamp.
+
+## Assistant Commentary
+
+I'll check the latest frame timing boundary available to the app and how to compare it with GameInput's clock.
+
+## Assistant Commentary
+
+The app already timestamps immediately before `Present()`. A later endpoint is the frame's GPU completion or Windows-reported display event, but those timestamps are collected afterward. Comparing them with GameInput requires mapping the clocks; timestamping when the app receives the result would include reporting delay.
+
+## Assistant Final
+
+**The closest useful software endpoint to 'sent to the display' is the frame's Windows-reported flip/display event.** Its timestamp is normally retrieved afterward through tracing, such as PresentMon. The timestamp describes when the event occurred, rather than when your app receives the trace result. [PresentMon's implementation](C:/Users/k/Repository/External/PresentMon_2-6-0/PresentData/PresentMonTraceConsumer.cpp:713).
+
+There are three relevant boundaries:
+
+1. **Immediately before `Present()`:** Call `IGameInput::GetCurrentTimestamp()`. This is directly comparable with `IGameInputReading::GetTimestamp()`. Your app already does this, after submitting the GPU commands. It measures input-to-CPU-presentation-submission latency. [Current code](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Source/Renderer.cpp:524).
+2. **When the GPU finishes rendering the frame:** Insert a D3D12 timestamp query after the frame's rendering commands. The GPU records the timestamp when preceding work finishes; the app reads the result later. This includes GPU processing but excludes any subsequent wait for presentation. D3D12 provides `GetClockCalibration()` to relate GPU timestamps to the CPU's QueryPerformanceCounter clock. [Microsoft's GPU timing documentation](https://learn.microsoft.com/en-us/windows/win32/direct3d12/timing).
+3. **When Windows reports the frame becoming displayed:** Correlate the frame with its flip/display event, as PresentMon does. This includes the later presentation delay and is the better endpoint for measuring input-to-display latency from software. [PresentMon's metric definitions](https://github.com/GameTechDev/PresentMon/blob/v2.6.0/README-ConsoleApplication.md#csv-columns).
+
+**If you require the timestamp to be available to your app before the frame reaches the display, there is no general DX12 callback that guarantees the final instant before scan-out.** Immediately before `Present()` is a straightforward boundary you control. Immediately after `Present()` is also measurable, but its return does not establish whether that frame is still waiting or has begun displaying.
+
+For clock compatibility, the first option needs no conversion: Microsoft explicitly supports comparing the two GameInput timestamps. [GameInput timestamp contract](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinputreading/methods/igameinputreading_gettimestamp).
+
+For the other options, **raw GPU or QPC timestamps cannot simply be subtracted from GameInput timestamps**. We would establish and validate a mapping between QPC and GameInput using closely paired current-time measurements, account for calibration uncertainty, and convert the frame event into the GameInput clock before subtraction.
+
+For your measurement goal, I would use the **display-event timestamp, collected asynchronously**, while retaining the exact reading used by that frame. This would require additional tracking in the app. It measures a Windows display boundary; monitor processing, pixel response, and the scan-out position of the particular visual change remain outside that timestamp.
