@@ -248,3 +248,35 @@ Those are reasons to offer **display-mode switching**, not reasons that every fu
 
 For **3dTestScene_CppDx12**, keeping the user's current display mode and using borderless fullscreen is appropriate. If you later want a render-resolution setting for performance, that alone would still give you no reason to add `SetFullscreenState`.
 
+## User
+
+okay, let's say that you do want the dx12 application to control the display resolution and/or refresh rate. why does that necessitate SetFullscreenState?
+
+## Assistant
+
+I'll check which APIs require DXGI fullscreen state and which can change the display mode independently.
+
+## Assistant
+
+**It does not necessitate `SetFullscreenState`.** My earlier recommendation was too narrow: controlling display resolution or refresh rate does not, by itself, require DXGI fullscreen state.
+
+There are two routes:
+
+| Route                             | How display-mode changes work                                                                 |
+|-----------------------------------|-----------------------------------------------------------------------------------------------|
+| **DXGI fullscreen management**     | Use `SetFullscreenState(TRUE)` and DXGI mode-selection APIs such as `ResizeTarget`.             |
+| **Windows display configuration** | Change the display mode with `ChangeDisplaySettingsExW` or `SetDisplayConfig`; stay borderless. |
+
+The requirement is specific to **`ResizeTarget`**: when the swap chain is windowed, that function resizes the window; when it is in DXGI fullscreen state, it changes the output's display mode. Therefore, **if you choose `ResizeTarget` to change the monitor's mode, you need DXGI fullscreen state for that behavior**. [Microsoft: ResizeTarget](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-resizetarget)
+
+Alternatively, a DX12 application can:
+
+1. Save the current display configuration.
+2. Apply a supported resolution/refresh rate using Windows display APIs.
+3. Resize its borderless window and swap-chain buffers to match.
+4. Restore the saved configuration when appropriate.
+
+Those Windows APIs operate on display configuration independently of the application's DXGI fullscreen state. [Microsoft: ChangeDisplaySettingsExW](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changedisplaysettingsexw), [Microsoft: SetDisplayConfig](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setdisplayconfig)
+
+Why choose `SetFullscreenState` then? **To use DXGI's existing fullscreen/output-management mechanism**, rather than implement display-mode management separately through Windows APIs. It is an API design choice, not an inherent DX12 requirement or a guarantee of better presentation performance. Microsoft's D3D12 documentation explicitly confirms that resolution and refresh-rate changes can be made without this method. [Microsoft: D3D12 swap chains](https://learn.microsoft.com/en-us/windows/win32/direct3d12/swap-chains)
+
