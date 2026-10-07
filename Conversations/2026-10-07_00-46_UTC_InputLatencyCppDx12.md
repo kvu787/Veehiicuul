@@ -366,3 +366,48 @@ The app's Sample measurement is:
 That measures reading age relative to GameInput's clock. It cannot establish the full time since the physical stick moved, because the app has no independently measured timestamp for that movement.
 
 Finally, **an older snapshot is not automatically incorrect**. If you hold the stick steady and no newer reading is available, the existing values may still describe it correctly. The app retains those values but does not repeatedly count the same reading as a new latency observation.
+
+## User
+
+so for controllers like gamesir's 8k pc controllers, when i set the polling rate to 1k, 8k, or other values, does this mean that the controller hardware sends a data package of its current state to the pc every 125 microseconds?
+
+## Assistant Commentary
+
+I'll check what GameSir's polling-rate setting represents and how it relates to reports reaching Windows and GameInput.
+
+## User
+
+so for controllers like gamesir's 8k pc controllers, when i set the polling rate to 1k, 8k, or other values, does this mean that the controller hardware sends a data package of its current state to the pc every 125 microseconds if the polling rate is 8,000?
+
+## Assistant Commentary
+
+I'll distinguish the nominal 125-microsecond report interval from how fresh each report's sensor values are.
+
+## Assistant Final
+
+**Yes, nominally: at 8,000 Hz, the reporting interval is 125 microseconds.** At 1,000 Hz, it is 1 millisecond.
+
+`Report interval = 1 / polling rate`
+
+| Polling rate | Nominal report interval |
+| ------------ | ----------------------- |
+| 1,000 Hz     | 1,000 microseconds      |
+| 2,000 Hz     | 500 microseconds        |
+| 4,000 Hz     | 250 microseconds        |
+| 8,000 Hz     | 125 microseconds        |
+
+GameSir advertises the G7 Pro 8K PC model as supporting 8,000 Hz over both wired and 2.4 GHz wireless connections. That is the advertised reporting cadence, rather than a measurement of your particular controller's actual performance. [GameSir specifications](https://gamesir.com/products/gamesir-g7-pro-8k-pc-champion-edition).
+
+For a wired USB controller, the PC's USB host polls the controller's input endpoint, and the controller supplies an available input report. At an 8,000 Hz interval, those opportunities occur every 125 microseconds. This happens independently of your game's calls to GameInput. [Microsoft's USB interrupt-transfer documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/usbcon/how-to-send-a-usb-interrupt-transfer--uwp-app-).
+
+The qualification is **what "current state" means**:
+
+- A report contains the controller's prepared input values. The reporting rate alone does not establish when its sensors were sampled or how much firmware processing occurred.
+- Consecutive reports can contain identical stick, trigger, and button values. Eight thousand reports does not mean eight thousand different states.
+- Windows/GameInput processing and the game's next input fetch add further timing considerations.
+
+Consequently, **8,000 Hz does not guarantee that the stick value returned to the game is at most 125 microseconds old**, or that total input latency is 125 microseconds.
+
+Under ideal periodic reporting, a change already ready for transmission waits between approximately zero and one report interval for the next opportunity. At 8,000 Hz that portion is up to about 125 microseconds; sensor sampling, firmware, transport, and software processing are additional parts of the path.
+
+InputLatency_CppDx12 fetches the latest available GameInput reading once per rendered frame. It can therefore skip intermediate reports while still using the newest available state. Its existing timing statistics do not verify that every hardware report reaches the PC exactly 125 microseconds apart.
