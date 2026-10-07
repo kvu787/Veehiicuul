@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstring>
 #include <format>
+#include <numbers>
 #include <stdexcept>
 
 using Microsoft::WRL::ComPtr;
@@ -325,6 +326,94 @@ void Renderer::Rectangle(float x, float y, float rectangleWidth, float rectangle
     Quad(x, y, rectangleWidth, rectangleHeight, u, v, u, v, color);
 }
 
+void Renderer::Triangle(float firstX, float firstY, float secondX, float secondY, float thirdX, float thirdY, Color color)
+{
+    if (vertices.size() + 3 > VertexCapacity) return;
+    const float u = 0.5f / AtlasWidth, v = 0.5f / AtlasHeight;
+    vertices.push_back({firstX, firstY, u, v, color});
+    vertices.push_back({secondX, secondY, u, v, color});
+    vertices.push_back({thirdX, thirdY, u, v, color});
+}
+
+void Renderer::Circle(float x, float y, float radius, Color color)
+{
+    constexpr std::size_t SegmentCount = 32;
+    // Computed once, shared by static guides and live stick markers.
+    static const auto directions = [] {
+        std::array<StickPosition, SegmentCount + 1> result{};
+        for (std::size_t index = 0; index <= SegmentCount; ++index) {
+            const float angle = static_cast<float>(index) * 2 * std::numbers::pi_v<float> / static_cast<float>(SegmentCount);
+            result[index] = {std::cos(angle), std::sin(angle)};
+        }
+        return result;
+    }();
+    for (std::size_t index = 0; index < SegmentCount; ++index) {
+        Triangle(x, y, x + radius * directions[index].x, y + radius * directions[index].y,
+            x + radius * directions[index + 1].x, y + radius * directions[index + 1].y, color);
+    }
+}
+
+void Renderer::ControllerPanel(const MonitorSnapshot& snapshot)
+{
+    std::array<ControllerAvailability, MaximumDevices> candidates{};
+    const auto count = std::min(snapshot.devices.size(), candidates.size());
+    for (std::size_t index = 0; index < count; ++index) candidates[index] = {snapshot.devices[index].connected, snapshot.devices[index].gamepad};
+    selectedController = SelectController(std::span(candidates).first(count), selectedController);
+    Rectangle(20, 142, static_cast<float>(width) - 40, 334, {0.065f, 0.10f, 0.13f});
+    if (selectedController) {
+        const auto& controller = snapshot.devices[*selectedController];
+        Text(32, 152, std::format("SELECTED CONTROLLER #{} | {:04X}:{:04X}", *selectedController, controller.vendor, controller.product), Accent);
+        Text(32, 178, "Name: " + controller.name, Foreground);
+        Text(32, 204, "GameInput ID: " + controller.identifier, Muted);
+    }
+    else {
+        Text(32, 152, "SELECTED CONTROLLER: none connected", Accent);
+        Text(32, 178, "Connect a gamepad. The first connected gamepad will be selected automatically.", Foreground);
+        Text(32, 204, "Name / GameInput ID: unavailable", Muted);
+    }
+    Text(32, 230, "Sticks -1..+1 (positive Y up) | Triggers 0..1 | Raw values, no added deadzone", Muted);
+    const Color guide{0.18f, 0.28f, 0.32f}, inside{0.085f, 0.14f, 0.17f};
+    for (const float centerX : {150.0f, 390.0f}) {
+        Rectangle(centerX - 58, 296, 116, 116, guide);
+        Rectangle(centerX - 56, 298, 112, 112, inside);
+        Circle(centerX, 354, 56, guide);
+        Circle(centerX, 354, 54, inside);
+        Rectangle(centerX - 56, 353, 112, 2, guide);
+        Rectangle(centerX - 1, 298, 2, 112, guide);
+    }
+    Text(90, 268, "LEFT STICK", Foreground); Text(324, 268, "RIGHT STICK", Foreground);
+    Text(96, 418, "X", Muted); Text(96, 442, "Y", Muted);
+    Text(336, 418, "X", Muted); Text(336, 442, "Y", Muted);
+    Text(584, 282, "LEFT TRIGGER", Foreground); Text(584, 378, "RIGHT TRIGGER", Foreground);
+    const float barWidth = std::max(1.0f, static_cast<float>(width) - 624);
+    Rectangle(584, 314, barWidth, 22, guide); Rectangle(584, 410, barWidth, 22, guide);
+    deviceRowsBeginning = 512;
+}
+
+void Renderer::DrawControllerState(VisualState& state)
+{
+    const bool available = state.connected && state.controllerReadingAvailable;
+    state.visualized = available;
+    const auto& analog = state.controller;
+    const auto value = [&](float x, float y, float number, bool signedValue) {
+        const auto text = FormatAnalogValue(number, signedValue);
+        Text(x, y, available ? text.View() : std::string_view("--"), available ? Accent : Muted);
+    };
+    value(120, 418, analog.leftStickX, true); value(120, 442, analog.leftStickY, true);
+    value(360, 418, analog.rightStickX, true); value(360, 442, analog.rightStickY, true);
+    value(776, 282, analog.leftTrigger, false); value(776, 378, analog.rightTrigger, false);
+    if (!available) {
+        Text(584, 442, "Waiting for gamepad state", Muted);
+        return;
+    }
+    const auto left = MapStickPosition(analog.leftStickX, analog.leftStickY, 150, 354, 56);
+    const auto right = MapStickPosition(analog.rightStickX, analog.rightStickY, 390, 354, 56);
+    Circle(left.x, left.y, 7, Accent); Circle(right.x, right.y, 7, Color{1, 0.72f, 0.27f});
+    const float barWidth = std::max(1.0f, static_cast<float>(width) - 624);
+    Rectangle(584, 314, barWidth * TriggerFill(analog.leftTrigger), 22, Accent);
+    Rectangle(584, 410, barWidth * TriggerFill(analog.rightTrigger), 22, Color{1, 0.72f, 0.27f});
+}
+
 void Renderer::Text(float x, float y, std::string_view text, Color color)
 {
     for (unsigned char character : text) {
@@ -349,8 +438,9 @@ void Renderer::BuildDashboard(const MonitorSnapshot& snapshot, std::size_t first
     Text(24, 78, std::format("VSync OFF | Uncapped | GPU 1 | Present 1 | Buffers 2 | Spin | Tearing {} | {:.0f} FPS",
         tearing ? "ON" : "unavailable", framesPerSecond), Foreground);
     Text(24, 106, foreground ? "Move/click each mouse, press keyboard keys, or use gamepad buttons/sticks." : "UNFOCUSED: measurement statistics pause. Activate this window to measure.", foreground ? Muted : Color{1, 0.7f, 0.3f});
-    Text(24, 134, "Each device: callback delay / late frame sample / Present begin (milliseconds)", Muted);
-    float y = 170;
+    ControllerPanel(snapshot);
+    Text(24, deviceRowsBeginning - 28, "Each device: callback delay / late frame sample / Present begin (milliseconds)", Muted);
+    float y = deviceRowsBeginning;
     for (std::size_t index = firstDevice; index < snapshot.devices.size() && y + 130 < static_cast<float>(height) - 66; ++index) {
         const auto& value = snapshot.devices[index];
         Rectangle(20, y, static_cast<float>(width) - 40, 124, {0.075f, 0.11f, 0.14f});
@@ -402,7 +492,12 @@ PresentationResult Renderer::DrawAndPresent(InputMonitor& monitor, std::array<Vi
     for (auto& state : states) state.visualized = false;
     monitor.SampleLatest(states);
     const auto frameNow = monitor.Now();
-    float y = 170;
+    if (selectedController && *selectedController < monitor.DeviceCount()) DrawControllerState(states[*selectedController]);
+    else {
+        for (const auto position : {StickPosition{120, 418}, StickPosition{120, 442}, StickPosition{360, 418},
+            StickPosition{360, 442}, StickPosition{776, 282}, StickPosition{776, 378}}) Text(position.x, position.y, "--", Muted);
+    }
+    float y = deviceRowsBeginning;
     const auto count = std::min(monitor.DeviceCount(), dashboardDeviceCount);
     for (std::size_t index = firstDevice; index < count && y + 130 < static_cast<float>(height) - 66; ++index) {
         auto& state = states[index];
@@ -414,12 +509,6 @@ PresentationResult Renderer::DrawAndPresent(InputMonitor& monitor, std::array<Vi
         if (state.kind & Input::GameInputKindMouse) {
             const float position = static_cast<float>((state.mouseX % 500 + 500) % 500) / 500.0f;
             Rectangle(32 + position * (static_cast<float>(width) - 130), y + 116, 18, 4, Accent);
-        }
-        if (state.kind & Input::GameInputKindGamepad) {
-            Rectangle(32, y + 114, std::clamp(state.leftTrigger, 0.0f, 1.0f) * 100, 4, Accent);
-            Rectangle(140, y + 114, std::clamp(state.rightTrigger, 0.0f, 1.0f) * 100, 4, Accent);
-            Rectangle(280 + std::clamp(state.leftX, -1.0f, 1.0f) * 60,
-                y + 108 - std::clamp(state.leftY, -1.0f, 1.0f) * 6, 6, 6, Accent);
         }
         y += 136;
     }

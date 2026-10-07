@@ -158,12 +158,20 @@ void InputMonitor::SampleLatest(std::array<VisualState, MaximumDevices>& states)
         state.newReading = false;
         const auto& slot = devices[index];
         state.connected = slot.connected.load(std::memory_order_relaxed);
-        if (!state.connected) { state.active = false; previousFrameReadings[index].Reset(); continue; }
+        if (!state.connected) {
+            state.active = false; state.controller = {}; state.controllerReadingAvailable = false;
+            previousFrameReadings[index].Reset(); continue;
+        }
         ComPtr<Input::IGameInputReading> reading;
-        const auto result = gameInput->GetCurrentReading(slot.kinds, slot.device.Get(), &reading);
+        // Composite controllers can advertise mouse/keyboard input as well.
+        // Request their gamepad stream so the analog panel gets gamepad state.
+        const auto requestedKinds = slot.kinds & Input::GameInputKindGamepad ? Input::GameInputKindGamepad : slot.kinds;
+        const auto result = gameInput->GetCurrentReading(requestedKinds, slot.device.Get(), &reading);
         const auto sampled = Now();
         if (FAILED(result)) {
             if (result != Input::GAMEINPUT_E_READING_NOT_FOUND && result != Input::GAMEINPUT_E_DEVICE_DISCONNECTED) ++pollErrors;
+            state.controller = {}; state.controllerReadingAvailable = false;
+            previousFrameReadings[index].Reset();
             continue;
         }
         ComPtr<IUnknown> identity;
@@ -187,12 +195,12 @@ void InputMonitor::SampleLatest(std::array<VisualState, MaximumDevices>& states)
             state.mouseY = mouse.positionY;
         }
         Input::GameInputGamepadState gamepad{};
-        if (reading->GetGamepadState(&gamepad)) {
+        state.controllerReadingAvailable = reading->GetGamepadState(&gamepad);
+        state.controller = {};
+        if (state.controllerReadingAvailable) {
             state.buttons |= gamepad.buttons;
-            state.leftX = gamepad.leftThumbstickX;
-            state.leftY = gamepad.leftThumbstickY;
-            state.leftTrigger = gamepad.leftTrigger;
-            state.rightTrigger = gamepad.rightTrigger;
+            state.controller = {gamepad.leftThumbstickX, gamepad.leftThumbstickY,
+                gamepad.rightThumbstickX, gamepad.rightThumbstickY, gamepad.leftTrigger, gamepad.rightTrigger};
         }
         state.active = state.buttons != 0 || state.keys != 0;
     }
@@ -246,7 +254,8 @@ void InputMonitor::LogWorker(const std::filesystem::path& logDirectory) noexcept
                 const auto& slot = devices[index];
                 const auto& value = statistics[index];
                 snapshot.devices.push_back({slot.name, slot.identifier, KindName(slot.kinds), slot.vendor, slot.product,
-                    slot.connected.load(std::memory_order_relaxed), value.callback.Snapshot(), value.interval.Snapshot(),
+                    slot.connected.load(std::memory_order_relaxed), (slot.kinds & Input::GameInputKindGamepad) != 0,
+                    value.callback.Snapshot(), value.interval.Snapshot(),
                     value.sample.Snapshot(), value.present.Snapshot(), value.presentCall.Snapshot()});
             }
             snapshot.droppedCallbacks = droppedCallbacks.load(std::memory_order_relaxed);

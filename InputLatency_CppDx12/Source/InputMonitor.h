@@ -5,6 +5,7 @@
 #include <wrl/client.h>
 
 #include "Measurement.h"
+#include "ControllerState.h"
 
 #include <filesystem>
 #include <mutex>
@@ -34,7 +35,7 @@ struct DeviceSnapshot
 {
     std::string name, identifier, kind;
     std::uint16_t vendor{}, product{};
-    bool connected{};
+    bool connected{}, gamepad{};
     StatisticSnapshot callbackDelay;
     StatisticSnapshot inputInterval;
     StatisticSnapshot sampleDelay;
@@ -54,7 +55,8 @@ struct VisualState
     bool connected{}, active{}, newReading{}, visualized{};
     std::uint32_t buttons{}, keys{};
     std::int64_t mouseX{}, mouseY{};
-    float leftX{}, leftY{}, leftTrigger{}, rightTrigger{};
+    ControllerAnalogState controller;
+    bool controllerReadingAvailable{};
     std::uint64_t timestamp{}, sampledAt{};
     Input::GameInputKind kind{};
 };

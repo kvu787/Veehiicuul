@@ -32,7 +32,13 @@ Activate the application window, then move or click each mouse, press keyboard k
 | PageUp / PageDown | Scroll the device list by one device          |
 | Esc / Alt+F4      | Exit and finish writing the measurement files |
 
-Rows show callback, late sample, and Present-begin statistics in milliseconds. The right-hand indicator changes immediately for new input and held buttons/keys. Mouse position, gamepad triggers, and the left stick also have visual indicators. New input uses the freshest per-device reading; the statistics text refreshes four times per second.
+The persistent controller panel selects one connected gamepad automatically. It displays its name, full GameInput device identifier, device index, and vendor/product IDs. The first connected gamepad is chosen initially; it stays selected while connected. If it disconnects, another connected gamepad is chosen. Scrolling the latency device list does not change the selected controller.
+
+Both analog sticks have position diagrams and signed X/Y values. Both triggers have fill bars and normalized numeric values. Stick values use -1..+1 with positive Y pointing up; trigger values use 0..1. Numeric values show four decimal places. The application adds no deadzone, smoothing, or filtering to the displayed values. If the controller disconnects or has no available gamepad reading, values are shown as `--` instead of retaining stale analog states.
+
+Controller diagrams and numeric values use the latest gamepad reading every rendered frame, sampled after the GPU and presentation waits. Composite controllers are polled specifically for their gamepad stream. The controller panel stays visible independently of the latency rows. An accepted frame that visualizes the selected gamepad contributes to its Present-begin statistics even when its latency row is outside the visible list.
+
+Latency rows show callback, late sample, and Present-begin statistics in milliseconds. Their right-hand indicators change immediately for new input and held buttons/keys; mouse position also has a visual indicator. Latency statistics text and controller identity/selection refresh four times per second. The window's minimum client size is 1024x720 to keep the controller data and complete identifier readable.
 
 The foreground application records measurement statistics. Unfocused input, if delivered by GameInput, is marked in raw logs and excluded from callback statistics. Focus transitions establish fresh baselines. Minimized windows wait for window availability and do not render.
 
@@ -52,7 +58,7 @@ The beginning of each measurement is `IGameInputReading::GetTimestamp()`. All me
 
 These are **software timings**, not physical switch-to-photon measurements. They do not identify when a switch physically closed, a USB report was emitted, or a displayed pixel changed. Hardware debounce, firmware processing, USB/Bluetooth transport, display scanout, and panel response are not separately measurable through this application. Do not use these results to rank the complete hardware latency of different peripherals. External synchronized input and optical instrumentation is required for that measurement.
 
-Present-begin statistics only include new readings for devices with a visible dashboard row and an accepted presentation. A successful `Present` does not prove the frame was displayed; zero-sync-interval frames can be superseded. Late-sample statistics cover all connected devices, including rows outside the visible viewport. Fresh readings supersede older readings for rendering, while callback logs preserve all callback-delivered state changes.
+Present-begin statistics only include new readings for devices visualized in the controller panel or a visible latency row, with an accepted presentation. A successful `Present` does not prove the frame was displayed; zero-sync-interval frames can be superseded. Late-sample statistics cover all connected devices, including rows outside the visible viewport. Fresh readings supersede older readings for rendering, while callback logs preserve all callback-delivered state changes.
 
 Initial cached readings are baselines, not latency observations. Repeated current readings are deduplicated by COM object identity, retaining the previous reading reference. Equal timestamps can belong to distinct readings and remain valid. Future timestamps are rejected instead of subtracting unsigned values. Percentiles use the nearest-rank method over the latest 8192 accepted observations for each metric; count, minimum, mean, and maximum cover the entire session.
 
@@ -79,22 +85,22 @@ This policy aims to reduce software backlog. It cannot guarantee the lowest phys
 
 Every launch creates `LogOutput/yyyy-MM-dd_HH-mm-ss/`. Direct executable launches locate this application's folder relative to the executable, without hard-coded repository paths. Build invocations also write a timestamped `Build.log`. `LogOutput/` and `BuildOutput/` are ignored by Git.
 
-| File                       | Contents                                                    |
-| -------------------------- | ----------------------------------------------------------- |
-| Application.log            | Runtime version, graphics policy, adapter, shutdown/errors  |
-| Launcher.log               | PowerShell launcher transcript                              |
-| Devices.csv                | Device identities and connection/disconnection events       |
-| Readings.csv               | Reading/callback timestamps and state-change intervals      |
-| Presentations.csv          | New-reading sample and Present timestamps, visibility flag  |
-| Summary.csv                | Per-device statistics for all five metrics, written at exit |
-| MeasurementDiagnostics.txt | Dropped records, invalid clocks, device and polling errors  |
-| Dashboard.png              | Optional GPU frame capture for verification                 |
+| File                       | Contents                                                       |
+| -------------------------- | -------------------------------------------------------------- |
+| Application.log            | Runtime, graphics policy, adapter, selected controller, errors |
+| Launcher.log               | PowerShell launcher transcript                                 |
+| Devices.csv                | Device identities and connection/disconnection events          |
+| Readings.csv               | Reading/callback timestamps and state-change intervals         |
+| Presentations.csv          | New-reading sample and Present timestamps, visibility flag     |
+| Summary.csv                | Per-device statistics for all five metrics, written at exit    |
+| MeasurementDiagnostics.txt | Dropped records, invalid clocks, device and polling errors     |
+| Dashboard.png              | Optional GPU frame capture for verification                    |
 
 Raw measurement units are microseconds. Device indexes join the CSV files to `Devices.csv`. The logs record timings and device metadata, without recording typed characters or key contents. Both queues have 65536 records. Queue overflow drops measurement records, increments diagnostic counters, and never delays live rendering. Any nonzero drop count means the logs are incomplete. Logging failures appear in the dashboard and cause a nonzero application exit.
 
 ## Verification
 
-`Build.ps1 -Test` runs arithmetic/statistics/queue tests and a short hidden DirectX 12 WARP/GameInput smoke test. Debug builds enable the DirectX 12 debug layer when available and fail if it reports errors or corruption. The smoke test uses actual GameInput device enumeration, without claiming an automated physical input-latency test.
+`Build.ps1 -Test` runs arithmetic/statistics/queue tests, controller selection/disconnect/analog coordinate/value tests, and a short hidden DirectX 12 WARP/GameInput smoke test. Debug builds enable the DirectX 12 debug layer when available and fail if it reports errors or corruption. The smoke test uses actual GameInput device enumeration, without claiming an automated physical input-latency test.
 
 See the [verification record](Documentation/Verification.md) for the completed checks and remaining manual checks.
 

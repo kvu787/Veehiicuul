@@ -24,11 +24,16 @@ public:
     std::string Description() const;
     void VerifyDebugMessages() const;
     void SaveLastFrame(const std::filesystem::path& path);
+    std::optional<std::size_t> SelectedController() const noexcept { return selectedController; }
 private:
     void CreateTargets();
     void CreatePipelineAndAtlas();
     void WaitForGpu();
     void Rectangle(float x, float y, float width, float height, Color color);
+    void Circle(float x, float y, float radius, Color color);
+    void Triangle(float firstX, float firstY, float secondX, float secondY, float thirdX, float thirdY, Color color);
+    void ControllerPanel(const MonitorSnapshot& snapshot);
+    void DrawControllerState(VisualState& state);
     void Text(float x, float y, std::string_view text, Color color);
     void Quad(float x, float y, float width, float height, float u0, float v0, float u1, float v1, Color color);
     Microsoft::WRL::ComPtr<IDXGIFactory6> factory;
@@ -53,5 +58,7 @@ private:
     std::vector<DashboardVertex> vertices;
     std::size_t dashboardVertexCount{};
     std::size_t dashboardDeviceCount{};
+    std::optional<std::size_t> selectedController;
+    float deviceRowsBeginning{170};
     static constexpr std::size_t VertexCapacity = 131072;
 };

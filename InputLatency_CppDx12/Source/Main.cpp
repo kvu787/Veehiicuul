@@ -45,6 +45,13 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM first, LPARAM
     }
     if (!state) return DefWindowProcW(window, message, first, second);
     switch (message) {
+    case WM_GETMINMAXINFO: {
+        auto* limits = reinterpret_cast<MINMAXINFO*>(second);
+        RECT minimum{0, 0, 1024, 720};
+        AdjustWindowRectEx(&minimum, WS_OVERLAPPEDWINDOW, FALSE, 0);
+        limits->ptMinTrackSize = {minimum.right - minimum.left, minimum.bottom - minimum.top};
+        return 0;
+    }
     case WM_CLOSE: state->running = false; return 0;
     case WM_DESTROY: state->running = false; PostQuitMessage(0); return 0;
     case WM_SIZE:
@@ -220,6 +227,11 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int)
         if (options.capture && frames) renderer.SaveLastFrame(logDirectory / L"Dashboard.png");
         renderer.VerifyDebugMessages();
         const auto finalSnapshot = monitor->Snapshot();
+        if (const auto selected = renderer.SelectedController()) {
+            const auto& controller = monitor->Device(*selected);
+            applicationLog << "SelectedController=" << *selected << "\nSelectedControllerName=" << controller.name
+                << "\nSelectedControllerId=" << controller.identifier << '\n';
+        }
         applicationLog << "FramesSubmitted=" << frames << "\nDevicesEnumerated=" << monitor->DeviceCount()
             << "\nDurationSeconds=" << std::chrono::duration<double>(std::chrono::steady_clock::now() - beginning).count()
             << "\nLoggingFailed=" << finalSnapshot.loggingFailed << "\nInputLatency shutdown\n";
