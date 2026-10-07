@@ -49,7 +49,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM first, LPARAM
     switch (message) {
     case WM_GETMINMAXINFO: {
         auto* limits = reinterpret_cast<MINMAXINFO*>(second);
-        RECT minimum{0, 0, 1024, 720};
+        RECT minimum{0, 0, 1200, 680};
         AdjustWindowRectEx(&minimum, WS_OVERLAPPEDWINDOW, FALSE, 0);
         limits->ptMinTrackSize = {minimum.right - minimum.left, minimum.bottom - minimum.top};
         return 0;

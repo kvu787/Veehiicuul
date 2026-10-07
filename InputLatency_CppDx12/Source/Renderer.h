@@ -36,11 +36,14 @@ private:
     void CreatePipelineAndAtlas();
     void WaitForGpu();
     void Rectangle(float x, float y, float width, float height, Color color);
+    void StatisticsPanel(float y, float panelHeight, std::string_view title,
+        const std::array<std::string_view, 5>& labels, const std::array<std::string, 5>& values,
+        const std::array<bool, 5>& warnings);
     void Circle(float x, float y, float radius, Color color);
     void Triangle(float firstX, float firstY, float secondX, float secondY, float thirdX, float thirdY, Color color);
     void ControllerPanel(const MonitorSnapshot& snapshot);
     void DrawControllerState(VisualState& state);
-    void Text(float x, float y, std::string_view text, Color color);
+    void Text(float x, float y, std::string_view text, Color color, float scale = 1);
     void Quad(float x, float y, float width, float height, float u0, float v0, float u1, float v1, Color color);
     Microsoft::WRL::ComPtr<IDXGIFactory6> factory;
     Microsoft::WRL::ComPtr<ID3D12Device> device;
@@ -66,5 +69,7 @@ private:
     std::size_t dashboardDeviceCount{};
     std::optional<std::size_t> selectedController;
     float deviceRowsBeginning{170};
+    float controllerPanelOffset{}, controllerAnalogOffset{}, controllerValueOffset{}, controllerStickRadius{56};
+    float diagnosticsPanelBeginning{};
     static constexpr std::size_t VertexCapacity = 131072;
 };

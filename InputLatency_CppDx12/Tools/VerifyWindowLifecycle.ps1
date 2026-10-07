@@ -107,12 +107,12 @@ try {
     $bounds = [WindowLifecycleVerification+Rectangle]::new()
     [WindowLifecycleVerification]::GetClientRect($window, [ref]$client) | Out-Null
     [WindowLifecycleVerification]::GetWindowRect($window, [ref]$bounds) | Out-Null
-    $width = 1024 + ($bounds.Right - $bounds.Left) - $client.Right
-    $height = 720 + ($bounds.Bottom - $bounds.Top) - $client.Bottom
+    $width = 1200 + ($bounds.Right - $bounds.Left) - $client.Right
+    $height = 680 + ($bounds.Bottom - $bounds.Top) - $client.Bottom
     if (-not [WindowLifecycleVerification]::SetWindowPos($window, [IntPtr]::Zero, 0, 0, $width, $height, 0x16)) { throw 'Resize failed.' }
     Start-Sleep -Seconds 2
     [WindowLifecycleVerification]::GetClientRect($window, [ref]$client) | Out-Null
-    if ($client.Right -ne 1024 -or $client.Bottom -ne 720) { throw 'Minimum client-size verification failed.' }
+    if ($client.Right -ne 1200 -or $client.Bottom -ne 680) { throw 'Minimum client-size verification failed.' }
     Record-Action 'MinimumClientSize'
     if (-not $application.WaitForExit(20000)) { throw 'Application did not finish window verification.' }
     if ($application.ExitCode -ne 0) { throw "Application exited with $($application.ExitCode)." }
