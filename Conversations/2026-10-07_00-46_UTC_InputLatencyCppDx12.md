@@ -599,3 +599,50 @@ That is option 3.
 ## Assistant Final
 
 **Option 3** - when Windows reports the frame becoming displayed.
+
+
+## User
+
+okay, implement input latency measurement that uses the duration from IGameInputReading::GetTimestamp to the "display-event timestamp" for InputLatency_CppDx12
+
+## Assistant Commentary
+
+I'll add frame-to-display tracking, map the display timestamps to GameInput's clock, and update the dashboard and logs to show reading-to-display latency.
+
+## Assistant Commentary
+
+I'll bundle PresentMon's display-event decoder inside the application so it can track both windowed and independent-flip presentation. The render thread will record which reading each frame used, while background tracking resolves whether and when that frame displayed.
+
+## Assistant Commentary
+
+The frame correlation and clock mapping are in place. Each frame keeps the original timestamp of its input snapshot, including when that snapshot is reused. Discarded frames and unresolved display events will be excluded from latency statistics, with their status recorded in the logs.
+
+## Assistant Commentary
+
+The Release build and all four tests pass, including clock conversion and frame matching checks. This account lacks the Windows permissions needed for display tracing, so I'll make `Run.cmd` request elevation and test the display-event path in a short run.
+
+## Assistant Commentary
+
+The smoke run actually captured 98 displayed frames with zero trace loss and zero clock errors. I incorrectly assumed that a non-administrator token lacked tracing permission; this account belongs to Performance Log Users. I'll keep the launcher from requesting elevation when that permission is already available.
+
+## Assistant Commentary
+
+The visible hardware run matched 14,928 displayed frames, with no unmatched events, trace loss, queue drops, or clock errors. The dashboard is still grayscale. I'm investigating a Debug-only shutdown timeout before finishing the verification.
+
+## Assistant Commentary
+
+The Debug timeout came from an upstream decoder assertion dialog. Using the decoder's production behavior in both configurations fixed it, and all four Debug tests now pass. Live display tracking is verified; this GameInput path did not expose the synthetic mouse input, so physical input motion remains a manual check.
+
+## Assistant Commentary
+
+The implementation and documentation are committed. Both Release and Debug pass all four tests. I'll finish by checking the repository state and recording the conversation; physical input motion remains the manual validation step.
+
+## Assistant Final
+
+Implemented **reading-to-display latency** in [InputLatency_CppDx12](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/ReadMe.md).
+
+The dashboard's Display metric measures `IGameInputReading::GetTimestamp()` to the matched Windows display event, with clock conversion. Tracking runs asynchronously, excludes discarded/unresolved frames, and uses a decoder bundled inside the app.
+
+Release and Debug passed all four tests. Live tracking matched 14,928 displayed frames with zero trace loss or clock errors. Physical input motion remains a manual check.
+
+Launch with [Run.cmd](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Run.cmd).
