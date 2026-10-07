@@ -317,3 +317,52 @@ Instrumented metrics require suitable application/driver markers; your app curre
 **Neither your app's Present value nor ordinary PresentMon "photon" metrics directly measure physical switch-to-visible-pixel latency.** Your app stops before display tracking; ordinary PresentMon uses reported display events, without observing actual panel light output. PresentMon also supports optional hardware-measured data when separate measurement equipment is supplied.
 
 Use your app to inspect GameInput delivery and reading freshness per device. Use PresentMon to examine a target application's frame and display pipeline. Comparing their averages directly can mislead because their starting timestamps, endpoints, input selection, and treatment of undisplayed frames differ. Your app's lightweight dashboard also represents its own workload, rather than the latency of a heavier game.
+
+## User
+
+explain how InputLatency_CppDx12 gets the state of the gamepad analog sticks and triggers. for example, when the game wants the state of the left stick, does it send a signal to the gamepad hardware and then receive the latest state from the gamepad hardware? or does it receive some kind of cached that is "out-of-date" by some duration?
+
+## Assistant Commentary
+
+I'll check the app's polling call and GameInput's documentation to explain where the stick and trigger values come from and how fresh they are.
+
+## Assistant Commentary
+
+GameInput returns the most recent reading already in memory. The app fetches it late in each rendered frame, but that fetch does not make the controller produce a new report. An unchanged reading can also remain valid while you hold a stick steady.
+
+## Assistant Final
+
+**It reads the latest cached GameInput snapshot. Requesting the left stick does not send a new query to the gamepad hardware or wait for a hardware reply.** The snapshot can therefore lag behind the physical stick position by a variable amount.
+
+The flow is approximately:
+
+```mermaid
+flowchart LR
+    A["Controller sensors and firmware"] --> B["USB / Bluetooth reports"]
+    B --> C["Windows / GameInput"]
+    C --> D["Latest reading in memory"]
+    D --> E["App samples and draws"]
+```
+
+Hardware reports arrive independently of the game's state-fetch calls. For USB interrupt endpoints, hardware communication involves a scheduled polling interval; that bus-level polling is separate from the game calling GameInput. See Microsoft's [USB polling interval documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/usbspec/ns-usbspec-_usb_endpoint_descriptor).
+
+In your app, [SampleLatest](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Source/InputMonitor.cpp:153) does two things:
+
+1. `GetCurrentReading(GameInputKindGamepad, device, ...)` gets the newest available reading for that particular gamepad.
+2. `reading->GetGamepadState(...)` copies the stick, trigger, and button values from that reading into a `GameInputGamepadState` structure.
+
+Both sticks and both triggers come from the same snapshot. There is no separate hardware request for each axis. Microsoft describes reading acquisition as a lightweight memory operation without kernel transitions, and the state representations as precomputed data. See [GameInput readings](https://learn.microsoft.com/en-us/gaming/gdk/docs/features/common/input/overviews/input-readings).
+
+**"Latest available" does not mean "measured at the exact instant the game asks."** Its freshness depends on when the controller samples its sensors, when a report travels over USB/Bluetooth, and when Windows/GameInput processes it. For example, a hypothetical controller reporting every 4 ms could have a movement occur just after a report, leaving almost 4 ms before the next report opportunity, plus processing delays. That is an illustration, not a measurement of your controller.
+
+Calling `GetCurrentReading` more frequently can pick up newly available readings sooner; it does not make the controller generate reports more frequently. An acquired reading is a snapshot: keeping that reading object and calling `GetGamepadState` again retrieves that snapshot's values. Fetching the newest snapshot requires another `GetCurrentReading` call. See the [API documentation](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinput/methods/igameinput_getcurrentreading).
+
+Your app fetches the latest reading once per rendered frame, **after the GPU and presentation waits**, immediately before constructing the live controller visuals. This reduces the time that a fetched snapshot sits around before submission. See [Renderer.cpp](C:/Users/k/Repository/Veehiicuul/InputLatency_CppDx12/Source/Renderer.cpp:489).
+
+The app's Sample measurement is:
+
+`GameInput timestamp immediately after fetching - reading's GameInput timestamp`
+
+That measures reading age relative to GameInput's clock. It cannot establish the full time since the physical stick moved, because the app has no independently measured timestamp for that movement.
+
+Finally, **an older snapshot is not automatically incorrect**. If you hold the stick steady and no newer reading is available, the existing values may still describe it correctly. The app retains those values but does not repeatedly count the same reading as a new latency observation.
