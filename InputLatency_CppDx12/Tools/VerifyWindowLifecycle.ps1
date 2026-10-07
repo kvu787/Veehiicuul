@@ -17,6 +17,7 @@ using System.Runtime.InteropServices;
 public static class WindowLifecycleVerification
 {
     [StructLayout(LayoutKind.Sequential)] public struct Rectangle { public int Left, Top, Right, Bottom; }
+    [StructLayout(LayoutKind.Sequential)] public struct MonitorInformation { public uint Size; public Rectangle Monitor, Work; public uint Flags; }
     [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr window, int command);
     [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr window);
     [DllImport("user32.dll")] public static extern bool IsZoomed(IntPtr window);
@@ -25,6 +26,8 @@ public static class WindowLifecycleVerification
     [DllImport("user32.dll")] public static extern bool PostMessageW(IntPtr window, uint message, UIntPtr first, IntPtr second);
     [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr window, out Rectangle rectangle);
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr window, out Rectangle rectangle);
+    [DllImport("user32.dll")] public static extern IntPtr MonitorFromWindow(IntPtr window, uint flags);
+    [DllImport("user32.dll")] public static extern bool GetMonitorInfoW(IntPtr monitor, ref MonitorInformation information);
     [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height, uint flags);
     [DllImport("user32.dll")] public static extern IntPtr GetWindowLongPtrW(IntPtr window, int index);
     [DllImport("user32.dll")] public static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
@@ -53,7 +56,23 @@ try {
     $window = $application.MainWindowHandle
     if ($window -eq 0) { throw 'Application window did not appear.' }
     [WindowLifecycleVerification]::SetForegroundWindow($window) | Out-Null
-    Start-Sleep -Seconds 4
+    Start-Sleep -Seconds 2
+    if (([WindowLifecycleVerification]::GetWindowLongPtrW($window, -16).ToInt64() -band 0x00CF0000) -ne 0) { throw 'Application did not start in borderless fullscreen.' }
+    $bounds = [WindowLifecycleVerification+Rectangle]::new()
+    $monitor = [WindowLifecycleVerification+MonitorInformation]::new()
+    $monitor.Size = [Runtime.InteropServices.Marshal]::SizeOf($monitor)
+    if (-not [WindowLifecycleVerification]::GetWindowRect($window, [ref]$bounds) -or
+        -not [WindowLifecycleVerification]::GetMonitorInfoW([WindowLifecycleVerification]::MonitorFromWindow($window, 2), [ref]$monitor)) { throw 'Cannot inspect startup window and monitor bounds.' }
+    if ($bounds.Left -ne $monitor.Monitor.Left -or $bounds.Top -ne $monitor.Monitor.Top -or
+        $bounds.Right -ne $monitor.Monitor.Right -or $bounds.Bottom -ne $monitor.Monitor.Bottom) { throw 'Startup window does not cover its complete monitor.' }
+    Record-Action 'StartupFullscreen'
+    [WindowLifecycleVerification]::PostMessageW($window, 0x100, [UIntPtr]0x7A, [IntPtr]0) | Out-Null
+    Start-Sleep -Seconds 2
+    if (([WindowLifecycleVerification]::GetWindowLongPtrW($window, -16).ToInt64() -band 0x00CF0000) -ne 0x00CF0000) { throw 'F11 did not restore startup windowed mode.' }
+    $client = [WindowLifecycleVerification+Rectangle]::new()
+    if (-not [WindowLifecycleVerification]::GetClientRect($window, [ref]$client) -or
+        $client.Right -ne 1280 -or $client.Bottom -ne 860) { throw 'F11 did not restore the original windowed client size.' }
+    Record-Action 'StartupWindowed'
     Record-Action 'BeforeMinimize'
     [WindowLifecycleVerification]::ShowWindow($window, 6) | Out-Null
     Start-Sleep -Milliseconds 300

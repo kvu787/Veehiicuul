@@ -28,6 +28,8 @@ Windows display-event tracing requires administrator or Performance Log Users pe
 
 ## Use
 
+The application starts in borderless fullscreen on its startup monitor. Press F11 to switch to a resizable window or back to borderless fullscreen.
+
 Activate the application window, then use gamepad buttons, sticks, and triggers. Each gamepad has its own statistics. Gamepad connection and disconnection are tracked throughout the session. Only the gamepad input kind is registered for device and reading callbacks and sampled per frame; mouse and keyboard inputs do not contribute measurements. Keyboard shortcuts below control the window.
 
 | Control           | Action                                        |
@@ -127,7 +129,7 @@ Raw measurement units are microseconds. Device indexes join the CSV files to `De
 
 `Tools/VerifyDisplayTracking.ps1` performs a short visible hardware-adapter test. Use gamepad buttons, sticks, and triggers during its eight-second session. It checks that all logged devices/statistics are gamepads, checks display correlation and timestamp subtraction, and reports when no fresh gamepad readings were displayed. Physical gamepad input remains a manual check when no such readings are collected.
 
-`Tools/VerifyWindowLifecycle.ps1` runs a 35-second visible Debug session that minimizes/restores, maximizes, toggles F11 fullscreen, and resizes to a 1024x720 client area. Click the application after restore if Windows blocks programmatic activation. It records action QPC timestamps, verifies that presentation pauses while minimized and resumes afterward, captures the minimum-size dashboard, and validates the session logs.
+`Tools/VerifyWindowLifecycle.ps1` runs a 35-second visible Debug session that checks borderless fullscreen startup and F11 windowed restoration, minimizes/restores, maximizes, toggles F11 fullscreen, and resizes to a 1024x720 client area. Click the application after restore if Windows blocks programmatic activation. It records action QPC timestamps, verifies that presentation pauses while minimized and resumes afterward, captures the minimum-size dashboard, and validates the session logs.
 
 `Tools/ValidateSession.ps1` independently checks device identities, timestamp subtraction/order, frame joins, first-display deduplication, and every summary count/aggregate/rolling percentile against the CSV records. By default, any clock error fails validation. `-AllowRejectedClockFrames` permits explicitly recorded clock-rejection frames only when they have no accepted conversion or display-reading observation; other diagnostic errors still fail validation.
 

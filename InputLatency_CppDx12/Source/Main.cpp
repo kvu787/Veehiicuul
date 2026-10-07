@@ -20,16 +20,18 @@ struct WindowState
 
 void ToggleFullscreen(HWND window, WindowState& state)
 {
+    const auto visibility = GetWindowLongPtrW(window, GWL_STYLE) & WS_VISIBLE;
     if (!state.borderless) {
         MONITORINFO monitor{sizeof(MONITORINFO)};
         if (!GetWindowPlacement(window, &state.placement) || !GetMonitorInfoW(MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST), &monitor)) return;
-        SetWindowLongPtrW(window, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+        if (!visibility) state.placement.showCmd = SW_SHOWNORMAL;
+        SetWindowLongPtrW(window, GWL_STYLE, WS_POPUP | visibility);
         SetWindowPos(window, HWND_TOP, monitor.rcMonitor.left, monitor.rcMonitor.top,
             monitor.rcMonitor.right - monitor.rcMonitor.left, monitor.rcMonitor.bottom - monitor.rcMonitor.top,
             SWP_FRAMECHANGED | SWP_NOOWNERZORDER);
     }
     else {
-        SetWindowLongPtrW(window, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
+        SetWindowLongPtrW(window, GWL_STYLE, WS_OVERLAPPEDWINDOW | visibility);
         SetWindowPlacement(window, &state.placement);
         SetWindowPos(window, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOOWNERZORDER);
     }
@@ -188,6 +190,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int)
             CW_USEDEFAULT, CW_USEDEFAULT, rectangle.right - rectangle.left, rectangle.bottom - rectangle.top,
             nullptr, nullptr, instance, &windowState);
         if (!window.handle) throw std::runtime_error("Cannot create application window.");
+        ToggleFullscreen(window.handle, windowState);
         if (!options.hidden) ShowWindow(window.handle, SW_SHOW);
         RECT client{}; GetClientRect(window.handle, &client);
         Renderer renderer;
