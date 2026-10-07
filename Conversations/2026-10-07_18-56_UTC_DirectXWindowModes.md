@@ -185,3 +185,27 @@ Multi-plane overlays (**MPO**) can also enable hardware composition and Independ
 
 For naming settings in your application, use **Windowed**, **Borderless Windowed**, and **Borderless Fullscreen** for those respective behaviors. Reserve **presentation mode** for the actual composed/independent flip path.
 
+## User
+
+should 3dTestScene_CppDx12 call SetFullscreenState?
+
+## Assistant
+
+I'll inspect how 3dTestScene_CppDx12 creates its window and swap chain, then check whether SetFullscreenState serves its intended fullscreen behavior.
+
+## Assistant
+
+**No. For its current borderless fullscreen behavior, 3dTestScene_CppDx12 should keep avoiding `SetFullscreenState(TRUE)`.**
+
+I inspected the implementation:
+
+- [Application.cpp](C:/Users/k/Repository/Veehiicuul/3dTestScene_CppDx12/Source/Application.cpp:244) implements F11 by removing window decorations and resizing the window to the monitor.
+- [Renderer.cpp](C:/Users/k/Repository/Veehiicuul/3dTestScene_CppDx12/Source/Renderer.cpp:427) creates a windowed flip-discard swap chain and disables DXGI's automatic Alt+Enter switching.
+- [Its Present call](C:/Users/k/Repository/Veehiicuul/3dTestScene_CppDx12/Source/Renderer.cpp:1213) uses `DXGI_PRESENT_ALLOW_TEARING` when VSync is off and tearing is enabled and supported.
+
+That matches Microsoft's documented approach for allowing tearing in fullscreen applications: **use a borderless fullscreen window and keep the swap chain windowed**. Entering DXGI fullscreen state would conflict with that presentation flag's requirements. [Microsoft: DXGI_PRESENT](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dxgi-present)
+
+Calling `SetFullscreenState(TRUE)` is also **not required to obtain Independent Flip**. Windows can select that path for an eligible borderless window. [Microsoft: DXGI flip model](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/for-best-performance--use-dxgi-flip-model)
+
+Reconsider the call only if you deliberately add display resolution/refresh-rate switching through DXGI. For the current application, it provides no needed functionality. [Microsoft: D3D12 swap chains](https://learn.microsoft.com/en-us/windows/win32/direct3d12/swap-chains)
+
