@@ -409,7 +409,7 @@ void Renderer::DrawControllerState(VisualState& state)
     }
     const auto left = MapStickPosition(analog.leftStickX, analog.leftStickY, 150, 354, 56);
     const auto right = MapStickPosition(analog.rightStickX, analog.rightStickY, 390, 354, 56);
-    Circle(left.x, left.y, 7, Accent); Circle(right.x, right.y, 7, SecondaryAccent);
+    Circle(left.x, left.y, 7, Accent); Circle(right.x, right.y, 7, Accent);
     const float barWidth = std::max(1.0f, static_cast<float>(width) - 624);
     Rectangle(584, 314, barWidth * TriggerFill(analog.leftTrigger), 22, Accent);
     Rectangle(584, 410, barWidth * TriggerFill(analog.rightTrigger), 22, SecondaryAccent);
