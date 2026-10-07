@@ -209,3 +209,42 @@ Calling `SetFullscreenState(TRUE)` is also **not required to obtain Independent 
 
 Reconsider the call only if you deliberately add display resolution/refresh-rate switching through DXGI. For the current application, it provides no needed functionality. [Microsoft: D3D12 swap chains](https://learn.microsoft.com/en-us/windows/win32/direct3d12/swap-chains)
 
+## User
+
+i'm confused about why you would ever want to use SetFullscreenState in directx 12. 
+
+"Reconsider the call only if you deliberately add display resolution/refresh-rate switching through DXGI."
+
+elaborate on this. why would you want this?
+
+## Assistant
+
+I'll explain the difference between changing the rendered image's resolution and changing the monitor's display mode, and clarify when SetFullscreenState is useful.
+
+## Assistant
+
+**You would use it when the application should control the monitor's display mode for the session. Most modern DX12 applications do not need that.** My earlier wording made it sound more necessary than it is.
+
+There are two separate resolutions:
+
+| Setting                | What it controls                                            | Example                         |
+|------------------------|-------------------------------------------------------------|---------------------------------|
+| **Render resolution**  | How many pixels the application renders before scaling.     | Render at 1920x1080.             |
+| **Display resolution** | The resolution Windows/GPU sends to the monitor.             | Output at 3840x2160 at 144 Hz.   |
+
+You can render at 1080p, upscale to 4K, and display the result in borderless fullscreen while the monitor stays at 4K/144 Hz. **Lowering render resolution does not require `SetFullscreenState`.** Microsoft explicitly discusses choosing rendering resolution independently of output resolution. [Microsoft: DXGI flip model](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/for-best-performance--use-dxgi-flip-model)
+
+Reasons to change the actual display mode include:
+
+- **A higher refresh rate available only at a lower display resolution.** Suppose a particular display connection supports 4K at 120 Hz but 1080p at 240 Hz. Rendering at 1080p while keeping the display at 4K/120 Hz still leaves the display refreshing at 120 Hz. Selecting a supported 1080p/240 Hz display mode changes that.
+- **An application-specific refresh rate.** A user might keep the desktop at 60 Hz but want the game to switch to a supported 144 Hz mode. A video-oriented application might instead select a supported refresh rate appropriate to its content.
+- **A particular output/scaling configuration.** A user might want a lower-resolution display mode and let the GPU's display scaler or the monitor enlarge the image, rather than have the application upscale it. Where scaling occurs depends on the hardware and configuration.
+
+Those are reasons to offer **display-mode switching**, not reasons that every fullscreen application needs this call.
+
+`SetFullscreenState(TRUE, output)` puts the swap chain into DXGI's fullscreen state for an output. It does **not** take a resolution or refresh-rate argument. The selected mode comes from other swap-chain configuration and APIs, such as `ResizeTarget`, whose mode description contains width, height, and refresh rate. In fullscreen state, `ResizeTarget` changes the output's display mode; in windowed state, it resizes the window. [Microsoft: SetFullscreenState](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-setfullscreenstate), [Microsoft: ResizeTarget](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-resizetarget)
+
+**It is one route to managing display modes, not a requirement for changing them.** Microsoft's D3D12 documentation explicitly says these changes can also be made without this method. It does not provide traditional exclusive fullscreen in D3D12. [Microsoft: D3D12 swap chains](https://learn.microsoft.com/en-us/windows/win32/direct3d12/swap-chains)
+
+For **3dTestScene_CppDx12**, keeping the user's current display mode and using borderless fullscreen is appropriate. If you later want a render-resolution setting for performance, that alone would still give you no reason to add `SetFullscreenState`.
+
