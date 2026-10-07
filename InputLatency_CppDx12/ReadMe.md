@@ -54,7 +54,7 @@ Composite or virtual devices may expose several input kinds. Only devices suppor
 
 The beginning of each input measurement is `IGameInputReading::GetTimestamp()`. Callback, sample, and Present endpoints use `IGameInput::GetCurrentTimestamp()` directly. The display endpoint is the matched frame's Windows display-event QPC timestamp, converted into the GameInput clock.
 
-Each frame brackets its pre-Present GameInput clock observation with two QPC calls. Conversion uses the midpoint of that bracket and `QueryPerformanceFrequency()`, without assuming equal clock epochs. The reported uncertainty is half the bracket duration plus one microsecond for GameInput quantization. Brackets with uncertainty above 100 microseconds are rejected. Clock progression is checked approximately once per second; a discrepancy above 200 microseconds rejects measurements until validation recovers. This validates the observed clock relationship rather than asserting an undocumented API clock origin. Calibration uncertainty does not cover every possible Windows event or driver timing error.
+Each frame brackets its pre-Present GameInput clock observation with two QPC calls. Conversion uses the midpoint of that bracket and `QueryPerformanceFrequency()`, without assuming equal clock epochs. Only the relative QPC duration is converted and rounded; addition to the integer GameInput anchor preserves single-microsecond precision even with large epochs. The reported uncertainty is half the bracket duration plus one microsecond for GameInput quantization. Brackets with uncertainty above 100 microseconds are rejected. Clock progression is checked approximately once per second; a discrepancy above 200 microseconds rejects measurements until validation recovers. This validates the observed clock relationship rather than asserting an undocumented API clock origin. Calibration uncertainty does not cover every possible Windows event or driver timing error.
 
 | Metric                   | Endpoint / meaning                                            |
 | ------------------------ | ------------------------------------------------------------- |
@@ -117,13 +117,24 @@ Every launch creates `LogOutput/yyyy-MM-dd_HH-mm-ss/`. Direct executable launche
 | MeasurementDiagnostics.txt | Dropped records, invalid clocks, device and polling errors       |
 | Dashboard.png              | Optional GPU frame capture for verification                      |
 
+Default session directories are reserved exclusively. When the current timestamp is occupied, startup waits for the next unused timestamp while preserving the required `yyyy-MM-dd_HH-mm-ss` naming format. Explicit `--log-directory` values may contain launcher/build files, but must not already contain `Application.log`. The application reserves that file atomically and rejects reuse without changing an existing session.
+
 Raw measurement units are microseconds. Device indexes join the CSV files to `Devices.csv`. The logs record gamepad timings and device metadata. `Application.log` records `MeasuredInputKind=Gamepad`, and device/summary kind fields contain `Gamepad`. Both queues have 65536 records. Queue overflow drops measurement records, increments diagnostic counters, and never delays live rendering. Any nonzero drop count means the logs are incomplete. Logging failures appear in the dashboard and cause a nonzero application exit.
 
 ## Verification
 
-`Build.ps1 -Test` runs arithmetic/statistics/queue tests, controller-state tests, display clock conversion/correlation tests, and a short hidden DirectX 12 WARP/GameInput smoke test. Debug builds enable the DirectX 12 debug layer when available and fail if it reports errors or corruption. The bundled event decoder uses its production behavior in both configurations to avoid upstream modal assertion dialogs on a background tracing thread.
+`Build.ps1 -Test` runs six tests: arithmetic/statistics/queues, controller state, display clock conversion/correlation, session-log validation, concurrent session-directory isolation, and a short hidden DirectX 12 WARP/GameInput smoke test. Session validation accepts a known-good fixture, rejects ten corruptions, and checks that a rejected clock conversion cannot contribute latency. Session-directory tests launch two copies concurrently and verify that reusing an occupied directory leaves existing logs untouched. Debug builds enable the DirectX 12 debug layer when available and fail if it reports errors or corruption. The bundled event decoder uses its production behavior in both configurations to avoid upstream modal assertion dialogs on a background tracing thread.
 
 `Tools/VerifyDisplayTracking.ps1` performs a short visible hardware-adapter test. Use gamepad buttons, sticks, and triggers during its eight-second session. It checks that all logged devices/statistics are gamepads, checks display correlation and timestamp subtraction, and reports when no fresh gamepad readings were displayed. Physical gamepad input remains a manual check when no such readings are collected.
+
+`Tools/VerifyWindowLifecycle.ps1` runs a 35-second visible Debug session that minimizes/restores, maximizes, toggles F11 fullscreen, and resizes to a 1024x720 client area. Click the application after restore if Windows blocks programmatic activation. It records action QPC timestamps, verifies that presentation pauses while minimized and resumes afterward, captures the minimum-size dashboard, and validates the session logs.
+
+`Tools/ValidateSession.ps1` independently checks device identities, timestamp subtraction/order, frame joins, first-display deduplication, and every summary count/aggregate/rolling percentile against the CSV records. By default, any clock error fails validation. `-AllowRejectedClockFrames` permits explicitly recorded clock-rejection frames only when they have no accepted conversion or display-reading observation; other diagnostic errors still fail validation.
+
+```powershell
+.\Tools\VerifyWindowLifecycle.ps1
+.\Tools\ValidateSession.ps1 -LogDirectory .\LogOutput\2026-10-07_03-19-44 -RequireGamepad -RequireDisplayMeasurements
+```
 
 See the [verification record](Documentation/Verification.md) for the completed checks and remaining manual checks.
 
