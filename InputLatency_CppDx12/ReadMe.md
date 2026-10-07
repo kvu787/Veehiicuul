@@ -1,0 +1,115 @@
+# Input latency / C++ / DirectX 12
+
+A standalone Windows 11 x64 application using Microsoft's GameInput v3 API to measure software input delivery and frame submission delay for connected mice, keyboards, and gamepads.
+
+Double-click `Build.cmd`, then `Run.cmd`. The Release executable is `BuildOutput\Release\InputLatency.exe`. The application, source, dependencies, build output, and session logs all live within this folder. It does not reference or modify another application in the repository. This folder can be copied and used independently.
+
+## Build and run
+
+Development requires Visual Studio 2022 or newer with the Desktop development with C++ workload, C++ CMake tools, and a current Windows SDK containing `dxc.exe`. Use modern `pwsh`. Only Windows 11 x64 is supported.
+
+```powershell
+.\Build.ps1 -Test
+.\Build.ps1 -Configuration Debug -Test
+.\Run.ps1
+.\Run.ps1 -DurationSeconds 30
+.\Run.ps1 -Configuration Debug
+```
+
+The `.cmd` launchers pass their arguments directly to these PowerShell scripts. `Run.cmd` fails if its selected build does not exist. Build scripts discover the installed x64 compiler and CMake/Ninja tools. Release uses `/O2`, whole-program optimization, link-time code generation, and the static Microsoft C++ runtime.
+
+The GameInput SDK and unmodified x64 runtime are included in `ThirdParty/GameInput`. Builds do not download anything or install GameInput system-wide. The build copies the runtime components and original licenses beside the executable. The application loads that bundled runtime explicitly. No Visual Studio installation or Visual C++ redistributable is required to run an already built Release package.
+
+For distribution, copy `InputLatency.exe`, `GameInputRedist.dll`, `GameInputBridge.dll`, `GameInputRawInputProxy.exe`, `GameInputLicense.txt`, and `GameInputNotice.txt` together. Windows supplies the DirectX 12, DXGI, and font services. See [GameInput provenance](ThirdParty/GameInput/Provenance.md) for the package version, checksum, and license locations.
+
+## Use
+
+Activate the application window, then move or click each mouse, press keyboard keys, and use gamepad buttons, sticks, and triggers. Each device has its own statistics. Device connection and disconnection are tracked throughout the session.
+
+| Control           | Action                                        |
+| ----------------- | --------------------------------------------- |
+| F11               | Toggle borderless fullscreen                  |
+| PageUp / PageDown | Scroll the device list by one device          |
+| Esc / Alt+F4      | Exit and finish writing the measurement files |
+
+Rows show callback, late sample, and Present-begin statistics in milliseconds. The right-hand indicator changes immediately for new input and held buttons/keys. Mouse position, gamepad triggers, and the left stick also have visual indicators. New input uses the freshest per-device reading; the statistics text refreshes four times per second.
+
+The foreground application records measurement statistics. Unfocused input, if delivered by GameInput, is marked in raw logs and excluded from callback statistics. Focus transitions establish fresh baselines. Minimized windows wait for window availability and do not render.
+
+Composite or virtual devices may expose several input kinds. The list preserves GameInput's device identities instead of assuming that every HID interface is a distinct physical peripheral. Up to 128 device identities are retained per session, including disconnected devices. Additional device/metadata errors are reported explicitly.
+
+## What is measured
+
+The beginning of each measurement is `IGameInputReading::GetTimestamp()`. All measurement endpoints use `IGameInput::GetCurrentTimestamp()`, on the same microsecond clock. QPC/steady-clock time is used only for the displayed FPS, UI refresh, and optional automatic exit.
+
+| Metric                   | Endpoint / meaning                                            |
+| ------------------------ | ------------------------------------------------------------- |
+| Reading to callback      | Entry into GameInput's reading callback                       |
+| State-change interval    | Time between consecutive callback readings for the device     |
+| Reading to late sample   | Return from the render thread's fresh per-device reading poll |
+| Reading to Present begin | Immediately before the frame's CPU call to DXGI `Present`     |
+| Present call duration    | Time spent inside that CPU `Present` call                     |
+
+These are **software timings**, not physical switch-to-photon measurements. They do not identify when a switch physically closed, a USB report was emitted, or a displayed pixel changed. Hardware debounce, firmware processing, USB/Bluetooth transport, display scanout, and panel response are not separately measurable through this application. Do not use these results to rank the complete hardware latency of different peripherals. External synchronized input and optical instrumentation is required for that measurement.
+
+Present-begin statistics only include new readings for devices with a visible dashboard row and an accepted presentation. A successful `Present` does not prove the frame was displayed; zero-sync-interval frames can be superseded. Late-sample statistics cover all connected devices, including rows outside the visible viewport. Fresh readings supersede older readings for rendering, while callback logs preserve all callback-delivered state changes.
+
+Initial cached readings are baselines, not latency observations. Repeated current readings are deduplicated by COM object identity, retaining the previous reading reference. Equal timestamps can belong to distinct readings and remain valid. Future timestamps are rejected instead of subtracting unsigned values. Percentiles use the nearest-rank method over the latest 8192 accepted observations for each metric; count, minimum, mean, and maximum cover the entire session.
+
+State-change intervals are **not USB polling rates**. GameInput reports state changes; idle periods, keyboard presses, and stick motion affect their distribution. Reading callbacks run on GameInput's worker and include callback scheduling delay. Rendering directly polls the cached stream instead of waiting for these callbacks.
+
+## Low-latency configuration
+
+The rendering policy follows the reference scene's `MinimizeInputLatency` configuration:
+
+- DirectX 12 with vendor-neutral adapter selection; WARP is available for functional testing.
+- Two flip-discard swap-chain buffers.
+- One unfinished GPU frame in total, enforced before allocator/upload-buffer reuse.
+- DXGI maximum presentation latency of one and its frame-latency waitable object.
+- Spin polls with `YieldProcessor` while waiting for GPU completion and presentation admission; window messages are serviced during and after the waits.
+- VSync off: `Present(0, DXGI_PRESENT_ALLOW_TEARING)` when DXGI supports tearing, otherwise `Present(0, 0)`.
+- No frame-rate limiter, timer-based frame pacing, or timed delays on the render/input paths.
+- Fresh input sampling after readiness waits and command setup, immediately before the small dashboard draw.
+- Above-normal render-thread scheduling, without real-time scheduling or forced affinity.
+- Preallocated, separate callback-to-logger and render-to-logger queues. Disk writes and percentile sorting run on a background thread.
+
+This policy aims to reduce software backlog. It cannot guarantee the lowest physical input latency on every machine. Spin polling intentionally uses CPU time while waiting. OS scheduling, CPU contention, graphics drivers, display configuration, and the Windows presentation path can influence results. Avoid unrelated load when comparing sessions.
+
+## Session files
+
+Every launch creates `LogOutput/yyyy-MM-dd_HH-mm-ss/`. Direct executable launches locate this application's folder relative to the executable, without hard-coded repository paths. Build invocations also write a timestamped `Build.log`. `LogOutput/` and `BuildOutput/` are ignored by Git.
+
+| File                       | Contents                                                    |
+| -------------------------- | ----------------------------------------------------------- |
+| Application.log            | Runtime version, graphics policy, adapter, shutdown/errors  |
+| Launcher.log               | PowerShell launcher transcript                              |
+| Devices.csv                | Device identities and connection/disconnection events       |
+| Readings.csv               | Reading/callback timestamps and state-change intervals      |
+| Presentations.csv          | New-reading sample and Present timestamps, visibility flag  |
+| Summary.csv                | Per-device statistics for all five metrics, written at exit |
+| MeasurementDiagnostics.txt | Dropped records, invalid clocks, device and polling errors  |
+| Dashboard.png              | Optional GPU frame capture for verification                 |
+
+Raw measurement units are microseconds. Device indexes join the CSV files to `Devices.csv`. The logs record timings and device metadata, without recording typed characters or key contents. Both queues have 65536 records. Queue overflow drops measurement records, increments diagnostic counters, and never delays live rendering. Any nonzero drop count means the logs are incomplete. Logging failures appear in the dashboard and cause a nonzero application exit.
+
+## Verification
+
+`Build.ps1 -Test` runs arithmetic/statistics/queue tests and a short hidden DirectX 12 WARP/GameInput smoke test. Debug builds enable the DirectX 12 debug layer when available and fail if it reports errors or corruption. The smoke test uses actual GameInput device enumeration, without claiming an automated physical input-latency test.
+
+See the [verification record](Documentation/Verification.md) for the completed checks and remaining manual checks.
+
+```powershell
+.\Run.ps1 -DurationSeconds 3 -SoftwareAdapter -Hidden
+.\Run.ps1 -DurationSeconds 3 -Hidden -CaptureFrame
+```
+
+The hidden and software-adapter options are for functional tests. Use a visible, focused hardware-adapter session for measurements. `-CaptureFrame` saves the last rendered frame after measurements stop, without adding readbacks to the measurement loop. The smoke test captures its dashboard automatically.
+
+## API references
+
+- [Microsoft GameInput package](https://www.nuget.org/packages/Microsoft.GameInput/3.5.283).
+- [GameInput readings and polling](https://learn.microsoft.com/en-us/xbox/gdk/docs/features/common/input/overviews/input-readings).
+- [GameInput callbacks and serialized dispatch](https://learn.microsoft.com/en-us/gaming/gdk/docs/features/common/input/advanced/input-callbacks).
+- [Reading timestamps](https://learn.microsoft.com/en-us/gaming/gdk/docs/reference/input/gameinput/interfaces/igameinputreading/methods/igameinputreading_gettimestamp).
+- [DXGI Present behavior](https://learn.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present).
+- [DXGI maximum frame latency](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency).
