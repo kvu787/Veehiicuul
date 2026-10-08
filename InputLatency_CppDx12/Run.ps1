@@ -33,5 +33,5 @@ try {
     $applicationProcess = Start-Process -FilePath $executable -WorkingDirectory $PSScriptRoot -ArgumentList $applicationArguments -WindowStyle $windowStyle -Wait -PassThru @launchOptions
     if ($applicationProcess.ExitCode -ne 0) { throw "Application exited with code $($applicationProcess.ExitCode). See Application.log." }
 }
-catch { Write-Host $_.Exception.Message -ForegroundColor White; exit 1 }
+catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }
 finally { if ($transcriptStarted) { Stop-Transcript | Out-Null } }

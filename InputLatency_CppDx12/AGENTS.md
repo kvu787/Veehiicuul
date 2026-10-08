@@ -1,5 +1,6 @@
 # Application requirements
 
+- Use only white, black, and grayscale colors in the rendered GUI dashboard. Keep standard colors outside the dashboard, including red console errors and standard Windows system dialogs.
 - Use a content space of exactly 1200 px width * 1300 px height.
 - Don't make the application contents responsive at all, except for the background color. This means that it should always render the content to the 1200*1300 content space and then fill the full window with the background color. If the window dimensions cut off content, that is fine.
 - Disallow window resizing.

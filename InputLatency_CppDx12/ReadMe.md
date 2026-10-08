@@ -62,6 +62,8 @@ Display tracking and input diagnostics have separate bordered panels containing 
 
 The dashboard uses only grayscale colors, with equal red, green, and blue components. Text, controller markers, activity indicators, and warnings use brightness differences against dark gray backgrounds.
 
+This palette applies to the rendered GUI dashboard. Build and launch console output uses standard colors, including red errors. Windows system dialogs retain their standard appearance.
+
 The foreground application records measurement statistics. Unfocused input, if delivered by GameInput, is marked in raw logs and excluded from callback statistics. Focus transitions establish fresh baselines. Minimized windows wait for window availability and do not render.
 
 Composite or virtual devices may expose several input kinds. Only devices supporting gamepad input are listed, and only their gamepad stream is measured. The list preserves GameInput's device identities instead of assuming that every HID interface is a distinct physical peripheral. Up to 128 gamepad device identities are retained per session, including disconnected devices. Additional device/metadata errors are reported explicitly.
