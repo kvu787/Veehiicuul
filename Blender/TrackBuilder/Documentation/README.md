@@ -324,9 +324,13 @@ ribbon:
 3. The mathematical spline is authoritative for the away-facing shape. A dense
    miter offset is constructed to the right of the CCW outer outline or left of
    a CCW inner outline.
-4. Normally evaluated contact stations and dense reference stations are paired
-   by an exact integer two-pointer merge. Every normally evaluated contact
-   vertex forces a corresponding offset station.
+4. Both evaluations retain Blender's original spline-parameter origin and CCW
+   parameter direction. The normally evaluated loop records the exact source
+   station where its canonical contact boundary begins. An integer two-pointer
+   merge carries that phase into dense traversal, including the fractional gap
+   when the first contact station lies between dense vertices. Every normally
+   evaluated contact vertex forces an offset interpolated at the same spline
+   parameter; spatial proximity does not determine station alignment.
 5. The dense offset is simplified independently between each pair of adjacent
    forced contact stations. Only away-edge chord error needs to be measured
    because the contact path inside an authored interval is linear. The maximum

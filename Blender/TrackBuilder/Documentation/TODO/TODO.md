@@ -1,30 +1,5 @@
 # TrackBuilder TODO
 
-## Correct smooth-curve station phase alignment
-
-`_contact_and_offset_reference` assumes the normally evaluated contact loop and
-the dense reference loop have the same normalized station zero. Both loops are
-canonicalized independently to their lowest sampled XY vertex, however, and the
-dense loop is then rotated only to the dense vertex nearest the first contact
-vertex. When the authored and reference evaluation counts are not integer
-multiples, that nearest vertex is not the same curve parameter. The subsequent
-exact rational merge therefore shifts every dense offset station along the
-curve.
-
-A formerly supported rotated cyclic Bézier with authored resolution 7 produced
-56 contact points and 2,048 reference points. With `barrier_width=1`, the first
-generated offset station differed by about `0.00691` from the dense offset
-interpolated at the corresponding contact station, exceeding the documented
-`0.001` adaptive-error limit. The same phase-alignment risk applies to supported
-NURBS splines. The build otherwise completed successfully.
-
-Preserve a shared spline-parameter origin through normal and dense evaluation,
-or carry the measured fractional phase through the station merge. Add an
-integration regression using a rotated NURBS curve whose authored resolution
-does not divide the chosen reference resolution. The test must compare offset
-stations to the corresponding dense source stations rather than to the current
-legacy rational-union implementation, which has the same phase assumption.
-
 ## Make construction rollback remove every temporary datablock
 
 `_instantiate_plans` creates its pending collections before entering its

@@ -29,7 +29,7 @@ A failure injection returning `CANCELLED` reproduced this: the previous model re
 
 Write one complete new-track procedure and a shorter repeat-edit procedure. Run them against a newly named track before signoff. The isolated new-track probe passed after supplying the missing settings, exact root name, import settings, registration, and rebuild steps.
 
-### P2 Correct NURBS contact and offset station alignment
+### Resolved NURBS contact and offset station alignment
 
 [TrackBuilder.py](../../Blender/TrackBuilder/TrackBuilder.py), lines 650-710, aligns independently canonicalized curve evaluations to the nearest dense vertex and then treats that vertex as an exact shared parameter origin. A nearby dense sample need not represent the authored sample's parameter when the resolutions do not divide evenly.
 
@@ -37,7 +37,11 @@ The template's supported cyclic NURBS track, with both authored resolutions set 
 
 The independent comparison preserved Blender's common sample origin and winding before canonicalization; the two evaluation origins coincided exactly. Preserve a shared spline parameter origin through both evaluations, or account for the fractional phase in pairing. Test against that shared-origin reference rather than the existing legacy merge, which repeats the same assumption. This is already identified in the TrackBuilder TODO and applies to the NURBS workflow actually supported here.
 
-The exact track-facing contact boundary is preserved. The defect affects offset correspondence and the claimed away-edge accuracy; it does not establish a collider mismatch in the current Ribeye export.
+The fix preserves Blender's shared parameter origin and carries the canonical contact start station into the integer merge without snapping. Copied curve transforms remain exact. A regression independently samples Blender's cyclic NURBS parameters at resolutions 7, 75, and 38, checks both windings and outer/inner offsets, and verifies forced stations within 0.000001 units and adaptive error within 0.001 units. The originally failing resolution 7 case passes, as do the existing mesh and representative-curve geometry hashes.
+
+The exact reproduced curve now has zero measured first-station alignment error and a maximum offset deviation of 0.000999582169 units, below the 0.001-unit limit. TrackTemplate and Ribeye contain the corrected embedded builder and regenerated output. Their contact outlines are unchanged, and Ribeye's exported model remains byte-identical. The Godot release build and exported startup pass. Of 35 Blender test methods, 34 pass; only the previously identified numeric-minimum method still fails in its three parameter subtests.
+
+The exact track-facing contact boundary is preserved. The defect affected offset correspondence and the claimed away-edge accuracy; it did not establish a collider mismatch in the Ribeye export.
 
 ### P2 Restore a useful green regression suite
 
@@ -78,7 +82,7 @@ Retain the tested local toolchain while relying on the frozen workflow. Treat a 
 
 ## Acceptance checklist
 
-1. Close the four findings above and rerun the Blender suite to a green result. Verify failed export preserves both old live files and the curve regression respects the documented error contract.
+1. Close the remaining findings above and rerun the Blender suite to a green result. Verify failed export preserves both old live files; the corrected curve regression already checks the documented error contract.
 2. Follow the revised instructions from a newly named template copy. Export, import, configure its settings and scene, register it, and run `Build.cmd` and `Run.cmd`.
 3. Play the new track and Ribeye with the physical controller. Check the start position, every configured car, outer and inner boundary resets, track switching both ways, camera follow, zoom, reset, and quit. Decorations and checkpoints remain visual content; custom track collision comes from the generated outlines.
 4. Change the new track outline and repeat the edit, rebuild, export, import, and release-build loop. Confirm the packaged game's displayed boundary and collision behavior both follow the change.
@@ -93,4 +97,4 @@ Retain the tested local toolchain while relying on the frozen workflow. Treat a 
 - The isolated template-derived track's release export and startup passed. Its 377-edge collision index loaded, input actions switched to Ribeye and back, and all six car selections succeeded before a clean exit.
 - Failure probes reproduced the mixed-generation export and the orphan-mesh cleanup defect. The supported NURBS probe reproduced the phase-alignment error while successfully building.
 
-Ignored local evidence is in `Build/TrackWorkflowReview`: `Inspection.log`, `BoundaryChecks.log`, `GameProbeBuild.log`, the two game console logs, exported assets, and the verification scripts. The original integration report is retained there as `TrackBuilderTestReport.txt`. Original `.blend` files and application source were not changed by this review.
+Ignored local evidence from the original review is in `Build/TrackWorkflowReview`: `Inspection.log`, `BoundaryChecks.log`, `GameProbeBuild.log`, the two game console logs, exported assets, and the verification scripts. The original integration report is retained there as `TrackBuilderTestReport.txt`. The follow-up alignment fix's before/after regression logs, saved-track verification, staged asset backups, and Godot build/startup logs are in `Build/NurbsAlignmentFix`. The original review left source files unchanged; the follow-up fix updates TrackBuilder and both embedded authoring copies.

@@ -76,6 +76,7 @@ class _Outline:
     sampling_method: str = "evaluated_input"
     offset_points: list[Vector] | None = None
     offset_source_fractions: list[float] | None = None
+    curve_start_station: int = 0
 
 
 @dataclass
@@ -423,6 +424,14 @@ def _validated_outlines(raw_outlines: list[_RawOutline], epsilon: float) -> list
     for raw in raw_outlines:
         validated = _ordered_validated_loop(raw, epsilon)
         canonical = _canonical_ccw(validated, raw.object_name, epsilon)
+        # Blender's first evaluated vertex is the shared spline-parameter
+        # origin at every resolution. Canonicalization rotates away from it;
+        # retain that rotation in the CCW parameter direction for curve pairing.
+        curve_start_station = 0
+        if raw.is_curve:
+            curve_start_station = validated.index(canonical[0])
+            if _signed_area(validated) < 0.0:
+                curve_start_station = (-curve_start_station) % len(validated)
         outlines.append(
             _Outline(
                 raw.object_name,
@@ -430,6 +439,7 @@ def _validated_outlines(raw_outlines: list[_RawOutline], epsilon: float) -> list
                 canonical,
                 raw.is_curve,
                 raw.source_object,
+                curve_start_station=curve_start_station,
             )
         )
     return outlines
@@ -511,6 +521,8 @@ def _evaluated_curve_loop(
     resolution: int,
     epsilon: float,
     temporary_collection: bpy.types.Collection,
+    *,
+    preserve_parameter_origin: bool = False,
 ) -> list[Vector]:
     """Evaluate an unmodified temporary curve copy without touching the input."""
 
@@ -519,7 +531,9 @@ def _evaluated_curve_loop(
     temporary_object.data = temporary_data
     temporary_object.name = f"__TrackBuilderCurveSample_{uuid.uuid4().hex}"
     temporary_object.parent = None
-    temporary_object.matrix_world = obj.matrix_world.copy()
+    # Supported curves are unparented; obj.copy() already preserves their
+    # transform. Reassigning matrix_world would decompose and round it, moving
+    # the reference samples away from the normally evaluated source curve.
     temporary_data.resolution_u = resolution
     temporary_data.render_resolution_u = 0
     temporary_data.splines[0].resolution_u = resolution
@@ -578,7 +592,11 @@ def _evaluated_curve_loop(
                 raise TrackBuilderValidationError(
                     f"Curve {obj.name!r} produces an edge no longer than epsilon when refined"
                 )
-        return _canonical_ccw(points, obj.name, epsilon)
+        canonical = _canonical_ccw(points, obj.name, epsilon)
+        if preserve_parameter_origin:
+            first_index = canonical.index(points[0])
+            return canonical[first_index:] + canonical[:first_index]
+        return canonical
     finally:
         if evaluated_object is not None and evaluated_mesh is not None:
             evaluated_object.to_mesh_clear()
@@ -651,19 +669,27 @@ def _contact_and_offset_reference(
     authored_source: list[Vector],
     dense_source: list[Vector],
     dense_offset: list[Vector],
+    authored_start_station: int,
 ) -> tuple[list[Vector], list[Vector], set[int]]:
-    """Pair a smooth offset with stations constrained to the authored polyline."""
+    """Pair CCW sample grids at the same exact cyclic spline parameters.
+
+    Dense samples retain Blender's parameter origin. The canonical authored
+    loop starts at ``authored_start_station / len(authored_source)`` from that
+    origin; its first contact station need not coincide with a dense vertex.
+    """
 
     if len(dense_source) != len(dense_offset):
         raise ValueError("Dense curve source and offset references must have equal point counts")
-    start = min(
-        range(len(dense_source)),
-        key=lambda index: (dense_source[index] - authored_source[0]).length_squared,
-    )
-    aligned_source = dense_source[start:] + dense_source[:start]
-    aligned_offset = dense_offset[start:] + dense_offset[:start]
     authored_count = len(authored_source)
-    dense_count = len(aligned_source)
+    dense_count = len(dense_source)
+    # Use an integer station grid with denominator authored_count * dense_count.
+    # Rotate dense traversal to the first station at or after the contact origin
+    # and retain the fractional gap instead of snapping to a nearby vertex.
+    dense_start, remainder = divmod(authored_start_station * dense_count, authored_count)
+    dense_phase = 0
+    if remainder:
+        dense_start += 1
+        dense_phase = authored_count - remainder
     forced_indices: set[int] = set()
     contact: list[Vector] = []
     offset: list[Vector] = []
@@ -676,7 +702,7 @@ def _contact_and_offset_reference(
             else dense_count * authored_count
         )
         dense_position = (
-            dense_index * authored_count
+            dense_index * authored_count + dense_phase
             if dense_index < dense_count
             else dense_count * authored_count
         )
@@ -685,13 +711,13 @@ def _contact_and_offset_reference(
             contact.append(authored_source[authored_index].copy())
             forced_indices.add(candidate_index)
             if authored_position == dense_position:
-                offset.append(aligned_offset[dense_index].copy())
+                offset.append(dense_offset[(dense_start + dense_index) % dense_count].copy())
                 dense_index += 1
             else:
                 offset.append(
                     _cyclic_interpolate_ratio(
-                        aligned_offset,
-                        authored_index,
+                        dense_offset,
+                        authored_start_station + authored_index,
                         authored_count,
                     )
                 )
@@ -700,11 +726,11 @@ def _contact_and_offset_reference(
             contact.append(
                 _cyclic_interpolate_ratio(
                     authored_source,
-                    dense_index,
-                    dense_count,
+                    dense_position,
+                    authored_count * dense_count,
                 )
             )
-            offset.append(aligned_offset[dense_index].copy())
+            offset.append(dense_offset[(dense_start + dense_index) % dense_count].copy())
             dense_index += 1
     return contact, offset, forced_indices
 
@@ -764,12 +790,14 @@ def _adaptive_curve_outline(
         resolution,
         epsilon,
         temporary_collection,
+        preserve_parameter_origin=True,
     )
     dense_offset = _stable_curve_offset_points(dense_source, width, offset_left)
     contact_reference, offset_reference, forced_indices = _contact_and_offset_reference(
         outline.points,
         dense_source,
         dense_offset,
+        outline.curve_start_station,
     )
     maximum_error = width * ADAPTIVE_OFFSET_ERROR_FACTOR
     selected = _adaptive_offset_indices(
@@ -797,6 +825,7 @@ def _adaptive_curve_outline(
         ),
         offset_points=offset_points,
         offset_source_fractions=offset_fractions,
+        curve_start_station=outline.curve_start_station,
     )
 
 

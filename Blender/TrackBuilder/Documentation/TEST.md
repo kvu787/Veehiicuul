@@ -70,9 +70,13 @@ The suite covers:
 - Golden geometry for every successful mesh-only fixture.
 - The representative smooth-curve performance scene's bounded-error topology
   hash, object count, vertex count, and face count.
-- Exact two-pointer station merging against the former rational-union reference,
-  including coincident, non-coincident, coprime, authored-denser, and
-  reference-denser station counts.
+- Exact two-pointer station merging against an independent rational union of
+  source parameters, including every authored start phase, coincident and
+  non-coincident stations, coprime counts, and either evaluation being denser.
+- Rotated cyclic NURBS at authored resolutions 7, 75, and 38 that do not divide
+  the dense reference resolution, including both windings and outer/inner
+  barriers. Independent Blender sampling checks forced offsets at the same
+  spline parameters, the adaptive chord-error bound, and input preservation.
 - Blender CDT input-face provenance for concave regions and multiple holes,
   without Python centroid-containment filtering.
 - Complete barrier-material sequences and adjusted segment lengths.

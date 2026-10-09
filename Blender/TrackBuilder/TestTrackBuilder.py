@@ -120,7 +120,7 @@ def _output_collection() -> bpy.types.Collection | None:
     return TrackBuilder._direct_child(track_builder, "Output")
 
 
-def _legacy_cyclic_interpolate(points: list[Vector], station: Fraction) -> Vector:
+def _reference_cyclic_interpolate(points: list[Vector], station: Fraction) -> Vector:
     scaled = station * len(points)
     index = scaled.numerator // scaled.denominator
     remainder = scaled - index
@@ -132,26 +132,22 @@ def _legacy_cyclic_interpolate(points: list[Vector], station: Fraction) -> Vecto
     )
 
 
-def _legacy_contact_and_offset_reference(
+def _source_station_reference(
     authored_source: list[Vector],
     dense_source: list[Vector],
     dense_offset: list[Vector],
+    authored_start_station: int,
 ) -> tuple[list[Vector], list[Vector], set[int]]:
-    """Reference implementation retained only for exact merge regression tests."""
+    """Independent rational union using Blender's shared source parameter origin."""
 
-    start = min(
-        range(len(dense_source)),
-        key=lambda index: (dense_source[index] - authored_source[0]).length_squared,
-    )
-    aligned_source = dense_source[start:] + dense_source[:start]
-    aligned_offset = dense_offset[start:] + dense_offset[:start]
+    phase = Fraction(authored_start_station, len(authored_source))
     authored_stations = {
         Fraction(index, len(authored_source)): index
         for index in range(len(authored_source))
     }
     dense_stations = {
-        Fraction(index, len(aligned_source)): index
-        for index in range(len(aligned_source))
+        (Fraction(index, len(dense_source)) - phase) % 1: index
+        for index in range(len(dense_source))
     }
     stations = sorted(set(authored_stations) | set(dense_stations))
     forced_indices: set[int] = set()
@@ -160,15 +156,15 @@ def _legacy_contact_and_offset_reference(
     for candidate_index, station in enumerate(stations):
         authored_index = authored_stations.get(station)
         if authored_index is None:
-            contact.append(_legacy_cyclic_interpolate(authored_source, station))
+            contact.append(_reference_cyclic_interpolate(authored_source, station))
         else:
             contact.append(authored_source[authored_index].copy())
             forced_indices.add(candidate_index)
         dense_index = dense_stations.get(station)
         offset.append(
-            aligned_offset[dense_index].copy()
+            dense_offset[dense_index].copy()
             if dense_index is not None
-            else _legacy_cyclic_interpolate(aligned_offset, station)
+            else _reference_cyclic_interpolate(dense_offset, station + phase)
         )
     return contact, offset, forced_indices
 
@@ -212,6 +208,34 @@ def _create_nurbs_loop(
     obj = bpy.data.objects.new(name, curve)
     collection.objects.link(obj)
     return obj
+
+
+def _source_parameter_samples(obj: bpy.types.Object, resolution: int) -> list[Vector]:
+    """Read Blender's cyclic spline stations without TrackBuilder canonicalization."""
+
+    data = obj.data.copy()
+    sampled = obj.copy()
+    sampled.data = data
+    data.resolution_u = resolution
+    data.splines[0].resolution_u = resolution
+    _track_builder_collection().objects.link(sampled)
+    evaluated = None
+    try:
+        bpy.context.view_layer.update()
+        evaluated = sampled.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        mesh = evaluated.to_mesh()
+        points = [(evaluated.matrix_world @ vertex.co).xy for vertex in mesh.vertices]
+        area = sum(
+            point.x * points[(index + 1) % len(points)].y
+            - point.y * points[(index + 1) % len(points)].x
+            for index, point in enumerate(points)
+        )
+        return points if area > 0 else [points[0], *reversed(points[1:])]
+    finally:
+        if evaluated is not None:
+            evaluated.to_mesh_clear()
+        bpy.data.objects.remove(sampled, do_unlink=True)
+        bpy.data.curves.remove(data)
 
 
 def _recorded_parameters() -> samples.BuildParameters:
@@ -461,9 +485,107 @@ class TrackBuilderTests(unittest.TestCase):
         self.assertTrue({0, 4} <= set(selected))
         self.assertTrue({1, 2, 3}.isdisjoint(selected))
 
+    def test_nurbs_offsets_preserve_source_phase_at_non_dividing_resolutions(self) -> None:
+        # The template's three-point cyclic NURBS reproduced a 0.07758-unit
+        # error at resolution 7. Include its current resolutions and reflection
+        # to cover both winding directions and outer/inner barrier offsets.
+        control_points = [
+            (-17.751028060913086, -27.10712432861328, 0.0, 1.0),
+            (-14.426091194152832, 29.466941833496094, 0.0, 1.0),
+            (32.177120208740234, -2.359818458557129, 0.0, 1.0),
+        ]
+        for resolution, reflection in [(7, 1), (7, -1), (75, 1), (38, -1)]:
+            with self.subTest(resolution=resolution, reflection=reflection):
+                _, _, _, material_names = self.load_test_input(2)
+                outlines = _outlines_collection()
+                for obj in list(outlines.all_objects):
+                    bpy.data.objects.remove(obj, do_unlink=True)
+                material = _ensure_material("PhaseAlignmentMaterial")
+                _create_mesh_loop(
+                    outlines, "Ground", [(-100, -100), (150, -100), (150, 100), (-100, 100)], material,
+                )
+                for name, scale in [("Outer", 1.0), ("Inner", 0.25)]:
+                    data = bpy.data.curves.new(name, type="CURVE")
+                    data.dimensions = "2D"
+                    data.fill_mode = "NONE"
+                    data.resolution_u = resolution
+                    spline = data.splines.new(type="NURBS")
+                    spline.points.add(2)
+                    spline.order_u = 3
+                    spline.resolution_u = resolution
+                    spline.use_cyclic_u = True
+                    for point, (x, y, z, weight) in zip(spline.points, control_points):
+                        point.co = (scale * x, scale * y, z, weight)
+                    data.materials.append(material)
+                    obj = bpy.data.objects.new(name, data)
+                    obj.location = (54.39967346191406, -14.723987579345703, 0.0)
+                    obj.rotation_euler.z = 0.23
+                    obj.scale.x = reflection
+                    outlines.objects.link(obj)
+                bpy.context.view_layer.update()
+                original_state = {
+                    obj.name: (obj.data.as_pointer(), obj.data.resolution_u, tuple(tuple(row) for row in obj.matrix_world))
+                    for obj in outlines.all_objects if obj.type == "CURVE"
+                }
+                epsilon, base, outer, inner = self.prepared_curve_outlines(1.0)
+                base_by_name = {outline.object_name: outline for outline in base}
+                for refined in [outer, *inner]:
+                    authored = base_by_name[refined.object_name]
+                    self.assertEqual(refined.points, authored.points)
+                    source = _source_parameter_samples(refined.source_object, resolution)
+                    reference_resolution = 256 if resolution == 7 else 1024
+                    dense = _source_parameter_samples(refined.source_object, reference_resolution)
+                    self.assertEqual(source[0], dense[0])
+                    self.assertNotEqual(len(dense) % len(source), 0)
+                    source_start = source.index(authored.points[0])
+                    dense_offset = TrackBuilder._stable_curve_offset_points(dense, 1.0, refined is not outer)
+                    expected_first = _reference_cyclic_interpolate(
+                        dense_offset, Fraction(source_start, len(source)),
+                    )
+                    self.assertLessEqual((refined.offset_points[0] - expected_first).length, 1.0e-6)
+
+                    # Every authored contact vertex forces the offset at the
+                    # same spline parameter, independently of spatial proximity.
+                    cumulative = [0.0]
+                    for index, point in enumerate(authored.points):
+                        cumulative.append(cumulative[-1] + (authored.points[(index + 1) % len(authored.points)] - point).length)
+                    for index in range(len(authored.points)):
+                        fraction = cumulative[index] / cumulative[-1]
+                        offset_index = min(
+                            range(len(refined.offset_points)),
+                            key=lambda candidate: abs(refined.offset_source_fractions[candidate] - fraction),
+                        )
+                        self.assertAlmostEqual(refined.offset_source_fractions[offset_index], fraction, delta=1.0e-7)
+                        expected = _reference_cyclic_interpolate(
+                            dense_offset, Fraction(source_start + index, len(source)),
+                        )
+                        self.assertLessEqual((refined.offset_points[offset_index] - expected).length, 1.0e-6)
+                    for point in dense_offset:
+                        self.assertLessEqual(
+                            min(
+                                TrackBuilder._distance_point_to_segment(
+                                    point, refined.offset_points[index],
+                                    refined.offset_points[(index + 1) % len(refined.offset_points)],
+                                )
+                                for index in range(len(refined.offset_points))
+                            ),
+                            0.001 * 1.001,
+                        )
+                output = TrackBuilder.build_track(1.0, 0.1, 5.0, material_names)
+                self.assert_valid_output(output, expected_inner_count=1)
+                self.assertEqual(original_state, {
+                    obj.name: (obj.data.as_pointer(), obj.data.resolution_u, tuple(tuple(row) for row in obj.matrix_world))
+                    for obj in outlines.all_objects if obj.type == "CURVE"
+                })
+
     def test_contact_and_offset_reference_matches_exact_rational_union(self) -> None:
-        for authored_count, dense_count in [(4, 8), (3, 5), (5, 3), (7, 11)]:
-            with self.subTest(authored_count=authored_count, dense_count=dense_count):
+        cases = [(4, 8), (3, 5), (5, 3), (7, 11), (6, 9)]
+        for authored_count, dense_count, start in [
+            (authored_count, dense_count, start)
+            for authored_count, dense_count in cases
+            for start in range(authored_count)
+        ]:
+            with self.subTest(authored_count=authored_count, dense_count=dense_count, start=start):
                 authored = [
                     Vector(
                         (
@@ -486,19 +608,19 @@ class TrackBuilderTests(unittest.TestCase):
                     Vector((100.0 + index * index, -50.0 + index * 0.25))
                     for index in range(dense_count)
                 ]
-                shift = min(2, dense_count - 1)
-                dense_source = dense_source[shift:] + dense_source[:shift]
-                dense_offset = dense_offset[shift:] + dense_offset[:shift]
+                authored = authored[start:] + authored[:start]
 
-                expected = _legacy_contact_and_offset_reference(
+                expected = _source_station_reference(
                     authored,
                     dense_source,
                     dense_offset,
+                    start,
                 )
                 actual = TrackBuilder._contact_and_offset_reference(
                     authored,
                     dense_source,
                     dense_offset,
+                    start,
                 )
 
                 self.assertEqual(actual[2], expected[2])
@@ -915,6 +1037,7 @@ class TrackBuilderTests(unittest.TestCase):
                 resolution,
                 epsilon,
                 _track_builder_collection(),
+                preserve_parameter_origin=True,
             )
             dense_offset = TrackBuilder._stable_curve_offset_points(
                 dense_source,
@@ -925,6 +1048,7 @@ class TrackBuilderTests(unittest.TestCase):
                 authored.points,
                 dense_source,
                 dense_offset,
+                authored.curve_start_station,
             )
             maximum_error = width * TrackBuilder.ADAPTIVE_OFFSET_ERROR_FACTOR
             for point in offset_reference:
