@@ -202,3 +202,37 @@ Freeze the implementation after those repairs; continue allowing track content, 
 [Full review, proposed freeze boundary, and acceptance checklist](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Documentation/TrackBuildingFeatureFreezeReview.md). Application code and original Blender files remain unchanged.
 
 - :codex-followup[Finish the freeze-readiness fixes]{prompt="Apply the four main findings in TrackBuildingFeatureFreezeReview.md, verify the Blender-to-Godot authoring loop, and record the track-building feature-freeze policy. Keep new features and optional performance work out of scope."}
+
+## User
+
+fix this: NURBS offset alignment has a real defect. A supported curve produced approximately 0.07758 units of error against the documented 0.001 tolerance, while reporting a successful build.
+
+## Assistant commentary
+
+I'll correct the NURBS station alignment, add a regression for the reproduced curve, and update the embedded TrackBuilder scripts in the template and Ribeye.
+
+## Assistant commentary
+
+The defect comes from choosing the nearest dense vertex as station zero. I'll carry the authored curve's exact parameter origin into the merge so both sample grids align, including fractional stations. The regression will cover the reported resolution 7 case and the template's current resolutions, 75 and 38.
+
+## Assistant commentary
+
+The new regression reproduced the reported 0.07758 error before the fix and now passes for both curve windings and both barrier sides. It also caught small shifts from reassigning the copied curve's world matrix; preserving the copied transform removes those shifts.
+
+## Assistant commentary
+
+The alignment regression and existing geometry checks pass; the full suite still has only the three stale minimum-dimension failures found in the review. I've also rebuilt staged copies of the template and Ribeye. Their corrected barrier geometry validates, and Ribeye's collision JSON is unchanged.
+
+## Assistant commentary
+
+The original failing curve now has zero measured station-alignment error, and its maximum offset deviation is 0.000999582, below the 0.001 limit. Both saved Blender files reproduce their geometry with the corrected embedded scripts, and the Godot release build and startup checks pass.
+
+## Assistant
+
+Fixed in [TrackBuilder.py](C:/Users/k/Repository/Veehiicuul/Blender/TrackBuilder/TrackBuilder.py) using exact spline parameters.
+
+The reproduced station error dropped from **0.07758 to 0**; maximum offset deviation is **0.000999582**, below the **0.001** limit.
+
+Updated the embedded builders and rebuilt TrackTemplate and Ribeye. Collision outlines are unchanged.
+
+Regression and Godot build/startup checks pass. The three pre-existing minimum-dimension test checks still fail.
