@@ -207,3 +207,28 @@ Reviewed the folder recursively and made [SimplePaint](C:/Users/k/Repository/Vee
 - Made the specification and integration guide self-contained.
 
 All 13 Release tests passed, including hardware/WARP GPU and standalone-copy checks. Shader behavior is unchanged. Changes and conversation were committed separately.
+
+## User
+
+"C:\Users\k\Repository\Veehiicuul\3dTestScene_CppDx12\Source\SimplePaint" shouldn't call itself canonical. I am saying that it is canon in the context of the development history of the SimplePaint shader. any specification or implementation of SimplePaint doesn't need to discuss this context.
+
+i made a commit that removes this "canon" from "C:\Users\k\Repository\Veehiicuul\3dTestScene_CppDx12\Source\SimplePaint". review "C:\Users\k\Repository\Veehiicuul\3dTestScene_CppDx12\Source\SimplePaint" to see if any further changes are needed.
+
+
+## Assistant
+
+I'll review your commit and the full SimplePaint folder for remaining references to its place in development history.
+
+
+## Assistant
+
+I found a remaining "canonical contract" comment in Material.h and the same label in the application's README. I'll remove those and simplify the angle wording too. The rest describes the shader's behavior without discussing its place in development history.
+
+
+## Assistant
+
+Removed the remaining 'canonical contract' comment in [Material.h](C:/Users/k/Repository/Veehiicuul/3dTestScene_CppDx12/Source/SimplePaint/Material.h:11), simplified the angle wording, and fixed the application's README label.
+
+No further changes were needed. Documentation checks passed. Only docs/comments changed, so runtime tests weren't rerun.
+
+Committed as `4ff0399`; conversation recorded separately.
