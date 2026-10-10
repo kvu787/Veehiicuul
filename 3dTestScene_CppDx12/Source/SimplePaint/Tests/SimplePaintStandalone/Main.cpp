@@ -5,8 +5,8 @@
 #include <array>
 #include <iostream>
 
-// A host-owned vertex layout proves the copied validator has no car-mesh or
-// application dependency. Exercise every public C++ header in the package.
+// A consumer-owned vertex layout exercises the copied validator and every
+// public C++ header without host application sources.
 struct Vertex
 {
     float positionX, positionY, positionZ;

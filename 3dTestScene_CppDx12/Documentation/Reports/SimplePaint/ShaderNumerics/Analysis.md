@@ -34,7 +34,7 @@ None of these examples depends on a mathematically undefined color endpoint: the
 
 **1. Color-denominator flooring - large, confirmed arithmetic error**
 
-Location at the examined revision: SimplePaint.hlsl, lines 81-84. The current shader is [here](../../SimplePaint.hlsl).
+Location at the examined revision: SimplePaint.hlsl, lines 81-84. The current shader is [here](../../../../Source/SimplePaint/SimplePaint.hlsl).
 
 Let B be brightness, b a linear base-color component after CPU conversion, and t the remapped tone. In exact arithmetic the existing curve can be written:
 

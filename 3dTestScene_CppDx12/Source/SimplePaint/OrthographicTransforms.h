@@ -75,7 +75,7 @@ inline ObjectTransforms BuildObjectTransforms(
     ObjectTransforms result;
     for (unsigned axis = 0; axis < 3; ++axis)
     {
-        // Normals use XYZ only. As before, object scales must be uniform.
+        // Normals use XYZ only; the validated object/view scale is uniform.
         DirectX::XMStoreFloat4(&result.normalToView[axis], columns.r[axis]);
     }
     DirectX::XMStoreFloat4(&result.worldToClip[0],

@@ -1,8 +1,8 @@
 # Historical SimplePaint numerical reports
 
 These reports and their CSV/INI inputs preserve earlier parameter proposals.
-They do not override the [current specification](../Specification.md) or
-[usage guide](../Usage.md).
+They do not override the [current specification](../../../Source/SimplePaint/Specification.md) or
+[usage guide](../../../Source/SimplePaint/Usage.md).
 
 - [Initial analysis](ShaderNumerics/Analysis.md), [examples](ShaderNumerics/Examples.csv), and [presets](ShaderNumerics/Presets).
 - [Constrained-input analysis](ShaderNumerics/ConstrainedAnalysis.md), with [examples](ShaderNumerics/ConstrainedExamples.csv).

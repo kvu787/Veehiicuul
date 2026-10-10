@@ -1,13 +1,15 @@
 # SimplePaint shader
 
-This folder contains the complete reusable C++20/HLSL implementation. Copy the **entire `SimplePaint` folder** into another project's source or vendor directory. It has no dependency on this application's renderer, generated meshes, settings loader, background shader, tests, or build scripts.
+This folder is the canonical specification and implementation of SimplePaint for Windows 11 x64. [Specification.md](Specification.md) defines the mathematics, supported inputs, GPU layout, and verification criteria. The C++20/HLSL sources implement that contract, and the [test suite](Tests) verifies it. Keep the specification, implementation, and tests aligned when changing the shader.
+
+Copy the **entire `SimplePaint` folder** into another project's source or vendor directory. It contains every module dependency and has no dependency on a host application's renderer, generated meshes, settings loader, background shader, or build scripts. [Usage.md](Usage.md) explains the controls and integration.
 
 ## Build the C++ library
 
 With CMake, keep the folder name `SimplePaint` and add:
 
 ```cmake
-add_subdirectory(vendor/SimplePaint)
+add_subdirectory(Vendor/SimplePaint)
 target_link_libraries(MyApp PRIVATE SimplePaint)
 ```
 
@@ -37,8 +39,8 @@ All values must be finite. With `m = 1/1024` and `M = 1-m`, RGB and Brightness a
 The supplied `SimplePaint.hlsl` contains complete `VSMain` and `PSMain` entry points. From a Windows SDK developer shell, for a host with three materials:
 
 ```text
-dxc -E VSMain -T vs_6_0 -O3 -Ges -WX -D SIMPLE_PAINT_MATERIAL_COUNT=3 -Fo PaintVS.dxil vendor/SimplePaint/SimplePaint.hlsl
-dxc -E PSMain -T ps_6_0 -O3 -Ges -WX -D SIMPLE_PAINT_MATERIAL_COUNT=3 -Fo PaintPS.dxil vendor/SimplePaint/SimplePaint.hlsl
+dxc -E VSMain -T vs_6_0 -O3 -Ges -WX -D SIMPLE_PAINT_MATERIAL_COUNT=3 -Fo PaintVertexShader.dxil Vendor/SimplePaint/SimplePaint.hlsl
+dxc -E PSMain -T ps_6_0 -O3 -Ges -WX -D SIMPLE_PAINT_MATERIAL_COUNT=3 -Fo PaintPixelShader.dxil Vendor/SimplePaint/SimplePaint.hlsl
 ```
 
 Define the same positive material count for both stages and upload exactly that many material records. The default is one. Track both `SimplePaint.hlsl` and `SimplePaintCore.hlsli` as build dependencies. You can also include `SimplePaintCore.hlsli` in your own entry points; it has no fixed bindings or material count.
@@ -66,7 +68,7 @@ The provided transform helper accepts finite orthographic dimensions in [1e-4,1e
 | SimplePaint.hlsl          | Configurable DX12 VS/PS adapter                    |
 | CMakeLists.txt            | C++ library target, usable after copying           |
 
-The paint mathematics reimplement Kevin Vu's [K12 Simple Paint shader](https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader). The included [usage guide](Usage.md), [specification](Specification.md), and [historical numerical reports](Reports/README.md) travel with the code. [Build and verification instructions](Usage.md#build-and-verify) run the included tests without application sources or build scripts.
+The facing-lobe and anchored color-curve mathematical construction is credited to Kevin Vu. [Build and verification instructions](Usage.md#build-and-verify) run the included tests without host application sources or build scripts.
 
 `ValidateParameters(parameters)` checks the material domain without computing GPU
 constants. `Material::Compile` also calls it before computing constants. Both APIs

@@ -48,6 +48,6 @@ PixelInput VSMain(VertexInput input)
 
 float4 PSMain(PixelInput input) : SV_TARGET
 {
-    // sRGB encoding is performed once by the application's sRGB RTV.
+    // Return linear RGB; the host performs sRGB encoding once for display.
     return float4(SimplePaintShade(input.paintNormal, paintMaterials[input.materialIndex]), 1.0f);
 }

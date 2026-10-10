@@ -34,7 +34,7 @@ inline double Curve(double color, double brightness, double tone)
     return a*tone / (a*tone+b*(1.0-tone));
 }
 
-// Independent binary64 reference: direct rational K12 reduction, normalized
+// Independent binary64 evaluation of Specification.md: rational facing, normalized
 // normal, explicit tone interpolation, and uncomposed Schlick color function.
 // Only roundoff beyond the mathematical [0,1] facing range is removed here.
 inline std::array<double, 3> Reference(const Case& sample)
@@ -62,7 +62,7 @@ inline std::vector<Case> Cases()
     using namespace SimplePaint;
     std::vector<Case> cases;
     // Cartesian extremes, full/inverted/constant tone ranges, exact axis normals,
-    // both slice poles, former cutoff, and tiny positive slices (underflow risk).
+    // both slice poles, both sides of the silhouette, and tiny positive slices.
     for (double color : {Margin, 0.04045, 0.5, InteriorMaximum})
     for (double brightness : {Margin, 0.126, 0.5, InteriorMaximum})
     for (double shift : {0.0, 1.0e-12, 0.5, InteriorMaximum})
@@ -78,7 +78,7 @@ inline std::vector<Case> Cases()
             .lightPoint = range[1],
         };
         for (Normal n : {Normal{0,0,1}, {0,0,-1}, {1,0,0}, {0,1,0}, {0,-1,0},
-            {0,1,1.0e-30f}, {1.0e-30f,1,1.0e-30f}, {1,0,0.009999f}, {1,0,0.010001f}})
+            {0,1,1.0e-30f}, {1.0e-30f,1,1.0e-30f}, {1,0,-1.0e-6f}, {1,0,1.0e-6f}})
             cases.push_back({.parameters = p, .normal = n});
         // Dense rings around the lobe maximum: these expose loss of 1-facing
         // much more effectively than uniformly random normals.

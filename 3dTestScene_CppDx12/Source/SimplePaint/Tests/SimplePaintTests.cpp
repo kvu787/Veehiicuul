@@ -74,8 +74,8 @@ int main()
         Throws([&]{(void)Orthographic::BuildObjectTransforms(XMMatrixScaling(1,2,1),projection);});
         Throws([&]{(void)Orthographic::BuildObjectTransforms(XMMatrixScaling(0,0,0),projection);});
         Throws([&]{(void)Orthographic::BuildObjectTransforms(XMMatrixPerspectiveFovRH(1,1,1,20),projection);});
-        // Independently preserve K12's original slice -> Schlick -> remap math
-        // away from its removed cutoff and ill-conditioned slice endpoints.
+        // Compare the specification's circular-slice/Schlick construction with
+        // its rational facing equation away from ill-conditioned slice endpoints.
         std::mt19937 random(0x4b3132);
         std::uniform_real_distribution<double> unit(0.0,1.0);
         for (unsigned i=0;i<20000;++i)
@@ -87,12 +87,12 @@ int main()
             const double t=(x+r)/(2*r),u1=(1+s)/2,u2=1-u1;
             const double schlick=u2*t/(u1*(1-t)+u2*t);
             const double warpedX=-r+2*r*schlick;
-            const double original=std::sqrt(std::max(0.0,1-warpedX*warpedX-y*y));
+            const double sliceFacing=std::sqrt(std::max(0.0,1-warpedX*warpedX-y*y));
             const double reduced=r*z*std::sqrt((1-s)*(1+s))/(r-s*x);
-            Require(std::abs(original-reduced)<1.0e-11,"Original K12 lobe and rational reduction differ");
+            Require(std::abs(sliceFacing-reduced)<1.0e-11,"SimplePaint slice/Schlick and rational facing equations differ");
         }
         std::cout << checks << " curve comparisons; parameter boundaries, anchors and transform validation passed.\n";
-        std::cout << "20,000 independent original K12 slice/Schlick/remap comparisons passed.\n";
+        std::cout << "20,000 independent SimplePaint slice/Schlick facing comparisons passed.\n";
     }
     catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }
 }

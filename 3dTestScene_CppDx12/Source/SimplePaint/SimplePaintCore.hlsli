@@ -2,10 +2,9 @@
 #define SIMPLE_PAINT_CORE_HLSLI
 
 // Reusable SimplePaint core. The application owns bindings and vertex layout.
-// CPU contract: Material.h and Geometry.h in this directory; see README.md.
+// Canonical contract: Specification.md; CPU interface: Material.h and Geometry.h.
 // All colors are linear RGB. No lighting, gamma encoding, or material repair.
-// Reimplements Kevin Vu's K12 Simple Paint mathematics:
-// https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader
+// Facing-lobe and anchored color-curve mathematical construction: Kevin Vu.
 struct SimplePaintMaterial
 {
     float4 warp;
@@ -27,7 +26,7 @@ float3 SimplePaintRotateNormal(float3 normal, SimplePaintMaterial material)
     return normal;
 }
 
-// Return positive homogeneous weights (P,Q) with f=P/(P+Q).
+// Return nonnegative homogeneous weights (P,Q), P+Q>0, with f=P/(P+Q).
 // Keeping Q instead of computing 1-f preserves tiny highlight complements.
 // Normal length cancels: per-pixel normalization is unnecessary.
 float2 SimplePaintFacingWeights(float3 n, SimplePaintMaterial material)

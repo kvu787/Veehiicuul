@@ -24,8 +24,8 @@ Historical reports retain their original wording and saved paths.
 - [Visual Studio guide](Documentation/VisualStudio.md): setup, code navigation, builds, debugging, tests, and troubleshooting.
 
 - [SimplePaint usage](Source/SimplePaint/Usage.md): controls, numerical limits, and C++/DX12 integration.
-- [Copyable SimplePaint module](Source/SimplePaint/README.md): self-contained C++/HLSL folder and integration instructions.
-- [SimplePaint specification](Source/SimplePaint/Specification.md): mathematics, rationale, and verification.
+- [Canonical SimplePaint module](Source/SimplePaint/README.md): self-contained specification, C++/HLSL implementation, tests, and integration instructions.
+- [SimplePaint specification](Source/SimplePaint/Specification.md): mathematics, numerical contract, GPU layout, and verification criteria.
 - [Asset generation](Documentation/Assets.md): background and mesh regeneration instructions.
 - [Historical reports](Documentation/Reports/README.md): earlier rendering and numerical analyses with supporting data.
 
@@ -39,7 +39,7 @@ Zoom Tracks:
 - one 3D car using `Source/Generated/CarMesh.generated.h`, moving between `x = -7` and
   `x = +7` at 8 units per second while rotating at 90 degrees per second;
 - a stationary UV sphere below and to the right of the cube, clear of the car;
-- an optimized SimplePaint/K12 shader shared by the car and sphere; and
+- an optimized SimplePaint shader shared by the car and sphere; and
 - one flattened 2D image containing the gray background, green ground, and
   static red cube.
 
@@ -164,7 +164,7 @@ objects provide independent paint controls for Axles, Body, Cabin, Headlights,
 Wheels, and Sphere. See [Usage.md](Source/SimplePaint/Usage.md) for accepted numerical ranges, examples,
 and instructions for embedding the shader in another C++/DX12 project.
 [Specification.md](Source/SimplePaint/Specification.md) defines the mathematics, numerical
-contract, cutoff decision, GPU layout, optimizations, and test results.
+contract, silhouette behavior, GPU layout, optimizations, and verification criteria.
 
 Every declared field is required in the settings file. JSON syntax and type
 conversion are handled by pinned, vendored [nlohmann/json](ThirdParty/nlohmann_json/README.md);
@@ -173,12 +173,11 @@ Application validation runs afterward using plain C++. Settings load once at
 startup; invalid or missing files report an error. See [application settings](Documentation/Settings.md#run-and-edit-this-application)
 for format rules and [Settings architecture](Documentation/Settings.md) for the code.
 
-The rewritten SimplePaint validates materials in C++ before uploading them.
-It preserves the K12 Schlick curve, facing lobe warp, and dark/light tone
-remap, while using positive contributions to preserve highlight accuracy.
-It removes the positive facing cutoff and all input clamps and denominator
-floors. The base colors in the shipped settings now obey the explicit
-numerical domain.
+SimplePaint validates materials in C++ before uploading them. Its anchored
+Schlick color curve, facing lobe warp, and dark/light tone remap use positive
+contributions to preserve highlight accuracy. It has no positive facing
+cutoff, input clamps, or denominator floors. The base colors in the shipped
+settings obey the explicit numerical domain.
 
 In the same JSON file, the `Sphere` object sets `"UResolution": 64` (longitude segments,
 3 to 512) and `"VResolution": 32` (pole-to-pole latitude segments, 2 to 512).

@@ -1,6 +1,6 @@
-# SimplePaint specification and rationale
+# SimplePaint specification
 
-Status: implemented. Date: 2026-09-05. This document supersedes the removed working specification and the earlier numerical proposals in [Historical reports](Reports/README.md).
+This is the canonical contract for the SimplePaint module in this folder. It defines the real-number appearance, accepted machine inputs, finite-precision evaluation, geometry requirements, GPU layout, and verification criteria. The C++/HLSL sources implement this contract; the included tests verify it. [Usage.md](Usage.md) explains the controls and integration, and [README.md](README.md) identifies the module's entry points. The supported development and target platform is Windows 11 x64.
 
 ## Purpose and abstract interface
 
@@ -8,7 +8,7 @@ SimplePaint makes it easy to color 3D models in a way that looks good from any a
 
 | Parameter   | Abstract domain  | Meaning                                                     |
 | ----------- | ---------------- | ----------------------------------------------------------- |
-| R, G, B     | Each in (0, 1)   | Base color in the existing user-facing sRGB space           |
+| R, G, B     | Each in (0, 1)   | Base color in user-facing sRGB space                        |
 | Brightness  | (0, 1)           | Positions the base-color anchor on the tone curve           |
 | Shift       | [0, 1)           | Warps the facing lobe in the direction selected by Rotation |
 | Rotation    | [0, 360) degrees | Circular orientation of the shift                           |
@@ -17,7 +17,7 @@ SimplePaint makes it easy to color 3D models in a way that looks good from any a
 
 All parameters are finite. There is no ordering constraint on Dark Point and Light Point. Reversed ranges are valid; equal endpoints inside (0, 1) produce constant color. Rotation has a canonical interval: 360 degrees is rejected even though its direction is mathematically equivalent to zero.
 
-The surface is opaque and unlit. The output is linear RGB, with alpha 1 in the application adapter. Paint depends only on the material and the oriented surface normal in the orthographic camera frame. It has no light, camera-position, perspective, texture, or distance inputs.
+The surface is opaque and unlit. The output is linear RGB, with alpha 1 in the supplied DX12 adapter. Paint depends only on the material and the oriented surface normal in the orthographic camera frame. It has no light, camera-position, perspective, texture, or distance inputs.
 
 ## Normals and the camera frame
 
@@ -25,7 +25,7 @@ The frame is right-handed view space: +X points right, +Y up, and +Z toward the 
 
 For the equations below, let `(x,y,z)` denote that rotated, unit-length normal. The implementation can use an unnormalized vector because its length cancels from the homogeneous expressions described later. It must still be finite and nonzero.
 
-Projection is exclusively orthographic. The example VS computes clip XYZ with three four-component dot products and sets clip W to one. Normals interpolate with `noperspective`. Each triangle has one material, and its material index interpolates with `nointerpolation`. A constant material rotation is linear and commutes with interpolation, so it is applied in VS instead of PS.
+Projection is exclusively orthographic. The supplied VS computes clip XYZ with three four-component dot products and sets clip W to one. Normals interpolate with `noperspective`. Each triangle has one material, and its material index interpolates with `nointerpolation`. A constant material rotation is linear and commutes with interpolation, so it is applied in VS instead of PS.
 
 ## Real-number reference mathematics
 
@@ -40,7 +40,7 @@ c = C / 12.92                         when C <= 0.04045
 c = ((C + 0.055) / 1.055)^2.4        otherwise
 ```
 
-This preserves the original Godot `source_color` interpretation and the existing DX12 application's display pipeline. The output is encoded to sRGB once at presentation, by the application's sRGB render-target view.
+All paint calculations use linear RGB. The host encodes the output to sRGB exactly once for display, for example through an sRGB render-target view.
 
 ### Warp the facing lobe
 
@@ -56,7 +56,7 @@ f = r*z*h / (r-s*x)                 when z > 0
 
 On the front hemisphere, `r > 0`, and `r-s*x >= (1-s)*r > 0`. Thus there is no singular denominator in this branch. The facing satisfies `0 < f <= r <= 1`.
 
-This is the algebraic reduction of the original K12 sequence:
+An equivalent circular-slice construction applies a Schlick bias to the horizontal slice coordinate:
 
 ```text
 sliceStart = -r
@@ -69,13 +69,13 @@ X  = -r + 2*r*w
 f  = sqrt(r*r-X*X)                  front hemisphere
 ```
 
-Both the circular slice and the Schlick bias are retained. For `s=0`, `f=z` on the front hemisphere. In the rotated frame the maximum is attained at `(s,0,h)`, where `f=1`. Rotation therefore selects the direction of the sideways shift. The original source was read from the local `SimplePaintShaders` repository at commit `abdf14856696f6437224abf3e20230333a58aae0`, in `Godot/ShaderTest/Shaders/K12.gdshader` and `Inc/Schlick.gdshaderinc`. The [published K12 source](https://github.com/kvu787/SimplePaintShaders/blob/793126205e028f06f635f23e87a9bac856bf669a/Godot/ShaderTest/Shaders/K12.gdshader) identifies the original construction and authorship (Kevin Vu).
+The circular-slice and rational forms define the same facing lobe. For `s=0`, `f=z` on the front hemisphere. In the rotated frame the maximum is attained at `(s,0,h)`, where `f=1`. Rotation therefore selects the direction of the sideways shift. The facing-lobe and anchored color-curve mathematical construction is credited to Kevin Vu.
 
-### Cutoff decision
+### Silhouette and back hemisphere
 
-The former rule `z < 0.01` is removed. For every fixed `s < 1`, the front-facing formula approaches zero continuously as `z` approaches zero. The bound `f <= r` also handles the two Y-axis slice poles. Define the entire back hemisphere, including `z=0`, as `f=0`; evaluate that branch before any slice arithmetic.
+For every fixed `s < 1`, the front-facing formula approaches zero continuously as `z` approaches zero. The bound `f <= r` also handles the two Y-axis slice poles. Define the entire back hemisphere, including `z=0`, as `f=0`; evaluate that branch before any slice arithmetic.
 
-A positive cutoff was an artistic discontinuity and did not resolve the underlying numerical problems near the shifted peak. Those problems are addressed by the evaluation method, not by discarding a band of front-facing normals. There is no configurable cutoff or shader epsilon.
+There is no positive facing cutoff or configurable shader epsilon. Every front-facing normal uses the lobe formula, including arbitrarily small positive `z`. The stable evaluation below preserves small highlight complements without introducing a discontinuity.
 
 The complete mathematical paint function is continuous in the normal, including the silhouette, for a fixed interior material. It is generally **not differentiable across the front/back boundary**, since the back hemisphere is constant. The core color curve is smooth; the complete shader must not be described as globally smooth.
 
@@ -90,7 +90,7 @@ B = (1-c)*(1-p)
 F(t) = A*t / (A*t + B*(1-t))
 ```
 
-`A` and `B` are strictly positive. The denominator is positive for the full closed tone interval [0,1]. This is the original anchored Schlick curve because its denominator expands to `(c-(1-p))*t + (1-p)*(1-c)`.
+`A` and `B` are strictly positive. The denominator is positive for the full closed tone interval [0,1]. This anchored Schlick curve has denominator `(c-(1-p))*t + (1-p)*(1-c)` when expanded.
 
 ```text
 F(0)   = 0
@@ -114,7 +114,7 @@ The reference's open domains permit values arbitrarily close to singular corners
 | Dark Point  | [0, M]           |
 | Light Point | [m, 1]           |
 
-This is a deliberate supported subset, not a modification of the abstract equations. The margin is an engineering choice that bounds both the lobe's concentration and the extreme color curves, gives simple identical UI limits, and meets the tested error criterion below. It is **not claimed to be the smallest possible margin**. No bound was chosen to keep an old denominator floor inactive; no such floor exists now. Narrow smooth highlights and finite image sampling are not used to justify these limits or to introduce filtering requirements.
+This is a deliberate supported subset of the abstract equations. The margin bounds both the lobe's concentration and the extreme color curves, gives simple identical UI limits, and meets the tested error criterion below. It is **not claimed to be the smallest possible margin**. The evaluation uses no positive-denominator floor. Narrow smooth highlights and finite image sampling are not used to justify these limits or to introduce filtering requirements.
 
 The smallest linear base color is approximately `7.56e-5`; the smallest `A` is approximately `7.38e-8`. Merely using positive curve coefficients is insufficient: a rounded facing value near one can still erase the tiny quantity `1-f` and significantly alter such a curve. The implementation retains that quantity independently.
 
@@ -164,7 +164,7 @@ P+Q = (L-r)*S + r*((a-b)^2+2ab) = L*S
 P/(P+Q) = (r/L)*(2ab/S)
 ```
 
-The shifted Schlick lobe is therefore unchanged. `Q` uses `L-r = y*y/(L+r)` and `S-2ab = (a-b)^2`, keeping both contributions nonnegative. Scaling the slice leaves `a,b` well conditioned even when the slice radius is tiny. This costs more arithmetic than the old cancellation-prone denominator but preserves the intended peak and removes the need for a denominator epsilon.
+These weights evaluate the specified shifted Schlick lobe. `Q` uses `L-r = y*y/(L+r)` and `S-2ab = (a-b)^2`, keeping both contributions nonnegative. Scaling the slice leaves `a,b` well conditioned even when the slice radius is tiny. This preserves the intended peak and avoids a denominator epsilon.
 
 ### Compose tone and color once on the CPU
 
@@ -188,7 +188,7 @@ color = numerator/(numerator+complement)
 
 Substitution of `t=d*(1-f)+l*f` proves equivalence to `F(t)`. No division is needed to recover facing, and no per-pixel tone interpolation is needed. There is no subtraction of nearly equal color denominator terms and no positive-denominator floor.
 
-Final RGB saturation removes binary32 output overshoot only. A production NVIDIA test returned `1.0000001192092896` (one ULP above one) before this final saturation. It is not a material clamp or a change to a valid real-number denominator. The adapter's sRGB RTV would also constrain the display output, but the reusable core promises RGB in [0,1].
+Final RGB saturation removes binary32 output overshoot only: reciprocal multiplication can produce a result slightly above one. It does not clamp material inputs or alter the real-number denominator. The core returns RGB in [0,1], independently of the host's render-target format.
 
 Use full `float` arithmetic, not `half`/`min16float`. Direct3D's [floating-point rules](https://learn.microsoft.com/en-us/windows/win32/direct3d11/floating-point-rules) permit flushing denormal inputs/results; the core does not rely on denormal preservation. The slice chart and the validated normal magnitude avoid a zero denominator; vanishing geometric contributions can round to zero without creating a finite cutoff parameter. DXC's [denormal-mode documentation](https://github.com/microsoft/DirectXShaderCompiler/wiki/Denorm-Mode) describes optional control in later shader models; this implementation targets SM 6.0 and does not require it.
 
@@ -204,7 +204,7 @@ Combined with the mesh cone condition, these transforms keep interpolated normal
 
 ## Encapsulation, layout, and DX12 integration
 
-`Source/SimplePaint` is the complete copyable module, with its own CMake target and integration README. `Material.*` owns parameters, validation, sRGB conversion, coefficient construction, and the GPU ABI. It is a C++20 library independent of DirectX types and scene settings. `Geometry.h` owns reusable mesh validation. `OrthographicTransforms.h` owns the optional DirectXMath transform adapter. `SimplePaintCore.hlsli` owns rotation, facing, and color evaluation and declares no bindings or material counts. `SimplePaint.hlsl` provides a reusable DX12 adapter whose `SIMPLE_PAINT_MATERIAL_COUNT` defaults to one; the host configures the count for both stages. JSON parsing belongs to the application's Settings module, and GPU resource ownership belongs to its renderer; both remain outside SimplePaint.
+This folder is the complete copyable module, with its own CMake target and integration README. `Material.*` owns parameters, validation, sRGB conversion, coefficient construction, and the GPU ABI. It is a C++20 library independent of DirectX types and scene settings. `Geometry.h` owns reusable mesh validation. `OrthographicTransforms.h` owns the optional DirectXMath transform adapter. `SimplePaintCore.hlsli` owns rotation, facing, and color evaluation and declares no bindings or material counts. `SimplePaint.hlsl` provides a reusable DX12 adapter whose `SIMPLE_PAINT_MATERIAL_COUNT` defaults to one; the host configures the count for both stages. Serialization, GPU resources, and synchronization belong to the host.
 
 | Byte offset | C++ / HLSL field | Meaning                                   |
 | ----------- | ---------------- | ----------------------------------------- |
@@ -216,50 +216,34 @@ Combined with the mesh cone condition, these transforms keep interpolated normal
 
 C++ asserts size 80, alignment 16, trivial copyability, and every field offset. The GPU tests exercise all six material indices, so the constant-buffer array stride and bindings are tested with the production shaders. `Material` has no mutating setters; `Compile` returns a complete material only after all validation succeeds. `Constants()` exposes read-only owned data for copying to an upload buffer.
 
-The application uses 96-byte object blocks at 256-byte-aligned addresses in `b0`. Its CMake build defines a material count of six for both shader stages and C++; a renderer static assertion checks agreement. `b1` points at six tightly packed 80-byte materials in a 512-byte allocation. The array is uploaded once at startup and shared across objects and frame slots. Only the moving car's transform block changes every frame; sphere transforms refresh when the camera viewport changes. Fence synchronization remains owned by the renderer.
+The supplied DX12 adapter binds a 96-byte `Orthographic::ObjectTransforms` block at `b0` and a tightly packed `GpuMaterial` array at `b1`. Each constant-buffer start address is 256-byte aligned, and CBV allocation sizes are rounded up to a multiple of 256 bytes. Material array elements retain their 80-byte stride. For example, six materials occupy 480 bytes in a 512-byte allocation. The host must match the compiled material count in both shader stages and its C++ allocation, then synchronize any updates against GPU use.
 
-Original exact-zero/one base-color settings were explicitly edited to `m`/`M` in the shipped asset. They are not converted by a compatibility path. The old global cutoff section and in-shader denominator epsilon have been removed. The obsolete working specification was removed; earlier numerical proposals remain as historical reports.
+## Optimization
 
-## Optimization and verification
+The implementation precomputes sRGB conversion, angle trig, shift square root, curve coefficients, tone remapping, and per-channel coefficient scaling. The shader loads five float4 material registers. The orthographic adapter omits view-vector construction, perspective correction, and normal normalization. Material rotation runs per vertex. Exact zero Shift selects a smaller path independently of Rotation.
 
-The implementation precomputes sRGB conversion, angle trig, shift square root, curve coefficients, tone remapping, and per-channel coefficient scaling. The shader loads five float4 material registers, as did the previous implementation. The orthographic adapter omits view-vector construction, perspective correction, and normal normalization. Material rotation runs per vertex. Exact zero Shift selects a smaller path independently of Rotation.
+The PS source has one square root on the zero-shift path and two on the shifted path. It has no pow, log, exponent, sine, cosine, or normal rsqrt. The GPU tests compile the supplied shaders with DXC `-O3 -Ges -WX`. The shifted slice arithmetic protects near-pole and near-peak behavior. Optimizations must preserve the numerical contract; inspect optimized DXIL and rerun correctness checks after changing the arithmetic or compiler settings.
 
-The PS source has one square root on the zero-shift path and two on the shifted path. It has no pow, log, exponent, sine, cosine, or normal rsqrt. DXC `-O3 -Ges -WX` compilation and inspection of the generated PS DXIL confirmed the two square-root call sites and absence of those transcendental operations. The extra shifted slice arithmetic protects near-pole and near-peak behavior. Optimizations are chosen subject to the numerical contract; no claim is made that this is the fastest possible shader on every GPU.
+## Verification
 
-Reproduce module checks using [the standalone build commands](Usage.md#build-and-verify). The application checks below record historical verification in the original host repository. The suite includes the following numerical and integration checks:
+Run the module's five CTest entries using [the standalone build commands](Usage.md#build-and-verify):
 
-| Check                    | Coverage / result                                             |
-| ------------------------ | ------------------------------------------------------------- |
-| SimplePaintContract      | 81,940 curve samples, anchor/endpoints/monotonicity           |
-| Original K12 equivalence | 20,000 independent slice/Schlick/remap comparisons            |
-| Input validation         | Every scalar, adjacent binary64 bounds, NaN, infinities       |
-| Geometry / transforms    | Actual car, sphere, bad indices/normals/materials/projections |
-| SimplePaintGpuHardware   | 30,208 production VS/PS samples; RTX 5070 Ti Laptop GPU       |
-| SimplePaintGpuWarp       | Same 30,208 samples; Microsoft Basic Render Driver            |
-| Interpolation            | 4,096 of each GPU run use distinct triangle vertex normals    |
-| Existing geometry tests  | UV sphere checks and 4,000 orthographic transform samples     |
-| DX12 debug validation    | No warnings or errors in either GPU correctness run           |
+| Test                   | Coverage                                                                         |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| SimplePaintContract    | 81,940 curve samples; anchors, endpoints, monotonicity, and parameter validation |
+|                        | 20,000 independent slice/Schlick versus rational facing comparisons              |
+|                        | Adjacent binary64 bounds, NaN, infinities, and invalid transforms                |
+| OrthographicTransforms | 4,000 packed transform comparisons and near/far depth endpoints                  |
+| SimplePaintGpuHardware | 30,208 production VS/PS samples on the preferred hardware adapter                |
+| SimplePaintGpuWarp     | The same 30,208 samples on WARP                                                  |
+| SimplePaintStandalone  | Fresh copied consumer, public C++ interfaces, shader counts, and copied tests    |
 
-The rebuilt Release application also passed a hidden-window smoke check: normal initialization, two seconds in its render loop, and clean exit after `WM_CLOSE`. `Build.cmd` builds the application, and `Run.cmd` launches the existing build. `Build.ps1 -Test` builds and runs the verification suite.
+`SimplePaintStandalone` copies the module's source, documentation, and tests into a fresh consumer project. It builds and runs every public C++ interface using consumer-owned geometry, compiles VS/PS with the default material count of one and an explicit count of three, and checks that zero is rejected. It also builds and runs the copied module's full CPU/GPU suite, excluding the recursive copy check. No host application sources or build scripts are required.
 
-The module owns five CTest entries: SimplePaintContract, OrthographicTransforms,
-SimplePaintGpuHardware, SimplePaintGpuWarp, and SimplePaintStandalone.
-SimplePaintStandalone copies the module's source, documentation, reports, and tests
-into a fresh consumer project. It builds and runs every public C++ interface
-using host-owned geometry, compiles VS/PS with counts one and three, and checks
-that zero is rejected. It also builds and runs the copied module's full CPU/GPU
-suite, excluding the recursive copy check. The original game's car/sphere mesh
-checks remain host integration tests; they are not dependencies of the module.
+The independent binary64 GPU reference in `Tests/SimplePaintReference.h` starts from the requested binary64 material parameters and the stored binary32 interpolated normal. It evaluates the specification's rotation, normalized rational facing, explicit tone remapping, and uncomposed color curve. This includes CPU coefficient conversion, VS rotation, GPU interpolation, and shader evaluation error. It does not measure errors from an external mesh exporter or an arbitrary host's world/view calculation; `OrthographicTransforms` covers the supplied transform adapter separately.
 
-The independent binary64 GPU reference starts from the requested binary64 material parameters and the stored binary32 interpolated normal. It computes rotation, normalized facing, explicit tone remapping, and the uncomposed color curve. Thus it includes CPU coefficient conversion, VS rotation, GPU interpolation, and shader evaluation error. It does not measure errors from an external mesh exporter or an arbitrary host's world/view calculation; the transform tests cover this application's adapter separately.
+The regression acceptance criterion is finite output in [0,1], alpha exactly one, and **maximum absolute per-channel error <= 0.001 in both linear RGB and sRGB** on both GPU backends. The sRGB criterion is measured before display quantization. Each GPU run includes 4,096 cases with distinct triangle vertex normals and fails on DX12 debug-layer warnings or errors when the debug layer is available. The test prints the measured maximum errors and whether debug validation was available.
 
-The regression acceptance criterion is finite output in [0,1], alpha exactly one, and **maximum absolute per-channel error <= 0.001 in both linear RGB and sRGB**. The sRGB criterion is measured before display quantization. Results from the Release run:
+The deterministic suite covers boundaries, peaks, poles, both sides of the silhouette, inverted and constant tone ranges, scaled normals, interpolation, and random cases. It is not an exhaustive proof over all binary64 parameter combinations or a promise of bitwise identity across GPU drivers. The abstract equivalence and positive-denominator arguments are analytic; the finite-precision error criterion is tested. Rerun the GPU tests when changing the compiler, arithmetic, accepted limits, or target hardware. Host applications must additionally test their own mesh validation and rendering integration.
 
-| Backend                       | Maximum linear error | Maximum sRGB error |
-| ----------------------------- | -------------------- | ------------------ |
-| NVIDIA RTX 5070 Ti Laptop GPU | 0.000214660          | 0.000112257        |
-| Microsoft Basic Render Driver | 0.000201116          | 0.000105149        |
-
-These are measured regression bounds on deterministic boundary, peak, pole, inverted-range, constant-range, scaled-normal, interpolation, and random cases. They are not an exhaustive proof over all binary64 parameter combinations or a promise of bitwise identity across GPU drivers. The abstract equivalence and positive-denominator arguments are analytic; the stated finite-precision error criterion is tested. Re-run the GPU tests when changing the compiler, arithmetic, accepted limits, or target hardware.
-
-An optional GPU-timestamp microbenchmark is available as `MyBuildOutput/Release/Source/SimplePaint/Tests/SimplePaintGpuTests.exe --benchmark`. On the same NVIDIA GPU, 128 warmed 1024x1024 production draws measured **0.0204 ms/draw for Shift=0** and **0.0216 ms/draw for Shift=0.6**. This uses constant normals and a float4 render target, excludes CPU submission/setup/readback, and is not a whole-scene FPS prediction or a speedup comparison against the old shader.
+An optional GPU-timestamp microbenchmark is available as `BuildOutput/Tests/SimplePaintGpuTests.exe --benchmark` after the standalone Ninja build described in Usage.md. It times 128 warmed 1024x1024 draws for Shift=0 and Shift=0.6, using constant normals and a float4 render target. It excludes CPU submission, setup, and readback; its output is not a whole-scene FPS prediction.
