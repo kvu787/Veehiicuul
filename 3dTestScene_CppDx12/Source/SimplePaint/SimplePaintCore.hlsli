@@ -2,7 +2,7 @@
 #define SIMPLE_PAINT_CORE_HLSLI
 
 // Reusable SimplePaint core. The application owns bindings and vertex layout.
-// Canonical contract: Specification.md; CPU interface: Material.h and Geometry.h.
+// Specification: Specification.md; CPU interface: Material.h and Geometry.h.
 // All colors are linear RGB. No lighting, gamma encoding, or material repair.
 // Facing-lobe and anchored color-curve mathematical construction: Kevin Vu.
 struct SimplePaintMaterial

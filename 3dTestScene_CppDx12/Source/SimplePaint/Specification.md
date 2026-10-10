@@ -1,6 +1,6 @@
 # SimplePaint specification
 
-This is the canonical contract for the SimplePaint module in this folder. It defines the real-number appearance, accepted machine inputs, finite-precision evaluation, geometry requirements, GPU layout, and verification criteria. The C++/HLSL sources implement this contract; the included tests verify it. [Usage.md](Usage.md) explains the controls and integration, and [README.md](README.md) identifies the module's entry points. The supported development and target platform is Windows 11 x64.
+This is the specification for the SimplePaint module in this folder. It defines the real-number appearance, accepted machine inputs, finite-precision evaluation, geometry requirements, GPU layout, and verification criteria. The C++/HLSL sources implement this contract; the included tests verify it. [Usage.md](Usage.md) explains the controls and integration, and [README.md](README.md) identifies the module's entry points. The supported development and target platform is Windows 11 x64.
 
 ## Purpose and abstract interface
 

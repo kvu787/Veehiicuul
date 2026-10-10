@@ -1,6 +1,6 @@
 # SimplePaint shader
 
-This folder is the canonical specification and implementation of SimplePaint for Windows 11 x64. [Specification.md](Specification.md) defines the mathematics, supported inputs, GPU layout, and verification criteria. The C++20/HLSL sources implement that contract, and the [test suite](Tests) verifies it. Keep the specification, implementation, and tests aligned when changing the shader.
+This folder contains the specification and implementation of SimplePaint for Windows 11 x64. [Specification.md](Specification.md) defines the mathematics, supported inputs, GPU layout, and verification criteria. The C++20/HLSL sources implement that contract, and the [test suite](Tests) verifies it. Keep the specification, implementation, and tests aligned when changing the shader.
 
 Copy the **entire `SimplePaint` folder** into another project's source or vendor directory. It contains every module dependency and has no dependency on a host application's renderer, generated meshes, settings loader, background shader, or build scripts. [Usage.md](Usage.md) explains the controls and integration.
 
