@@ -24,7 +24,7 @@ Historical reports retain their original wording and saved paths.
 - [Visual Studio guide](Documentation/VisualStudio.md): setup, code navigation, builds, debugging, tests, and troubleshooting.
 
 - [SimplePaint usage](Source/SimplePaint/Usage.md): controls, numerical limits, and C++/DX12 integration.
-- [Canonical SimplePaint module](Source/SimplePaint/README.md): self-contained specification, C++/HLSL implementation, tests, and integration instructions.
+- [SimplePaint module](Source/SimplePaint/README.md): self-contained specification, C++/HLSL implementation, tests, and integration instructions.
 - [SimplePaint specification](Source/SimplePaint/Specification.md): mathematics, numerical contract, GPU layout, and verification criteria.
 - [Asset generation](Documentation/Assets.md): background and mesh regeneration instructions.
 - [Historical reports](Documentation/Reports/README.md): earlier rendering and numerical analyses with supporting data.

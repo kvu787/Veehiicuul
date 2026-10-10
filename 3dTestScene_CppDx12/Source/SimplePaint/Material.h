@@ -8,7 +8,7 @@
 namespace SimplePaint
 {
 // Practical binary32 domain, distinct from the open real-number domain.
-// See Specification.md for the canonical contract and README.md for integration.
+// See Specification.md for the input contract and README.md for integration.
 // These limits reject inputs; they are never shader clamps. Exact powers of two
 // make boundary tests unambiguous.
 inline constexpr double Margin = 1.0 / 1024.0;
@@ -22,7 +22,7 @@ struct Parameters
     double brightness = 0.5;
     // Shift in [0, InteriorMaximum]; zero disables directional warping.
     double shift = 0.0;
-    // Canonical counterclockwise screen angle in [0,360); zero points right.
+    // Counterclockwise screen angle in [0,360); zero points right.
     double rotationDegrees = 0.0;
     // Tones at facing 0 and 1. Dark is [0,InteriorMaximum], light is [Margin,1].
     // Either ordering is valid, including equality (a constant painted color).
