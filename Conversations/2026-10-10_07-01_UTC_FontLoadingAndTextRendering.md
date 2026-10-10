@@ -180,3 +180,37 @@ The app uses **Windows GDI to rasterize the font once at startup**, then **Direc
 The font has **one fixed rasterized size, with no scaling**. The 18-pixel font height and 12 x 24 drawing cells describe different things: the latter includes the space allocated around each character.
 
 Text layout is deliberately basic: there is no kerning, Unicode decoding, wrapping, or newline handling. Bytes outside printable ASCII become `?`, and text stops before crossing the content area's right margin. Most dashboard geometry is rebuilt every **250 ms**; current controller values are added each frame.
+
+## User
+
+how does this compare to using directwrite
+
+## Assistant
+
+I'll compare this atlas approach with DirectWrite, including what would change in the app's DirectX 12 rendering path.
+
+## Assistant
+
+**The current approach is a small, fixed text renderer. DirectWrite would add better font handling and text layout, while still allowing the app to use its existing DirectX 12 atlas renderer.**
+
+DirectWrite handles font selection, character shaping, layout, and glyph rasterization. It is independent of the graphics system, so using it does not require switching the dashboard to Direct2D. [Microsoft's DirectWrite overview](https://learn.microsoft.com/en-us/windows/win32/directwrite/introducing-directwrite).
+
+| Aspect           | Current app                         | With DirectWrite                                      |
+| ---------------- | ----------------------------------- | ----------------------------------------------------- |
+| Characters       | Printable ASCII only                | Unicode, shaping, bidirectional text, font fallback    |
+| Character spacing| Fixed 12-pixel advance              | Actual font metrics and fractional positioning        |
+| Layout           | One line, cut off at the right edge  | Measurement, wrapping, alignment, trimming             |
+| Font size        | One rasterized size                 | Supports different sizes; can still use one fixed size |
+| Antialiasing     | GDI grayscale coverage in an atlas  | Grayscale or ClearType, with rendering controls        |
+| Frame rendering  | Batched textured triangles in DX12  | Can retain that approach or use Direct2D               |
+
+DirectWrite's typography and layout features are documented in Microsoft's [overview](https://learn.microsoft.com/en-us/windows/win32/directwrite/introducing-directwrite) and [programming guide](https://learn.microsoft.com/en-us/windows/win32/directwrite/programming-guide).
+
+There are two useful ways to integrate it:
+
+- **Use DirectWrite to generate the atlas.** Replace the startup GDI rasterizer with DirectWrite glyph rasterization, then retain the existing texture, triangles, shaders, and batching. DirectWrite exposes glyph coverage through [glyph-run analysis](https://learn.microsoft.com/en-us/windows/win32/api/dwrite/nn-dwrite-idwriteglyphrunanalysis). If the app still uses ASCII and 12-pixel spacing, this changes rasterization but leaves most existing limitations intact. Unicode support would also require decoding strings, obtaining shaped glyph runs, and caching the required glyphs.
+- **Use DirectWrite with Direct2D to draw text.** This provides a more complete text drawing API. Microsoft's DX12 integration example uses Direct2D through D3D11On12, adding wrapped resources and acquire/release operations around drawing. That is a larger change to this app's rendering path. [Microsoft's integration example](https://learn.microsoft.com/en-us/windows/win32/direct3d12/d2d-using-d3d11on12).
+
+**For this latency dashboard, the existing approach is reasonable:** it has one font size, simple labels and numbers, and performs font rasterization only at startup. DirectWrite does not inherently make the per-frame rendering faster; a DirectWrite-generated atlas could have essentially the same GPU work. Performance differences would need measurement.
+
+The clearest reason to adopt DirectWrite here would be **correctly displaying non-ASCII controller names or improving font metrics and appearance**. I would retain the DX12 atlas renderer and add DirectWrite font/layout support as needed. DirectWrite also does not require ClearType; grayscale rendering fits the current alpha-mask approach.
