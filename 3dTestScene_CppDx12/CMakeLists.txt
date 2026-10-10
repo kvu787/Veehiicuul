@@ -128,7 +128,7 @@ target_include_directories(Veehiicuul PRIVATE "${SHADER_GENERATED_DIRECTORY}")
 set(BACKGROUND_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/Assets/SceneBackground.png")
 set(GAME_SETTINGS "${CMAKE_CURRENT_SOURCE_DIR}/Assets/Settings.json")
 add_custom_target(RuntimeAssets ALL
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:Veehiicuul>/assets"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:Veehiicuul>/Assets"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
         "${BACKGROUND_IMAGE}"
         "$<TARGET_FILE_DIR:Veehiicuul>/Assets/SceneBackground.png"
@@ -144,6 +144,7 @@ add_dependencies(Veehiicuul RuntimeAssets)
 find_program(BLENDER_EXECUTABLE
     NAMES blender.exe
     PATHS
+        "$ENV{USERPROFILE}/Program/blender-4.5.14-windows-x64"
         "$ENV{USERPROFILE}/Program/blender-4.5.12-windows-x64"
         "$ENV{USERPROFILE}/Program/blender-5.2.0-windows-x64"
     NO_DEFAULT_PATH

@@ -13,11 +13,11 @@ files beside the executable. Edit the source JSON, rebuild through `Build.cmd`,
 and relaunch through `Run.cmd` to apply changes.
 
 Regenerate the background and `Source/Generated/CarMesh.generated.h` with Blender
-4.5.12 LTS from the `3dTestScene_CppDx12` directory. The shared Blender source remains one level
+4.5.14 LTS from the `3dTestScene_CppDx12` directory. The shared Blender source remains one level
 above it, in the repository's `Blender` directory:
 
 ```powershell
-& "$env:USERPROFILE\Program\blender-4.5.12-windows-x64\blender.exe" `
+& "$env:USERPROFILE\Program\blender-4.5.14-windows-x64\blender.exe" `
     --background --factory-startup --disable-autoexec `
     "..\Blender\Car.blend" `
     --python-exit-code 1 `
