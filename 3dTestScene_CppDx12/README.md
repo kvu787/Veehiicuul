@@ -99,6 +99,7 @@ path and prepares the x64 compiler environment.
 
 Build prerequisites:
 
+- PowerShell 7 (`pwsh`) available on `PATH` for the build and run wrappers;
 - Visual Studio 2022 or newer with the **Desktop development with C++**
   workload, the **C++ CMake tools for Windows** component (CMake 3.24 or newer),
   and a Windows SDK;
@@ -231,11 +232,17 @@ The renderer handles resizing, DPI changes, minimizing/restoring, and GPU/CPU
 frame synchronization. Only the two staged image/settings files are required
 at runtime.
 
-# [temp] PresentMon
+# PresentMon capture
 
 Run these commands from the `3dTestScene_CppDx12` directory.
+The capture runs for 300 seconds after a five-second delay. Each invocation
+creates a new directory; an existing directory causes an error instead of
+overwriting its results.
 
 ```powershell
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
 $gameProcesses = @(Get-Process -Name Veehiicuul -ErrorAction Stop)
 if ($gameProcesses.Count -ne 1) { throw 'Run exactly one game instance.' }
 $gameProcessId = $gameProcesses[0].Id
@@ -253,6 +260,16 @@ New-Item -ItemType Directory -Path $captureDirectory | Out-Null
     --output_file "$captureDirectory\PresentMon.csv" `
     *> "$captureDirectory\PresentMon.log"
 
+if ($LASTEXITCODE -ne 0) {
+    throw "PresentMon failed with exit code $LASTEXITCODE. Review '$captureDirectory\PresentMon.log'."
+}
+```
+
+If interactive terminal output is needed, replace only the PresentMon
+invocation above with this alternative. Use a fresh capture directory for
+each run, and keep the exit-code check above after the command.
+
+```powershell
 & "C:\Program Files\Git\usr\bin\winpty.exe" -Xallow-non-tty -Xplain `
     "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe" `
     --process_id $gameProcessId `
@@ -260,7 +277,7 @@ New-Item -ItemType Directory -Path $captureDirectory | Out-Null
     --set_circular_buffer_size 65536 `
     --no_console_stats `
     --track_etw_status `
-    --delay 5 --timed 30 --terminate_after_timed `
+    --delay 5 --timed 300 --terminate_after_timed `
     --output_file "$captureDirectory\PresentMon.csv" `
     2>&1 | Tee-Object -FilePath "$captureDirectory\PresentMon.log"
 ```
