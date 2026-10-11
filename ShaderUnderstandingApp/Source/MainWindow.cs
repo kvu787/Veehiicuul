@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -24,6 +25,19 @@ internal sealed class MainWindow : Window {
     internal readonly CheckBox BackSelector = new() { Content = "Back hemisphere", Margin = new(24, 0, 0, 0) };
     internal readonly CheckBox MarkerSelector = new() { Content = "Markers", IsChecked = true, Margin = new(24, 0, 0, 0) };
     internal readonly TabControl DetailTabs = new();
+    internal readonly Button DetailsToggle;
+    internal readonly GridSplitter DetailsDivider = new() {
+        ResizeDirection = GridResizeDirection.Rows, ResizeBehavior = GridResizeBehavior.PreviousAndNext,
+        HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch,
+        Cursor = Cursors.SizeNS, KeyboardIncrement = 16,
+        ToolTip = "Drag to give more height to the graphs or details. When focused, use the Up and Down arrow keys."
+    };
+    private readonly RowDefinition graphsRow = new() { Height = new(1.05, GridUnitType.Star), MinHeight = 260 };
+    private readonly RowDefinition dividerRow = new() { Height = new(18) };
+    private readonly RowDefinition detailsRow = new() { Height = new(0.82, GridUnitType.Star), MinHeight = 180 };
+    private GridLength expandedGraphsHeight;
+    private GridLength expandedDetailsHeight;
+    private bool detailsVisible = true;
     private readonly ComboBox experimentSelector = new();
     private readonly TextBlock experimentNote = Appearance.Label("", 16, Appearance.Quiet);
     private readonly TextBlock status = Appearance.Label("Ready", 16, Appearance.Quiet);
@@ -47,6 +61,10 @@ internal sealed class MainWindow : Window {
 
     public MainWindow(SessionLog log) {
         this.log = log;
+        this.DetailsToggle = Appearance.Button("Hide details", this.ToggleDetails);
+        this.DetailsToggle.Margin = new(24, 0, 0, 0);
+        this.DetailsToggle.ToolTip = "Hide the bottom inspector and explanation tabs to give their space to both graphs. Show details restores their previous size and selected tab.";
+        AutomationProperties.SetName(this.DetailsDivider, "Resize graphs and details vertically");
         this.Title = "SimplePaint - Shader Understanding";
         this.Width = 2200;
         this.Height = 1320;
@@ -161,9 +179,12 @@ internal sealed class MainWindow : Window {
         grid.RowDefinitions.Add(new() { Height = new(60) });
         grid.RowDefinitions.Add(new() { Height = new(1.18, GridUnitType.Star), MinHeight = 260 });
         grid.RowDefinitions.Add(new() { Height = new(18) });
-        grid.RowDefinitions.Add(new() { Height = new(0.82, GridUnitType.Star), MinHeight = 260 });
-        grid.RowDefinitions.Add(new() { Height = new(18) });
-        grid.RowDefinitions.Add(new() { Height = new(1.05, GridUnitType.Star), MinHeight = 300 });
+        // Keep the preview allocation fixed while the lower area is resized or
+        // collapsed, so all reclaimed space goes to the graphs.
+        grid.RowDefinitions.Add(new() { Height = new(1.87, GridUnitType.Star), MinHeight = 578 });
+        DockPanel toolbarArea = new() { VerticalAlignment = VerticalAlignment.Top };
+        DockPanel.SetDock(this.DetailsToggle, Dock.Right);
+        toolbarArea.Children.Add(this.DetailsToggle);
         StackPanel toolbar = new() { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Top };
         TextBlock displayLabel = Appearance.Label("Display", 18, Appearance.Quiet);
         displayLabel.VerticalAlignment = VerticalAlignment.Center;
@@ -177,7 +198,8 @@ internal sealed class MainWindow : Window {
         Button peak = Appearance.Button("Probe peak", () => this.SetProbe(new CompiledPaint(this.Parameters).Peak * (this.BackSelector.IsChecked == true ? -1 : 1)));
         peak.Margin = new(24, 0, 0, 0);
         toolbar.Children.Add(peak);
-        grid.Children.Add(toolbar);
+        toolbarArea.Children.Add(toolbar);
+        grid.Children.Add(toolbarArea);
         Grid previews = PairGrid();
         previews.Children.Add(this.BuildPreview(this.OriginalView, "Original SimplePaint", "Shifted circular-slice facing", Appearance.Original));
         UIElement proposed = this.BuildPreview(this.ProposedView, "Linear warp + squared facing", "Linear normal transform, then squared facing", Appearance.Proposed);
@@ -195,14 +217,44 @@ internal sealed class MainWindow : Window {
         UIElement colorChart = BuildChart(this.ColorPlot, "02   Shared color response", "Linear RGB | Dark and Light Points included", this.ColorAxisSelector);
         Grid.SetColumn(colorChart, 2);
         charts.Children.Add(colorChart);
-        Grid.SetRow(charts, 3);
-        grid.Children.Add(charts);
+        Grid lowerArea = new();
+        lowerArea.RowDefinitions.Add(this.graphsRow);
+        lowerArea.RowDefinitions.Add(this.dividerRow);
+        lowerArea.RowDefinitions.Add(this.detailsRow);
+        lowerArea.Children.Add(charts);
+        Grid.SetRow(this.DetailsDivider, 1);
+        lowerArea.Children.Add(this.DetailsDivider);
         this.DetailTabs.Items.Add(new TabItem { Header = "Inspect a normal", Content = this.BuildInspector() });
         this.DetailTabs.Items.Add(new TabItem { Header = "Equations and meaning", Content = BuildGuide() });
         this.DetailTabs.Items.Add(new TabItem { Header = "Smoothness and cost", Content = BuildTradeoffs() });
-        Grid.SetRow(this.DetailTabs, 5);
-        grid.Children.Add(this.DetailTabs);
+        Grid.SetRow(this.DetailTabs, 2);
+        lowerArea.Children.Add(this.DetailTabs);
+        Grid.SetRow(lowerArea, 3);
+        grid.Children.Add(lowerArea);
         return grid;
+    }
+
+    private void ToggleDetails() {
+        if (this.detailsVisible) {
+            this.expandedGraphsHeight = this.graphsRow.Height;
+            this.expandedDetailsHeight = this.detailsRow.Height;
+            this.detailsRow.MinHeight = 0;
+            this.detailsRow.Height = new(0);
+            this.dividerRow.Height = new(0);
+            this.graphsRow.Height = new(1, GridUnitType.Star);
+            this.DetailTabs.Visibility = Visibility.Collapsed;
+            this.DetailsDivider.Visibility = Visibility.Collapsed;
+        }
+        else {
+            this.graphsRow.Height = this.expandedGraphsHeight;
+            this.detailsRow.Height = this.expandedDetailsHeight;
+            this.detailsRow.MinHeight = 180;
+            this.dividerRow.Height = new(18);
+            this.DetailTabs.Visibility = Visibility.Visible;
+            this.DetailsDivider.Visibility = Visibility.Visible;
+        }
+        this.detailsVisible = !this.detailsVisible;
+        this.DetailsToggle.Content = this.detailsVisible ? "Hide details" : "Show details";
     }
 
     private Border BuildPreview(SphereView view, string title, string subtitle, Brush accent) {

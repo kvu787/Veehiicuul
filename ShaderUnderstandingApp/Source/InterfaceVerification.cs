@@ -43,6 +43,51 @@ internal static class InterfaceVerification {
         Require(window.OriginalView.Image?.PixelWidth == 448 && window.ProposedView.Image?.PixelWidth == 448, "both preview images exist");
         Capture("DefaultComparison");
 
+        // Exercise the native splitter and the real collapse button. Layout
+        // changes must reclaim space for both graphs without changing previews.
+        double initialFacingHeight = window.FacingPlot.ActualHeight;
+        double initialColorHeight = window.ColorPlot.ActualHeight;
+        double initialPreviewHeight = window.OriginalView.ActualHeight;
+        Task layoutRender = window.CurrentRender;
+        PaintParameters layoutParameters = window.Parameters;
+        Direction layoutProbe = window.Probe;
+        void DragDivider(double distance) {
+            window.DetailsDivider.RaiseEvent(new DragStartedEventArgs(0, 0));
+            window.DetailsDivider.RaiseEvent(new DragDeltaEventArgs(0, distance));
+            window.DetailsDivider.RaiseEvent(new DragCompletedEventArgs(0, distance, false));
+            window.ArrangeOffscreen(2560, 1392);
+        }
+        DragDivider(80);
+        Require(Math.Abs(window.FacingPlot.ActualHeight - initialFacingHeight - 80) < 1 &&
+            Math.Abs(window.ColorPlot.ActualHeight - initialColorHeight - 80) < 1, "dragging the divider adds height to both graphs");
+        Require(Math.Abs(window.OriginalView.ActualHeight - initialPreviewHeight) < 1, "divider drag keeps sphere preview height");
+        Capture("ResizedGraphs");
+        double resizedFacingHeight = window.FacingPlot.ActualHeight;
+        double resizedColorHeight = window.ColorPlot.ActualHeight;
+        double reclaimedHeight = window.DetailTabs.ActualHeight + window.DetailsDivider.ActualHeight;
+        window.DetailTabs.SelectedIndex = 2;
+        window.DetailsToggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        window.ArrangeOffscreen(2560, 1392);
+        Require(window.DetailTabs.Visibility == Visibility.Collapsed && window.DetailsDivider.Visibility == Visibility.Collapsed &&
+            Equals(window.DetailsToggle.Content, "Show details"), "hide button collapses the complete details pane and leaves a restore control");
+        Require(Math.Abs(window.FacingPlot.ActualHeight - resizedFacingHeight - reclaimedHeight) < 1 &&
+            Math.Abs(window.ColorPlot.ActualHeight - resizedColorHeight - reclaimedHeight) < 1, "all collapsed space goes to both graphs");
+        Require(Math.Abs(window.OriginalView.ActualHeight - initialPreviewHeight) < 1 &&
+            Math.Abs(window.ProposedView.ActualHeight - initialPreviewHeight) < 1, "collapsing details keeps both sphere preview heights");
+        Require(window.Parameters == layoutParameters && window.Probe == layoutProbe && window.CurrentRender == layoutRender,
+            "layout changes preserve material, normal, and rendered previews");
+        Capture("GraphsWithoutDetails");
+        window.DetailsToggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        window.ArrangeOffscreen(2560, 1392);
+        Require(window.DetailTabs.Visibility == Visibility.Visible && window.DetailsDivider.Visibility == Visibility.Visible &&
+            window.DetailTabs.SelectedIndex == 2 && Equals(window.DetailsToggle.Content, "Hide details"), "show button restores the previous selected tab");
+        Require(Math.Abs(window.FacingPlot.ActualHeight - resizedFacingHeight) < 1 &&
+            Math.Abs(window.ColorPlot.ActualHeight - resizedColorHeight) < 1, "show button restores the user-adjusted divider position");
+        DragDivider(-80);
+        Require(Math.Abs(window.FacingPlot.ActualHeight - initialFacingHeight) < 1, "divider can return to the initial graph allocation");
+        window.DetailTabs.SelectedIndex = 0;
+        log.Write($"Graph canvas heights at 2560x1392: facing {initialFacingHeight:F0}, color {initialColorHeight:F0}; collapsed gain {reclaimedHeight + 80:F0} pixels.");
+
         PaintParameters reported = new() {
             BaseColor = new(0.12955473163841805, 0.223, 0.578), Brightness = 0.37594897598870053,
             Shift = 0, RotationDegrees = 0, DarkPoint = 0.2101238082627118, LightPoint = 0.8306739936440678
@@ -123,7 +168,8 @@ internal static class InterfaceVerification {
 
         Rect bounds = window.OriginalView.SphereBounds;
         Point center = new(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2);
-        Require(window.OriginalView.NormalAt(center) == new Direction(0, 0, 1), "sphere center maps to forward normal");
+        Direction? centerNormal = window.OriginalView.NormalAt(center);
+        Require(centerNormal is not null && (centerNormal.Value + new Direction(0, 0, -1)).Length < 1e-12, "sphere center maps to forward normal");
         Require(window.OriginalView.NormalAt(new(bounds.Left - 1, center.Y)) is null, "outside-sphere clicks rejected");
         Direction? upper = window.OriginalView.NormalAt(new(center.X, bounds.Top + bounds.Height / 4));
         Require(upper is not null && Math.Abs(upper.Value.Y - 0.5) < 1e-12, "screen up maps to positive Y");
@@ -230,6 +276,7 @@ internal static class InterfaceVerification {
         window.DetailTabs.SelectedIndex = 0;
         await Settle();
         Require(window.Parameters == new PaintParameters() && window.BackSelector.IsChecked == false, "reset restores initial material and hemisphere");
+        Task minimumLayoutRender = window.CurrentRender;
         window.ArrangeOffscreen(2184, 1280);
         await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
         Capture("WindowedComparison");
@@ -241,6 +288,26 @@ internal static class InterfaceVerification {
             Require(rectangle.Right <= window.Root.ActualWidth + 1 && rectangle.Bottom <= window.Root.ActualHeight + 1, "minimum layout contains " + element.GetType().Name);
         }
         Capture("MinimumWindow");
+        double minimumFacingHeight = window.FacingPlot.ActualHeight;
+        double minimumColorHeight = window.ColorPlot.ActualHeight;
+        window.DetailsToggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        window.ArrangeOffscreen(1544, 1080);
+        Require(window.FacingPlot.ActualHeight > minimumFacingHeight + 200 && window.ColorPlot.ActualHeight > minimumColorHeight + 200,
+            "collapsing details also enlarges both graphs at minimum window size");
+        Button minimumPeak = Descendants(window.Root).OfType<Button>().Single(button => Equals(button.Content, "Probe peak"));
+        Rect peakBounds = minimumPeak.TransformToAncestor(window.Root).TransformBounds(new Rect(minimumPeak.RenderSize));
+        Rect toggleBounds = window.DetailsToggle.TransformToAncestor(window.Root).TransformBounds(new Rect(window.DetailsToggle.RenderSize));
+        Require(peakBounds.Right + 12 <= toggleBounds.Left && toggleBounds.Right <= window.Root.ActualWidth,
+            "details toggle remains separate from other toolbar controls at minimum size");
+        Capture("MinimumWindowWithoutDetails");
+        // Resize while collapsed, then verify restoration uses the saved
+        // proportions and still supports further native splitter interaction.
+        window.ArrangeOffscreen(2560, 1392);
+        window.DetailsToggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        window.ArrangeOffscreen(2560, 1392);
+        Require(Math.Abs(window.FacingPlot.ActualHeight - initialFacingHeight) < 1 &&
+            Math.Abs(window.ColorPlot.ActualHeight - initialColorHeight) < 1, "details restore correctly after resizing a collapsed window");
+        Require(window.CurrentRender == minimumLayoutRender, "window resizing and pane toggles do not regenerate sphere images");
         Require(!window.IsVisible, "no physical display used throughout verification");
         log.Write($"Passed {checks} interface checks; completed {window.CompletedRenders} previews. Screenshots and verified parameters are in this session folder.");
     }
