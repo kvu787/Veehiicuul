@@ -8,12 +8,14 @@ The layout is sized for comfortable use on a 27-inch 2560x1440 monitor: 18-pixel
 
 Requires PowerShell 7 (`pwsh`) and the .NET 10 SDK for Windows x64. The application uses WPF and the .NET libraries; it has no third-party package dependencies.
 
-1. Double-click `Build.cmd`. This publishes an optimized Release build to `BuildOutput/Release`.
-2. Double-click `Run.cmd`. It opens that build. If the build is missing, it exits with an error and asks you to build first.
+1. Double-click `Build.cmd`. This publishes an optimized Release build to a new directory under `BuildOutput/Releases`, then atomically updates `BuildOutput/CurrentBuild.txt` to select it. A failed build leaves the previous selection intact.
+2. Double-click `Run.cmd`. It copies the selected completed build into that session's `LogOutput/yyyy-MM-dd_HH-mm-ss/Application` directory and runs the copy. If no build is selected or its executable is missing, it exits with an error and asks you to build first.
+
+You can keep using an open app while development and rebuilding continue. Every launch has its own binaries, and builds never overwrite published binaries. A launch during a build uses the last completed build; after publication, new launches use the new build. Existing windows keep their version and parameters until you close them.
 
 The build is framework dependent and needs the .NET 10 Windows Desktop Runtime, which is included with the SDK. This application is intended to be built and run inside this repository.
 
-Each application run creates `LogOutput/yyyy-MM-dd_HH-mm-ss`. The folder contains launch information, application errors, and the final material parameters. Build transcripts, verification images, and verification results also go under `LogOutput`. Build products and logs are ignored by Git.
+Each application run creates `LogOutput/yyyy-MM-dd_HH-mm-ss`. The folder contains the private application copy, launch information, application errors, and the final material parameters. Build transcripts, verification images, and verification results also go under `LogOutput`. Build products and logs are ignored by Git. Keep an open session's folder until that window closes; afterwards its files can be removed together with its logs.
 
 ## Explore the comparison
 
@@ -132,6 +134,14 @@ Verify an existing build without rebuilding:
 pwsh -NoProfile -File .\Run.ps1 -VerifyInterface
 ```
 
+Verify launching and rebuilding concurrently, including Windows file locks and missing or failed builds:
+
+```powershell
+pwsh -NoProfile -File .\Tests\LaunchIsolationTests.ps1
+```
+
+The launch isolation checks exercise `Run.cmd`, hold session and published assemblies open against replacement, rebuild while launching another offscreen instance, and confirm that the next launch selects the new completed build. They also verify that missing builds cannot launch and that a failed build preserves the previous selection. This suite requires an existing completed build and publishes another build during its concurrency check.
+
 Verification uses WPF software rendering into images and never shows a window. It constructs the window before starting the dispatcher, matching the initial-render timing of a normal launch. Mathematical tests compare the stable original against an independent rational expression over 30,000 seeded samples, and check shared peaks, scale invariance, interpolation, silhouette and back behavior, endpoint remapping, and invalid inputs. Interface tests exercise real control handlers, exact entry, cancellation of obsolete renders, pixel correspondence, guided explorations, parameter serialization, minimum-window layout, startup status completion, and tooltip contrast and wrapping. Completed preview durations are recorded in each session's `Application.log`.
 
 Source inspected at repository commit `2a7ae01`:
@@ -143,5 +153,6 @@ Source inspected at repository commit `2a7ae01`:
 - [Mathematical evaluator](Source/ShaderMathematics/PaintMathematics.cs)
 - [Independent mathematical checks](Tests/ShaderMathematicsTests/Program.cs)
 - [Offscreen interface verification](Source/InterfaceVerification.cs)
+- [Launch isolation verification](Tests/LaunchIsolationTests.ps1)
 
 Original facing-lobe and anchored color-curve mathematical construction: Kevin Vu. The linear-warp model implements the proposal from the associated SimplePaint analysis conversation. The original C++ shader is unchanged by this app.
