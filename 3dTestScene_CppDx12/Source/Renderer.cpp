@@ -1057,9 +1057,16 @@ void Renderer::CreateConstantBuffer()
 
 void Renderer::UpdateCamera()
 {
-    const XMVECTOR eye = DirectX::XMVectorSet(1.6889755f, 3.6863865f, 2.9253915f, 1.0f);
+    // Pitch is downward from horizontal; yaw is from +Z toward +X. Roll is zero.
+    constexpr float pitch = DirectX::XM_PIDIV4;
+    constexpr float yaw = DirectX::XM_PIDIV4;
+    constexpr float distance = 5.0f;
+    const XMVECTOR eye = DirectX::XMVectorSet(
+        distance * std::cos(pitch) * std::sin(yaw),
+        distance * std::sin(pitch),
+        distance * std::cos(pitch) * std::cos(yaw), 1.0f);
     const XMVECTOR target = DirectX::XMVectorZero();
-    const XMVECTOR up = DirectX::XMVectorSet(-0.36863866f, 0.6755902f, -0.63850087f, 0.0f);
+    const XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     const XMMATRIX view = DirectX::XMMatrixLookAtRH(eye, target, up);
     const float aspectRatio = std::min(
         static_cast<float>(m_width) / static_cast<float>(m_height),

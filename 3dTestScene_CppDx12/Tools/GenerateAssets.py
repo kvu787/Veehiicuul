@@ -309,9 +309,18 @@ def _generate_background(output_path: Path) -> str:
     image[:, :] = np.rint(np.array((0.3, 0.3, 0.3)) * 255.0).astype(np.uint8)
     depth_buffer = np.full((BACKGROUND_HEIGHT, BACKGROUND_WIDTH), np.inf, dtype=np.float64)
 
-    eye = np.array((1.6889755, 3.6863865, 2.9253915), dtype=np.float64)
+    # Match Renderer::UpdateCamera: downward pitch, yaw from +Z toward +X, zero roll.
+    pitch = math.radians(45.0)
+    yaw = math.radians(45.0)
+    distance = 5.0
+    eye = np.array(
+        (distance * math.cos(pitch) * math.sin(yaw),
+         distance * math.sin(pitch),
+         distance * math.cos(pitch) * math.cos(yaw)),
+        dtype=np.float64,
+    )
     target = np.zeros(3, dtype=np.float64)
-    up = np.array((-0.36863866, 0.6755902, -0.63850087), dtype=np.float64)
+    up = np.array((0.0, 1.0, 0.0), dtype=np.float64)
     view = _view_matrix(eye, target, up)
     projection = _orthographic_matrix(5.0 * BACKGROUND_ASPECT, 5.0, 1.0, 20.0)
     view_projection = view @ projection
