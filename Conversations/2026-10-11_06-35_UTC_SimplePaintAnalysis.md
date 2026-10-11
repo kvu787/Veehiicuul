@@ -1070,3 +1070,47 @@ For a twice-differentiable function, check whether $f''(x)$ changes sign across 
 - $f(x)=x^4$: $f''(x)=12x^2$ stays nonnegative, so $(0,0)$ is not an inflection point.
 
 The second derivative can be undefined at an inflection point; the defining property is the change in concavity.
+
+
+## Sphere probe movement locks
+
+## User
+
+for the sphere graphs, add an option to lock probe movement along either the "facing" or "slice" axes. i want this to demonstrate how moving the probe to change only the slice changes the facing vs tilt curve, while moving the probe along a constant slice is simply changing the tilt.
+
+Attached image: `C:/Users/k/AppData/Local/Temp/codex-clipboard-f88c7af1-26ca-4d5b-826b-e1fb8cb3b132.png`.
+
+![Sphere probe axis lock request](2026-10-11_06-35_UTC_SimplePaintAnalysisImages/ProbeAxisLockRequest.png)
+
+
+## Assistant
+
+I'll add a shared probe-movement selector to the sphere previews: Free, Tilt only (constant slice), and Slice only (constant tilt). I'll use the graph's rotated coordinates for these constraints so the locked movement demonstrates the relationship you described.
+
+
+## Assistant
+
+The graph uses two coordinates: tilt around the selected slice, and the slice's offset in the rotated Y direction. I'll label the locks "Tilt only" and "Slice only", show both values, and draw the permitted path on each sphere. "Tilt only" will preserve the curves; "Slice only" will change their shape while keeping the probe at the same tilt.
+
+
+## Assistant
+
+The locks now affect mouse and keyboard movement on both spheres, with tilt and slice values shown above them. I'm checking that changing tilt leaves both curves unchanged, changing slice keeps the graph indicators at the same tilt, and neither operation regenerates the sphere images.
+
+
+## Assistant
+
+The checks pass: "Tilt only" preserves both curves, and "Slice only" preserves the probe's tilt while changing the curves. I also verified keyboard movement and the layouts at 2560x1440 and the minimum window size. The updated build is ready through Run.cmd; an already-open app can remain running.
+
+
+## Assistant
+
+Added a shared **Probe movement** selector:
+
+- **Free**: move normally.
+- **Tilt only**: fixed slice; curves stay unchanged.
+- **Slice only**: fixed tilt; curves change.
+
+Dashed paths and tilt/slice readouts show the constraint. Mouse and keyboard movement are supported.
+
+Rebuilt and verified. Open a new instance with [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd).
