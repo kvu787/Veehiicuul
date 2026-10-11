@@ -20,6 +20,7 @@ internal static class InterfaceVerification {
 
         async Task Settle() {
             await window.WaitForPreview();
+            Require(window.StatusText.StartsWith("CPU mathematical preview", StringComparison.Ordinal), "completed preview clears updating status");
             window.ArrangeOffscreen(1480, 980);
             await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
         }
@@ -40,6 +41,20 @@ internal static class InterfaceVerification {
         Require(window.OriginalView.Image?.PixelWidth == 448 && window.ProposedView.Image?.PixelWidth == 448, "both preview images exist");
         Capture("DefaultComparison");
 
+        ToolTip tip = new() { Content = window.OriginalView.ToolTip };
+        tip.Measure(new(600, double.PositiveInfinity));
+        tip.Arrange(new Rect(tip.DesiredSize));
+        tip.UpdateLayout();
+        Require(tip.ActualWidth <= 360 && tip.ActualHeight > 40, "sphere tooltip wraps into a compact box");
+        Require(tip.Background is SolidColorBrush background && background.Color == Appearance.Panel.Color, "tooltip uses the dark background");
+        TextBlock tooltipText = Descendants(tip).OfType<TextBlock>().Single();
+        Require(tooltipText.TextWrapping == TextWrapping.Wrap && tooltipText.Foreground is SolidColorBrush foreground && foreground.Color == Appearance.Text.Color, "tooltip text wraps and contrasts with its background");
+        RenderTargetBitmap tooltipImage = new((int)Math.Ceiling(tip.ActualWidth), (int)Math.Ceiling(tip.ActualHeight), 96, 96, PixelFormats.Pbgra32);
+        tooltipImage.Render(tip);
+        PngBitmapEncoder tooltipEncoder = new();
+        tooltipEncoder.Frames.Add(BitmapFrame.Create(tooltipImage));
+        using (FileStream stream = File.Create(Path.Combine(log.DirectoryPath, "SphereTooltip.png"))) tooltipEncoder.Save(stream);
+
         Rect bounds = window.OriginalView.SphereBounds;
         Point center = new(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2);
         Require(window.OriginalView.NormalAt(center) == new Direction(0, 0, 1), "sphere center maps to forward normal");
@@ -56,6 +71,8 @@ internal static class InterfaceVerification {
         Require(window.FacingPlot.Paint.Parameters == window.Parameters && window.ColorPlot.Paint.Parameters == window.Parameters, "plots share new material");
 
         ParameterControl shift = window.Controls["Shift"];
+        Task currentRender = window.CurrentRender;
+        Require(shift.CommitText() && ReferenceEquals(currentRender, window.CurrentRender), "committing an unchanged entry does not restart rendering");
         shift.Entry.Text = "1";
         Require(!shift.CommitText() && window.Parameters.Shift == 0.8, "out-of-range shift leaves material unchanged");
         shift.Entry.Text = "NaN";

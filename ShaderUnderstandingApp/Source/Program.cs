@@ -23,9 +23,16 @@ internal static class Program {
                 application.Shutdown(1);
             };
             if (verify) {
+                // Match normal startup: construct the window before Run starts
+                // the dispatcher, with no captured UI synchronization context.
+                SynchronizationContext? previousContext = SynchronizationContext.Current;
+                MainWindow window;
+                try {
+                    SynchronizationContext.SetSynchronizationContext(null);
+                    window = new(session);
+                } finally { SynchronizationContext.SetSynchronizationContext(previousContext); }
                 application.Startup += async (_, _) => {
                     try {
-                        MainWindow window = new(session);
                         await InterfaceVerification.Run(window, session);
                         session.Write("Offscreen interface verification passed. No window was shown.");
                         window.Close();

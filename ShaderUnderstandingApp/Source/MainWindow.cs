@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
@@ -41,6 +42,7 @@ internal sealed class MainWindow : Window {
     internal Direction Probe { get; private set; } = new(0, 0, 1);
     internal int CompletedRenders { get; private set; }
     internal Task CurrentRender { get; private set; } = Task.CompletedTask;
+    internal string StatusText => this.status.Text;
 
     public MainWindow(SessionLog log) {
         this.log = log;
@@ -362,28 +364,46 @@ internal sealed class MainWindow : Window {
     }
 
     private async Task RenderAsync(CompiledPaint paint, PreviewStage stage, bool back, CancellationTokenSource cancellation, long version) {
+        Stopwatch duration = Stopwatch.StartNew();
         try {
             this.status.Text = "Updating the mathematical previews...";
-            SphereImages images = await Task.Run(() => SphereRendering.Render(paint, stage, back, 448, cancellation.Token), cancellation.Token);
-            if (this.closed || cancellation.IsCancellationRequested || version != this.renderVersion) return;
-            this.OriginalView.Image = SphereRendering.Bitmap(images.Original, images.Size);
-            this.ProposedView.Image = SphereRendering.Bitmap(images.Proposed, images.Size);
-            this.OriginalView.Back = back;
-            this.ProposedView.Back = back;
-            this.OriginalView.InvalidateVisual();
-            this.ProposedView.InvalidateVisual();
-            this.CompletedRenders++;
-            this.status.Text = "CPU mathematical preview  |  Orthographic normals  |  Click or drag either sphere; click the facing plot to explore the back.";
+            SphereImages images = await Task.Run(() => SphereRendering.Render(paint, stage, back, 448, cancellation.Token), cancellation.Token).ConfigureAwait(false);
+            // Construction starts the first render before Application.Run has
+            // installed a UI synchronization context. Never rely on await to
+            // return to the owning thread, including for errors and cleanup.
+            await this.UpdateOnDispatcher(() => {
+                if (this.closed || cancellation.IsCancellationRequested || version != this.renderVersion) return;
+                this.OriginalView.Image = SphereRendering.Bitmap(images.Original, images.Size);
+                this.ProposedView.Image = SphereRendering.Bitmap(images.Proposed, images.Size);
+                this.OriginalView.Back = back;
+                this.ProposedView.Back = back;
+                this.OriginalView.InvalidateVisual();
+                this.ProposedView.InvalidateVisual();
+                this.CompletedRenders++;
+                this.status.Text = "CPU mathematical preview  |  Orthographic normals  |  Click or drag either sphere; click the facing plot to explore the back.";
+                this.log.Write($"Preview {version} completed in {duration.Elapsed.TotalMilliseconds:F1} ms; {stage}; {(back ? "back" : "front")}.");
+            });
         } catch (OperationCanceledException) {
             // Newer input replaces an obsolete render; the UI never blocks on it.
         } catch (Exception exception) {
-            this.log.Write(exception.ToString());
-            this.status.Text = "Preview failed. Details are in this session's Application.log.";
+            await this.UpdateOnDispatcher(() => {
+                this.log.Write(exception.ToString());
+                if (!this.closed && version == this.renderVersion) this.status.Text = "Preview failed. Details are in this session's Application.log.";
+            });
             throw;
         } finally {
-            if (ReferenceEquals(this.renderCancellation, cancellation)) this.renderCancellation = null;
-            cancellation.Dispose();
+            try {
+                await this.UpdateOnDispatcher(() => {
+                    if (ReferenceEquals(this.renderCancellation, cancellation)) this.renderCancellation = null;
+                });
+            } finally { cancellation.Dispose(); }
         }
+    }
+
+    private async Task UpdateOnDispatcher(Action update) {
+        if (this.Dispatcher.HasShutdownStarted) return;
+        try { await this.Dispatcher.InvokeAsync(update); }
+        catch (OperationCanceledException) when (this.Dispatcher.HasShutdownStarted) { }
     }
 
     private void UpdateInspection(CompiledPaint paint) {

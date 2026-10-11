@@ -61,8 +61,9 @@ internal sealed class ParameterControl : StackPanel {
             this.entry.ToolTip = $"Enter a number from {this.slider.Minimum:R} to {this.slider.Maximum:R}. Escape restores the current value.";
             return false;
         }
+        bool changed = value != this.Value;
         this.SetValue(value);
-        this.Changed?.Invoke(value);
+        if (changed) this.Changed?.Invoke(value);
         return true;
     }
 

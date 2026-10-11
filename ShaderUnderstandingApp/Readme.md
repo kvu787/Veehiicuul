@@ -128,7 +128,7 @@ Verify an existing build without rebuilding:
 pwsh -NoProfile -File .\Run.ps1 -VerifyInterface
 ```
 
-Verification uses WPF software rendering into images and never shows a window. Mathematical tests compare the stable original against an independent rational expression over 30,000 seeded samples, and check shared peaks, scale invariance, interpolation, silhouette and back behavior, endpoint remapping, and invalid inputs. Interface tests exercise real control handlers, exact entry, cancellation of obsolete renders, pixel correspondence, guided explorations, parameter serialization, and minimum-window layout.
+Verification uses WPF software rendering into images and never shows a window. It constructs the window before starting the dispatcher, matching the initial-render timing of a normal launch. Mathematical tests compare the stable original against an independent rational expression over 30,000 seeded samples, and check shared peaks, scale invariance, interpolation, silhouette and back behavior, endpoint remapping, and invalid inputs. Interface tests exercise real control handlers, exact entry, cancellation of obsolete renders, pixel correspondence, guided explorations, parameter serialization, minimum-window layout, startup status completion, and tooltip contrast and wrapping. Completed preview durations are recorded in each session's `Application.log`.
 
 Source inspected at repository commit `2a7ae01`:
 
