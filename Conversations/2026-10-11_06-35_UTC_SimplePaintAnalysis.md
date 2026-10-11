@@ -922,3 +922,31 @@ Yes, that's expected. **Normal vectors** shows:
 Switch to **Facing f** or **Painted color** to see Shift's effect on the original.
 
 I also removed the back-hemisphere checkbox and associated rendering/switching code. Rebuilt; all 284 GUI checks and shader math tests pass. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the updated app.
+
+
+## Remove fluff from the app text
+
+## User
+
+remove "fluff text" like this. any element should be "informative", instead of being "fluff" or trying to use a tone between fluff and informative.
+
+Attached image: `C:/Users/k/AppData/Local/Temp/codex-clipboard-2d30d3e0-a5f8-4681-85f3-b937992eedf5.png`.
+
+![Fluff text removal request](2026-10-11_06-35_UTC_SimplePaintAnalysisImages/FluffTextRemovalRequest.png)
+
+
+## Assistant
+
+I'll remove the tagline and review the app's text for slogans, filler, and vague descriptions. Labels and explanations will state what a control does or what a visualization shows.
+
+
+## Assistant
+
+The text audit found the two slogans you marked and several vague headings. I'll replace those headings with names such as "Shared material parameters", "Parameter presets", and "Facing versus tilt". The explanations will retain formulas, parameter effects, and interaction instructions.
+
+
+## Assistant
+
+Removed the tagline and replaced the slogan with **Shared material parameters**. I also made graph, preset, tab, and explanation text more specific.
+
+Rebuilt and verified: all 284 GUI checks and shader math tests pass. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the updated app.
