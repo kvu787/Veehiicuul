@@ -950,3 +950,26 @@ The text audit found the two slogans you marked and several vague headings. I'll
 Removed the tagline and replaced the slogan with **Shared material parameters**. I also made graph, preset, tab, and explanation text more specific.
 
 Rebuilt and verified: all 284 GUI checks and shader math tests pass. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the updated app.
+
+
+## Remove the Normal vectors display mode
+
+## User
+
+okay, remove the "Normal vectors" mode entirely and make any corresponding simplifications that this enables. for now, the "facing f" mode is more important for this explanation and the "normal vectors" just adds confusion.
+
+Attached image: `C:/Users/k/AppData/Local/Temp/codex-clipboard-e7ea39e5-ca5f-40c2-8a82-4d555c7babcb.png`.
+
+![Normal vector mode removal request](2026-10-11_06-35_UTC_SimplePaintAnalysisImages/NormalVectorModeRemovalRequest.png)
+
+
+## Assistant
+
+I'll remove Normal vectors from the display menu and delete its rendering, explanatory text, and verification code. I'll keep the normal calculations needed for the shader formulas and probe values.
+
+
+## Assistant
+
+Removed **Normal vectors**, its rendering code, help text, and obsolete checks. The remaining modes are **Painted color**, **Facing f**, and **Remapped tone t**.
+
+Rebuilt; all 271 GUI checks and shader math tests pass. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the update.
