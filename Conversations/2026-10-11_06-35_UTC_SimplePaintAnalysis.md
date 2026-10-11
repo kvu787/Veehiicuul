@@ -973,3 +973,22 @@ I'll remove Normal vectors from the display menu and delete its rendering, expla
 Removed **Normal vectors**, its rendering code, help text, and obsolete checks. The remaining modes are **Painted color**, **Facing f**, and **Remapped tone t**.
 
 Rebuilt; all 271 GUI checks and shader math tests pass. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the update.
+
+
+## Default tone endpoints
+
+## User
+
+use dark point = 0.3 and light point = 0.9 as the default values
+
+
+## Assistant
+
+I'll set the default Dark Point to 0.3 and Light Point to 0.9, then rebuild and check that Reset restores those values.
+
+
+## Assistant
+
+Defaults are now **Dark Point = 0.3** and **Light Point = 0.9**, including startup and Reset.
+
+Rebuilt and verified. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the update.
