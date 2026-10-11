@@ -700,3 +700,39 @@ The label is added, and the layout checks pass. The open app is locking its buil
 Added **Input axis** beside that dropdown. Rebuilt and checked the layout at 1440p and the minimum window size.
 
 Reopen [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) to see it.
+
+
+## Use the app while development continues
+
+## User
+
+ensure that i can double-click run.cmd and actively use the app and not have that block your development
+
+
+## Assistant
+
+I'll make each launch use its own copy of the build, so an open app won't lock the files that development needs to replace.
+
+
+## Assistant
+
+I'll also make the launcher choose only a fully completed build. That will let you open the app during a rebuild without picking up a mixture of old and new files. Existing windows will keep their current version; later launches will use the newest completed build.
+
+
+## Assistant
+
+The new launch path passes the GUI checks from a private session copy. I'm now testing the file-lock case: keeping a session's DLL and the selected build's DLL locked while rebuilding and launching another copy through Run.cmd.
+
+
+## Assistant
+
+The concurrency tests pass: rebuilding succeeded with both DLLs locked, Run.cmd launched during the build, and the next launch selected the new build. All 30 launcher checks passed, including missing-build and failed-build cases. The app's GUI and mathematical checks also pass.
+
+
+## Assistant
+
+You can now double-click [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) and keep using the app while I develop and rebuild.
+
+Each launch uses a private copy. Open windows keep their version and parameters; new launches use the latest completed build.
+
+Verified with 30 launcher checks, including rebuilding with DLLs locked and launching during a build.
