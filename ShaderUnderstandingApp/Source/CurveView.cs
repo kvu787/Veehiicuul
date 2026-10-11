@@ -27,8 +27,7 @@ internal sealed class CurveView : FrameworkElement {
     internal double BackRegionFraction => this.BackRangeDegrees / (2 * this.FacingHalfRange);
     internal double FacingProbeTilt {
         get {
-            Direction rotated = RotateForSweep(this.Probe, this.Paint.Parameters.RotationDegrees);
-            return Math.Atan2(rotated.X, rotated.Z) * 180 / Math.PI;
+            return ProbeCoordinates.FromNormal(this.Probe, this.Paint.Parameters.RotationDegrees).Tilt * 180 / Math.PI;
         }
     }
     internal double FacingProbeFraction => this.FacingFractionAt(this.FacingProbeTilt);
@@ -84,13 +83,8 @@ internal sealed class CurveView : FrameworkElement {
     private double FacingFractionAt(double angle) => (angle / this.FacingHalfRange + 1) / 2;
     internal Direction FacingNormalAt(double fraction) {
         double rotation = this.Paint.Parameters.RotationDegrees;
-        Direction rotated = RotateForSweep(this.Probe, rotation);
-        double radius = Math.Sqrt(rotated.X * rotated.X + rotated.Z * rotated.Z);
-        double tilt = this.FacingAngleAt(fraction) * Math.PI / 180;
-        double azimuth = rotation * Math.PI / 180;
-        double x = radius * Math.Sin(tilt);
-        return new(x * Math.Cos(azimuth) - rotated.Y * Math.Sin(azimuth),
-            x * Math.Sin(azimuth) + rotated.Y * Math.Cos(azimuth), radius * Math.Cos(tilt));
+        ProbeCoordinates coordinates = ProbeCoordinates.FromNormal(this.Probe, rotation);
+        return (coordinates with { Tilt = this.FacingAngleAt(fraction) * Math.PI / 180 }).ToNormal(rotation);
     }
     internal Point FacingMarkerPoint(PaintModel model) => this.Map(Math.Clamp(this.FacingProbeFraction, 0, 1), this.Paint.Evaluate(this.Probe, model).Facing);
     public Direction? NormalAt(Point point) {
@@ -208,8 +202,4 @@ internal sealed class CurveView : FrameworkElement {
     }
 
     private static double Component(PaintColor color, int channel) => channel == 0 ? color.Red : channel == 1 ? color.Green : color.Blue;
-    private static Direction RotateForSweep(Direction normal, double rotation) {
-        double angle = -rotation * Math.PI / 180;
-        return new(normal.X * Math.Cos(angle) - normal.Y * Math.Sin(angle), normal.X * Math.Sin(angle) + normal.Y * Math.Cos(angle), normal.Z);
-    }
 }

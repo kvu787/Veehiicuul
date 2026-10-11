@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -155,6 +156,95 @@ internal static class InterfaceVerification {
         window.SetParameters(rangeMaterial);
         window.SetProbe(rangeProbe);
         window.BackRangeSelector.Value = 90;
+        await Settle();
+
+        // Sphere input must use exactly the graph's slice coordinates, at all
+        // material rotations (including Rotation with zero Shift). Compute the
+        // expected coordinates independently of the new conversion helper.
+        double Slice(Direction normal, double rotation) => -normal.X * Math.Sin(rotation * Math.PI / 180) + normal.Y * Math.Cos(rotation * Math.PI / 180);
+        double Tilt(Direction normal, double rotation) => Math.Atan2(normal.X * Math.Cos(rotation * Math.PI / 180) + normal.Y * Math.Sin(rotation * Math.PI / 180), normal.Z);
+        Point SpherePoint(SphereView sphere, double x, double y) => new(sphere.SphereBounds.Left + (1 + x) * sphere.SphereBounds.Width / 2,
+            sphere.SphereBounds.Top + (1 - y) * sphere.SphereBounds.Height / 2);
+        double[] FacingSamples() => Enum.GetValues<PaintModel>().SelectMany(model => Enumerable.Range(0, 65)
+            .Select(index => window.FacingPlot.Paint.Evaluate(window.FacingPlot.FacingNormalAt(index / 64.0), model).Facing)).ToArray();
+        window.StageSelector.SelectedIndex = (int)PreviewStage.Facing;
+        foreach (double rotation in new[] { 0.0, 45, 123 }) {
+            window.SetParameters(rangeMaterial with { RotationDegrees = rotation, Shift = rotation == 123 ? 0 : 0.6 });
+            await Settle();
+            foreach (SphereView sphere in new[] { window.OriginalView, window.ProposedView }) {
+                foreach (ProbeMovement movement in Enum.GetValues<ProbeMovement>()) {
+                    window.SetProbe(new(0.3, -0.5, 0.8));
+                    Direction initial = window.Probe;
+                    Task movementRender = window.CurrentRender;
+                    BitmapSource initialImage = sphere.Image!;
+                    double initialTilt = Tilt(initial, rotation);
+                    double initialSlice = Slice(initial, rotation);
+                    double[] before = FacingSamples();
+                    window.MovementSelector.SelectedIndex = (int)movement;
+                    Require(window.Probe == initial && window.CurrentRender == movementRender &&
+                        window.OriginalView.Movement == movement && window.ProposedView.Movement == movement,
+                        "movement selection is shared and preserves the probe and previews");
+                    sphere.Pick(SpherePoint(sphere, 0.6, 0.3));
+                    Direction candidate = new(0.6, 0.3, Math.Sqrt(1 - 0.6 * 0.6 - 0.3 * 0.3));
+                    double expectedSlice = movement == ProbeMovement.TiltOnly ? initialSlice : Slice(candidate, rotation);
+                    double expectedTilt = movement == ProbeMovement.SliceOnly ? initialTilt : Tilt(candidate, rotation);
+                    Require(Math.Abs(Slice(window.Probe, rotation) - expectedSlice) < 1e-12 &&
+                        Math.Abs(Tilt(window.Probe, rotation) - expectedTilt) < 1e-12 && Math.Abs(window.Probe.Length - 1) < 1e-12 && window.Probe.Z >= 0,
+                        "sphere picking independently verifies both locked coordinates at rotation " + rotation);
+                    Require(Math.Abs(window.FacingPlot.FacingProbeTilt * Math.PI / 180 - expectedTilt) < 1e-12,
+                        "graph indicator stays at the selected tilt after constrained sphere picking");
+                    double maximumChange = before.Zip(FacingSamples(), (first, second) => Math.Abs(first - second)).Max();
+                    Require(movement == ProbeMovement.TiltOnly ? maximumChange < 1e-12 : maximumChange > 0.01,
+                        "tilt motion preserves both curves; slice motion changes their shape");
+                    Require(window.OriginalView.Probe == window.Probe && window.ProposedView.Probe == window.Probe &&
+                        window.CurrentRender == movementRender && ReferenceEquals(sphere.Image, initialImage), "locked input synchronizes both spheres without rendering new images");
+                    Require(sphere.NormalAt(new(0, 0)) is null, "locked sphere ignores points outside its disk");
+                    double sliceBeforeKey = Slice(window.Probe, rotation);
+                    double tiltBeforeKey = Tilt(window.Probe, rotation);
+                    sphere.MoveProbe(Key.Home);
+                    if (movement == ProbeMovement.TiltOnly) {
+                        Require(Math.Abs(Slice(window.Probe, rotation) - sliceBeforeKey) < 1e-12 && Math.Abs(Tilt(window.Probe, rotation)) < 1e-12,
+                            "Home in Tilt only zeros tilt and preserves slice");
+                        sphere.MoveProbe(Key.Right);
+                        Require(Math.Abs(Tilt(window.Probe, rotation) - Math.PI / 90) < 1e-12 && Math.Abs(Slice(window.Probe, rotation) - sliceBeforeKey) < 1e-12,
+                            "Tilt only keyboard movement preserves the selected slice");
+                    } else if (movement == ProbeMovement.SliceOnly) {
+                        Require(Math.Abs(Slice(window.Probe, rotation)) < 1e-12 && Math.Abs(Tilt(window.Probe, rotation) - tiltBeforeKey) < 1e-12,
+                            "Home in Slice only zeros slice and preserves tilt");
+                        sphere.MoveProbe(Key.Up);
+                        Require(Math.Abs(Slice(window.Probe, rotation) - 0.025) < 1e-12 && Math.Abs(Tilt(window.Probe, rotation) - tiltBeforeKey) < 1e-12,
+                            "Slice only keyboard movement preserves the selected tilt");
+                    } else {
+                        Require(window.Probe == new Direction(0, 0, 1), "Home in Free mode selects the center");
+                        sphere.MoveProbe(Key.Right);
+                        Require(Math.Abs(window.Probe.X - 0.025) < 1e-12 && window.Probe.Y == 0, "Free keyboard movement keeps screen-space axes");
+                    }
+                    Require(window.CurrentRender == movementRender, "keyboard locks do not regenerate images");
+                }
+            }
+        }
+        window.SetParameters(rangeMaterial);
+        window.SetProbe(new(0.3, -0.5, 0.8));
+        window.MovementSelector.SelectedIndex = (int)ProbeMovement.TiltOnly;
+        await Settle();
+        Capture("TiltOnlyProbeMovement");
+        window.MovementSelector.SelectedIndex = (int)ProbeMovement.SliceOnly;
+        await Settle();
+        Capture("SliceOnlyProbeMovement");
+        // Reaching a slice pole makes tilt undefined. On leaving it, preserve
+        // the last meaningful tilt instead of silently changing the path.
+        double poleTilt = Tilt(window.Probe, rangeMaterial.RotationDegrees);
+        for (int index = 0; index < 80; index++) window.OriginalView.MoveProbe(Key.Up);
+        Require(Math.Abs(Slice(window.Probe, rangeMaterial.RotationDegrees) - 1) < 1e-12, "Slice only reaches the positive slice pole");
+        window.ProposedView.MoveProbe(Key.Down);
+        Require(Math.Abs(Tilt(window.Probe, rangeMaterial.RotationDegrees) - poleTilt) < 1e-12,
+            "moving away from a slice pole on the other sphere retains the previous tilt");
+        window.SetProbe(new(0.2, 0.4, -0.8));
+        window.OriginalView.Pick(SpherePoint(window.OriginalView, 0.1, 0.2));
+        Require(window.Probe.Z >= 0 && double.IsFinite(window.Probe.Length), "locked sphere input brings a graph's back probe to the front");
+        window.MovementSelector.SelectedIndex = (int)ProbeMovement.Free;
+        window.StageSelector.SelectedIndex = (int)PreviewStage.Paint;
+        window.SetProbe(rangeProbe);
         await Settle();
 
         // Exercise the real drag bar handlers, including both zero-height
@@ -410,7 +500,7 @@ internal static class InterfaceVerification {
         // A minimum-sized window has less client area because of its title bar.
         window.ArrangeOffscreen(1544, 1080);
         await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
-        foreach (FrameworkElement element in new FrameworkElement[] { window.OriginalView, window.ProposedView, window.FacingPlot, window.ColorPlot, window.DetailTabs, window.BackRangeSelector }) {
+        foreach (FrameworkElement element in new FrameworkElement[] { window.OriginalView, window.ProposedView, window.FacingPlot, window.ColorPlot, window.DetailTabs, window.BackRangeSelector, window.MovementSelector }) {
             Rect rectangle = element.TransformToAncestor(window.Root).TransformBounds(new Rect(element.RenderSize));
             Require(rectangle.Right <= window.Root.ActualWidth + 1 && rectangle.Bottom <= window.Root.ActualHeight + 1, "minimum layout contains " + element.GetType().Name);
         }

@@ -22,6 +22,7 @@ internal sealed class MainWindow : Window {
     internal readonly CurveView FacingPlot = new();
     internal readonly CurveView ColorPlot = new() { ColorCurve = true };
     internal readonly ComboBox StageSelector = new() { Width = 214 };
+    internal readonly ComboBox MovementSelector = new() { Width = 172 };
     internal readonly ComboBox ColorAxisSelector = new() { Width = 196 };
     internal readonly Slider BackRangeSelector = new() {
         Minimum = 0, Maximum = 90, Value = 90, SmallChange = 1, LargeChange = 10,
@@ -41,6 +42,7 @@ internal sealed class MainWindow : Window {
     private readonly TextBlock status = Appearance.Label("Ready", 16, Appearance.Quiet);
     private readonly TextBlock stageNote = Appearance.Label("", 16, Appearance.Quiet);
     private readonly TextBlock normalNote = Appearance.Label("", 18, Appearance.Quiet);
+    private readonly TextBlock probeCoordinatesNote = Appearance.Label("", 18, Appearance.Quiet);
     private readonly TextBlock differenceNote = Appearance.Label("", 16, Appearance.Quiet);
     private readonly Border baseSwatch = new() { Height = 24, CornerRadius = new(3), Margin = new(0, 12, 0, 24) };
     private readonly TextBlock[] originalValues = new TextBlock[7];
@@ -175,24 +177,47 @@ internal sealed class MainWindow : Window {
 
     private Grid BuildExploration() {
         Grid grid = new();
-        grid.RowDefinitions.Add(new() { Height = new(60) });
+        grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new() { Height = new(1.18, GridUnitType.Star), MinHeight = 260 });
         grid.RowDefinitions.Add(new() { Height = new(18) });
         // Keep the preview allocation fixed while the lower area is resized or
         // collapsed, so all reclaimed space goes to the graphs.
-        grid.RowDefinitions.Add(new() { Height = new(1.87, GridUnitType.Star), MinHeight = 578 });
-        StackPanel toolbar = new() { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Top };
+        grid.RowDefinitions.Add(new() { Height = new(1.87, GridUnitType.Star), MinHeight = 518 });
+        WrapPanel toolbar = new() { VerticalAlignment = VerticalAlignment.Top };
+        StackPanel displayControls = new() { Orientation = Orientation.Horizontal, Margin = new(0, 0, 24, 16) };
         TextBlock displayLabel = Appearance.Label("Display", 18, Appearance.Quiet);
         displayLabel.VerticalAlignment = VerticalAlignment.Center;
         displayLabel.Margin = new(0, 0, 14, 0);
-        toolbar.Children.Add(displayLabel);
+        displayControls.Children.Add(displayLabel);
         foreach (string stage in new[] { "Painted color", "Facing f", "Remapped tone t" }) this.StageSelector.Items.Add(stage);
         this.StageSelector.SelectedIndex = 0;
-        toolbar.Children.Add(this.StageSelector);
-        toolbar.Children.Add(this.MarkerSelector);
+        displayControls.Children.Add(this.StageSelector);
+        displayControls.Children.Add(this.MarkerSelector);
         Button peak = Appearance.Button("Probe peak", () => this.SetProbe(new CompiledPaint(this.Parameters).Peak));
         peak.Margin = new(24, 0, 0, 0);
-        toolbar.Children.Add(peak);
+        displayControls.Children.Add(peak);
+        toolbar.Children.Add(displayControls);
+        StackPanel movementControls = new() { Orientation = Orientation.Horizontal, Margin = new(0, 0, 24, 16) };
+        Label movementLabel = new() {
+            Content = Appearance.Label("Probe movement", 18, Appearance.Quiet), Target = this.MovementSelector,
+            VerticalContentAlignment = VerticalAlignment.Center, Padding = new(0, 0, 14, 0)
+        };
+        movementControls.Children.Add(movementLabel);
+        foreach (string movement in new[] { "Free", "Tilt only", "Slice only" }) this.MovementSelector.Items.Add(movement);
+        this.MovementSelector.SelectedIndex = 0;
+        this.MovementSelector.ToolTip = "Free changes both coordinates. Tilt only keeps rotated Y (the slice) fixed, so the facing curves retain their shape. Slice only keeps atan2(rotated X, Z) (the tilt) fixed, so the curves change while their probe markers keep the same horizontal position. Facing f is the shader result; it may change in either mode. This lock applies to sphere mouse and keyboard movement.";
+        AutomationProperties.SetName(this.MovementSelector, "Sphere probe movement constraint");
+        this.MovementSelector.SelectionChanged += (_, _) => {
+            this.OriginalView.Movement = (ProbeMovement)this.MovementSelector.SelectedIndex;
+            this.ProposedView.Movement = this.OriginalView.Movement;
+            this.OriginalView.InvalidateVisual();
+            this.ProposedView.InvalidateVisual();
+        };
+        movementControls.Children.Add(this.MovementSelector);
+        toolbar.Children.Add(movementControls);
+        this.probeCoordinatesNote.VerticalAlignment = VerticalAlignment.Center;
+        this.probeCoordinatesNote.ToolTip = "Slice y is the probe's Y component after rotating XY by minus Rotation. Tilt is atan2(rotated X, Z), measured in degrees. These are the facing graph's coordinates, not either model's facing f.";
+        toolbar.Children.Add(new Border { Child = this.probeCoordinatesNote, Height = 44, Margin = new(0, 0, 0, 16) });
         grid.Children.Add(toolbar);
         Grid previews = PairGrid();
         previews.Children.Add(BuildPreview(this.OriginalView, "Original SimplePaint", "Shifted circular-slice facing", Appearance.Original));
@@ -358,6 +383,7 @@ internal sealed class MainWindow : Window {
         AddExplanation(text, "3. Facing-to-tone remap", "t = DarkPoint*(1 - f) + LightPoint*f\nEqual endpoints give a constant tone. Reversed endpoints invert the progression.", true);
         AddExplanation(text, "4. Tone-to-color curve", "For each decoded linear base-color channel c, with Brightness b:\nA = c*b;  B = (1-c)*(1-b)\nF(t) = A*t / (A*t + B*(1-t))\nF(0)=0, F(1)=1, F(1-b)=c. Output linear RGB is encoded to sRGB.", true);
         AddExplanation(text, "Color response graph", "Facing f to RGB shows F(DarkPoint*(1-f) + LightPoint*f), including both tone endpoints. Changing Dark Point or Light Point changes these curves. Tone t to RGB shows the underlying F(t), which depends only on Base Color and Brightness; its shaded interval marks the tones the shader uses. In the facing view, the dashed base-color anchor appears only when that color is reachable. Reversed endpoints give decreasing facing-to-color curves; equal endpoints give flat curves.");
+        AddExplanation(text, "Probe movement and graph slices", "In the graph's rotated frame, Slice y fixes the Y component. With r = sqrt(1-y*y), a tilt sweep uses (r*sin(tilt), y, r*cos(tilt)), then undoes Rotation. Tilt only moves along this slice and preserves both facing curves. Slice only changes y at a fixed tilt, changing the curves while keeping the probe markers at the same horizontal position. The dashed sphere path shows the permitted movement. Neither lock holds the shader's facing f constant. The graph uses Rotation to define its slice even when Shift is zero.");
         AddExplanation(text, "Separate light and dark weights", "The original implementation also computes stable, nonnegative P and Q. Reconstructing Q from 1-f can erase tiny highlight complements. Their absolute sizes can differ between models; compare f and output color. The pixel shader combines their weights directly with precomputed color coefficients.");
         return new ScrollViewer { Content = text, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     }
@@ -477,6 +503,8 @@ internal sealed class MainWindow : Window {
     }
 
     private void UpdateInspection(CompiledPaint paint) {
+        this.OriginalView.RotationDegrees = this.Parameters.RotationDegrees;
+        this.ProposedView.RotationDegrees = this.Parameters.RotationDegrees;
         this.OriginalView.Probe = this.Probe;
         this.ProposedView.Probe = this.Probe;
         this.OriginalView.Peak = paint.Peak;
@@ -490,6 +518,9 @@ internal sealed class MainWindow : Window {
         PaintSample original = paint.Evaluate(this.Probe, PaintModel.Original);
         PaintSample proposed = paint.Evaluate(this.Probe, PaintModel.LinearWarp);
         this.normalNote.Text = $"Selected view normal: {Format(this.Probe)}   |   {(this.Probe.Z < 0 ? "back" : this.Probe.Z == 0 ? "silhouette" : "front")}";
+        ProbeCoordinates coordinates = ProbeCoordinates.FromNormal(this.Probe, this.Parameters.RotationDegrees);
+        this.probeCoordinatesNote.Text = Math.Abs(coordinates.Slice) == 1 ? $"Tilt undefined   |   Slice y {coordinates.Slice:F3}"
+            : $"Tilt {coordinates.Tilt * 180 / Math.PI:F1}°   |   Slice y {coordinates.Slice:F3}";
         FillValues(this.originalValues, original);
         FillValues(this.proposedValues, proposed);
         this.originalSwatch.Background = new SolidColorBrush(Appearance.DisplayColor(original.DisplayColor));
