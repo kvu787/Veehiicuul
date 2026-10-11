@@ -31,7 +31,7 @@ shader_parameter/Brightness = 0.26497657504
 shader_parameter/Shift = 0.39600001881
 shader_parameter/RotationDegrees = 26.82999940029584
 shader_parameter/DarkPoint = 0.2000000095
-shader_parameter/LightPoint = 0.9499766075775
+shader_parameter/LightPoint = 0.9999766099525
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gvgjh"]
 render_priority = 0
@@ -46,12 +46,12 @@ shader_parameter/LightPoint = 0.8999766052025
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_y2uan"]
 render_priority = 0
 shader = ExtResource("2_y2uan")
-shader_parameter/BaseColorSrgb = Color(0.15, 0.15, 0.15, 1)
-shader_parameter/Brightness = 0.62497659214
+shader_parameter/BaseColorSrgb = Color(0.3, 0.3, 0.3, 1)
+shader_parameter/Brightness = 0.3999765814525
 shader_parameter/Shift = 0.278000013205
 shader_parameter/RotationDegrees = 228.70999488787407
-shader_parameter/DarkPoint = 0.0
-shader_parameter/LightPoint = 1.0
+shader_parameter/DarkPoint = 0.10000000475
+shader_parameter/LightPoint = 0.7999766004525
 
 [sub_resource type="Environment" id="Environment_17r7h"]
 background_mode = 1

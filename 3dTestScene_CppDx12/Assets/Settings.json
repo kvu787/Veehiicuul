@@ -31,7 +31,7 @@
         "Shift": 0.39600001881,
         "RotationDegrees": 26.82999940029584,
         "DarkPoint": 0.2000000095,
-        "LightPoint": 0.9499766075775
+        "LightPoint": 0.9999766099525
     },
     "SimplePaintShader_Headlights": {
         "BaseColor": [0.85, 0.6477, 0.13600002],
@@ -42,12 +42,12 @@
         "LightPoint": 0.8999766052025
     },
     "SimplePaintShader_Wheels": {
-        "BaseColor": [0.15, 0.15, 0.15],
-        "Brightness": 0.62497659214,
+        "BaseColor": [0.3, 0.3, 0.3],
+        "Brightness": 0.3999765814525,
         "Shift": 0.278000013205,
         "RotationDegrees": 228.70999488787407,
-        "DarkPoint": 0.0,
-        "LightPoint": 1.0
+        "DarkPoint": 0.10000000475,
+        "LightPoint": 0.7999766004525
     },
     "SimplePaintShader_Sphere": {
         "BaseColor": [0.107, 0.223, 0.578],
