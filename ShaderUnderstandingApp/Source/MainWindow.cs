@@ -19,21 +19,21 @@ internal sealed class MainWindow : Window {
     internal readonly SphereView ProposedView = new() { Accent = Appearance.Proposed };
     internal readonly CurveView FacingPlot = new();
     internal readonly CurveView ColorPlot = new() { ColorCurve = true };
-    internal readonly ComboBox StageSelector = new() { Width = 154 };
-    internal readonly CheckBox BackSelector = new() { Content = "Back hemisphere", Margin = new(16, 0, 0, 0) };
-    internal readonly CheckBox MarkerSelector = new() { Content = "Markers", IsChecked = true, Margin = new(16, 0, 0, 0) };
+    internal readonly ComboBox StageSelector = new() { Width = 214 };
+    internal readonly CheckBox BackSelector = new() { Content = "Back hemisphere", Margin = new(24, 0, 0, 0) };
+    internal readonly CheckBox MarkerSelector = new() { Content = "Markers", IsChecked = true, Margin = new(24, 0, 0, 0) };
     internal readonly TabControl DetailTabs = new();
     private readonly ComboBox experimentSelector = new();
-    private readonly TextBlock experimentNote = Appearance.Label("", 12, Appearance.Quiet);
-    private readonly TextBlock status = Appearance.Label("Ready", 12, Appearance.Quiet);
-    private readonly TextBlock stageNote = Appearance.Label("", 11, Appearance.Quiet);
-    private readonly TextBlock normalNote = Appearance.Label("", 12, Appearance.Quiet);
-    private readonly TextBlock differenceNote = Appearance.Label("", 12, Appearance.Quiet);
-    private readonly Border baseSwatch = new() { Height = 16, CornerRadius = new(3), Margin = new(0, 8, 0, 16) };
+    private readonly TextBlock experimentNote = Appearance.Label("", 16, Appearance.Quiet);
+    private readonly TextBlock status = Appearance.Label("Ready", 16, Appearance.Quiet);
+    private readonly TextBlock stageNote = Appearance.Label("", 16, Appearance.Quiet);
+    private readonly TextBlock normalNote = Appearance.Label("", 18, Appearance.Quiet);
+    private readonly TextBlock differenceNote = Appearance.Label("", 16, Appearance.Quiet);
+    private readonly Border baseSwatch = new() { Height = 24, CornerRadius = new(3), Margin = new(0, 12, 0, 24) };
     private readonly TextBlock[] originalValues = new TextBlock[7];
     private readonly TextBlock[] proposedValues = new TextBlock[7];
-    private readonly Border originalSwatch = new() { Height = 18, CornerRadius = new(3), Margin = new(0, 6, 10, 0) };
-    private readonly Border proposedSwatch = new() { Height = 18, CornerRadius = new(3), Margin = new(0, 6, 0, 0) };
+    private readonly Border originalSwatch = new() { Height = 24, CornerRadius = new(3), Margin = new(0, 8, 10, 0) };
+    private readonly Border proposedSwatch = new() { Height = 24, CornerRadius = new(3), Margin = new(0, 8, 0, 0) };
     private bool updating;
     private bool closed;
     private CancellationTokenSource? renderCancellation;
@@ -47,20 +47,21 @@ internal sealed class MainWindow : Window {
     public MainWindow(SessionLog log) {
         this.log = log;
         this.Title = "SimplePaint - Shader Understanding";
-        this.Width = 1480;
-        this.Height = 1020;
-        this.MinWidth = 1120;
-        this.MinHeight = 800;
+        this.Width = 2200;
+        this.Height = 1320;
+        this.MinWidth = 1560;
+        this.MinHeight = 1120;
         this.Background = Appearance.Background;
         this.FontFamily = new("Segoe UI");
+        this.FontSize = 18;
         this.Content = this.Root;
         this.Root.RowDefinitions.Add(new() { Height = GridLength.Auto });
         this.Root.RowDefinitions.Add(new());
         this.Root.RowDefinitions.Add(new() { Height = GridLength.Auto });
         this.Root.Children.Add(this.BuildHeader());
         Grid body = new() { Margin = new(24, 0, 24, 0) };
-        body.ColumnDefinitions.Add(new() { Width = new(290) });
-        body.ColumnDefinitions.Add(new() { Width = new(18) });
+        body.ColumnDefinitions.Add(new() { Width = new(472) });
+        body.ColumnDefinitions.Add(new() { Width = new(24) });
         body.ColumnDefinitions.Add(new());
         Grid.SetRow(body, 1);
         this.Root.Children.Add(body);
@@ -68,7 +69,7 @@ internal sealed class MainWindow : Window {
         Grid exploration = this.BuildExploration();
         Grid.SetColumn(exploration, 2);
         body.Children.Add(exploration);
-        this.status.Margin = new(24, 10, 24, 12);
+        this.status.Margin = new(24, 12, 24, 14);
         Grid.SetRow(this.status, 2);
         this.Root.Children.Add(this.status);
         this.OriginalView.ProbeChanged += this.SetProbe;
@@ -89,12 +90,12 @@ internal sealed class MainWindow : Window {
     }
 
     private Grid BuildHeader() {
-        Grid header = new() { Margin = new(24, 18, 24, 18) };
+        Grid header = new() { Margin = new(24, 20, 24, 20) };
         header.ColumnDefinitions.Add(new());
         header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         StackPanel title = new();
-        title.Children.Add(Appearance.Label("SimplePaint", 26, strong: true));
-        title.Children.Add(Appearance.Label("A normal becomes a tone. A tone becomes a color.", 13, Appearance.Quiet));
+        title.Children.Add(Appearance.Label("SimplePaint", 32, strong: true));
+        title.Children.Add(Appearance.Label("A normal becomes a tone. A tone becomes a color.", 18, Appearance.Quiet));
         header.Children.Add(title);
         StackPanel actions = new() { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         foreach ((string label, Action action) in new (string, Action)[] {
@@ -102,7 +103,7 @@ internal sealed class MainWindow : Window {
             ("Save parameters", this.SaveParameters), ("Export PNG", this.ExportSnapshot)
         }) {
             Button button = Appearance.Button(label, action);
-            button.Margin = new(8, 0, 0, 0);
+            button.Margin = new(12, 0, 0, 0);
             actions.Children.Add(button);
         }
         Grid.SetColumn(actions, 1);
@@ -112,8 +113,8 @@ internal sealed class MainWindow : Window {
 
     private Border BuildControls() {
         StackPanel content = new();
-        content.Children.Add(Appearance.Label("ONE MATERIAL, TWO MODELS", 12, Appearance.Quiet, true));
-        content.Children.Add(Appearance.Label("All parameters are shared.", 12, Appearance.Quiet));
+        content.Children.Add(Appearance.Label("ONE MATERIAL, TWO MODELS", 18, Appearance.Quiet, true));
+        content.Children.Add(Appearance.Label("All parameters are shared.", 16, Appearance.Quiet));
         content.Children.Add(this.baseSwatch);
         this.AddControl(content, "Red", "Base color / Red", PaintParameters.Margin, PaintParameters.MaximumInterior, 0.107, "Red channel in sRGB. The application decodes it once before evaluating the color curve.");
         this.AddControl(content, "Green", "Base color / Green", PaintParameters.Margin, PaintParameters.MaximumInterior, 0.223, "Green channel in sRGB. The displayed input is an sRGB value, not linear intensity.");
@@ -123,15 +124,15 @@ internal sealed class MainWindow : Window {
         this.AddControl(content, "Rotation", "Rotation / degrees", 0, Math.BitDecrement(360), 45, "Counterclockwise on screen: 0 right, 90 up, 180 left, 270 down. At zero Shift, Rotation has no visible effect.", 1);
         this.AddControl(content, "Dark", "Dark Point", 0, PaintParameters.MaximumInterior, 0, "Input tone at facing 0. This is not a displayed brightness. It may exceed Light Point.");
         this.AddControl(content, "Light", "Light Point", PaintParameters.Margin, 1, 1, "Input tone at facing 1. Equal endpoints give a constant color; reversed endpoints invert the gradient.");
-        TextBlock heading = Appearance.Label("GUIDED EXPLORATIONS", 12, Appearance.Quiet, true);
-        heading.Margin = new(0, 8, 0, 8);
+        TextBlock heading = Appearance.Label("GUIDED EXPLORATIONS", 18, Appearance.Quiet, true);
+        heading.Margin = new(0, 8, 0, 12);
         content.Children.Add(heading);
         foreach (string name in new[] { "Custom parameters", "Default comparison", "No shift: z versus z squared", "Near the silhouette", "Look at the back hemisphere", "Reverse the tones", "Make a constant color", "Original scene / sphere", "Original scene / body" }) this.experimentSelector.Items.Add(name);
         this.experimentSelector.SelectionChanged += (_, _) => {
             if (!this.updating && this.experimentSelector.SelectedIndex > 0) this.ApplyExperiment(this.experimentSelector.SelectedIndex);
         };
         content.Children.Add(this.experimentSelector);
-        this.experimentNote.Margin = new(0, 10, 0, 0);
+        this.experimentNote.Margin = new(0, 14, 0, 0);
         content.Children.Add(this.experimentNote);
         ScrollViewer scroll = new() { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new(0, 0, 5, 0) };
         return Appearance.Surface(scroll);
@@ -156,16 +157,16 @@ internal sealed class MainWindow : Window {
 
     private Grid BuildExploration() {
         Grid grid = new();
-        grid.RowDefinitions.Add(new() { Height = new(44) });
-        grid.RowDefinitions.Add(new() { Height = new(1.15, GridUnitType.Star), MinHeight = 208 });
-        grid.RowDefinitions.Add(new() { Height = new(14) });
-        grid.RowDefinitions.Add(new() { Height = new(0.72, GridUnitType.Star), MinHeight = 168 });
-        grid.RowDefinitions.Add(new() { Height = new(14) });
-        grid.RowDefinitions.Add(new() { Height = new(0.94, GridUnitType.Star), MinHeight = 180 });
+        grid.RowDefinitions.Add(new() { Height = new(60) });
+        grid.RowDefinitions.Add(new() { Height = new(1.18, GridUnitType.Star), MinHeight = 280 });
+        grid.RowDefinitions.Add(new() { Height = new(18) });
+        grid.RowDefinitions.Add(new() { Height = new(0.82, GridUnitType.Star), MinHeight = 240 });
+        grid.RowDefinitions.Add(new() { Height = new(18) });
+        grid.RowDefinitions.Add(new() { Height = new(1.05, GridUnitType.Star), MinHeight = 300 });
         StackPanel toolbar = new() { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Top };
-        TextBlock displayLabel = Appearance.Label("Display", 12, Appearance.Quiet);
+        TextBlock displayLabel = Appearance.Label("Display", 18, Appearance.Quiet);
         displayLabel.VerticalAlignment = VerticalAlignment.Center;
-        displayLabel.Margin = new(0, 0, 10, 0);
+        displayLabel.Margin = new(0, 0, 14, 0);
         toolbar.Children.Add(displayLabel);
         foreach (string stage in new[] { "Painted color", "Facing f", "Remapped tone t", "Normal vectors" }) this.StageSelector.Items.Add(stage);
         this.StageSelector.SelectedIndex = 0;
@@ -173,7 +174,7 @@ internal sealed class MainWindow : Window {
         toolbar.Children.Add(this.BackSelector);
         toolbar.Children.Add(this.MarkerSelector);
         Button peak = Appearance.Button("Probe peak", () => this.SetProbe(new CompiledPaint(this.Parameters).Peak * (this.BackSelector.IsChecked == true ? -1 : 1)));
-        peak.Margin = new(16, 0, 0, 0);
+        peak.Margin = new(24, 0, 0, 0);
         toolbar.Children.Add(peak);
         grid.Children.Add(toolbar);
         Grid previews = PairGrid();
@@ -204,18 +205,18 @@ internal sealed class MainWindow : Window {
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new());
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        grid.Children.Add(Appearance.Label(title, 16, accent, true));
-        TextBlock description = Appearance.Label(subtitle, 11, Appearance.Quiet);
+        grid.Children.Add(Appearance.Label(title, 22, accent, true));
+        TextBlock description = Appearance.Label(subtitle, 16, Appearance.Quiet);
         Grid.SetRow(description, 1);
         grid.Children.Add(description);
         Grid.SetRow(view, 2);
         grid.Children.Add(view);
-        TextBlock footnote = Appearance.Label("White ring: inspected normal   |   colored dot: peak direction", 10.5, Appearance.Quiet);
+        TextBlock footnote = Appearance.Label("White ring: inspected normal   |   colored dot: peak direction", 16, Appearance.Quiet);
         if (view == this.OriginalView) footnote.Text = "White ring: inspected normal   |   back: original is constant";
         Grid.SetRow(footnote, 3);
         grid.Children.Add(footnote);
         AutomationProperties.SetName(view, title + ". Click or use arrow keys to inspect a normal.");
-        return Appearance.Surface(grid, new(16, 12, 16, 10));
+        return Appearance.Surface(grid, new(20, 16, 20, 14));
     }
 
     private static Border BuildChart(CurveView view, string title, string subtitle) {
@@ -223,32 +224,32 @@ internal sealed class MainWindow : Window {
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new());
-        grid.Children.Add(Appearance.Label(title, 13, strong: true));
-        TextBlock description = Appearance.Label(subtitle, 10.5, Appearance.Quiet);
+        grid.Children.Add(Appearance.Label(title, 18, strong: true));
+        TextBlock description = Appearance.Label(subtitle, 16, Appearance.Quiet);
         Grid.SetRow(description, 1);
         grid.Children.Add(description);
         Grid.SetRow(view, 2);
         grid.Children.Add(view);
-        return Appearance.Surface(grid, new(12, 10, 12, 8));
+        return Appearance.Surface(grid, new(18, 14, 18, 12));
     }
 
     private ScrollViewer BuildInspector() {
         StackPanel content = new();
         content.Children.Add(this.normalNote);
-        Grid values = new() { Margin = new(0, 8, 0, 0) };
-        values.ColumnDefinitions.Add(new() { Width = new(130) });
+        Grid values = new() { Margin = new(0, 12, 0, 0) };
+        values.ColumnDefinitions.Add(new() { Width = new(200) });
         values.ColumnDefinitions.Add(new());
         values.ColumnDefinitions.Add(new());
         string[] labels = ["Rotated normal", "Warped normal", "Light P / Dark Q", "Facing f", "Remapped tone t", "Linear RGB", "Display sRGB"];
         for (int row = 0; row < labels.Length; row++) {
             values.RowDefinitions.Add(new() { Height = GridLength.Auto });
-            TextBlock label = Appearance.Label(labels[row], 11, Appearance.Quiet);
+            TextBlock label = Appearance.Label(labels[row], 18, Appearance.Quiet);
             Grid.SetRow(label, row);
             values.Children.Add(label);
             for (int column = 1; column <= 2; column++) {
-                TextBlock value = Appearance.Label("", 11, column == 1 ? Appearance.Original : Appearance.Proposed);
+                TextBlock value = Appearance.Label("", 18, column == 1 ? Appearance.Original : Appearance.Proposed);
                 value.FontFamily = new("Consolas");
-                value.Margin = new(0, 0, 8, 3);
+                value.Margin = new(0, 0, 12, 4);
                 Grid.SetColumn(value, column);
                 Grid.SetRow(value, row);
                 values.Children.Add(value);
@@ -261,9 +262,9 @@ internal sealed class MainWindow : Window {
         Grid.SetColumn(this.proposedSwatch, 2);
         swatches.Children.Add(this.proposedSwatch);
         content.Children.Add(swatches);
-        this.differenceNote.Margin = new(0, 8, 0, 0);
+        this.differenceNote.Margin = new(0, 12, 0, 0);
         content.Children.Add(this.differenceNote);
-        this.stageNote.Margin = new(0, 5, 0, 0);
+        this.stageNote.Margin = new(0, 8, 0, 0);
         content.Children.Add(this.stageNote);
         return new ScrollViewer { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
     }
@@ -290,11 +291,11 @@ internal sealed class MainWindow : Window {
     }
 
     private static void AddExplanation(Panel panel, string title, string explanation, bool formula = false) {
-        TextBlock heading = Appearance.Label(title, 13, Appearance.Text, true);
-        heading.Margin = new(0, 0, 0, 5);
+        TextBlock heading = Appearance.Label(title, 20, Appearance.Text, true);
+        heading.Margin = new(0, 0, 0, 8);
         panel.Children.Add(heading);
-        TextBlock body = Appearance.Label(explanation, 12, Appearance.Quiet);
-        body.Margin = new(0, 0, 10, 16);
+        TextBlock body = Appearance.Label(explanation, 18, Appearance.Quiet);
+        body.Margin = new(0, 0, 14, 22);
         if (formula) body.FontFamily = new("Consolas");
         panel.Children.Add(body);
     }
@@ -302,7 +303,7 @@ internal sealed class MainWindow : Window {
     private static Grid PairGrid() {
         Grid grid = new();
         grid.ColumnDefinitions.Add(new());
-        grid.ColumnDefinitions.Add(new() { Width = new(14) });
+        grid.ColumnDefinitions.Add(new() { Width = new(18) });
         grid.ColumnDefinitions.Add(new());
         return grid;
     }

@@ -6,10 +6,11 @@ using System.Windows.Media;
 namespace ShaderUnderstanding;
 
 internal static class PlotText {
-    public static void Draw(DrawingContext drawing, string text, Point position, Brush color, Visual visual, double size = 11) {
+    public static void Draw(DrawingContext drawing, string text, Point position, Brush color, Visual visual, double size = 16, HorizontalAlignment alignment = HorizontalAlignment.Left) {
         FormattedText formatted = new(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
             new Typeface("Segoe UI"), size, color, VisualTreeHelper.GetDpi(visual).PixelsPerDip);
-        drawing.DrawText(formatted, position);
+        double offset = alignment == HorizontalAlignment.Center ? formatted.Width / 2 : alignment == HorizontalAlignment.Right ? formatted.Width : 0;
+        drawing.DrawText(formatted, new(position.X - offset, position.Y));
     }
 }
 
@@ -22,7 +23,7 @@ internal sealed class CurveView : FrameworkElement {
     private double? hoveredTone;
 
     public CurveView() {
-        this.MinHeight = 105;
+        this.MinHeight = 145;
         this.Cursor = Cursors.Cross;
         this.MouseLeftButtonDown += (_, arguments) => {
             this.CaptureMouse();
@@ -34,7 +35,7 @@ internal sealed class CurveView : FrameworkElement {
         this.ToolTip = "Click or drag the facing plot to select a normal. Hover over the color curve to read its linear RGB output.";
     }
 
-    private Rect Plot => new(34, 12, Math.Max(1, this.ActualWidth - 46), Math.Max(1, this.ActualHeight - 48));
+    private Rect Plot => new(48, 16, Math.Max(1, this.ActualWidth - 84), Math.Max(1, this.ActualHeight - 84));
     private Point Map(double fraction, double value) => new(this.Plot.Left + fraction * this.Plot.Width, this.Plot.Bottom - value * this.Plot.Height);
 
     private void Interact(Point point, bool selecting) {
@@ -56,7 +57,7 @@ internal sealed class CurveView : FrameworkElement {
         foreach (double value in new[] { 0.0, 0.5, 1.0 }) {
             Point start = this.Map(0, value);
             drawing.DrawLine(new(Appearance.Line, 0.6), start, this.Map(1, value));
-            PlotText.Draw(drawing, value.ToString("0.#", CultureInfo.InvariantCulture), new(5, start.Y - 8), Appearance.Quiet, this);
+            PlotText.Draw(drawing, value.ToString("0.#", CultureInfo.InvariantCulture), new(plot.Left - 10, start.Y - 11), Appearance.Quiet, this, alignment: HorizontalAlignment.Right);
         }
         if (this.ColorCurve) this.DrawColorCurves(drawing);
         else this.DrawFacingCurves(drawing);
@@ -68,7 +69,7 @@ internal sealed class CurveView : FrameworkElement {
             double fraction = (angle + 180.0) / 360;
             double x = this.Map(fraction, 0).X;
             drawing.DrawLine(new(Appearance.Line, 0.6), new(x, this.Plot.Top), new(x, this.Plot.Bottom));
-            PlotText.Draw(drawing, angle.ToString(CultureInfo.InvariantCulture), new(x - (angle == 180 ? 20 : 10), this.Plot.Bottom + 5), Appearance.Quiet, this);
+            PlotText.Draw(drawing, angle.ToString(CultureInfo.InvariantCulture), new(x, this.Plot.Bottom + 6), Appearance.Quiet, this, alignment: HorizontalAlignment.Center);
         }
         this.DrawPath(drawing, value => this.Paint.Evaluate(PaintMath.Sweep(value * 360 - 180, this.Paint.Parameters.RotationDegrees), PaintModel.Original).Facing, Appearance.Original);
         this.DrawPath(drawing, value => this.Paint.Evaluate(PaintMath.Sweep(value * 360 - 180, this.Paint.Parameters.RotationDegrees), PaintModel.LinearWarp).Facing, Appearance.Proposed);
@@ -81,16 +82,16 @@ internal sealed class CurveView : FrameworkElement {
             drawing.DrawLine(new(Appearance.Quiet, 1) { DashStyle = DashStyles.Dot }, this.Map(fraction, 0), this.Map(fraction, 1));
             foreach (PaintModel model in Enum.GetValues<PaintModel>()) {
                 Brush brush = model == PaintModel.Original ? Appearance.Original : Appearance.Proposed;
-                drawing.DrawEllipse(brush, new(Appearance.Panel, 1), this.Map(fraction, this.Paint.Evaluate(this.Probe, model).Facing), 3, 3);
+                drawing.DrawEllipse(brush, new(Appearance.Panel, 1), this.Map(fraction, this.Paint.Evaluate(this.Probe, model).Facing), 4, 4);
             }
         }
-        PlotText.Draw(drawing, "Normal tilt (degrees)   |   shaded regions: back", new(this.Plot.Left, this.Plot.Bottom + 22), Appearance.Quiet, this, 10.5);
+        PlotText.Draw(drawing, "Normal tilt (degrees) | shaded regions: back", new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Quiet, this);
     }
 
     private void DrawColorCurves(DrawingContext drawing) {
         foreach (double tone in new[] { 0.0, 0.25, 0.5, 0.75, 1.0 }) {
             Point bottom = this.Map(tone, 0);
-            PlotText.Draw(drawing, tone.ToString("0.##", CultureInfo.InvariantCulture), new(bottom.X - (tone == 1 ? 7 : 8), bottom.Y + 5), Appearance.Quiet, this);
+            PlotText.Draw(drawing, tone.ToString("0.##", CultureInfo.InvariantCulture), new(bottom.X, bottom.Y + 6), Appearance.Quiet, this, alignment: HorizontalAlignment.Center);
         }
         for (int channel = 0; channel < 3; channel++) {
             int selected = channel;
@@ -99,7 +100,7 @@ internal sealed class CurveView : FrameworkElement {
         double anchor = 1 - this.Paint.Parameters.Brightness;
         drawing.DrawLine(new(Appearance.Quiet, 1) { DashStyle = DashStyles.Dash }, this.Map(anchor, 0), this.Map(anchor, 1));
         PaintColor anchorColor = this.Paint.Curve(anchor);
-        for (int channel = 0; channel < 3; channel++) drawing.DrawEllipse(Channels[channel], null, this.Map(anchor, Component(anchorColor, channel)), 3, 3);
+        for (int channel = 0; channel < 3; channel++) drawing.DrawEllipse(Channels[channel], null, this.Map(anchor, Component(anchorColor, channel)), 4, 4);
         double originalTone = this.Paint.Evaluate(this.Probe, PaintModel.Original).Tone;
         double proposedTone = this.Paint.Evaluate(this.Probe, PaintModel.LinearWarp).Tone;
         drawing.DrawLine(new(Appearance.Original, 1) { DashStyle = DashStyles.Dot }, this.Map(originalTone, 0), this.Map(originalTone, 1));
@@ -107,9 +108,9 @@ internal sealed class CurveView : FrameworkElement {
         if (this.hoveredTone is double hovered) {
             PaintColor sample = this.Paint.Curve(hovered);
             drawing.DrawLine(new(Appearance.Text, 0.7), this.Map(hovered, 0), this.Map(hovered, 1));
-            PlotText.Draw(drawing, $"t {hovered:F3}   RGB {sample.Red:F3}  {sample.Green:F3}  {sample.Blue:F3}", new(this.Plot.Left, this.Plot.Bottom + 22), Appearance.Text, this, 10.5);
+            PlotText.Draw(drawing, $"t {hovered:F3}   RGB {sample.Red:F3}  {sample.Green:F3}  {sample.Blue:F3}", new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Text, this);
         } else {
-            PlotText.Draw(drawing, $"t: original {originalTone:F3} / warp {proposedTone:F3}   |   anchor {anchor:F3}", new(this.Plot.Left, this.Plot.Bottom + 22), Appearance.Quiet, this, 10.5);
+            PlotText.Draw(drawing, $"t: original {originalTone:F3} / warp {proposedTone:F3} | anchor {anchor:F3}", new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Quiet, this);
         }
     }
 
@@ -124,7 +125,7 @@ internal sealed class CurveView : FrameworkElement {
             }
         }
         geometry.Freeze();
-        drawing.DrawGeometry(null, new(color, 1.8), geometry);
+        drawing.DrawGeometry(null, new(color, 2.2), geometry);
     }
 
     private static double Component(PaintColor color, int channel) => channel == 0 ? color.Red : channel == 1 ? color.Green : color.Blue;

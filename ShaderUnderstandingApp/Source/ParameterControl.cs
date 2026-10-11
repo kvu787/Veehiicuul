@@ -17,15 +17,15 @@ internal sealed class ParameterControl : StackPanel {
     public Slider Slider => this.slider;
 
     public ParameterControl(string label, double minimum, double maximum, double initial, string explanation, double step = 0.001) {
-        this.Margin = new(0, 0, 0, 14);
-        TextBlock heading = Appearance.Label(label, 13, strong: true);
+        this.Margin = new(0, 0, 0, 18);
+        TextBlock heading = Appearance.Label(label, 18, strong: true);
         heading.ToolTip = explanation;
         this.Children.Add(heading);
-        Grid row = new() { Margin = new(0, 5, 0, 0) };
+        Grid row = new() { Margin = new(0, 8, 0, 0) };
         row.ColumnDefinitions.Add(new());
-        row.ColumnDefinitions.Add(new() { Width = new(99) });
+        row.ColumnDefinitions.Add(new() { Width = new(214) });
         this.slider = new() { Minimum = minimum, Maximum = maximum, Value = initial, SmallChange = step, LargeChange = step * 10, ToolTip = explanation };
-        this.entry = new() { VerticalContentAlignment = VerticalAlignment.Center, ToolTip = explanation, FontFamily = new("Consolas"), FontSize = 12 };
+        this.entry = new() { VerticalContentAlignment = VerticalAlignment.Center, ToolTip = explanation, FontFamily = new("Consolas"), FontSize = 18 };
         AutomationProperties.SetName(this.slider, label);
         AutomationProperties.SetName(this.entry, label + " exact value");
         Grid.SetColumn(this.entry, 1);

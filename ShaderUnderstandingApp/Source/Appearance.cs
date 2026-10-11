@@ -19,7 +19,7 @@ internal static class Appearance {
         return brush;
     }
 
-    public static TextBlock Label(string text, double size = 13, Brush? foreground = null, bool strong = false) => new() {
+    public static TextBlock Label(string text, double size = 18, Brush? foreground = null, bool strong = false) => new() {
         Text = text, FontSize = size, Foreground = foreground ?? Text,
         FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal, TextWrapping = TextWrapping.Wrap
     };

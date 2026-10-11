@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -21,7 +22,8 @@ internal static class InterfaceVerification {
         async Task Settle() {
             await window.WaitForPreview();
             Require(window.StatusText.StartsWith("CPU mathematical preview", StringComparison.Ordinal), "completed preview clears updating status");
-            window.ArrangeOffscreen(1480, 980);
+            // Match a maximized 2560x1440 desktop with title bar and taskbar.
+            window.ArrangeOffscreen(2560, 1392);
             await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
         }
 
@@ -45,7 +47,7 @@ internal static class InterfaceVerification {
         tip.Measure(new(600, double.PositiveInfinity));
         tip.Arrange(new Rect(tip.DesiredSize));
         tip.UpdateLayout();
-        Require(tip.ActualWidth <= 360 && tip.ActualHeight > 40, "sphere tooltip wraps into a compact box");
+        Require(tip.ActualWidth <= tip.MaxWidth && tip.ActualHeight > 40, "sphere tooltip wraps into a compact box");
         Require(tip.Background is SolidColorBrush background && background.Color == Appearance.Panel.Color, "tooltip uses the dark background");
         TextBlock tooltipText = Descendants(tip).OfType<TextBlock>().Single();
         Require(tooltipText.TextWrapping == TextWrapping.Wrap && tooltipText.Foreground is SolidColorBrush foreground && foreground.Color == Appearance.Text.Color, "tooltip text wraps and contrasts with its background");
@@ -61,6 +63,18 @@ internal static class InterfaceVerification {
         Require(window.OriginalView.NormalAt(new(bounds.Left - 1, center.Y)) is null, "outside-sphere clicks rejected");
         Direction? upper = window.OriginalView.NormalAt(new(center.X, bounds.Top + bounds.Height / 4));
         Require(upper is not null && Math.Abs(upper.Value.Y - 0.5) < 1e-12, "screen up maps to positive Y");
+
+        // Verify that the larger slider template still routes drag and track
+        // commands into the same material and exact-value entry.
+        Slider slider = window.Controls["Shift"].Slider;
+        Track track = (Track)slider.Template.FindName("PART_Track", slider);
+        double beforeDrag = slider.Value;
+        track.Thumb.RaiseEvent(new DragDeltaEventArgs(20, 0));
+        Require(slider.Value > beforeDrag && window.Parameters.Shift == slider.Value, "larger thumb drags update the material");
+        Require(double.Parse(window.Controls["Shift"].Entry.Text, System.Globalization.CultureInfo.InvariantCulture) == slider.Value, "thumb drag updates the exact entry");
+        double beforeTrack = slider.Value;
+        Slider.IncreaseLarge.Execute(null, slider);
+        Require(Math.Abs(slider.Value - beforeTrack - slider.LargeChange) < 1e-12, "slider track command still advances the value");
 
         // Exercise actual WPF control changes and their subscribed handlers.
         BitmapSource? previousImage = window.OriginalView.Image;
@@ -141,7 +155,7 @@ internal static class InterfaceVerification {
 
         for (int index = 1; index <= 2; index++) {
             window.DetailTabs.SelectedIndex = index;
-            window.ArrangeOffscreen(1480, 980);
+            window.ArrangeOffscreen(2560, 1392);
             await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
             Require(Descendants(window.DetailTabs).OfType<ScrollViewer>().Any(), "explanation tab scrolls");
             Capture(index == 1 ? "Equations" : "SmoothnessAndCost");
@@ -152,8 +166,11 @@ internal static class InterfaceVerification {
         window.DetailTabs.SelectedIndex = 0;
         await Settle();
         Require(window.Parameters == new PaintParameters() && window.BackSelector.IsChecked == false, "reset restores initial material and hemisphere");
+        window.ArrangeOffscreen(2184, 1280);
+        await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+        Capture("WindowedComparison");
         // A minimum-sized window has less client area because of its title bar.
-        window.ArrangeOffscreen(1104, 760);
+        window.ArrangeOffscreen(1544, 1080);
         await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
         foreach (FrameworkElement element in new FrameworkElement[] { window.OriginalView, window.ProposedView, window.FacingPlot, window.ColorPlot, window.DetailTabs }) {
             Rect rectangle = element.TransformToAncestor(window.Root).TransformBounds(new Rect(element.RenderSize));

@@ -100,7 +100,7 @@ internal sealed class SphereView : FrameworkElement {
 
     public Rect SphereBounds {
         get {
-            double diameter = Math.Max(1, Math.Min(this.ActualWidth - 56, this.ActualHeight - 28));
+            double diameter = Math.Max(1, Math.Min(this.ActualWidth - 80, this.ActualHeight - 44));
             return new((this.ActualWidth - diameter) / 2, (this.ActualHeight - diameter) / 2, diameter, diameter);
         }
     }
@@ -125,17 +125,17 @@ internal sealed class SphereView : FrameworkElement {
         bool probeVisible = (this.Probe.Z < 0) == this.Back || this.Probe.Z == 0;
         if (probeVisible) {
             Point point = Project(this.Probe, bounds);
-            drawing.DrawEllipse(null, new(Appearance.Background, 4), point, 6, 6);
-            drawing.DrawEllipse(null, new(Brushes.White, 1.5), point, 6, 6);
-            drawing.DrawLine(new(Brushes.White, 1), new(point.X - 11, point.Y), new(point.X - 7, point.Y));
-            drawing.DrawLine(new(Brushes.White, 1), new(point.X + 7, point.Y), new(point.X + 11, point.Y));
+            drawing.DrawEllipse(null, new(Appearance.Background, 4), point, 8, 8);
+            drawing.DrawEllipse(null, new(Brushes.White, 1.5), point, 8, 8);
+            drawing.DrawLine(new(Brushes.White, 1.5), new(point.X - 15, point.Y), new(point.X - 10, point.Y));
+            drawing.DrawLine(new(Brushes.White, 1.5), new(point.X + 10, point.Y), new(point.X + 15, point.Y));
         }
         if (!this.Back || this.HasBackPeak) {
             Point peak = Project(this.Back ? this.Peak * -1 : this.Peak, bounds);
-            drawing.DrawEllipse(this.Accent, new(Appearance.Background, 1.5), peak, 3.5, 3.5);
+            drawing.DrawEllipse(this.Accent, new(Appearance.Background, 1.5), peak, 4.5, 4.5);
         }
-        PlotText.Draw(drawing, "+Y", new(bounds.Left + bounds.Width / 2 - 10, 0), Appearance.Quiet, this);
-        PlotText.Draw(drawing, "+X", new(bounds.Right + 6, bounds.Top + bounds.Height / 2 - 8), Appearance.Quiet, this);
+        PlotText.Draw(drawing, "+Y", new(bounds.Left + bounds.Width / 2, 0), Appearance.Quiet, this, alignment: HorizontalAlignment.Center);
+        PlotText.Draw(drawing, "+X", new(bounds.Right + 8, bounds.Top + bounds.Height / 2 - 11), Appearance.Quiet, this);
     }
 
     private static Point Project(Direction normal, Rect bounds) => new(bounds.Left + (normal.X + 1) * bounds.Width / 2, bounds.Top + (1 - normal.Y) * bounds.Height / 2);
