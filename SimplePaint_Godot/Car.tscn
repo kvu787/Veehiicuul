@@ -6,7 +6,7 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_u5o7h"]
 render_priority = 0
 shader = ExtResource("2_y2uan")
-shader_parameter/BaseColorSrgb = Color(0.107, 0.223, 0.578, 1)
+shader_parameter/BaseColorSrgb = Color(0.2159017, 0.21590173, 0.2159017, 1)
 shader_parameter/Brightness = 0.5
 shader_parameter/Shift = 0.0
 shader_parameter/RotationDegrees = 0.0
@@ -16,40 +16,40 @@ shader_parameter/LightPoint = 1.0
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_47788"]
 render_priority = 0
 shader = ExtResource("2_y2uan")
-shader_parameter/BaseColorSrgb = Color(0.19331017, 0.25161922, 0.43807337, 1)
-shader_parameter/Brightness = 0.5
-shader_parameter/Shift = 0.0
-shader_parameter/RotationDegrees = 0.0
+shader_parameter/BaseColorSrgb = Color(0.078, 0.26069996, 0.6, 1)
+shader_parameter/Brightness = 0.3199765776525
+shader_parameter/Shift = 0.40800001938
+shader_parameter/RotationDegrees = 31.38999929837072
 shader_parameter/DarkPoint = 0.0
-shader_parameter/LightPoint = 1.0
+shader_parameter/LightPoint = 0.9999766099525
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_w13o2"]
 render_priority = 0
 shader = ExtResource("2_y2uan")
-shader_parameter/BaseColorSrgb = Color(0.10602916, 0.28360596, 0.3819805, 1)
-shader_parameter/Brightness = 0.5
-shader_parameter/Shift = 0.0
-shader_parameter/RotationDegrees = 0.0
-shader_parameter/DarkPoint = 0.0
-shader_parameter/LightPoint = 1.0
+shader_parameter/BaseColorSrgb = Color(0.31949997, 0.4822083, 0.71, 1)
+shader_parameter/Brightness = 0.346976578935
+shader_parameter/Shift = 0.39600001881
+shader_parameter/RotationDegrees = 26.82999940029584
+shader_parameter/DarkPoint = 0.2000000095
+shader_parameter/LightPoint = 0.9499766075775
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gvgjh"]
 render_priority = 0
 shader = ExtResource("2_y2uan")
-shader_parameter/BaseColorSrgb = Color(0.36998883, 0.16482574, 0.40531626, 1)
-shader_parameter/Brightness = 0.5
-shader_parameter/Shift = 0.0
-shader_parameter/RotationDegrees = 0.0
+shader_parameter/BaseColorSrgb = Color(0.85, 0.6477, 0.13600002, 1)
+shader_parameter/Brightness = 0.47697658511
+shader_parameter/Shift = 0.6430000305425
+shader_parameter/RotationDegrees = 39.23999912290752
 shader_parameter/DarkPoint = 0.0
-shader_parameter/LightPoint = 1.0
+shader_parameter/LightPoint = 0.8999766052025
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_y2uan"]
 render_priority = 0
 shader = ExtResource("2_y2uan")
-shader_parameter/BaseColorSrgb = Color(0.34394002, 0.2390796, 0.13684478, 1)
-shader_parameter/Brightness = 0.5
-shader_parameter/Shift = 0.0
-shader_parameter/RotationDegrees = 0.0
+shader_parameter/BaseColorSrgb = Color(0.15, 0.15, 0.15, 1)
+shader_parameter/Brightness = 0.62497659214
+shader_parameter/Shift = 0.278000013205
+shader_parameter/RotationDegrees = 228.70999488787407
 shader_parameter/DarkPoint = 0.0
 shader_parameter/LightPoint = 1.0
 
@@ -63,5 +63,13 @@ surface_material_override/1 = SubResource("ShaderMaterial_47788")
 surface_material_override/2 = SubResource("ShaderMaterial_w13o2")
 surface_material_override/3 = SubResource("ShaderMaterial_gvgjh")
 surface_material_override/4 = SubResource("ShaderMaterial_y2uan")
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=1459367396]
+transform = Transform3D(0.70710677, 0.49999994, -0.49999994, 0, 0.7071067, 0.7071067, 0.70710677, -0.49999994, 0.49999994, 0, 0, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=852612984]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.53833)
+projection = 1
+size = 5.797
 
 [editable path="Car"]
