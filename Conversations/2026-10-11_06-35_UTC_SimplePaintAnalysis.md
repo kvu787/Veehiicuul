@@ -1044,3 +1044,29 @@ For the settings and probe shown:
 The front inflections are approximately **69.1°** for teal and **-84.4°, -2.8°, 64.4°, 83.0°** for amber.
 
 An inflection is a change in concavity. The teal joins at ±90° do not count. These counts depend on Shift and the probe slice.
+
+
+## Mathematical definition of an inflection point
+
+## User
+
+provide the math definition of an inflection point
+
+
+## Assistant
+
+An inflection point is where a graph changes concavity. A zero second derivative alone is not enough; its sign must change across the point.
+
+
+## Assistant
+
+An **inflection point** is a point $(c,f(c))$ on a continuous graph where the graph changes **concavity**: from concave up to concave down, or vice versa.
+
+For a twice-differentiable function, check whether $f''(x)$ changes sign across $x=c$. Positive means concave up; negative means concave down.
+
+**A zero second derivative alone is not sufficient.** For example:
+
+- $f(x)=x^3$: $f''(x)=6x$ changes sign at zero, so $(0,0)$ is an inflection point.
+- $f(x)=x^4$: $f''(x)=12x^2$ stays nonnegative, so $(0,0)$ is not an inflection point.
+
+The second derivative can be undefined at an inflection point; the defining property is the change in concavity.
