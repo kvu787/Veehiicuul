@@ -1114,3 +1114,36 @@ Added a shared **Probe movement** selector:
 Dashed paths and tilt/slice readouts show the constraint. Mouse and keyboard movement are supported.
 
 Rebuilt and verified. Open a new instance with [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd).
+
+
+## Persistent sphere movement guides
+
+## User
+
+show the "tilt only" and "slice only" lines in all "probe movement" modes, but use different colors for those lines to indicate if movement is constrained
+
+
+## Assistant
+
+I'll show both guide lines in every probe movement mode and use their colors to distinguish available movement from constrained movement.
+
+
+## Assistant
+
+I'll use blue for available tilt movement, purple for available slice movement, and gray for locked movement. Each sphere's legend will also say "free" or "locked" so the colors are explicit.
+
+
+## Assistant
+
+Both guides now remain visible in Free, Tilt only, and Slice only, with matching legends that show each axis's lock state. The build and verification checks pass, including checks of the rendered colors in all three modes.
+
+
+## Assistant
+
+Both lines now show in every mode:
+
+- **Blue**: tilt movement available.
+- **Purple**: slice movement available.
+- **Gray**: movement locked.
+
+Legends show each axis's state. Rebuilt and verified; open a new instance with [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd).
