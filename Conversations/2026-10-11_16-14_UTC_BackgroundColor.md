@@ -130,3 +130,22 @@ To change the gray background you circled:
 3. Under **Rendering > Environment > Defaults**, click its color swatch and choose your color.
 
 This sets the project's default background, including the camera preview and running scene. [Godot documentation](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-rendering-environment-defaults-default-clear-color)
+
+## User
+
+can i change it for just a specific camera
+
+## Assistant
+
+I'll check the camera-specific environment setting.
+
+## Assistant
+
+Yes. Give that **Camera3D** its own **Environment**:
+
+1. Select **Camera3D** in the scene tree.
+2. In the Inspector, find **Environment** and choose **New Environment** from its dropdown.
+3. Click the new resource to expand it.
+4. Under **Background**, set **Mode** to **Custom Color**, then choose **Color**.
+
+You'll see it when previewing that camera or when it is the active camera during gameplay. The environment applies to that camera. [Godot documentation](https://docs.godotengine.org/en/stable/tutorials/3d/environment_and_post_processing.html#camera3d-node)
