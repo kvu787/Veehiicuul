@@ -22,6 +22,22 @@ internal sealed class CurveView : FrameworkElement {
     public Direction Probe { get; set; } = new(0, 0, 1);
     public bool ColorCurve { get; init; }
     public ColorResponseAxis ColorAxis { get; set; }
+    public double BackRangeDegrees { get; set; } = 90;
+    internal double FacingHalfRange => 90 + this.BackRangeDegrees;
+    internal double BackRegionFraction => this.BackRangeDegrees / (2 * this.FacingHalfRange);
+    internal IEnumerable<double> FacingAxisTicks {
+        get {
+            double limit = this.FacingHalfRange;
+            double step = limit <= 135 ? 45 : 90;
+            yield return -limit;
+            for (double angle = Math.Ceiling(-limit / step) * step; angle < limit; angle += step) {
+                // Keep endpoint labels readable as the range changes, even
+                // when an endpoint sits almost on a regular tick.
+                if ((limit - Math.Abs(angle)) / (2 * limit) * this.Plot.Width >= 48) yield return angle;
+            }
+            yield return limit;
+        }
+    }
     public event Action<Direction>? ProbeChanged;
     private double? hoveredInput;
 
@@ -57,22 +73,30 @@ internal sealed class CurveView : FrameworkElement {
 
     private Rect Plot => new(48, 16, Math.Max(1, this.ActualWidth - 84), Math.Max(1, this.ActualHeight - 84));
     private Point Map(double fraction, double value) => new(this.Plot.Left + fraction * this.Plot.Width, this.Plot.Bottom - value * this.Plot.Height);
+    internal double FacingAngleAt(double fraction) => (2 * fraction - 1) * this.FacingHalfRange;
+    private double FacingFractionAt(double angle) => (angle / this.FacingHalfRange + 1) / 2;
+    public Direction? NormalAt(Point point) {
+        if (this.ColorCurve || !this.Plot.Contains(point)) return null;
+        double fraction = (point.X - this.Plot.Left) / this.Plot.Width;
+        return PaintMath.Sweep(this.FacingAngleAt(fraction), this.Paint.Parameters.RotationDegrees);
+    }
 
     private void Interact(Point point, bool selecting) {
         if (!this.Plot.Contains(point)) return;
         double fraction = Math.Clamp((point.X - this.Plot.Left) / this.Plot.Width, 0, 1);
         if (this.ColorCurve) { this.hoveredInput = fraction; this.InvalidateVisual(); }
-        else if (selecting) this.ProbeChanged?.Invoke(PaintMath.Sweep(fraction * 360 - 180, this.Paint.Parameters.RotationDegrees));
+        else if (selecting && this.NormalAt(point) is Direction normal) this.ProbeChanged?.Invoke(normal);
     }
 
     protected override void OnRender(DrawingContext drawing) {
         base.OnRender(drawing);
         drawing.DrawRectangle(Brushes.Transparent, null, new(this.RenderSize));
         Rect plot = this.Plot;
-        if (!this.ColorCurve) {
+        if (!this.ColorCurve && this.BackRangeDegrees > 0) {
             Brush backFill = Appearance.Brush("#232A38");
-            drawing.DrawRectangle(backFill, null, new(plot.Left, plot.Top, plot.Width * 0.25, plot.Height));
-            drawing.DrawRectangle(backFill, null, new(plot.Left + plot.Width * 0.75, plot.Top, plot.Width * 0.25, plot.Height));
+            double width = plot.Width * this.BackRegionFraction;
+            drawing.DrawRectangle(backFill, null, new(plot.Left, plot.Top, width, plot.Height));
+            drawing.DrawRectangle(backFill, null, new(plot.Right - width, plot.Top, width, plot.Height));
         } else if (this.ColorAxis == ColorResponseAxis.Tone) {
             double first = Math.Min(this.Paint.Parameters.DarkPoint, this.Paint.Parameters.LightPoint);
             double last = Math.Max(this.Paint.Parameters.DarkPoint, this.Paint.Parameters.LightPoint);
@@ -91,27 +115,27 @@ internal sealed class CurveView : FrameworkElement {
     }
 
     private void DrawFacingCurves(DrawingContext drawing) {
-        foreach (int angle in new[] { -180, -90, 0, 90, 180 }) {
-            double fraction = (angle + 180.0) / 360;
+        foreach (double angle in this.FacingAxisTicks) {
+            double fraction = this.FacingFractionAt(angle);
             double x = this.Map(fraction, 0).X;
             drawing.DrawLine(new(Appearance.Line, 0.6), new(x, this.Plot.Top), new(x, this.Plot.Bottom));
-            PlotText.Draw(drawing, angle.ToString(CultureInfo.InvariantCulture), new(x, this.Plot.Bottom + 6), Appearance.Quiet, this, alignment: HorizontalAlignment.Center);
+            PlotText.Draw(drawing, angle.ToString("0.#", CultureInfo.InvariantCulture), new(x, this.Plot.Bottom + 6), Appearance.Quiet, this, alignment: HorizontalAlignment.Center);
         }
-        this.DrawPath(drawing, value => this.Paint.Evaluate(PaintMath.Sweep(value * 360 - 180, this.Paint.Parameters.RotationDegrees), PaintModel.Original).Facing, Appearance.Original);
-        this.DrawPath(drawing, value => this.Paint.Evaluate(PaintMath.Sweep(value * 360 - 180, this.Paint.Parameters.RotationDegrees), PaintModel.LinearWarp).Facing, Appearance.Proposed);
+        this.DrawPath(drawing, value => this.Paint.Evaluate(PaintMath.Sweep(this.FacingAngleAt(value), this.Paint.Parameters.RotationDegrees), PaintModel.Original).Facing, Appearance.Original);
+        this.DrawPath(drawing, value => this.Paint.Evaluate(PaintMath.Sweep(this.FacingAngleAt(value), this.Paint.Parameters.RotationDegrees), PaintModel.LinearWarp).Facing, Appearance.Proposed);
         Direction rotated = this.Paint.Parameters.Shift == 0
             ? RotateForSweep(this.Probe, this.Paint.Parameters.RotationDegrees)
             : this.Paint.Rotate(this.Probe);
-        if (Math.Abs(rotated.Y) < 0.00001) {
+        if (Math.Abs(rotated.Y) < 0.00001 && Math.Abs(Math.Atan2(rotated.X, rotated.Z) * 180 / Math.PI) <= this.FacingHalfRange) {
             double tilt = Math.Atan2(rotated.X, rotated.Z) * 180 / Math.PI;
-            double fraction = (tilt + 180) / 360;
+            double fraction = this.FacingFractionAt(tilt);
             drawing.DrawLine(new(Appearance.Quiet, 1) { DashStyle = DashStyles.Dot }, this.Map(fraction, 0), this.Map(fraction, 1));
             foreach (PaintModel model in Enum.GetValues<PaintModel>()) {
                 Brush brush = model == PaintModel.Original ? Appearance.Original : Appearance.Proposed;
                 drawing.DrawEllipse(brush, new(Appearance.Panel, 1), this.Map(fraction, this.Paint.Evaluate(this.Probe, model).Facing), 4, 4);
             }
         }
-        PlotText.Draw(drawing, "Normal tilt (degrees) | shaded regions: back", new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Quiet, this);
+        PlotText.Draw(drawing, this.BackRangeDegrees == 0 ? "Normal tilt (degrees) | front hemisphere only" : "Normal tilt (degrees) | shaded regions: back", new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Quiet, this);
     }
 
     private void DrawColorCurves(DrawingContext drawing) {

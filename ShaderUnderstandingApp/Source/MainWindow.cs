@@ -23,6 +23,10 @@ internal sealed class MainWindow : Window {
     internal readonly CurveView ColorPlot = new() { ColorCurve = true };
     internal readonly ComboBox StageSelector = new() { Width = 214 };
     internal readonly ComboBox ColorAxisSelector = new() { Width = 196 };
+    internal readonly Slider BackRangeSelector = new() {
+        Minimum = 0, Maximum = 90, Value = 90, SmallChange = 1, LargeChange = 10,
+        IsSnapToTickEnabled = true, TickFrequency = 1, Width = 144, Margin = new(12, 0, 12, 0)
+    };
     internal readonly CheckBox BackSelector = new() { Content = "Back hemisphere", Margin = new(24, 0, 0, 0) };
     internal readonly CheckBox MarkerSelector = new() { Content = "Markers", IsChecked = true, Margin = new(24, 0, 0, 0) };
     internal readonly TabControl DetailTabs = new() { ClipToBounds = true };
@@ -203,7 +207,25 @@ internal sealed class MainWindow : Window {
         Grid.SetRow(previews, 1);
         grid.Children.Add(previews);
         Grid charts = PairGrid();
-        charts.Children.Add(BuildChart(this.FacingPlot, "01   Shape of the shading", "Facing f   |   original / teal     proposed / amber"));
+        StackPanel rangeControls = new() { Orientation = Orientation.Horizontal };
+        Label rangeLabel = new() {
+            Content = Appearance.Label("Back range", 18, Appearance.Quiet), Target = this.BackRangeSelector,
+            VerticalContentAlignment = VerticalAlignment.Center, Padding = new(0)
+        };
+        TextBlock rangeValue = Appearance.Label("90°", 18, Appearance.Quiet);
+        rangeValue.MinWidth = 36;
+        rangeValue.VerticalAlignment = VerticalAlignment.Center;
+        rangeControls.Children.Add(rangeLabel);
+        rangeControls.Children.Add(this.BackRangeSelector);
+        rangeControls.Children.Add(rangeValue);
+        this.BackRangeSelector.ToolTip = "Visible back-hemisphere angle on each side of the facing graph. 0 degrees shows -90 to 90; 90 degrees shows -180 to 180. This changes the graph's range, not the shader.";
+        AutomationProperties.SetName(this.BackRangeSelector, "Facing graph back range in degrees per side");
+        this.BackRangeSelector.ValueChanged += (_, _) => {
+            this.FacingPlot.BackRangeDegrees = this.BackRangeSelector.Value;
+            rangeValue.Text = this.BackRangeSelector.Value.ToString("0", CultureInfo.InvariantCulture) + "°";
+            this.FacingPlot.InvalidateVisual();
+        };
+        charts.Children.Add(BuildChart(this.FacingPlot, "01   Shape of the shading", "Facing f   |   original / teal     proposed / amber", headerControls: rangeControls));
         this.ColorAxisSelector.Items.Add("Facing f to RGB");
         this.ColorAxisSelector.Items.Add("Tone t to RGB");
         this.ColorAxisSelector.SelectedIndex = 0;
@@ -260,25 +282,29 @@ internal sealed class MainWindow : Window {
         return Appearance.Surface(grid, new(20, 16, 20, 14));
     }
 
-    private static Border BuildChart(CurveView view, string title, string subtitle, ComboBox? axisSelector = null) {
+    private static Border BuildChart(CurveView view, string title, string subtitle, ComboBox? axisSelector = null, FrameworkElement? headerControls = null) {
         Grid grid = new();
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new());
         TextBlock heading = Appearance.Label(title, 18, strong: true);
         heading.VerticalAlignment = VerticalAlignment.Center;
-        if (axisSelector is null) grid.Children.Add(heading);
-        else {
-            DockPanel header = new();
-            StackPanel axisControls = new() { Orientation = Orientation.Horizontal, Margin = new(16, 0, 0, 0) };
+        if (axisSelector is not null) {
+            StackPanel axisControls = new() { Orientation = Orientation.Horizontal };
             Label inputLabel = new() {
                 Content = Appearance.Label("Input axis", 18, Appearance.Quiet), Target = axisSelector,
                 VerticalContentAlignment = VerticalAlignment.Center, Padding = new(0, 0, 12, 0)
             };
             axisControls.Children.Add(inputLabel);
             axisControls.Children.Add(axisSelector);
-            DockPanel.SetDock(axisControls, Dock.Right);
-            header.Children.Add(axisControls);
+            headerControls = axisControls;
+        }
+        if (headerControls is null) grid.Children.Add(heading);
+        else {
+            DockPanel header = new();
+            headerControls.Margin = new(16, 0, 0, 0);
+            DockPanel.SetDock(headerControls, Dock.Right);
+            header.Children.Add(headerControls);
             header.Children.Add(heading);
             grid.Children.Add(header);
         }

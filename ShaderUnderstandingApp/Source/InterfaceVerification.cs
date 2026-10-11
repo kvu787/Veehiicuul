@@ -43,6 +43,45 @@ internal static class InterfaceVerification {
         Require(window.OriginalView.Image?.PixelWidth == 448 && window.ProposedView.Image?.PixelWidth == 448, "both preview images exist");
         Capture("DefaultComparison");
 
+        Task rangeRender = window.CurrentRender;
+        PaintParameters rangeMaterial = window.Parameters;
+        Direction rangeProbe = window.Probe;
+        window.BackRangeSelector.Value = 0;
+        window.ArrangeOffscreen(2560, 1392);
+        Require(window.FacingPlot.FacingHalfRange == 90 && window.FacingPlot.BackRegionFraction == 0 &&
+            window.FacingPlot.FacingAxisTicks.SequenceEqual(new double[] { -90, -45, 0, 45, 90 }),
+            "zero Back range removes shading and gives the front-only angle axis");
+        Point FacingPoint(double fraction) => new(48 + fraction * (window.FacingPlot.ActualWidth - 84),
+            16 + (window.FacingPlot.ActualHeight - 84) / 3);
+        Direction? rangeLeft = window.FacingPlot.NormalAt(FacingPoint(0));
+        Direction? rangeRight = window.FacingPlot.NormalAt(FacingPoint(1));
+        Require(rangeLeft is Direction firstNormal && rangeRight is Direction lastNormal &&
+            Math.Abs(firstNormal.Z) < 1e-12 && Math.Abs(lastNormal.Z) < 1e-12 &&
+            firstNormal.X < -0.7 && lastNormal.X > 0.7, "front-only plot endpoints pick the two silhouette normals");
+        Require(window.FacingPlot.NormalAt(new(0, 0)) is null, "facing graph ignores clicks outside the plot");
+        Capture("FrontOnlyFacingRange");
+        window.BackRangeSelector.Value = 45;
+        window.ArrangeOffscreen(2560, 1392);
+        Require(window.FacingPlot.FacingAngleAt(0) == -135 && window.FacingPlot.FacingAngleAt(1) == 135 &&
+            Math.Abs(window.FacingPlot.BackRegionFraction - 1.0 / 6) < 1e-14, "intermediate Back range scales the angle domain and both shaded regions");
+        Require(window.FacingPlot.NormalAt(FacingPoint(0)) is Direction extendedNormal &&
+            Math.Abs(extendedNormal.Z + Math.Sqrt(0.5)) < 1e-12, "extended graph clicks use the new angle range");
+        Capture("PartialBackFacingRange");
+        window.BackRangeSelector.Value = 1;
+        window.ArrangeOffscreen(2560, 1392);
+        Require(window.FacingPlot.FacingAxisTicks.SequenceEqual(new double[] { -91, -45, 0, 45, 91 }),
+            "range endpoints do not overlap nearby tick labels");
+        Track rangeTrack = (Track)window.BackRangeSelector.Template.FindName("PART_Track", window.BackRangeSelector);
+        rangeTrack.Thumb.RaiseEvent(new DragDeltaEventArgs(20, 0));
+        Require(window.BackRangeSelector.Value > 1 && window.FacingPlot.BackRangeDegrees == window.BackRangeSelector.Value,
+            "Back range thumb routes dragging into the graph domain");
+        Require(window.Parameters == rangeMaterial && window.Probe == rangeProbe && window.CurrentRender == rangeRender,
+            "Back range leaves material, probe, and sphere images unchanged");
+        window.BackRangeSelector.Value = 90;
+        window.ArrangeOffscreen(2560, 1392);
+        Require(window.FacingPlot.FacingHalfRange == 180 && window.FacingPlot.BackRegionFraction == 0.25 &&
+            window.FacingPlot.FacingAxisTicks.SequenceEqual(new double[] { -180, -90, 0, 90, 180 }), "maximum Back range restores the complete angle axis");
+
         // Exercise the real drag bar handlers, including both zero-height
         // collapse and upward restoration using the same bar. Layout
         // changes must reclaim space for both graphs without changing previews.
@@ -293,7 +332,7 @@ internal static class InterfaceVerification {
         // A minimum-sized window has less client area because of its title bar.
         window.ArrangeOffscreen(1544, 1080);
         await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
-        foreach (FrameworkElement element in new FrameworkElement[] { window.OriginalView, window.ProposedView, window.FacingPlot, window.ColorPlot, window.DetailTabs }) {
+        foreach (FrameworkElement element in new FrameworkElement[] { window.OriginalView, window.ProposedView, window.FacingPlot, window.ColorPlot, window.DetailTabs, window.BackRangeSelector }) {
             Rect rectangle = element.TransformToAncestor(window.Root).TransformBounds(new Rect(element.RenderSize));
             Require(rectangle.Right <= window.Root.ActualWidth + 1 && rectangle.Bottom <= window.Root.ActualHeight + 1, "minimum layout contains " + element.GetType().Name);
         }
