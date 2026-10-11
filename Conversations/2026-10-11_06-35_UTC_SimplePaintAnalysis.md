@@ -868,3 +868,57 @@ Added **Back range** to graph 01:
 Fixed the disappearing indicators: the graph's slice now follows the sphere probe. Probes outside the visible range remain marked at the nearest edge.
 
 Rebuilt; all 282 GUI checks and shader math tests pass. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the update.
+
+
+## Front hemisphere previews and the original normal diagnostic
+
+## User
+
+there's no need to view the back hemisphere. remove this check box and do any corresponding simplifications in the app code that this enables.
+
+Attached image: `C:/Users/k/AppData/Local/Temp/codex-clipboard-b658e269-7e5f-4529-b624-135aca0c1e39.png`.
+
+![Back hemisphere checkbox removal request](2026-10-11_06-35_UTC_SimplePaintAnalysisImages/BackHemisphereCheckboxRemovalRequest.png)
+
+
+## Assistant
+
+I'll remove the checkbox and simplify the sphere previews to always show the front hemisphere. I'll keep the graph's Back range control for comparing the shading curves.
+
+
+## Assistant
+
+The checkbox also triggered automatic view switching when a graph selection crossed into the back hemisphere. I'm removing that switching path, the back-view preset, and the back-rendering parameters. Probe movement will now update the markers and readout without regenerating the sphere images.
+
+
+## User
+
+non-zero shift doesn't seem to affect the original simplepaint normal sphere map. is this expected?
+
+Attached image: `C:/Users/k/AppData/Local/Temp/codex-clipboard-d43c0a2d-609c-4b96-b80a-f43494770174.png`.
+
+![Original normal map Shift question](2026-10-11_06-35_UTC_SimplePaintAnalysisImages/OriginalNormalMapShiftQuestion.png)
+
+
+## Assistant
+
+Yes. With Rotation at 0, that's expected: the original shader's Shift changes the facing calculation, not the normal vector shown by this diagnostic. Switch to Facing f or Painted color to see its effect. The proposed version changes the normal through its linear warp, so its normal map changes with Shift.
+
+I'm finishing the back-hemisphere checkbox removal and checking the resulting app.
+
+
+## Assistant
+
+The checkbox and back-view rendering paths are removed. Both spheres now stay on the front hemisphere, and graph selections update the probe without restarting the previews. The rebuilt app passes all 284 GUI checks and the shader math tests.
+
+
+## Assistant
+
+Yes, that's expected. **Normal vectors** shows:
+
+- **Original:** the rotated normal. Shift changes the facing calculation; with Rotation at 0, the normal map stays unchanged.
+- **Proposed:** the normalized warped normal, which Shift directly changes.
+
+Switch to **Facing f** or **Painted color** to see Shift's effect on the original.
+
+I also removed the back-hemisphere checkbox and associated rendering/switching code. Rebuilt; all 284 GUI checks and shader math tests pass. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the updated app.
