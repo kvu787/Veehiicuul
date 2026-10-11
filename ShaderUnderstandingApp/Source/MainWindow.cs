@@ -235,9 +235,15 @@ internal sealed class MainWindow : Window {
         if (axisSelector is null) grid.Children.Add(heading);
         else {
             DockPanel header = new();
-            axisSelector.Margin = new(16, 0, 0, 0);
-            DockPanel.SetDock(axisSelector, Dock.Right);
-            header.Children.Add(axisSelector);
+            StackPanel axisControls = new() { Orientation = Orientation.Horizontal, Margin = new(16, 0, 0, 0) };
+            Label inputLabel = new() {
+                Content = Appearance.Label("Input axis", 18, Appearance.Quiet), Target = axisSelector,
+                VerticalContentAlignment = VerticalAlignment.Center, Padding = new(0, 0, 12, 0)
+            };
+            axisControls.Children.Add(inputLabel);
+            axisControls.Children.Add(axisSelector);
+            DockPanel.SetDock(axisControls, Dock.Right);
+            header.Children.Add(axisControls);
             header.Children.Add(heading);
             grid.Children.Add(header);
         }
