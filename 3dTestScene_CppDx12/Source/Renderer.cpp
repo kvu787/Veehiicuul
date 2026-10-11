@@ -1089,6 +1089,13 @@ void Renderer::UpdateCamera()
 
 Renderer::AnimationState Renderer::CurrentAnimationState() const
 {
+    if (m_stationaryCarEnabled)
+    {
+        // The mesh faces +Z. Facing +X puts the headlights at the lower right
+        // in the fixed 45-degree camera, matching the reference screenshot.
+        return {.position = 0.0f, .rotation = DirectX::XM_PIDIV2};
+    }
+
     constexpr double movementSpeed = 8.0;
     constexpr double travelDistance = 7.0;
     constexpr double fullCycleDistance = travelDistance * 4.0;

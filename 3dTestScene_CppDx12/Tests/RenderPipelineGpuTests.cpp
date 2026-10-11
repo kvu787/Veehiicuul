@@ -16,6 +16,24 @@ struct RendererTestAccess
     }
     static void Flush(Renderer& renderer) { renderer.WaitForGpu(); }
     static bool HasPresentationWait(const Renderer& renderer) { return renderer.m_presentationEvent != nullptr; }
+    static void VerifyStationaryCar(Renderer& renderer)
+    {
+        const auto start = renderer.m_animationStart;
+        if (renderer.IsStationaryCarEnabled()) throw std::runtime_error("Car should start animated");
+        renderer.SetStationaryCarEnabled(true);
+        for (const auto elapsed : {1, 10, 100})
+        {
+            renderer.m_animationStart = std::chrono::steady_clock::now() - std::chrono::seconds(elapsed);
+            const auto state = renderer.CurrentAnimationState();
+            if (state.position != 0.0f || state.rotation != DirectX::XM_PIDIV2)
+                throw std::runtime_error("Stationary car moved or did not match the reference orientation");
+        }
+        renderer.SetStationaryCarEnabled(false);
+        renderer.m_animationStart = std::chrono::steady_clock::now() - std::chrono::seconds(1);
+        if (renderer.CurrentAnimationState().position < 5.0f)
+            throw std::runtime_error("Car animation did not resume");
+        renderer.m_animationStart = start;
+    }
 };
 namespace
 {
@@ -47,6 +65,13 @@ int main(int argc, char** argv)
 {
     try
     {
+        if (argc > 1 && std::string_view(argv[1]) == "--stationary-car-only")
+        {
+            Renderer renderer;
+            RendererTestAccess::VerifyStationaryCar(renderer);
+            std::cout << "Stationary car origin, orientation, and animation resume passed.\n";
+            return 0;
+        }
         const bool warp = argc > 1 && std::string_view(argv[1]) == "--warp";
         Microsoft::WRL::ComPtr<ID3D12Debug> debug;
         Require(SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug))), "D3D12 debug layer required for render pipeline tests");
@@ -81,12 +106,15 @@ int main(int argc, char** argv)
             };
             Renderer renderer;
             renderer.Initialize(window.handle, 320, 180, settings, warp);
+            RendererTestAccess::VerifyStationaryCar(renderer);
             Require(renderer.IsVsyncEnabled() == settings.RenderPipeline.VSync, "Configured VSync ignored during initialization");
             Require(RendererTestAccess::HasPresentationWait(renderer) == renderPipeline.waitForPresentation,
                 "Swap-chain presentation wait does not match the selected render pipeline");
             for (int frame = 0; frame < 24; ++frame)
             {
                 if (frame == 6) renderer.SetVsyncEnabled(true);
+                if (frame == 7) renderer.SetStationaryCarEnabled(true);
+                if (frame == 18) renderer.SetStationaryCarEnabled(false);
                 if (frame == 12) renderer.SetVsyncEnabled(false);
                 Require(renderer.PrepareFrame(Pump), "Unexpected preparation cancellation");
                 Require(renderer.PendingGpuFrames() < renderPipeline.maxGpuFramesInFlight, "GPU budget exceeded at admission");

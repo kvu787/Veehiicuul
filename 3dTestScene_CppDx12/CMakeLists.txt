@@ -229,6 +229,7 @@ if(BUILD_TESTING)
     endif()
     add_test(NAME RenderPipelineGpuHardware COMMAND RenderPipelineGpuTests)
     add_test(NAME RenderPipelineGpuWarp COMMAND RenderPipelineGpuTests --warp)
+    add_test(NAME StationaryCarMode COMMAND RenderPipelineGpuTests --stationary-car-only)
     set_tests_properties(RenderPipelineGpuHardware RenderPipelineGpuWarp PROPERTIES TIMEOUT 90 RUN_SERIAL TRUE)
 endif()
 

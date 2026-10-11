@@ -129,10 +129,17 @@ directory, whose location is set at build time. This directory is ignored by Git
 | Key                | Action                       |
 | ------------------ | ---------------------------- |
 | `V`                | Toggle VSync                 |
+| `S`                | Toggle stationary car mode   |
 | `F11`              | Toggle borderless fullscreen |
 | `Esc` or `Alt+F4`  | Quit                         |
 
 The app starts windowed at 1280x720 with VSync off. Press F11 to toggle borderless fullscreen.
+
+Press `S` to place the car at the world origin `(0, 0, 0)` and stop both
+translation and rotation. Its fixed 90-degree yaw faces the headlights toward
+the lower right, matching the reference screenshot with the existing camera.
+The window title reports `Car: Stationary` or `Car: Animated`. Press `S` again
+to resume the normal animation at its current elapsed time. The car starts animated.
 
 With VSync off, presentation permits tearing only when the selected pipeline requests it and DXGI supports it.
 

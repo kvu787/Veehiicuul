@@ -221,6 +221,12 @@ LRESULT Application::HandleMessage(
             UpdateWindowTitle();
             return 0;
         }
+        if (wParam == 'S')
+        {
+            m_renderer.SetStationaryCarEnabled(!m_renderer.IsStationaryCarEnabled());
+            UpdateWindowTitle();
+            return 0;
+        }
         break;
 
     default:
@@ -294,12 +300,14 @@ void Application::UpdateWindowTitle() const
 {
     const wchar_t* vsyncState = m_renderer.IsVsyncEnabled() ? L"On" : L"Off";
     const wchar_t* displayState = m_fullscreen ? L"Fullscreen" : L"Windowed";
+    const wchar_t* carState = m_renderer.IsStationaryCarEnabled() ? L"Stationary" : L"Animated";
     wchar_t title[512]{};
     swprintf_s(
         title,
-        L"Veehiicuul | %s | VSync: %s | %s | V: VSync  F11: fullscreen  Esc: quit",
+        L"Veehiicuul | %s | VSync: %s | %s | Car: %s | S: stationary car  V: VSync  F11: fullscreen  Esc: quit",
         m_renderer.RenderPipelineDescription().c_str(),
         vsyncState,
-        displayState);
+        displayState,
+        carState);
     SetWindowTextW(m_window, title);
 }

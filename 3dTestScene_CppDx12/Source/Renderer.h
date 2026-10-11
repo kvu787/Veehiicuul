@@ -37,6 +37,8 @@ public:
 
     void SetVsyncEnabled(bool enabled) noexcept { m_vsyncEnabled = enabled; }
     [[nodiscard]] bool IsVsyncEnabled() const noexcept { return m_vsyncEnabled; }
+    void SetStationaryCarEnabled(bool enabled) noexcept { m_stationaryCarEnabled = enabled; }
+    [[nodiscard]] bool IsStationaryCarEnabled() const noexcept { return m_stationaryCarEnabled; }
     [[nodiscard]] bool IsInitialized() const noexcept { return m_initialized; }
 
 private:
@@ -99,6 +101,7 @@ private:
     std::uint32_t m_height = 0;
     bool m_initialized = false;
     bool m_vsyncEnabled = false;
+    bool m_stationaryCarEnabled = false;
     bool m_tearingSupported = false;
     bool m_useSoftwareAdapter = false;
     ResolvedRenderPipeline m_renderPipeline = StandardRenderPipeline;
