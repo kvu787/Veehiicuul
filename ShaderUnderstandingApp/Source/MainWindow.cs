@@ -294,9 +294,8 @@ internal sealed class MainWindow : Window {
         grid.Children.Add(description);
         Grid.SetRow(view, 2);
         grid.Children.Add(view);
-        TextBlock footnote = Appearance.Label("White ring: front probe   |   colored dot: peak direction", 16, Appearance.Quiet);
-        Grid.SetRow(footnote, 3);
-        grid.Children.Add(footnote);
+        Grid.SetRow(view.Legend, 3);
+        grid.Children.Add(view.Legend);
         AutomationProperties.SetName(view, title + ". Click or use arrow keys to inspect a normal.");
         return Appearance.Surface(grid, new(20, 16, 20, 14));
     }
@@ -383,7 +382,7 @@ internal sealed class MainWindow : Window {
         AddExplanation(text, "3. Facing-to-tone remap", "t = DarkPoint*(1 - f) + LightPoint*f\nEqual endpoints give a constant tone. Reversed endpoints invert the progression.", true);
         AddExplanation(text, "4. Tone-to-color curve", "For each decoded linear base-color channel c, with Brightness b:\nA = c*b;  B = (1-c)*(1-b)\nF(t) = A*t / (A*t + B*(1-t))\nF(0)=0, F(1)=1, F(1-b)=c. Output linear RGB is encoded to sRGB.", true);
         AddExplanation(text, "Color response graph", "Facing f to RGB shows F(DarkPoint*(1-f) + LightPoint*f), including both tone endpoints. Changing Dark Point or Light Point changes these curves. Tone t to RGB shows the underlying F(t), which depends only on Base Color and Brightness; its shaded interval marks the tones the shader uses. In the facing view, the dashed base-color anchor appears only when that color is reachable. Reversed endpoints give decreasing facing-to-color curves; equal endpoints give flat curves.");
-        AddExplanation(text, "Probe movement and graph slices", "In the graph's rotated frame, Slice y fixes the Y component. With r = sqrt(1-y*y), a tilt sweep uses (r*sin(tilt), y, r*cos(tilt)), then undoes Rotation. Tilt only moves along this slice and preserves both facing curves. Slice only changes y at a fixed tilt, changing the curves while keeping the probe markers at the same horizontal position. The dashed sphere path shows the permitted movement. Neither lock holds the shader's facing f constant. The graph uses Rotation to define its slice even when Shift is zero.");
+        AddExplanation(text, "Probe movement and graph slices", "In the graph's rotated frame, Slice y fixes the Y component. With r = sqrt(1-y*y), a tilt sweep uses (r*sin(tilt), y, r*cos(tilt)), then undoes Rotation. Tilt only moves along this slice and preserves both facing curves. Slice only changes y at a fixed tilt, changing the curves while keeping the probe markers at the same horizontal position. Both dashed paths appear in every mode: blue for available tilt movement, purple for available slice movement, gray for locked movement. Neither lock holds the shader's facing f constant. The graph uses Rotation to define its slice even when Shift is zero.");
         AddExplanation(text, "Separate light and dark weights", "The original implementation also computes stable, nonnegative P and Q. Reconstructing Q from 1-f can erase tiny highlight complements. Their absolute sizes can differ between models; compare f and output color. The pixel shader combines their weights directly with precomputed color coefficients.");
         return new ScrollViewer { Content = text, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     }

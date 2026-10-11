@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -51,6 +53,8 @@ internal sealed class SphereView : FrameworkElement {
     private Direction probe = new(0, 0, 1);
     private double rotationDegrees;
     private double lastTilt;
+    private ProbeMovement movement;
+    public TextBlock Legend { get; } = Appearance.Label("", 16, Appearance.Quiet);
     public BitmapSource? Image { get; set; }
     public Direction Probe {
         get => this.probe;
@@ -60,7 +64,15 @@ internal sealed class SphereView : FrameworkElement {
         }
     }
     public Direction Peak { get; set; } = new(0, 0, 1);
-    public ProbeMovement Movement { get; set; }
+    public ProbeMovement Movement {
+        get => this.movement;
+        set {
+            this.movement = value;
+            this.UpdateLegend();
+        }
+    }
+    private Brush TiltColor => this.Movement == ProbeMovement.SliceOnly ? Appearance.LockedMovement : Appearance.TiltMovement;
+    private Brush SliceColor => this.Movement == ProbeMovement.TiltOnly ? Appearance.LockedMovement : Appearance.SliceMovement;
     public double RotationDegrees {
         get => this.rotationDegrees;
         set {
@@ -78,7 +90,8 @@ internal sealed class SphereView : FrameworkElement {
         this.MinHeight = 120;
         this.Cursor = Cursors.Cross;
         this.Focusable = true;
-        this.ToolTip = "Click or drag to move the shared probe. Probe movement can lock tilt or slice. Tilt only: Left/Right changes tilt at fixed slice. Slice only: Up/Down changes slice at fixed tilt. Home zeros the unlocked coordinate; in Free mode it selects the center. The dashed path shows permitted motion.";
+        this.ToolTip = "Click or drag to move the shared probe. Both dashed paths appear in every mode: blue for available tilt movement, purple for available slice movement, gray for locked movement. Tilt only: Left/Right changes tilt at fixed slice. Slice only: Up/Down changes slice at fixed tilt. Home zeros the unlocked coordinate; in Free mode it selects the center.";
+        this.UpdateLegend();
         RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
         this.MouseLeftButtonDown += (_, arguments) => {
             this.Focus();
@@ -138,7 +151,8 @@ internal sealed class SphereView : FrameworkElement {
         Rect bounds = this.SphereBounds;
         if (this.Image is not null) drawing.DrawImage(this.Image, bounds);
         if (!this.ShowMarkers) return;
-        if (this.Movement != ProbeMovement.Free) this.DrawMovementPath(drawing, bounds);
+        this.DrawMovementPath(drawing, bounds, ProbeMovement.TiltOnly, this.TiltColor);
+        this.DrawMovementPath(drawing, bounds, ProbeMovement.SliceOnly, this.SliceColor);
         if (this.Probe.Z >= 0) {
             Point point = Project(this.Probe, bounds);
             drawing.DrawEllipse(null, new(Appearance.Background, 4), point, 8, 8);
@@ -152,14 +166,22 @@ internal sealed class SphereView : FrameworkElement {
         PlotText.Draw(drawing, "+X", new(bounds.Right + 8, bounds.Top + bounds.Height / 2 - 11), Appearance.Quiet, this);
     }
 
-    private void DrawMovementPath(DrawingContext drawing, Rect bounds) {
+    private void UpdateLegend() {
+        this.Legend.Inlines.Clear();
+        this.Legend.Inlines.Add(new Run(this.Movement == ProbeMovement.SliceOnly ? "Tilt: locked" : "Tilt: free") { Foreground = this.TiltColor });
+        this.Legend.Inlines.Add("   |   ");
+        this.Legend.Inlines.Add(new Run(this.Movement == ProbeMovement.TiltOnly ? "Slice: locked" : "Slice: free") { Foreground = this.SliceColor });
+        this.Legend.Inlines.Add("   |   Ring: probe   |   Dot: peak");
+    }
+
+    private void DrawMovementPath(DrawingContext drawing, Rect bounds, ProbeMovement axis, Brush color) {
         ProbeCoordinates anchor = this.FrontCoordinates;
         StreamGeometry path = new();
         using (StreamGeometryContext context = path.Open()) {
             const int segments = 128;
             for (int index = 0; index <= segments; index++) {
                 double angle = (index / (double)segments - 0.5) * Math.PI;
-                ProbeCoordinates coordinates = this.Movement == ProbeMovement.TiltOnly ? anchor with { Tilt = angle }
+                ProbeCoordinates coordinates = axis == ProbeMovement.TiltOnly ? anchor with { Tilt = angle }
                     : anchor with { Slice = Math.Sin(angle) };
                 Point point = Project(coordinates.ToNormal(this.RotationDegrees), bounds);
                 if (index == 0) context.BeginFigure(point, false, false);
@@ -167,8 +189,12 @@ internal sealed class SphereView : FrameworkElement {
             }
         }
         path.Freeze();
-        drawing.DrawGeometry(null, new(Appearance.Background, 3) { DashStyle = new(new double[] { 2, 4.0 / 3 }, 0) }, path);
-        drawing.DrawGeometry(null, new(Brushes.White, 1) { DashStyle = new(new double[] { 6, 4 }, 0) }, path);
+        const double outlineWidth = 3.5;
+        const double lineWidth = 1.75;
+        // WPF multiplies dash lengths by pen width. Match the two patterns so
+        // every colored dash has an outline against either dark or light paint.
+        drawing.DrawGeometry(null, new(Appearance.Background, outlineWidth) { DashStyle = new(new double[] { 6 / outlineWidth, 4 / outlineWidth }, 0) }, path);
+        drawing.DrawGeometry(null, new(color, lineWidth) { DashStyle = new(new double[] { 6 / lineWidth, 4 / lineWidth }, 0) }, path);
     }
 
     private static Point Project(Direction normal, Rect bounds) => new(bounds.Left + (normal.X + 1) * bounds.Width / 2, bounds.Top + (1 - normal.Y) * bounds.Height / 2);

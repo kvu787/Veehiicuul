@@ -12,6 +12,9 @@ internal static class Appearance {
     public static readonly SolidColorBrush Line = Brush("#344257");
     public static readonly SolidColorBrush Original = Brush("#64D5CF");
     public static readonly SolidColorBrush Proposed = Brush("#FFB574");
+    public static readonly SolidColorBrush TiltMovement = Brush("#8AB4FF");
+    public static readonly SolidColorBrush SliceMovement = Brush("#D0A7FF");
+    public static readonly SolidColorBrush LockedMovement = Brush("#8491A3");
 
     public static SolidColorBrush Brush(string color) {
         SolidColorBrush brush = new((Color)ColorConverter.ConvertFromString(color));

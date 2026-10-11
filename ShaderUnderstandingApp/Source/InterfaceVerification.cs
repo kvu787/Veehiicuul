@@ -225,12 +225,35 @@ internal static class InterfaceVerification {
         }
         window.SetParameters(rangeMaterial);
         window.SetProbe(new(0.3, -0.5, 0.8));
-        window.MovementSelector.SelectedIndex = (int)ProbeMovement.TiltOnly;
-        await Settle();
-        Capture("TiltOnlyProbeMovement");
-        window.MovementSelector.SelectedIndex = (int)ProbeMovement.SliceOnly;
-        await Settle();
-        Capture("SliceOnlyProbeMovement");
+        foreach (ProbeMovement movement in Enum.GetValues<ProbeMovement>()) {
+            window.MovementSelector.SelectedIndex = (int)movement;
+            await Settle();
+            RenderTargetBitmap image = new((int)window.Root.ActualWidth, (int)window.Root.ActualHeight, 96, 96, PixelFormats.Pbgra32);
+            image.Render(window.Root);
+            byte[] pixels = Pixels(image);
+            // Inspect rendered sphere pixels, excluding legends. Both paths
+            // must appear even in Free mode; each locked direction is gray.
+            Color[] expectedColors = movement switch {
+                ProbeMovement.TiltOnly => [Color.FromRgb(0x8A, 0xB4, 0xFF), Color.FromRgb(0x84, 0x91, 0xA3)],
+                ProbeMovement.SliceOnly => [Color.FromRgb(0x84, 0x91, 0xA3), Color.FromRgb(0xD0, 0xA7, 0xFF)],
+                _ => [Color.FromRgb(0x8A, 0xB4, 0xFF), Color.FromRgb(0xD0, 0xA7, 0xFF)]
+            };
+            foreach (SphereView sphere in new[] { window.OriginalView, window.ProposedView }) {
+                Rect guideBounds = sphere.TransformToAncestor(window.Root).TransformBounds(sphere.SphereBounds);
+                foreach (Color expected in expectedColors) {
+                    int matching = 0;
+                    for (int y = (int)Math.Ceiling(guideBounds.Top); y < (int)guideBounds.Bottom; y++) {
+                        for (int x = (int)Math.Ceiling(guideBounds.Left); x < (int)guideBounds.Right; x++) {
+                            int offset = (y * image.PixelWidth + x) * 4;
+                            if (Math.Abs(pixels[offset] - expected.B) < 8 && Math.Abs(pixels[offset + 1] - expected.G) < 8 &&
+                                Math.Abs(pixels[offset + 2] - expected.R) < 8 && pixels[offset + 3] == 255) matching++;
+                        }
+                    }
+                    Require(matching > 20, "both sphere guides render with their permitted or locked color in " + movement);
+                }
+            }
+            Capture(movement == ProbeMovement.Free ? "FreeProbeMovement" : movement == ProbeMovement.TiltOnly ? "TiltOnlyProbeMovement" : "SliceOnlyProbeMovement");
+        }
         // Reaching a slice pole makes tilt undefined. On leaving it, preserve
         // the last meaningful tilt instead of silently changing the path.
         double poleTilt = Tilt(window.Probe, rangeMaterial.RotationDegrees);
