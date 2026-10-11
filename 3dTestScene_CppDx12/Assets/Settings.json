@@ -18,16 +18,16 @@
         "LightPoint": 1.0
     },
     "SimplePaintShader_Body": {
-        "BaseColor": [0.078, 0.26069996, 0.6],
-        "Brightness": 0.3199765776525,
+        "BaseColor": [0.103999995, 0.3592001, 0.8],
+        "Brightness": 0.2179765728075,
         "Shift": 0.40800001938,
         "RotationDegrees": 31.38999929837072,
         "DarkPoint": 0.0,
         "LightPoint": 0.9999766099525
     },
     "SimplePaintShader_Cabin": {
-        "BaseColor": [0.31949997, 0.4822083, 0.71],
-        "Brightness": 0.346976578935,
+        "BaseColor": [0.37600002, 0.5314668, 0.8],
+        "Brightness": 0.26497657504,
         "Shift": 0.39600001881,
         "RotationDegrees": 26.82999940029584,
         "DarkPoint": 0.2000000095,
