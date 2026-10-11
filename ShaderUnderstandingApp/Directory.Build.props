@@ -1,0 +1,7 @@
+<Project>
+    <PropertyGroup>
+        <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)IntermediateOutput/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+        <BaseOutputPath>$(MSBuildThisFileDirectory)BuildOutput/Projects/$(MSBuildProjectName)/</BaseOutputPath>
+        <DefaultItemExcludes>$(DefaultItemExcludes);$(MSBuildThisFileDirectory)BuildOutput/**;$(MSBuildThisFileDirectory)IntermediateOutput/**;$(MSBuildThisFileDirectory)LogOutput/**</DefaultItemExcludes>
+    </PropertyGroup>
+</Project>

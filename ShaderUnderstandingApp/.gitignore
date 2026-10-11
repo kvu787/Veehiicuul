@@ -1,0 +1,5 @@
+BuildOutput/
+IntermediateOutput/
+LogOutput/
+**/bin/
+**/obj/
