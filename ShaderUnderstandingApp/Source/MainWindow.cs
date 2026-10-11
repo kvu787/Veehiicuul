@@ -20,6 +20,7 @@ internal sealed class MainWindow : Window {
     internal readonly CurveView FacingPlot = new();
     internal readonly CurveView ColorPlot = new() { ColorCurve = true };
     internal readonly ComboBox StageSelector = new() { Width = 214 };
+    internal readonly ComboBox ColorAxisSelector = new() { Width = 196 };
     internal readonly CheckBox BackSelector = new() { Content = "Back hemisphere", Margin = new(24, 0, 0, 0) };
     internal readonly CheckBox MarkerSelector = new() { Content = "Markers", IsChecked = true, Margin = new(24, 0, 0, 0) };
     internal readonly TabControl DetailTabs = new();
@@ -122,8 +123,8 @@ internal sealed class MainWindow : Window {
         this.AddControl(content, "Brightness", "Brightness", PaintParameters.Margin, PaintParameters.MaximumInterior, 0.5, "The base color appears at tone 1 - Brightness. Increasing this value moves the anchor left; it does not multiply RGB.");
         this.AddControl(content, "Shift", "Shift", 0, PaintParameters.MaximumInterior, 0.6, "Moves the highlight from the center toward the silhouette. The maximum's sideways component is Shift; its tilt is asin(Shift).");
         this.AddControl(content, "Rotation", "Rotation / degrees", 0, Math.BitDecrement(360), 45, "Counterclockwise on screen: 0 right, 90 up, 180 left, 270 down. At zero Shift, Rotation has no visible effect.", 1);
-        this.AddControl(content, "Dark", "Dark Point", 0, PaintParameters.MaximumInterior, 0, "Input tone at facing 0. This is not a displayed brightness. It may exceed Light Point.");
-        this.AddControl(content, "Light", "Light Point", PaintParameters.Margin, 1, 1, "Input tone at facing 1. Equal endpoints give a constant color; reversed endpoints invert the gradient.");
+        this.AddControl(content, "Dark", "Dark Point", 0, PaintParameters.MaximumInterior, 0, "Input tone at facing 0. The Facing f to RGB plot shows its output color at the left endpoint. It may exceed Light Point.");
+        this.AddControl(content, "Light", "Light Point", PaintParameters.Margin, 1, 1, "Input tone at facing 1. The Facing f to RGB plot shows its output color at the right endpoint. Equal endpoints give a constant color; reversed endpoints invert the gradient.");
         TextBlock heading = Appearance.Label("GUIDED EXPLORATIONS", 18, Appearance.Quiet, true);
         heading.Margin = new(0, 8, 0, 12);
         content.Children.Add(heading);
@@ -158,9 +159,9 @@ internal sealed class MainWindow : Window {
     private Grid BuildExploration() {
         Grid grid = new();
         grid.RowDefinitions.Add(new() { Height = new(60) });
-        grid.RowDefinitions.Add(new() { Height = new(1.18, GridUnitType.Star), MinHeight = 280 });
+        grid.RowDefinitions.Add(new() { Height = new(1.18, GridUnitType.Star), MinHeight = 260 });
         grid.RowDefinitions.Add(new() { Height = new(18) });
-        grid.RowDefinitions.Add(new() { Height = new(0.82, GridUnitType.Star), MinHeight = 240 });
+        grid.RowDefinitions.Add(new() { Height = new(0.82, GridUnitType.Star), MinHeight = 260 });
         grid.RowDefinitions.Add(new() { Height = new(18) });
         grid.RowDefinitions.Add(new() { Height = new(1.05, GridUnitType.Star), MinHeight = 300 });
         StackPanel toolbar = new() { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Top };
@@ -186,7 +187,12 @@ internal sealed class MainWindow : Window {
         grid.Children.Add(previews);
         Grid charts = PairGrid();
         charts.Children.Add(BuildChart(this.FacingPlot, "01   Shape of the shading", "Facing f   |   original / teal     proposed / amber"));
-        UIElement colorChart = BuildChart(this.ColorPlot, "02   Shared color response", "Linear output RGB   |   red, green, blue channels");
+        this.ColorAxisSelector.Items.Add("Facing f to RGB");
+        this.ColorAxisSelector.Items.Add("Tone t to RGB");
+        this.ColorAxisSelector.SelectedIndex = 0;
+        this.ColorAxisSelector.ToolTip = "Facing f includes Dark Point and Light Point. Tone t shows the underlying curve over all tones; the shaded interval marks the tones selected by those endpoints. The base-color anchor may be outside that interval.";
+        AutomationProperties.SetName(this.ColorAxisSelector, "Color response horizontal axis");
+        UIElement colorChart = BuildChart(this.ColorPlot, "02   Shared color response", "Linear RGB | Dark and Light Points included", this.ColorAxisSelector);
         Grid.SetColumn(colorChart, 2);
         charts.Children.Add(colorChart);
         Grid.SetRow(charts, 3);
@@ -219,13 +225,28 @@ internal sealed class MainWindow : Window {
         return Appearance.Surface(grid, new(20, 16, 20, 14));
     }
 
-    private static Border BuildChart(CurveView view, string title, string subtitle) {
+    private static Border BuildChart(CurveView view, string title, string subtitle, ComboBox? axisSelector = null) {
         Grid grid = new();
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new());
-        grid.Children.Add(Appearance.Label(title, 18, strong: true));
+        TextBlock heading = Appearance.Label(title, 18, strong: true);
+        heading.VerticalAlignment = VerticalAlignment.Center;
+        if (axisSelector is null) grid.Children.Add(heading);
+        else {
+            DockPanel header = new();
+            axisSelector.Margin = new(16, 0, 0, 0);
+            DockPanel.SetDock(axisSelector, Dock.Right);
+            header.Children.Add(axisSelector);
+            header.Children.Add(heading);
+            grid.Children.Add(header);
+        }
         TextBlock description = Appearance.Label(subtitle, 16, Appearance.Quiet);
+        if (axisSelector is not null) axisSelector.SelectionChanged += (_, _) => {
+            view.ColorAxis = (ColorResponseAxis)axisSelector.SelectedIndex;
+            description.Text = view.ColorAxis == ColorResponseAxis.Facing ? "Linear RGB | Dark and Light Points included" : "Linear RGB | shaded: selected tone range";
+            view.InvalidateVisual();
+        };
         Grid.SetRow(description, 1);
         grid.Children.Add(description);
         Grid.SetRow(view, 2);
@@ -275,6 +296,7 @@ internal sealed class MainWindow : Window {
         AddExplanation(text, "2. Choose a facing function", "Original, using a rotated unit normal (x,y,z):\nr = sqrt(x*x + z*z);  h = sqrt(1 - s*s)\nf = r*z*h / (r - s*x) for z > 0; otherwise f = 0.\n\nProposed, using an unnormalized rotated normal:\nw = (h*x - s*z, h*y, z)\nP = w.z*w.z;  Q = w.x*w.x + w.y*w.y;  f = P/(P+Q).", true);
         AddExplanation(text, "3. Remap facing to a tone", "t = DarkPoint*(1 - f) + LightPoint*f\nEqual endpoints give a constant tone. Reversed endpoints invert the progression.", true);
         AddExplanation(text, "4. Use the same anchored color curve", "For each decoded linear base-color channel c, with Brightness b:\nA = c*b;  B = (1-c)*(1-b)\nF(t) = A*t / (A*t + B*(1-t))\nF(0)=0, F(1)=1, F(1-b)=c. Finally, encode linear RGB to sRGB once.", true);
+        AddExplanation(text, "Read the shared color response plot", "Facing f to RGB shows F(DarkPoint*(1-f) + LightPoint*f), including both tone endpoints. Changing Dark Point or Light Point changes these curves. Tone t to RGB shows the underlying F(t), which depends only on Base Color and Brightness; its shaded interval marks the tones the shader uses. In the facing view, the dashed base-color anchor appears only when that color is reachable. Reversed endpoints give decreasing facing-to-color curves; equal endpoints give flat curves.");
         AddExplanation(text, "Why P and Q are kept separately", "The original implementation also computes stable, nonnegative P and Q. Reconstructing Q from 1-f can erase tiny highlight complements. Their absolute sizes can differ between models; compare f and output color. The pixel shader combines their weights directly with precomputed color coefficients.");
         return new ScrollViewer { Content = text, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     }

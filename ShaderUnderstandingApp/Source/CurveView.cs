@@ -14,13 +14,33 @@ internal static class PlotText {
     }
 }
 
+internal enum ColorResponseAxis { Facing, Tone }
+
 internal sealed class CurveView : FrameworkElement {
     private static readonly Brush[] Channels = [Appearance.Brush("#F28B97"), Appearance.Brush("#A7DC86"), Appearance.Brush("#8AB4FF")];
     public CompiledPaint Paint { get; set; } = new(new());
     public Direction Probe { get; set; } = new(0, 0, 1);
     public bool ColorCurve { get; init; }
+    public ColorResponseAxis ColorAxis { get; set; }
     public event Action<Direction>? ProbeChanged;
-    private double? hoveredTone;
+    private double? hoveredInput;
+
+    public PaintColor SampleColor(double input) => this.ColorAxis == ColorResponseAxis.Facing ? this.Paint.ColorAtFacing(input) : this.Paint.Curve(input);
+    public double SampleTone(double input) => this.ColorAxis == ColorResponseAxis.Facing ? this.Paint.ToneAtFacing(input) : input;
+    public double ProbePosition(PaintModel model) {
+        PaintSample sample = this.Paint.Evaluate(this.Probe, model);
+        return this.ColorAxis == ColorResponseAxis.Facing ? sample.Facing : sample.Tone;
+    }
+    public double? BaseColorPosition {
+        get {
+            double tone = 1 - this.Paint.Parameters.Brightness;
+            if (this.ColorAxis == ColorResponseAxis.Tone) return tone;
+            double range = this.Paint.Parameters.LightPoint - this.Paint.Parameters.DarkPoint;
+            if (range == 0) return null;
+            double facing = (tone - this.Paint.Parameters.DarkPoint) / range;
+            return facing >= 0 && facing <= 1 ? facing : null;
+        }
+    }
 
     public CurveView() {
         this.MinHeight = 145;
@@ -31,8 +51,8 @@ internal sealed class CurveView : FrameworkElement {
         };
         this.MouseMove += (_, arguments) => this.Interact(arguments.GetPosition(this), this.IsMouseCaptured);
         this.MouseLeftButtonUp += (_, _) => this.ReleaseMouseCapture();
-        this.MouseLeave += (_, _) => { this.hoveredTone = null; this.InvalidateVisual(); };
-        this.ToolTip = "Click or drag the facing plot to select a normal. Hover over the color curve to read its linear RGB output.";
+        this.MouseLeave += (_, _) => { this.hoveredInput = null; this.InvalidateVisual(); };
+        this.ToolTip = "Click or drag the facing plot to select a normal. Hover over the color plot to read linear RGB. Its axis selector switches between the complete facing-to-color response and the underlying tone curve.";
     }
 
     private Rect Plot => new(48, 16, Math.Max(1, this.ActualWidth - 84), Math.Max(1, this.ActualHeight - 84));
@@ -41,7 +61,7 @@ internal sealed class CurveView : FrameworkElement {
     private void Interact(Point point, bool selecting) {
         if (!this.Plot.Contains(point)) return;
         double fraction = Math.Clamp((point.X - this.Plot.Left) / this.Plot.Width, 0, 1);
-        if (this.ColorCurve) { this.hoveredTone = fraction; this.InvalidateVisual(); }
+        if (this.ColorCurve) { this.hoveredInput = fraction; this.InvalidateVisual(); }
         else if (selecting) this.ProbeChanged?.Invoke(PaintMath.Sweep(fraction * 360 - 180, this.Paint.Parameters.RotationDegrees));
     }
 
@@ -53,6 +73,12 @@ internal sealed class CurveView : FrameworkElement {
             Brush backFill = Appearance.Brush("#232A38");
             drawing.DrawRectangle(backFill, null, new(plot.Left, plot.Top, plot.Width * 0.25, plot.Height));
             drawing.DrawRectangle(backFill, null, new(plot.Left + plot.Width * 0.75, plot.Top, plot.Width * 0.25, plot.Height));
+        } else if (this.ColorAxis == ColorResponseAxis.Tone) {
+            double first = Math.Min(this.Paint.Parameters.DarkPoint, this.Paint.Parameters.LightPoint);
+            double last = Math.Max(this.Paint.Parameters.DarkPoint, this.Paint.Parameters.LightPoint);
+            drawing.DrawRectangle(Appearance.Brush("#243245"), null, new(this.Map(first, 0).X, plot.Top, plot.Width * (last - first), plot.Height));
+            foreach (double endpoint in new[] { first, last })
+                drawing.DrawLine(new(Appearance.Quiet, 1), this.Map(endpoint, 0), this.Map(endpoint, 1));
         }
         foreach (double value in new[] { 0.0, 0.5, 1.0 }) {
             Point start = this.Map(0, value);
@@ -89,28 +115,36 @@ internal sealed class CurveView : FrameworkElement {
     }
 
     private void DrawColorCurves(DrawingContext drawing) {
-        foreach (double tone in new[] { 0.0, 0.25, 0.5, 0.75, 1.0 }) {
-            Point bottom = this.Map(tone, 0);
-            PlotText.Draw(drawing, tone.ToString("0.##", CultureInfo.InvariantCulture), new(bottom.X, bottom.Y + 6), Appearance.Quiet, this, alignment: HorizontalAlignment.Center);
+        foreach (double input in new[] { 0.0, 0.25, 0.5, 0.75, 1.0 }) {
+            Point bottom = this.Map(input, 0);
+            PlotText.Draw(drawing, input.ToString("0.##", CultureInfo.InvariantCulture), new(bottom.X, bottom.Y + 6), Appearance.Quiet, this, alignment: HorizontalAlignment.Center);
         }
         for (int channel = 0; channel < 3; channel++) {
             int selected = channel;
-            this.DrawPath(drawing, tone => Component(this.Paint.Curve(tone), selected), Channels[channel]);
+            this.DrawPath(drawing, input => Component(this.SampleColor(input), selected), Channels[channel]);
         }
-        double anchor = 1 - this.Paint.Parameters.Brightness;
-        drawing.DrawLine(new(Appearance.Quiet, 1) { DashStyle = DashStyles.Dash }, this.Map(anchor, 0), this.Map(anchor, 1));
-        PaintColor anchorColor = this.Paint.Curve(anchor);
-        for (int channel = 0; channel < 3; channel++) drawing.DrawEllipse(Channels[channel], null, this.Map(anchor, Component(anchorColor, channel)), 4, 4);
-        double originalTone = this.Paint.Evaluate(this.Probe, PaintModel.Original).Tone;
-        double proposedTone = this.Paint.Evaluate(this.Probe, PaintModel.LinearWarp).Tone;
-        drawing.DrawLine(new(Appearance.Original, 1) { DashStyle = DashStyles.Dot }, this.Map(originalTone, 0), this.Map(originalTone, 1));
-        drawing.DrawLine(new(Appearance.Proposed, 1) { DashStyle = DashStyles.Dot }, this.Map(proposedTone, 0), this.Map(proposedTone, 1));
-        if (this.hoveredTone is double hovered) {
-            PaintColor sample = this.Paint.Curve(hovered);
+        if (this.BaseColorPosition is double anchor) {
+            drawing.DrawLine(new(Appearance.Quiet, 1) { DashStyle = DashStyles.Dash }, this.Map(anchor, 0), this.Map(anchor, 1));
+            PaintColor anchorColor = this.SampleColor(anchor);
+            for (int channel = 0; channel < 3; channel++) drawing.DrawEllipse(Channels[channel], null, this.Map(anchor, Component(anchorColor, channel)), 4, 4);
+        }
+        double[] endpoints = this.ColorAxis == ColorResponseAxis.Facing ? [0, 1] : [this.Paint.Parameters.DarkPoint, this.Paint.Parameters.LightPoint];
+        foreach (double endpoint in endpoints) {
+            PaintColor color = this.SampleColor(endpoint);
+            for (int channel = 0; channel < 3; channel++) drawing.DrawEllipse(Channels[channel], new(Appearance.Panel, 1), this.Map(endpoint, Component(color, channel)), 4, 4);
+        }
+        drawing.DrawLine(new(Appearance.Original, 1) { DashStyle = DashStyles.Dot }, this.Map(this.ProbePosition(PaintModel.Original), 0), this.Map(this.ProbePosition(PaintModel.Original), 1));
+        drawing.DrawLine(new(Appearance.Proposed, 1) { DashStyle = DashStyles.Dot }, this.Map(this.ProbePosition(PaintModel.LinearWarp), 0), this.Map(this.ProbePosition(PaintModel.LinearWarp), 1));
+        if (this.hoveredInput is double hovered) {
+            PaintColor sample = this.SampleColor(hovered);
             drawing.DrawLine(new(Appearance.Text, 0.7), this.Map(hovered, 0), this.Map(hovered, 1));
-            PlotText.Draw(drawing, $"t {hovered:F3}   RGB {sample.Red:F3}  {sample.Green:F3}  {sample.Blue:F3}", new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Text, this);
+            string input = this.ColorAxis == ColorResponseAxis.Facing ? $"f {hovered:F3}, t {this.SampleTone(hovered):F3}" : $"t {hovered:F3}";
+            PlotText.Draw(drawing, $"{input} | RGB {sample.Red:F3} {sample.Green:F3} {sample.Blue:F3}", new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Text, this);
         } else {
-            PlotText.Draw(drawing, $"t: original {originalTone:F3} / warp {proposedTone:F3} | anchor {anchor:F3}", new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Quiet, this);
+            string axis = this.ColorAxis == ColorResponseAxis.Facing ? "Facing f" : "Tone t";
+            string anchorLabel = this.BaseColorPosition is double position ? $"base {(this.ColorAxis == ColorResponseAxis.Facing ? "f" : "t")} {position:F3}"
+                : this.Paint.Parameters.DarkPoint == this.Paint.Parameters.LightPoint && this.Paint.Parameters.DarkPoint == 1 - this.Paint.Parameters.Brightness ? "base everywhere" : "base absent";
+            PlotText.Draw(drawing, $"{axis} | tones {this.Paint.Parameters.DarkPoint:F3} -> {this.Paint.Parameters.LightPoint:F3} | {anchorLabel}", new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Quiet, this);
         }
     }
 

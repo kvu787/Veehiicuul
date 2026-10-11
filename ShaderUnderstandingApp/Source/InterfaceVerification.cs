@@ -43,6 +43,70 @@ internal static class InterfaceVerification {
         Require(window.OriginalView.Image?.PixelWidth == 448 && window.ProposedView.Image?.PixelWidth == 448, "both preview images exist");
         Capture("DefaultComparison");
 
+        PaintParameters reported = new() {
+            BaseColor = new(0.12955473163841805, 0.223, 0.578), Brightness = 0.37594897598870053,
+            Shift = 0, RotationDegrees = 0, DarkPoint = 0.2101238082627118, LightPoint = 0.8306739936440678
+        };
+        window.SetParameters(reported);
+        window.SetProbe(new(0, 0, 1));
+        await Settle();
+        Require(window.ColorPlot.ColorAxis == ColorResponseAxis.Facing, "default color plot includes the facing-to-tone remap");
+        CompiledPaint reportedPaint = new(reported);
+        PaintColor darkColor = window.ColorPlot.SampleColor(0);
+        PaintColor lightColor = window.ColorPlot.SampleColor(1);
+        Require(darkColor.MaximumDifference(reportedPaint.Evaluate(new(1, 0, 0), PaintModel.Original).LinearColor) < 1e-14, "plotted dark endpoint matches the sphere silhouette");
+        Require(lightColor.MaximumDifference(reportedPaint.Evaluate(new(0, 0, 1), PaintModel.Original).LinearColor) < 1e-14 && lightColor.Blue < 0.56, "reported light endpoint matches the peak rather than white");
+        Require(window.ColorPlot.BaseColorPosition is double baseFacing && window.ColorPlot.SampleColor(baseFacing).MaximumDifference(reported.BaseColor.Decode()) < 1e-14, "facing anchor reaches the decoded base color");
+        Capture("ReportedFacingResponse");
+
+        window.Controls["Dark"].Slider.Value = 0.35;
+        await Settle();
+        Require(window.ColorPlot.SampleColor(0).MaximumDifference(darkColor) > 0.01 && window.ColorPlot.SampleColor(1).MaximumDifference(lightColor) < 1e-14, "Dark Point changes only its facing endpoint");
+        window.Controls["Light"].Slider.Value = 0.7;
+        await Settle();
+        Require(window.ColorPlot.SampleColor(1).MaximumDifference(lightColor) > 0.01, "Light Point changes its facing endpoint");
+
+        window.SetParameters(reported);
+        await Settle();
+        Task beforeAxisChange = window.CurrentRender;
+        window.ColorAxisSelector.SelectedIndex = (int)ColorResponseAxis.Tone;
+        await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+        Require(window.ColorPlot.ColorAxis == ColorResponseAxis.Tone && ReferenceEquals(beforeAxisChange, window.CurrentRender), "axis selector updates the plot without rerendering the spheres");
+        Require(window.ColorPlot.SampleColor(0) == new PaintColor(0, 0, 0) && window.ColorPlot.SampleColor(1) == new PaintColor(1, 1, 1), "underlying tone curve retains its full black-to-white domain");
+        Require(window.ColorPlot.BaseColorPosition == 1 - reported.Brightness, "tone view keeps its tone-space anchor");
+        Require(window.ColorPlot.ProbePosition(PaintModel.Original) == reported.LightPoint, "tone-view probe uses remapped tone");
+        Capture("ReportedToneResponse");
+        PaintColor underlying = window.ColorPlot.SampleColor(0.5);
+        window.Controls["Dark"].Slider.Value = 0.35;
+        await Settle();
+        Require(window.ColorPlot.SampleColor(0.5) == underlying, "endpoints select tones without changing the underlying curve");
+
+        window.ColorAxisSelector.SelectedIndex = (int)ColorResponseAxis.Facing;
+        window.SetParameters(reported);
+        window.SetProbe(new(Math.Sqrt(0.75), 0, 0.5));
+        await Settle();
+        Require(Math.Abs(window.ColorPlot.ProbePosition(PaintModel.Original) - 0.5) < 1e-14 && Math.Abs(window.ColorPlot.ProbePosition(PaintModel.LinearWarp) - 0.25) < 1e-14, "facing-view markers use each model's facing");
+        foreach (PaintModel model in Enum.GetValues<PaintModel>())
+            Require(window.ColorPlot.SampleColor(window.ColorPlot.ProbePosition(model)).MaximumDifference(reportedPaint.Evaluate(window.Probe, model).LinearColor) < 1e-14, "plot marker agrees with inspected color for " + model);
+
+        window.SetParameters(reported with { DarkPoint = 0.8, LightPoint = 0.2 });
+        await Settle();
+        Require(window.ColorPlot.SampleColor(0).Blue > window.ColorPlot.SampleColor(1).Blue, "reversed endpoints produce a decreasing facing response");
+        Capture("InvertedColorResponse");
+        window.SetParameters(reported with { DarkPoint = 0.42, LightPoint = 0.42 });
+        await Settle();
+        Require(window.ColorPlot.BaseColorPosition is null && window.ColorPlot.SampleColor(0).MaximumDifference(window.ColorPlot.SampleColor(1)) < 1e-14, "constant tone produces a flat response without a false anchor");
+        Capture("ConstantColorResponse");
+        double baseTone = 1 - reported.Brightness;
+        window.SetParameters(reported with { DarkPoint = baseTone, LightPoint = baseTone });
+        await Settle();
+        Require(window.ColorPlot.BaseColorPosition is null && window.ColorPlot.SampleColor(0.5).MaximumDifference(reported.BaseColor.Decode()) < 1e-14, "constant base tone gives the base color everywhere");
+        window.SetParameters(reported with { DarkPoint = 0.1, LightPoint = 0.2 });
+        await Settle();
+        Require(window.ColorPlot.BaseColorPosition is null, "out-of-range base tone has no facing anchor");
+        window.ApplyExperiment(1);
+        await Settle();
+
         ToolTip tip = new() { Content = window.OriginalView.ToolTip };
         tip.Measure(new(600, double.PositiveInfinity));
         tip.Arrange(new Rect(tip.DesiredSize));

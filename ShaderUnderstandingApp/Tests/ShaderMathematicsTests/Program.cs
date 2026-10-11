@@ -74,6 +74,33 @@ foreach (PaintModel model in Enum.GetValues<PaintModel>())
     Near(constant.Evaluate(new(1, 0, 0), model).LinearColor.MaximumDifference(constant.Evaluate(new(0, 0, 1), model).LinearColor), 0, 1e-14, "Constant tone endpoints");
 CompiledPaint inverted = new(new() { DarkPoint = 0.8, LightPoint = 0.2 });
 Check(inverted.Evaluate(new(0, 1, 0), PaintModel.Original).LinearColor.Red > inverted.Evaluate(inverted.Peak, PaintModel.Original).LinearColor.Red, "Reversed tone endpoints are supported");
+
+// The shared response plot must include the endpoint remap when its input is
+// facing. Compare it with independently evaluated normals, including the user's
+// reported range, reversed endpoints, and a constant tone.
+PaintParameters reported = new() {
+    BaseColor = new(0.12955473163841805, 0.223, 0.578), Brightness = 0.37594897598870053,
+    Shift = 0, RotationDegrees = 0, DarkPoint = 0.2101238082627118, LightPoint = 0.8306739936440678
+};
+foreach (PaintParameters parameters in new[] { reported, reported with { DarkPoint = 0.8, LightPoint = 0.2 }, reported with { DarkPoint = 0.42, LightPoint = 0.42 } }) {
+    CompiledPaint paint = new(parameters);
+    for (int index = 0; index <= 100; index++) {
+        double facing = index / 100.0;
+        Direction normal = new(Math.Sqrt(1 - facing * facing), 0, facing);
+        Near(paint.ColorAtFacing(facing).MaximumDifference(Reference(parameters, normal)), 0, 1e-14, "Facing response includes tone endpoints");
+        Near(paint.ColorAtFacing(facing).MaximumDifference(paint.Curve(paint.ToneAtFacing(facing))), 0, 1e-14, "Facing response agrees with the remapped tone curve");
+    }
+    Near(paint.ToneAtFacing(0), parameters.DarkPoint, 0, "Facing zero selects Dark Point");
+    Near(paint.ToneAtFacing(1), parameters.LightPoint, 0, "Facing one selects Light Point");
+}
+CompiledPaint reportedPaint = new(reported);
+Near(reportedPaint.ColorAtFacing(1).Blue, 0.55108, 0.000005, "Reported peak blue matches the inspector rather than white");
+CompiledPaint changedDark = new(reported with { DarkPoint = 0.35 });
+Check(changedDark.ColorAtFacing(0).MaximumDifference(reportedPaint.ColorAtFacing(0)) > 0.01, "Dark Point moves the plotted facing-zero endpoint");
+Near(changedDark.ColorAtFacing(1).MaximumDifference(reportedPaint.ColorAtFacing(1)), 0, 1e-14, "Dark Point preserves the facing-one endpoint");
+CompiledPaint changedLight = new(reported with { LightPoint = 0.7 });
+Check(changedLight.ColorAtFacing(1).MaximumDifference(reportedPaint.ColorAtFacing(1)) > 0.01, "Light Point moves the plotted facing-one endpoint");
+Near(changedLight.ColorAtFacing(0).MaximumDifference(reportedPaint.ColorAtFacing(0)), 0, 1e-14, "Light Point preserves the facing-zero endpoint");
 foreach (PaintParameters invalid in new[] { new PaintParameters { Shift = 1 }, new() { RotationDegrees = 360 }, new() { Brightness = double.NaN }, new() { BaseColor = new(0, 0.5, 0.5) } }) {
     bool rejected = false;
     try { _ = new CompiledPaint(invalid); } catch (ArgumentOutOfRangeException) { rejected = true; }

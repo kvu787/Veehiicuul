@@ -121,15 +121,25 @@ public sealed class CompiledPaint {
         FacingWeights weights = model == PaintModel.Original
             ? this.OriginalWeights(rotated)
             : new(warped.Z * warped.Z, warped.X * warped.X + warped.Y * warped.Y);
-        PaintColor numerator = this.numeratorDark * weights.Dark + this.numeratorLight * weights.Light;
-        PaintColor complement = this.complementDark * weights.Dark + this.complementLight * weights.Light;
         double tone = (this.Parameters.DarkPoint * weights.Dark + this.Parameters.LightPoint * weights.Light) / (weights.Light + weights.Dark);
-        return new(normal, rotated, warped, weights, weights.Facing, tone, numerator / (numerator + complement));
+        return new(normal, rotated, warped, weights, weights.Facing, tone, this.ColorForWeights(weights));
     }
+
+    public double ToneAtFacing(double facing) => this.Parameters.DarkPoint * (1 - facing) + this.Parameters.LightPoint * facing;
+
+    // Plot samples start from facing. Normal evaluation keeps separate P/Q
+    // weights so a rounded facing cannot erase a tiny highlight complement.
+    public PaintColor ColorAtFacing(double facing) => this.ColorForWeights(new(facing, 1 - facing));
 
     public PaintColor Curve(double tone) {
         PaintColor numerator = this.curveNumerator * tone;
         return numerator / (numerator + this.curveComplement * (1 - tone));
+    }
+
+    private PaintColor ColorForWeights(FacingWeights weights) {
+        PaintColor numerator = this.numeratorDark * weights.Dark + this.numeratorLight * weights.Light;
+        PaintColor complement = this.complementDark * weights.Dark + this.complementLight * weights.Light;
+        return numerator / (numerator + complement);
     }
 
     private FacingWeights OriginalWeights(Direction normal) {
