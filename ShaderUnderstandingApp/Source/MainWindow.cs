@@ -70,6 +70,7 @@ internal sealed class MainWindow : Window {
         this.Title = "SimplePaint - Shader Understanding";
         this.Width = 2200;
         this.Height = 1320;
+        this.WindowState = WindowState.Maximized;
         this.MinWidth = 1560;
         this.MinHeight = 1120;
         this.Background = Appearance.Background;

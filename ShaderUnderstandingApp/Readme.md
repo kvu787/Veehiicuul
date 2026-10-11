@@ -2,7 +2,7 @@
 
 A native C# / WPF application for Windows 11 x64. Compare the original SimplePaint shader with the proposed linear-warp squared-facing model using one shared material. Both spheres, both plots, and the numerical inspector update together.
 
-The layout is sized for comfortable use on a 27-inch 2560x1440 monitor: 18-pixel main text, 16-pixel supporting labels, and controls at least 44 pixels tall at 100% Windows scaling. WPF also honors Windows display scaling. The initial window is 2200x1320; maximize it for the full comparison. Parameter and explanation panels scroll when needed in a smaller window.
+The layout is sized for comfortable use on a 27-inch 2560x1440 monitor: 18-pixel main text, 16-pixel supporting labels, and controls at least 44 pixels tall at 100% Windows scaling. WPF also honors Windows display scaling. The app starts maximized with the standard Windows title bar. Its restored window size is 2200x1320. Parameter and explanation panels scroll when needed in a smaller window.
 
 The graphs have more height by default. Drag the grip between the graphs and the bottom details pane to adjust their share of the lower area. Drag it all the way down to fully hide the details pane, including its tabs. The grip remains at the bottom; drag it up to restore the pane at your preferred height with the same selected tab. After focusing the divider, Up and Down also resize, hide, and restore the pane. The sphere previews keep their height during these adjustments, and material parameters and the inspected normal stay unchanged.
 
