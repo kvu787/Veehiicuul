@@ -185,7 +185,7 @@ internal sealed class MainWindow : Window {
         displayLabel.VerticalAlignment = VerticalAlignment.Center;
         displayLabel.Margin = new(0, 0, 14, 0);
         toolbar.Children.Add(displayLabel);
-        foreach (string stage in new[] { "Painted color", "Facing f", "Remapped tone t", "Normal vectors" }) this.StageSelector.Items.Add(stage);
+        foreach (string stage in new[] { "Painted color", "Facing f", "Remapped tone t" }) this.StageSelector.Items.Add(stage);
         this.StageSelector.SelectedIndex = 0;
         toolbar.Children.Add(this.StageSelector);
         toolbar.Children.Add(this.MarkerSelector);
@@ -497,7 +497,6 @@ internal sealed class MainWindow : Window {
         this.stageNote.Text = this.StageSelector.SelectedIndex switch {
             1 => "Facing diagnostic: 0 = black, 1 = white. P and Q have arbitrary common scale; f = P/(P+Q).",
             2 => "Tone diagnostic: 0 = black, 1 = white, before the RGB curve. Tone is not displayed luminance.",
-            3 => "Normal display: RGB = (unit vector + 1)/2. Original: rotated normal. Proposed: warped normal.",
             _ => "Painted color uses the shared curve in linear RGB, then one sRGB encoding. Inspector colors always show final paint."
         };
     }

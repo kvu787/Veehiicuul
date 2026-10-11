@@ -33,23 +33,12 @@ internal static class SphereRendering {
     }
 
     private static void Write(byte[] pixels, int offset, PaintSample sample, PreviewStage stage) {
-        PaintColor color;
-        switch (stage) {
-        case PreviewStage.Facing:
-            color = new(sample.Facing, sample.Facing, sample.Facing);
-            break;
-        case PreviewStage.Tone:
-            color = new(sample.Tone, sample.Tone, sample.Tone);
-            break;
-        case PreviewStage.Normal:
-            Direction unit = sample.WarpedNormal.Unit;
-            color = new(0.5 + unit.X * 0.5, 0.5 + unit.Y * 0.5, 0.5 + unit.Z * 0.5);
-            break;
-        default:
-            color = sample.DisplayColor;
-            break;
-        }
-        // Diagnostic scalars and normal components map directly to display bytes;
+        PaintColor color = stage switch {
+            PreviewStage.Facing => new(sample.Facing, sample.Facing, sample.Facing),
+            PreviewStage.Tone => new(sample.Tone, sample.Tone, sample.Tone),
+            _ => sample.DisplayColor
+        };
+        // Diagnostic scalars map directly to display bytes;
         // only the painted linear RGB uses the sRGB encoding function.
         pixels[offset] = Appearance.Byte(color.Blue);
         pixels[offset + 1] = Appearance.Byte(color.Green);

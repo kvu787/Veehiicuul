@@ -367,11 +367,6 @@ internal static class InterfaceVerification {
         Require(window.Parameters.DarkPoint > window.Parameters.LightPoint, "reverse-tones exploration inverts endpoints");
         RequirePixels(window, PreviewStage.Tone, Require);
 
-        window.StageSelector.SelectedIndex = (int)PreviewStage.Normal;
-        await Settle();
-        RequirePixels(window, PreviewStage.Normal, Require);
-        Capture("WarpedNormals");
-
         window.ApplyExperiment(5);
         await Settle();
         Require(Pixels(window.OriginalView.Image!).SequenceEqual(Pixels(window.ProposedView.Image!)), "constant tone produces identical painted spheres");
@@ -456,7 +451,6 @@ internal static class InterfaceVerification {
                 PaintColor expected = stage switch {
                     PreviewStage.Facing => new(sample.Facing, sample.Facing, sample.Facing),
                     PreviewStage.Tone => new(sample.Tone, sample.Tone, sample.Tone),
-                    PreviewStage.Normal => new(0.5 + sample.WarpedNormal.Unit.X / 2, 0.5 + sample.WarpedNormal.Unit.Y / 2, 0.5 + sample.WarpedNormal.Unit.Z / 2),
                     _ => sample.DisplayColor
                 };
                 int offset = (y * size + x) * 4;

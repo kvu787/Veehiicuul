@@ -1,7 +1,7 @@
 namespace ShaderUnderstanding;
 
 public enum PaintModel { Original, LinearWarp }
-public enum PreviewStage { Paint, Facing, Tone, Normal }
+public enum PreviewStage { Paint, Facing, Tone }
 
 public readonly record struct Direction(double X, double Y, double Z) {
     public double Length => Math.Sqrt(this.X * this.X + this.Y * this.Y + this.Z * this.Z);
