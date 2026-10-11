@@ -810,3 +810,61 @@ The drag bar now reduces the pane to zero height and stays visible at the bottom
 Done. Drag the bar all the way down to fully hide the bottom pane, then drag it up to restore it. The show/hide button is removed.
 
 Rebuilt and verified with 188 GUI checks. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the updated version.
+
+
+## Facing graph back range and sphere probe indicators
+
+## User
+
+create some kind of control to increase or decrease the "shaded regions: back" part of this graph. this control should be able to fully hide that area so that the graph goes from -90 to 90 on the x axis
+
+Attached image: `C:/Users/k/AppData/Local/Temp/codex-clipboard-ba017093-8404-4873-a66e-5a44fe2c3312.png`.
+
+![Facing graph back range request](2026-10-11_06-35_UTC_SimplePaintAnalysisImages/FacingGraphBackRangeRequest.png)
+
+
+## Assistant
+
+I'll add a "Back range" slider to that graph. At zero it will show only -90° to 90°; increasing it will reveal more of the back hemisphere on both sides, up to the current -180° to 180° view.
+
+
+## User
+
+also, when i move the probe on the sphere, the indicators on the "01 shape of the shading" graph disappear. fix that.
+
+Attached image: `C:/Users/k/AppData/Local/Temp/codex-clipboard-bce85a26-81c1-44e2-addc-47aa77f5b422.png`.
+
+![Facing graph probe indicators issue](2026-10-11_06-35_UTC_SimplePaintAnalysisImages/FacingGraphProbeMarkersIssue.png)
+
+
+## Assistant
+
+The markers are currently drawn only when the probe lies in one fixed slice of the sphere. I'll make that slice follow the probe, so the curves and markers stay aligned with the normal you're inspecting. If the probe falls outside the chosen x-axis range, I'll show an indicator at the graph edge.
+
+
+## Assistant
+
+The range slider is working: zero removes both shaded regions and changes the axis to -90° through 90°. Intermediate values scale the curves and click positions correctly. I'm now checking the probe-following slice and markers.
+
+
+## Assistant
+
+The new slice passes through the inspected normal, and its plotted values match the shader evaluator for the positions checked so far. I'm checking that both marker colors actually render, including when the probe is outside the visible range.
+
+
+## Assistant
+
+Both changes pass all 282 GUI checks and the shader math tests. The markers now follow the sphere probe, stay visible when the two values overlap, and show at the nearest edge when outside the chosen range. The rebuilt app is ready through Run.cmd.
+
+
+## Assistant
+
+Added **Back range** to graph 01:
+
+- **0°** shows -90° to 90°, with no back shading.
+- **90°** shows -180° to 180°.
+- Intermediate values reveal part of the back on each side.
+
+Fixed the disappearing indicators: the graph's slice now follows the sphere probe. Probes outside the visible range remain marked at the nearest edge.
+
+Rebuilt; all 282 GUI checks and shader math tests pass. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the update.
