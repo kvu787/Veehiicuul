@@ -992,3 +992,20 @@ I'll set the default Dark Point to 0.3 and Light Point to 0.9, then rebuild and 
 Defaults are now **Dark Point = 0.3** and **Light Point = 0.9**, including startup and Reset.
 
 Rebuilt and verified. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the update.
+
+
+## Maximized windowed startup
+
+## User
+
+have the app start in maximized windowed mode
+
+
+## Assistant
+
+I'll make the app start maximized and verify the startup setting.
+
+
+## Assistant
+
+The app now starts in **maximized windowed mode**. Rebuilt and verified. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the update.
