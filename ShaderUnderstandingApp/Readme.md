@@ -1,0 +1,143 @@
+# SimplePaint Shader Understanding
+
+A native C# / WPF application for Windows 11 x64. Compare the original SimplePaint shader with the proposed linear-warp squared-facing model using one shared material. Both spheres, both plots, and the numerical inspector update together.
+
+## Build and run
+
+Requires PowerShell 7 (`pwsh`) and the .NET 10 SDK for Windows x64. The application uses WPF and the .NET libraries; it has no third-party package dependencies.
+
+1. Double-click `Build.cmd`. This publishes an optimized Release build to `BuildOutput/Release`.
+2. Double-click `Run.cmd`. It opens that build. If the build is missing, it exits with an error and asks you to build first.
+
+The build is framework dependent and needs the .NET 10 Windows Desktop Runtime, which is included with the SDK. This application is intended to be built and run inside this repository.
+
+Each application run creates `LogOutput/yyyy-MM-dd_HH-mm-ss`. The folder contains launch information, application errors, and the final material parameters. Build transcripts, verification images, and verification results also go under `LogOutput`. Build products and logs are ignored by Git.
+
+## Explore the comparison
+
+- Change a slider, or enter an exact value and press Enter. Tab also commits a value; Escape restores it. Invalid values leave the current material unchanged and mark the entry. Hover a parameter label for its meaning.
+- Click or drag either sphere to inspect the same camera-space normal in both models. The white ring marks that normal. Arrow keys move it after focusing a sphere; Home selects the center.
+- Switch **Display** between final paint, facing, remapped tone, and normal vectors. Paint receives sRGB encoding; diagnostic values map directly to display intensity.
+- Click or drag the facing plot to sweep a normal through a full circle in the material's Rotation plane. Shaded plot regions represent the back hemisphere. The plot's probe marker appears only when the selected normal lies in that slice.
+- Toggle **Back hemisphere** to inspect negative-Z normals with the same screen X/Y convention. The original facing is zero throughout the back. Only the proposed model has a back peak marker.
+- Use **Probe peak** to inspect the exact maximum direction, including peaks narrower than one preview pixel.
+- Hover the RGB curve to read its linear output. Its gray dashed line is the base-color anchor; teal and amber dotted lines are the tones of the currently inspected normal.
+- Read **Equations and meaning** and **Smoothness and cost** for the mathematical steps and shader implementation implications. The panels scroll at smaller window sizes.
+- **Save parameters** and **Load parameters** round-trip the complete material as JSON. **Export PNG** captures the current comparison after the latest preview finishes.
+
+Suggested order: **No shift: z versus z squared**, **Near the silhouette**, **Look at the back hemisphere**, then **Reverse the tones** and **Make a constant color**. Two additional explorations reproduce the sphere and body materials in the C++ scene's `Assets/Settings.json` at the source revision below.
+
+## Shared controls
+
+The ranges follow the existing module's numerical contract. Let `m = 1/1024 = 0.0009765625` and `M = 1-m = 0.9990234375`.
+
+| Control           | Range       | Meaning                                                                     |
+| ----------------- | ----------- | --------------------------------------------------------------------------- |
+| Base color R/G/B  | `[m, M]`    | An sRGB color decoded to linear RGB before constructing the channel curves. |
+| Brightness        | `[m, M]`    | Places the base-color anchor at tone `1-Brightness`.                        |
+| Shift             | `[0, M]`    | Sideways component of the front maximum's unit normal.                      |
+| Rotation          | `[0, 360)`  | Counterclockwise screen angle: 0 right, 90 up, 180 left, 270 down.          |
+| Dark Point        | `[0, M]`    | Input tone at facing zero.                                                  |
+| Light Point       | `[m, 1]`    | Input tone at facing one.                                                   |
+
+Equal Dark/Light points give a constant color. Reversed points invert the tone progression. Brightness is an anchor control, not an RGB multiplier. Rotation has no shading effect at zero Shift.
+
+## The two models
+
+Coordinates are camera relative: +X right, +Y up, +Z toward the camera. Rotate the input normal's XY components by negative Rotation first. The sphere preview supplies analytic unit normals in an orthographic view; the evaluator also accepts unnormalized normals.
+
+For a rotated **unit** normal `(x,y,z)` and `s = Shift`, the original real-number expression is:
+
+```text
+h = sqrt((1-s)*(1+s))
+r = sqrt(x*x + z*z)
+f = r*z*h / (r-s*x)    when z > 0
+f = 0                 when z <= 0
+```
+
+The app evaluates the stable, nonnegative light/dark weights `P,Q` translated from `SimplePaintCore.hlsli`, rather than computing `Q = 1-f`. It also follows `Material.cpp` when composing and scaling the color coefficients. This preserves the construction used by the original shader near its highlight and slice poles.
+
+For the proposal, the rotated normal does **not** need normalization:
+
+```hlsl
+// CPU: precompute h = sqrt((1-s)*(1+s)).
+// Vertex shader: apply after the existing XY rotation.
+float3 w = float3(h*n.x - s*n.z, h*n.y, n.z);
+
+// Pixel shader: use the interpolated w.
+float P = w.z*w.z;
+float Q = dot(w.xy, w.xy);
+```
+
+Both models conceptually produce `f = P/(P+Q)`. The entire proposed transform is linear, so it commutes with interpolation when the triangle has a constant material. Its inverse exists for `s < 1`; therefore `P+Q` is positive for every nonzero normal.
+
+Both front maxima occur at `(s,0,h)` in the rotated frame, and both have `f = 0` on the silhouette. They differ elsewhere: at zero Shift, the original front facing is `z`, while the proposal gives `z*z`. The proposal has an antipodal maximum on the back instead of a constant back hemisphere.
+
+## From facing to color
+
+Facing first chooses a tone. Each linear base-color channel then supplies its own anchored rational curve:
+
+```text
+t = DarkPoint*(1-f) + LightPoint*f
+
+c = decoded linear base-color channel
+b = Brightness
+A = c*b
+B = (1-c)*(1-b)
+F(t) = A*t / (A*t + B*(1-t))
+
+F(0) = 0
+F(1) = 1
+F(1-b) = c
+```
+
+For the actual shader, combine the tone remap and curve on the CPU:
+
+```text
+ND = A*DarkPoint          NL = A*LightPoint
+CD = B*(1-DarkPoint)      CL = B*(1-LightPoint)
+
+numerator  = ND*Q + NL*P
+complement = CD*Q + CL*P
+linear RGB = numerator / (numerator + complement)
+```
+
+The division that would construct `f` cancels. Consequently the proposed pixel-facing calculation needs only squares and an addition; it does not need a square root, normalization, division, or branch. The final RGB rational curve still has channel divisions. The original facing code uses one square root for zero Shift and two for positive Shift, in addition to its other arithmetic. The inspector displays `f` and `t` to explain the computation even though a production shader need not materialize them.
+
+The absolute magnitudes of `P,Q` differ between models and are not brightness values. Their common scale cancels from the output. Compare facing, tone, and final colors instead.
+
+## Smoothness and limits
+
+For fixed valid parameters, the proposed facing and linear RGB are infinitely differentiable functions of every nonzero input normal. Their denominators are positive, and the warp is invertible. The original is smooth inside the front hemisphere, but generally has a derivative discontinuity where it meets its constant back hemisphere. A constant tone remap removes that shading variation altogether.
+
+The smoothness claim concerns the real-number functions. It excludes the piecewise sRGB display encoding, finite precision, pixel coverage, and discontinuous surface normals. This app evaluates CPU double-precision mathematics and maps it to 8-bit previews. It is not a GPU benchmark or a bit-for-bit binary32 emulator. Preview images are 448 by 448 samples, so extreme settings can produce a peak too small to hit a pixel. Probe the exact peak to see its mathematical value.
+
+No GPU speedup is inferred from this application's responsiveness. Production use still needs the C++ module's numerical tests, compiled shader inspection, and profiling of the intended workload.
+
+## Verification and source
+
+Run both test suites and produce offscreen PNG captures:
+
+```powershell
+pwsh -NoProfile -File .\Build.ps1 -Verify
+```
+
+Verify an existing build without rebuilding:
+
+```powershell
+pwsh -NoProfile -File .\Run.ps1 -VerifyInterface
+```
+
+Verification uses WPF software rendering into images and never shows a window. Mathematical tests compare the stable original against an independent rational expression over 30,000 seeded samples, and check shared peaks, scale invariance, interpolation, silhouette and back behavior, endpoint remapping, and invalid inputs. Interface tests exercise real control handlers, exact entry, cancellation of obsolete renders, pixel correspondence, guided explorations, parameter serialization, and minimum-window layout.
+
+Source inspected at repository commit `2a7ae01`:
+
+- [Original specification](../3dTestScene_CppDx12/Source/SimplePaint/Specification.md)
+- [Original HLSL](../3dTestScene_CppDx12/Source/SimplePaint/SimplePaintCore.hlsli)
+- [Original material compilation](../3dTestScene_CppDx12/Source/SimplePaint/Material.cpp)
+- [Scene material settings](../3dTestScene_CppDx12/Assets/Settings.json)
+- [Mathematical evaluator](Source/ShaderMathematics/PaintMathematics.cs)
+- [Independent mathematical checks](Tests/ShaderMathematicsTests/Program.cs)
+- [Offscreen interface verification](Source/InterfaceVerification.cs)
+
+Original facing-lobe and anchored color-curve mathematical construction: Kevin Vu. The linear-warp model implements the proposal from the associated SimplePaint analysis conversation. The original C++ shader is unchanged by this app.
