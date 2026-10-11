@@ -22,11 +22,10 @@ Each application run creates `LogOutput/yyyy-MM-dd_HH-mm-ss`. The folder contain
 ## Explore the comparison
 
 - Change a slider, or enter an exact value and press Enter. Tab also commits a value; Escape restores it. Invalid values leave the current material unchanged and mark the entry. Hover a parameter label for its meaning.
-- Click or drag either sphere to inspect the same camera-space normal in both models. The white ring marks that normal. Arrow keys move it after focusing a sphere; Home selects the center.
+- Both sphere previews always show the front hemisphere. Click or drag either sphere to inspect the same camera-space normal in both models. The white ring marks a front-facing probe. Arrow keys move it after focusing a sphere; Home selects the center. Inspecting a back normal through the facing graph updates the graphs and readout while the sphere previews continue to show the front.
 - Switch **Display** between final paint, facing, remapped tone, and normal vectors. Paint receives sRGB encoding; diagnostic values map directly to display intensity.
 - The facing plot follows the inspected normal: it sweeps tilt while keeping the probe's offset perpendicular to the material's Rotation plane. Both colored markers stay on their curves as you move the probe on either sphere. Click or drag the plot to inspect another normal in the same slice. Shaded regions represent the back hemisphere. A probe outside the visible angle range retains its actual facing values at the nearest edge, with an arrow and an "outside view" caption.
 - Use the facing graph's **Back range** slider to choose how much of the back hemisphere is visible on each side. **0°** shows only **-90° to 90°**, removing both shaded regions; **90°** restores **-180° to 180°**. Intermediate settings zoom the graph symmetrically, including its curves and click positions. This is a graph setting and does not change the material.
-- Toggle **Back hemisphere** to inspect negative-Z normals with the same screen X/Y convention. The original facing is zero throughout the back. Only the proposed model has a back peak marker.
 - Use **Probe peak** to inspect the exact maximum direction, including peaks narrower than one preview pixel.
 - The **Shared color response** plot defaults to **Facing f to RGB**: its horizontal input is facing, and it includes `t = DarkPoint*(1-f) + LightPoint*f`. Changing either endpoint changes the curves. The left and right endpoints show the actual colors at facing 0 and 1, including reversed or constant tone ranges.
 - Switch that plot to **Tone t to RGB** to inspect the underlying curve `F(t)` over the full tone interval. This curve depends on Base Color and Brightness; the shaded interval shows the tones selected by Dark Point and Light Point. These endpoints change the selected interval, rather than the underlying curve's shape.
@@ -34,7 +33,7 @@ Each application run creates `LogOutput/yyyy-MM-dd_HH-mm-ss`. The folder contain
 - Read **Equations and meaning** and **Smoothness and cost** for the mathematical steps and shader implementation implications. The panels scroll at smaller window sizes.
 - **Save parameters** and **Load parameters** round-trip the complete material as JSON. **Export PNG** captures the current comparison after the latest preview finishes.
 
-Suggested order: **No shift: z versus z squared**, **Near the silhouette**, **Look at the back hemisphere**, then **Reverse the tones** and **Make a constant color**. Two additional explorations reproduce the sphere and body materials in the C++ scene's `Assets/Settings.json` at the source revision below.
+Suggested order: **No shift: z versus z squared**, **Near the silhouette**, then **Reverse the tones** and **Make a constant color**. Two additional explorations reproduce the sphere and body materials in the C++ scene's `Assets/Settings.json` at the source revision below.
 
 ## Shared controls
 

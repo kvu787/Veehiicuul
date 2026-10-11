@@ -17,7 +17,7 @@ internal sealed class MainWindow : Window {
     private readonly SessionLog log;
     internal readonly Grid Root = new() { Background = Appearance.Background };
     internal readonly Dictionary<string, ParameterControl> Controls = [];
-    internal readonly SphereView OriginalView = new() { Accent = Appearance.Original, HasBackPeak = false };
+    internal readonly SphereView OriginalView = new() { Accent = Appearance.Original };
     internal readonly SphereView ProposedView = new() { Accent = Appearance.Proposed };
     internal readonly CurveView FacingPlot = new();
     internal readonly CurveView ColorPlot = new() { ColorCurve = true };
@@ -27,7 +27,6 @@ internal sealed class MainWindow : Window {
         Minimum = 0, Maximum = 90, Value = 90, SmallChange = 1, LargeChange = 10,
         IsSnapToTickEnabled = true, TickFrequency = 1, Width = 144, Margin = new(12, 0, 12, 0)
     };
-    internal readonly CheckBox BackSelector = new() { Content = "Back hemisphere", Margin = new(24, 0, 0, 0) };
     internal readonly CheckBox MarkerSelector = new() { Content = "Markers", IsChecked = true, Margin = new(24, 0, 0, 0) };
     internal readonly TabControl DetailTabs = new() { ClipToBounds = true };
     internal readonly Thumb DetailsDivider = new() {
@@ -98,8 +97,6 @@ internal sealed class MainWindow : Window {
         this.ProposedView.ProbeChanged += this.SetProbe;
         this.FacingPlot.ProbeChanged += this.SetProbe;
         this.StageSelector.SelectionChanged += (_, _) => { if (!this.updating) this.Refresh(); };
-        this.BackSelector.Checked += (_, _) => this.ChangeHemisphere();
-        this.BackSelector.Unchecked += (_, _) => this.ChangeHemisphere();
         this.MarkerSelector.Checked += (_, _) => this.RefreshMarkers();
         this.MarkerSelector.Unchecked += (_, _) => this.RefreshMarkers();
         this.Closed += (_, _) => {
@@ -149,7 +146,7 @@ internal sealed class MainWindow : Window {
         TextBlock heading = Appearance.Label("GUIDED EXPLORATIONS", 18, Appearance.Quiet, true);
         heading.Margin = new(0, 8, 0, 12);
         content.Children.Add(heading);
-        foreach (string name in new[] { "Custom parameters", "Default comparison", "No shift: z versus z squared", "Near the silhouette", "Look at the back hemisphere", "Reverse the tones", "Make a constant color", "Original scene / sphere", "Original scene / body" }) this.experimentSelector.Items.Add(name);
+        foreach (string name in new[] { "Custom parameters", "Default comparison", "No shift: z versus z squared", "Near the silhouette", "Reverse the tones", "Make a constant color", "Original scene / sphere", "Original scene / body" }) this.experimentSelector.Items.Add(name);
         this.experimentSelector.SelectionChanged += (_, _) => {
             if (!this.updating && this.experimentSelector.SelectedIndex > 0) this.ApplyExperiment(this.experimentSelector.SelectedIndex);
         };
@@ -193,15 +190,14 @@ internal sealed class MainWindow : Window {
         foreach (string stage in new[] { "Painted color", "Facing f", "Remapped tone t", "Normal vectors" }) this.StageSelector.Items.Add(stage);
         this.StageSelector.SelectedIndex = 0;
         toolbar.Children.Add(this.StageSelector);
-        toolbar.Children.Add(this.BackSelector);
         toolbar.Children.Add(this.MarkerSelector);
-        Button peak = Appearance.Button("Probe peak", () => this.SetProbe(new CompiledPaint(this.Parameters).Peak * (this.BackSelector.IsChecked == true ? -1 : 1)));
+        Button peak = Appearance.Button("Probe peak", () => this.SetProbe(new CompiledPaint(this.Parameters).Peak));
         peak.Margin = new(24, 0, 0, 0);
         toolbar.Children.Add(peak);
         grid.Children.Add(toolbar);
         Grid previews = PairGrid();
-        previews.Children.Add(this.BuildPreview(this.OriginalView, "Original SimplePaint", "Shifted circular-slice facing", Appearance.Original));
-        UIElement proposed = this.BuildPreview(this.ProposedView, "Linear warp + squared facing", "Linear normal transform, then squared facing", Appearance.Proposed);
+        previews.Children.Add(BuildPreview(this.OriginalView, "Original SimplePaint", "Shifted circular-slice facing", Appearance.Original));
+        UIElement proposed = BuildPreview(this.ProposedView, "Linear warp + squared facing", "Linear normal transform, then squared facing", Appearance.Proposed);
         Grid.SetColumn(proposed, 2);
         previews.Children.Add(proposed);
         Grid.SetRow(previews, 1);
@@ -262,7 +258,7 @@ internal sealed class MainWindow : Window {
         this.Root.UpdateLayout();
     }
 
-    private Border BuildPreview(SphereView view, string title, string subtitle, Brush accent) {
+    private static Border BuildPreview(SphereView view, string title, string subtitle, Brush accent) {
         Grid grid = new();
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
@@ -274,8 +270,7 @@ internal sealed class MainWindow : Window {
         grid.Children.Add(description);
         Grid.SetRow(view, 2);
         grid.Children.Add(view);
-        TextBlock footnote = Appearance.Label("White ring: inspected normal   |   colored dot: peak direction", 16, Appearance.Quiet);
-        if (view == this.OriginalView) footnote.Text = "White ring: inspected normal   |   back: original is constant";
+        TextBlock footnote = Appearance.Label("White ring: front probe   |   colored dot: peak direction", 16, Appearance.Quiet);
         Grid.SetRow(footnote, 3);
         grid.Children.Add(footnote);
         AutomationProperties.SetName(view, title + ". Click or use arrow keys to inspect a normal.");
@@ -371,7 +366,7 @@ internal sealed class MainWindow : Window {
     private static ScrollViewer BuildTradeoffs() {
         StackPanel text = new();
         AddExplanation(text, "What stays the same", "Both models share every material control, their front highlight direction, their silhouette tone, and their color response. The front maximum is (s, 0, sqrt(1-s*s)) before undoing Rotation.");
-        AddExplanation(text, "What changes", "At zero Shift the original facing is z on the front hemisphere, while the proposed facing is z squared. The proposal has a second, antipodal maximum on the back. The original back hemisphere stays at Dark Point. Try the Back hemisphere checkbox and Facing display.");
+        AddExplanation(text, "What changes", "At zero Shift the original facing is z on the front hemisphere, while the proposed facing is z squared. The proposal has a second, antipodal maximum on the back. The original back hemisphere stays at Dark Point. The facing graph's Back range reveals this difference.");
         AddExplanation(text, "Infinite differentiability", "The original is smooth inside the front hemisphere, but generally has a derivative discontinuity where it meets its constant back hemisphere. The proposed facing and linear RGB are ratios of polynomials with positive denominators for every nonzero normal and Shift < 1, so they are infinitely differentiable there. The final sRGB encoding is piecewise defined. This claim excludes that display encoding, finite pixels, triangle seams, and quantization.");
         AddExplanation(text, "Where the shader work happens", "CPU: material validation, sRGB decoding, angle constants, and color coefficients.\nVertex stage: original rotation; proposed rotation plus a linear warp. Both commute with interpolation.\nPixel facing: original uses one square root at zero Shift and two otherwise. Proposed uses just P = z*z and Q = dot(xy,xy).\nPixel color: both retain the channel-wise rational curve and its divisions.");
         AddExplanation(text, "What this app measures", "This app evaluates the shader mathematics in double precision on the CPU and renders analytic spheres. It is an educational reference, not a GPU benchmark, a bit-for-bit emulation of binary32, or proof of a production speedup. Pixel coverage can miss very narrow peaks near maximum Shift.");
@@ -415,19 +410,7 @@ internal sealed class MainWindow : Window {
 
     internal void SetProbe(Direction normal) {
         this.Probe = normal.Unit;
-        bool back = normal.Z < 0;
-        if (this.BackSelector.IsChecked != back) {
-            this.updating = true;
-            this.BackSelector.IsChecked = back;
-            this.updating = false;
-            this.Refresh();
-        } else this.UpdateInspection(new(this.Parameters));
-    }
-
-    private void ChangeHemisphere() {
-        if (this.updating) return;
-        this.Probe = this.Probe with { Z = Math.Abs(this.Probe.Z) * (this.BackSelector.IsChecked == true ? -1 : 1) };
-        this.Refresh();
+        this.UpdateInspection(new(this.Parameters));
     }
 
     private void RefreshMarkers() {
@@ -450,14 +433,14 @@ internal sealed class MainWindow : Window {
         CancellationTokenSource cancellation = new();
         this.renderCancellation = cancellation;
         long version = ++this.renderVersion;
-        this.CurrentRender = this.RenderAsync(paint, (PreviewStage)this.StageSelector.SelectedIndex, this.BackSelector.IsChecked == true, cancellation, version);
+        this.CurrentRender = this.RenderAsync(paint, (PreviewStage)this.StageSelector.SelectedIndex, cancellation, version);
     }
 
-    private async Task RenderAsync(CompiledPaint paint, PreviewStage stage, bool back, CancellationTokenSource cancellation, long version) {
+    private async Task RenderAsync(CompiledPaint paint, PreviewStage stage, CancellationTokenSource cancellation, long version) {
         Stopwatch duration = Stopwatch.StartNew();
         try {
             this.status.Text = "Updating the mathematical previews...";
-            SphereImages images = await Task.Run(() => SphereRendering.Render(paint, stage, back, 448, cancellation.Token), cancellation.Token).ConfigureAwait(false);
+            SphereImages images = await Task.Run(() => SphereRendering.Render(paint, stage, 448, cancellation.Token), cancellation.Token).ConfigureAwait(false);
             // Construction starts the first render before Application.Run has
             // installed a UI synchronization context. Never rely on await to
             // return to the owning thread, including for errors and cleanup.
@@ -465,13 +448,11 @@ internal sealed class MainWindow : Window {
                 if (this.closed || cancellation.IsCancellationRequested || version != this.renderVersion) return;
                 this.OriginalView.Image = SphereRendering.Bitmap(images.Original, images.Size);
                 this.ProposedView.Image = SphereRendering.Bitmap(images.Proposed, images.Size);
-                this.OriginalView.Back = back;
-                this.ProposedView.Back = back;
                 this.OriginalView.InvalidateVisual();
                 this.ProposedView.InvalidateVisual();
                 this.CompletedRenders++;
                 this.status.Text = "CPU mathematical preview  |  Orthographic normals  |  Click or drag either sphere; click the facing plot to explore the back.";
-                this.log.Write($"Preview {version} completed in {duration.Elapsed.TotalMilliseconds:F1} ms; {stage}; {(back ? "back" : "front")}.");
+                this.log.Write($"Preview {version} completed in {duration.Elapsed.TotalMilliseconds:F1} ms; {stage}.");
             });
         } catch (OperationCanceledException) {
             // Newer input replaces an obsolete render; the UI never blocks on it.
@@ -540,7 +521,6 @@ internal sealed class MainWindow : Window {
         PaintParameters parameters = new();
         Direction probe = new(0, 0, 1);
         string note;
-        bool back = false;
         switch (index) {
         case 2:
             parameters = parameters with { Shift = 0, RotationDegrees = 0 };
@@ -553,23 +533,18 @@ internal sealed class MainWindow : Window {
             note = "The probe is 2 degrees from the silhouette. Click and drag the facing plot across +90 to inspect the front/back transition.";
             break;
         case 4:
-            back = true;
-            probe = new CompiledPaint(parameters).Peak * -1;
-            note = "Original stays at Dark Point throughout the back. The proposal has a second maximum opposite the front highlight.";
-            break;
-        case 5:
             parameters = parameters with { DarkPoint = 0.85, LightPoint = 0.15 };
             note = "The facing functions are unchanged. The tone remap runs backward, so the geometric maximum now receives the darker tone.";
             break;
-        case 6:
+        case 5:
             parameters = parameters with { DarkPoint = 0.5, LightPoint = 0.5 };
             note = "Both models give the base color everywhere at Brightness 0.5. Switch to Facing f to see the underlying shapes still differ.";
             break;
-        case 7:
+        case 6:
             parameters = parameters with { Brightness = 0.126, Shift = 0, RotationDegrees = 0 };
             note = "The sphere material from the current C++ scene. Increasing Brightness shifts the base-color anchor left on the color plot.";
             break;
-        case 8:
+        case 7:
             parameters = parameters with { BaseColor = new(PaintParameters.Margin, 0.45466664, 0.88), Brightness = 0.3070000145825, Shift = 0.394000018715, RotationDegrees = 60.00000285 };
             note = "The body material from the current C++ scene. The very small red channel makes the final white highlight narrow.";
             break;
@@ -578,7 +553,6 @@ internal sealed class MainWindow : Window {
             break;
         }
         this.updating = true;
-        this.BackSelector.IsChecked = back;
         this.StageSelector.SelectedIndex = 0;
         this.experimentSelector.SelectedIndex = index;
         this.updating = false;

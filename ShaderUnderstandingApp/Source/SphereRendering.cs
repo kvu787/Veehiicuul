@@ -8,7 +8,7 @@ namespace ShaderUnderstanding;
 internal sealed record SphereImages(byte[] Original, byte[] Proposed, int Size);
 
 internal static class SphereRendering {
-    public static SphereImages Render(CompiledPaint paint, PreviewStage stage, bool back, int size, CancellationToken cancellation) {
+    public static SphereImages Render(CompiledPaint paint, PreviewStage stage, int size, CancellationToken cancellation) {
         byte[] original = new byte[size * size * 4];
         byte[] proposed = new byte[original.Length];
         for (int row = 0; row < size; row++) {
@@ -16,7 +16,7 @@ internal static class SphereRendering {
             double y = 1 - (row + 0.5) * 2 / size;
             for (int column = 0; column < size; column++) {
                 double x = (column + 0.5) * 2 / size - 1;
-                Direction? normal = PaintMath.SphereNormal(x, y, back);
+                Direction? normal = PaintMath.SphereNormal(x, y);
                 if (normal is null) continue;
                 int offset = (row * size + column) * 4;
                 Write(original, offset, paint.Evaluate(normal.Value, PaintModel.Original), stage);
@@ -62,9 +62,7 @@ internal sealed class SphereView : FrameworkElement {
     public BitmapSource? Image { get; set; }
     public Direction Probe { get; set; } = new(0, 0, 1);
     public Direction Peak { get; set; } = new(0, 0, 1);
-    public bool Back { get; set; }
     public bool ShowMarkers { get; set; } = true;
-    public bool HasBackPeak { get; init; } = true;
     public Brush Accent { get; init; } = Appearance.Original;
     public event Action<Direction>? ProbeChanged;
 
@@ -92,7 +90,7 @@ internal sealed class SphereView : FrameworkElement {
             case Key.Home: x = 0; y = 0; break;
             default: return;
             }
-            Direction? normal = PaintMath.SphereNormal(x, y, this.Back);
+            Direction? normal = PaintMath.SphereNormal(x, y);
             if (normal is not null) this.ProbeChanged?.Invoke(normal.Value);
             arguments.Handled = true;
         };
@@ -108,7 +106,7 @@ internal sealed class SphereView : FrameworkElement {
     public Direction? NormalAt(Point point) {
         Rect bounds = this.SphereBounds;
         return PaintMath.SphereNormal((point.X - bounds.Left) * 2 / bounds.Width - 1,
-            1 - (point.Y - bounds.Top) * 2 / bounds.Height, this.Back);
+            1 - (point.Y - bounds.Top) * 2 / bounds.Height);
     }
 
     private void Pick(Point point) {
@@ -122,18 +120,15 @@ internal sealed class SphereView : FrameworkElement {
         Rect bounds = this.SphereBounds;
         if (this.Image is not null) drawing.DrawImage(this.Image, bounds);
         if (!this.ShowMarkers) return;
-        bool probeVisible = (this.Probe.Z < 0) == this.Back || this.Probe.Z == 0;
-        if (probeVisible) {
+        if (this.Probe.Z >= 0) {
             Point point = Project(this.Probe, bounds);
             drawing.DrawEllipse(null, new(Appearance.Background, 4), point, 8, 8);
             drawing.DrawEllipse(null, new(Brushes.White, 1.5), point, 8, 8);
             drawing.DrawLine(new(Brushes.White, 1.5), new(point.X - 15, point.Y), new(point.X - 10, point.Y));
             drawing.DrawLine(new(Brushes.White, 1.5), new(point.X + 10, point.Y), new(point.X + 15, point.Y));
         }
-        if (!this.Back || this.HasBackPeak) {
-            Point peak = Project(this.Back ? this.Peak * -1 : this.Peak, bounds);
-            drawing.DrawEllipse(this.Accent, new(Appearance.Background, 1.5), peak, 4.5, 4.5);
-        }
+        Point peak = Project(this.Peak, bounds);
+        drawing.DrawEllipse(this.Accent, new(Appearance.Background, 1.5), peak, 4.5, 4.5);
         PlotText.Draw(drawing, "+Y", new(bounds.Left + bounds.Width / 2, 0), Appearance.Quiet, this, alignment: HorizontalAlignment.Center);
         PlotText.Draw(drawing, "+X", new(bounds.Right + 8, bounds.Top + bounds.Height / 2 - 11), Appearance.Quiet, this);
     }

@@ -41,6 +41,10 @@ internal static class InterfaceVerification {
         Require(!window.IsVisible, "window remains invisible");
         Require(window.CompletedRenders > 0, "initial preview completes");
         Require(window.OriginalView.Image?.PixelWidth == 448 && window.ProposedView.Image?.PixelWidth == 448, "both preview images exist");
+        Require(!Descendants(window.Root).OfType<CheckBox>().Any(checkBox => Equals(checkBox.Content, "Back hemisphere")),
+            "back hemisphere checkbox is removed");
+        Require(!Descendants(window.Root).OfType<ComboBox>().SelectMany(selector => selector.Items.OfType<string>()).Contains("Look at the back hemisphere"),
+            "back-view guided exploration is removed");
         Capture("DefaultComparison");
 
         Task rangeRender = window.CurrentRender;
@@ -333,7 +337,7 @@ internal static class InterfaceVerification {
         window.StageSelector.SelectedIndex = (int)PreviewStage.Facing;
         await Settle();
         Require(window.Parameters.Shift == 23.0 / 30, "rapid input keeps final value");
-        RequirePixels(window, PreviewStage.Facing, false, Require);
+        RequirePixels(window, PreviewStage.Facing, Require);
 
         window.ApplyExperiment(2);
         window.StageSelector.SelectedIndex = (int)PreviewStage.Facing;
@@ -341,28 +345,34 @@ internal static class InterfaceVerification {
         CompiledPaint paint = new(window.Parameters);
         Require(Math.Abs(paint.Evaluate(window.Probe, PaintModel.Original).Facing - 0.5) < 1e-12, "zero-shift exploration selects z = 0.5");
         Require(Math.Abs(paint.Evaluate(window.Probe, PaintModel.LinearWarp).Facing - 0.25) < 1e-12, "zero-shift exploration shows squared facing");
-        RequirePixels(window, PreviewStage.Facing, false, Require);
+        RequirePixels(window, PreviewStage.Facing, Require);
         Capture("FacingComparison");
 
-        window.BackSelector.IsChecked = true;
+        Task beforeBackProbe = window.CurrentRender;
+        BitmapSource frontOriginal = window.OriginalView.Image!;
+        BitmapSource frontProposed = window.ProposedView.Image!;
+        window.SetProbe(window.FacingPlot.NormalAt(FacingPoint(0.95))!.Value);
         await Settle();
-        Require(window.Probe.Z < 0 && window.OriginalView.Back && window.ProposedView.Back, "hemisphere checkbox flips the probe and previews");
-        RequirePixels(window, PreviewStage.Facing, true, Require);
-        Require(!window.OriginalView.HasBackPeak && window.ProposedView.HasBackPeak, "only proposed model labels a back peak");
-        Capture("BackComparison");
+        Require(window.Probe.Z < 0 && window.CurrentRender == beforeBackProbe && ReferenceEquals(frontOriginal, window.OriginalView.Image) &&
+            ReferenceEquals(frontProposed, window.ProposedView.Image), "back graph selection updates inspection without changing the front previews");
+        RequirePixels(window, PreviewStage.Facing, Require);
+        Rect frontBounds = window.OriginalView.SphereBounds;
+        Require(window.OriginalView.NormalAt(new(frontBounds.Left + frontBounds.Width / 2, frontBounds.Top + frontBounds.Height / 2))!.Value.Z > 0,
+            "sphere picking stays on the front after selecting a back graph normal");
+        Capture("FrontPreviewsWithBackGraphProbe");
 
-        window.ApplyExperiment(5);
+        window.ApplyExperiment(4);
         window.StageSelector.SelectedIndex = (int)PreviewStage.Tone;
         await Settle();
         Require(window.Parameters.DarkPoint > window.Parameters.LightPoint, "reverse-tones exploration inverts endpoints");
-        RequirePixels(window, PreviewStage.Tone, false, Require);
+        RequirePixels(window, PreviewStage.Tone, Require);
 
         window.StageSelector.SelectedIndex = (int)PreviewStage.Normal;
         await Settle();
-        RequirePixels(window, PreviewStage.Normal, false, Require);
+        RequirePixels(window, PreviewStage.Normal, Require);
         Capture("WarpedNormals");
 
-        window.ApplyExperiment(6);
+        window.ApplyExperiment(5);
         await Settle();
         Require(Pixels(window.OriginalView.Image!).SequenceEqual(Pixels(window.ProposedView.Image!)), "constant tone produces identical painted spheres");
 
@@ -370,13 +380,15 @@ internal static class InterfaceVerification {
         Require(!window.OriginalView.ShowMarkers && !window.ProposedView.ShowMarkers, "marker checkbox updates both views");
         window.MarkerSelector.IsChecked = true;
         Button peak = Descendants(window.Root).OfType<Button>().Single(button => Equals(button.Content, "Probe peak"));
-        peak.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-        Require((window.Probe + new CompiledPaint(window.Parameters).Peak * -1).Length < 1e-12, "peak button selects shared peak");
         window.SetProbe(new CompiledPaint(window.Parameters).Peak * -1);
+        Task beforePeak = window.CurrentRender;
+        peak.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Require(window.Probe.Z > 0 && (window.Probe + new CompiledPaint(window.Parameters).Peak * -1).Length < 1e-12,
+            "peak button always selects the shared front peak");
         await Settle();
-        Require(window.BackSelector.IsChecked == true && window.ProposedView.Back, "normal selection can change hemisphere");
+        Require(window.CurrentRender == beforePeak, "moving the probe across hemispheres does not restart rendering");
 
-        window.ApplyExperiment(8);
+        window.ApplyExperiment(7);
         await Settle();
         string material = JsonSerializer.Serialize(window.Parameters, SessionLog.JsonOptions);
         PaintParameters? restored = JsonSerializer.Deserialize<PaintParameters>(material);
@@ -395,7 +407,7 @@ internal static class InterfaceVerification {
         reset.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         window.DetailTabs.SelectedIndex = 0;
         await Settle();
-        Require(window.Parameters == new PaintParameters() && window.BackSelector.IsChecked == false, "reset restores initial material and hemisphere");
+        Require(window.Parameters == new PaintParameters() && window.Probe == new Direction(0, 0, 1), "reset restores initial material and front probe");
         Task minimumLayoutRender = window.CurrentRender;
         window.ArrangeOffscreen(2184, 1280);
         await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
@@ -431,14 +443,14 @@ internal static class InterfaceVerification {
         log.Write($"Passed {checks} interface checks; completed {window.CompletedRenders} previews. Screenshots and verified parameters are in this session folder.");
     }
 
-    private static void RequirePixels(MainWindow window, PreviewStage stage, bool back, Action<bool, string> require) {
+    private static void RequirePixels(MainWindow window, PreviewStage stage, Action<bool, string> require) {
         byte[][] images = [Pixels(window.OriginalView.Image!), Pixels(window.ProposedView.Image!)];
         CompiledPaint paint = new(window.Parameters);
         const int size = 448;
         // Independent pixel-to-normal mapping and display conversion verify
-        // channel order, hemisphere, stage selection, and the newest parameters.
+        // channel order, front hemisphere, stage, and the newest parameters.
         foreach ((int x, int y) in new[] { (224, 224), (300, 140), (68, 250), (180, 405) }) {
-            Direction normal = PaintMath.SphereNormal((x + 0.5) * 2 / size - 1, 1 - (y + 0.5) * 2 / size, back)!.Value;
+            Direction normal = PaintMath.SphereNormal((x + 0.5) * 2 / size - 1, 1 - (y + 0.5) * 2 / size)!.Value;
             for (int model = 0; model < 2; model++) {
                 PaintSample sample = paint.Evaluate(normal, (PaintModel)model);
                 PaintColor expected = stage switch {
@@ -451,7 +463,7 @@ internal static class InterfaceVerification {
                 require(images[model][offset] == (byte)Math.Round(expected.Blue * 255) &&
                     images[model][offset + 1] == (byte)Math.Round(expected.Green * 255) &&
                     images[model][offset + 2] == (byte)Math.Round(expected.Red * 255) && images[model][offset + 3] == 255,
-                    $"{stage} pixel ({x},{y}), model {model}, back {back}");
+                    $"{stage} front pixel ({x},{y}), model {model}");
             }
         }
         require(images[0][3] == 0 && images[1][3] == 0, "outside-sphere pixels transparent");

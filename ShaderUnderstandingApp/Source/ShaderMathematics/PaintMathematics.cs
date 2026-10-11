@@ -173,9 +173,9 @@ public static class PaintMath {
         return new(Math.Sin(tilt) * Math.Cos(azimuth), Math.Sin(tilt) * Math.Sin(azimuth), Math.Cos(tilt));
     }
 
-    public static Direction? SphereNormal(double horizontal, double vertical, bool back) {
+    public static Direction? SphereNormal(double horizontal, double vertical) {
         double squared = horizontal * horizontal + vertical * vertical;
         if (squared > 1) return null;
-        return new(horizontal, vertical, Math.Sqrt(Math.Max(0, 1 - squared)) * (back ? -1 : 1));
+        return new(horizontal, vertical, Math.Sqrt(Math.Max(0, 1 - squared)));
     }
 }
