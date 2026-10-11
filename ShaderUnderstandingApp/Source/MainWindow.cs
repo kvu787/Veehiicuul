@@ -112,9 +112,8 @@ internal sealed class MainWindow : Window {
         Grid header = new() { Margin = new(24, 20, 24, 20) };
         header.ColumnDefinitions.Add(new());
         header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        StackPanel title = new();
-        title.Children.Add(Appearance.Label("SimplePaint", 32, strong: true));
-        title.Children.Add(Appearance.Label("A normal becomes a tone. A tone becomes a color.", 18, Appearance.Quiet));
+        TextBlock title = Appearance.Label("SimplePaint", 32, strong: true);
+        title.VerticalAlignment = VerticalAlignment.Center;
         header.Children.Add(title);
         StackPanel actions = new() { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         foreach ((string label, Action action) in new (string, Action)[] {
@@ -132,8 +131,7 @@ internal sealed class MainWindow : Window {
 
     private Border BuildControls() {
         StackPanel content = new();
-        content.Children.Add(Appearance.Label("ONE MATERIAL, TWO MODELS", 18, Appearance.Quiet, true));
-        content.Children.Add(Appearance.Label("All parameters are shared.", 16, Appearance.Quiet));
+        content.Children.Add(Appearance.Label("Shared material parameters", 18, Appearance.Quiet, true));
         content.Children.Add(this.baseSwatch);
         this.AddControl(content, "Red", "Base color / Red", PaintParameters.Margin, PaintParameters.MaximumInterior, 0.107, "Red channel in sRGB. The application decodes it once before evaluating the color curve.");
         this.AddControl(content, "Green", "Base color / Green", PaintParameters.Margin, PaintParameters.MaximumInterior, 0.223, "Green channel in sRGB. The displayed input is an sRGB value, not linear intensity.");
@@ -143,10 +141,10 @@ internal sealed class MainWindow : Window {
         this.AddControl(content, "Rotation", "Rotation / degrees", 0, Math.BitDecrement(360), 45, "Counterclockwise on screen: 0 right, 90 up, 180 left, 270 down. At zero Shift, Rotation has no visible effect.", 1);
         this.AddControl(content, "Dark", "Dark Point", 0, PaintParameters.MaximumInterior, 0, "Input tone at facing 0. The Facing f to RGB plot shows its output color at the left endpoint. It may exceed Light Point.");
         this.AddControl(content, "Light", "Light Point", PaintParameters.Margin, 1, 1, "Input tone at facing 1. The Facing f to RGB plot shows its output color at the right endpoint. Equal endpoints give a constant color; reversed endpoints invert the gradient.");
-        TextBlock heading = Appearance.Label("GUIDED EXPLORATIONS", 18, Appearance.Quiet, true);
+        TextBlock heading = Appearance.Label("Parameter presets", 18, Appearance.Quiet, true);
         heading.Margin = new(0, 8, 0, 12);
         content.Children.Add(heading);
-        foreach (string name in new[] { "Custom parameters", "Default comparison", "No shift: z versus z squared", "Near the silhouette", "Reverse the tones", "Make a constant color", "Original scene / sphere", "Original scene / body" }) this.experimentSelector.Items.Add(name);
+        foreach (string name in new[] { "Custom parameters", "Default parameters", "Zero Shift: z versus z squared", "Silhouette transition", "Reversed tone endpoints", "Constant tone", "Scene sphere material", "Scene body material" }) this.experimentSelector.Items.Add(name);
         this.experimentSelector.SelectionChanged += (_, _) => {
             if (!this.updating && this.experimentSelector.SelectedIndex > 0) this.ApplyExperiment(this.experimentSelector.SelectedIndex);
         };
@@ -221,7 +219,7 @@ internal sealed class MainWindow : Window {
             rangeValue.Text = this.BackRangeSelector.Value.ToString("0", CultureInfo.InvariantCulture) + "°";
             this.FacingPlot.InvalidateVisual();
         };
-        charts.Children.Add(BuildChart(this.FacingPlot, "01   Shape of the shading", "Facing f   |   original / teal     proposed / amber", headerControls: rangeControls));
+        charts.Children.Add(BuildChart(this.FacingPlot, "01   Facing versus tilt", "Facing f   |   original / teal     proposed / amber", headerControls: rangeControls));
         this.ColorAxisSelector.Items.Add("Facing f to RGB");
         this.ColorAxisSelector.Items.Add("Tone t to RGB");
         this.ColorAxisSelector.SelectedIndex = 0;
@@ -237,8 +235,8 @@ internal sealed class MainWindow : Window {
         lowerArea.Children.Add(charts);
         Grid.SetRow(this.DetailsDivider, 1);
         lowerArea.Children.Add(this.DetailsDivider);
-        this.DetailTabs.Items.Add(new TabItem { Header = "Inspect a normal", Content = this.BuildInspector() });
-        this.DetailTabs.Items.Add(new TabItem { Header = "Equations and meaning", Content = BuildGuide() });
+        this.DetailTabs.Items.Add(new TabItem { Header = "Probe values", Content = this.BuildInspector() });
+        this.DetailTabs.Items.Add(new TabItem { Header = "Shader equations", Content = BuildGuide() });
         this.DetailTabs.Items.Add(new TabItem { Header = "Smoothness and cost", Content = BuildTradeoffs() });
         Grid.SetRow(this.DetailTabs, 2);
         lowerArea.Children.Add(this.DetailTabs);
@@ -354,23 +352,23 @@ internal sealed class MainWindow : Window {
 
     private static ScrollViewer BuildGuide() {
         StackPanel text = new();
-        AddExplanation(text, "1. Start with a camera-space normal", "+X is screen-right, +Y is up, +Z points toward the camera. Rotation turns XY by the negative input angle. A sphere lets you inspect every front-facing normal without changing the camera.");
-        AddExplanation(text, "2. Choose a facing function", "Original, using a rotated unit normal (x,y,z):\nr = sqrt(x*x + z*z);  h = sqrt(1 - s*s)\nf = r*z*h / (r - s*x) for z > 0; otherwise f = 0.\n\nProposed, using an unnormalized rotated normal:\nw = (h*x - s*z, h*y, z)\nP = w.z*w.z;  Q = w.x*w.x + w.y*w.y;  f = P/(P+Q).", true);
-        AddExplanation(text, "3. Remap facing to a tone", "t = DarkPoint*(1 - f) + LightPoint*f\nEqual endpoints give a constant tone. Reversed endpoints invert the progression.", true);
-        AddExplanation(text, "4. Use the same anchored color curve", "For each decoded linear base-color channel c, with Brightness b:\nA = c*b;  B = (1-c)*(1-b)\nF(t) = A*t / (A*t + B*(1-t))\nF(0)=0, F(1)=1, F(1-b)=c. Finally, encode linear RGB to sRGB once.", true);
-        AddExplanation(text, "Read the shared color response plot", "Facing f to RGB shows F(DarkPoint*(1-f) + LightPoint*f), including both tone endpoints. Changing Dark Point or Light Point changes these curves. Tone t to RGB shows the underlying F(t), which depends only on Base Color and Brightness; its shaded interval marks the tones the shader uses. In the facing view, the dashed base-color anchor appears only when that color is reachable. Reversed endpoints give decreasing facing-to-color curves; equal endpoints give flat curves.");
-        AddExplanation(text, "Why P and Q are kept separately", "The original implementation also computes stable, nonnegative P and Q. Reconstructing Q from 1-f can erase tiny highlight complements. Their absolute sizes can differ between models; compare f and output color. The pixel shader combines their weights directly with precomputed color coefficients.");
+        AddExplanation(text, "1. Camera-space normal and rotation", "+X is screen-right, +Y is up, +Z points toward the camera. At positive Shift, Rotation turns XY by the negative input angle. The sphere previews display all front-facing unit normals.");
+        AddExplanation(text, "2. Facing functions", "Original, using a rotated unit normal (x,y,z):\nr = sqrt(x*x + z*z);  h = sqrt(1 - s*s)\nf = r*z*h / (r - s*x) for z > 0; otherwise f = 0.\n\nProposed, using an unnormalized rotated normal:\nw = (h*x - s*z, h*y, z)\nP = w.z*w.z;  Q = w.x*w.x + w.y*w.y;  f = P/(P+Q).", true);
+        AddExplanation(text, "3. Facing-to-tone remap", "t = DarkPoint*(1 - f) + LightPoint*f\nEqual endpoints give a constant tone. Reversed endpoints invert the progression.", true);
+        AddExplanation(text, "4. Tone-to-color curve", "For each decoded linear base-color channel c, with Brightness b:\nA = c*b;  B = (1-c)*(1-b)\nF(t) = A*t / (A*t + B*(1-t))\nF(0)=0, F(1)=1, F(1-b)=c. Output linear RGB is encoded to sRGB.", true);
+        AddExplanation(text, "Color response graph", "Facing f to RGB shows F(DarkPoint*(1-f) + LightPoint*f), including both tone endpoints. Changing Dark Point or Light Point changes these curves. Tone t to RGB shows the underlying F(t), which depends only on Base Color and Brightness; its shaded interval marks the tones the shader uses. In the facing view, the dashed base-color anchor appears only when that color is reachable. Reversed endpoints give decreasing facing-to-color curves; equal endpoints give flat curves.");
+        AddExplanation(text, "Separate light and dark weights", "The original implementation also computes stable, nonnegative P and Q. Reconstructing Q from 1-f can erase tiny highlight complements. Their absolute sizes can differ between models; compare f and output color. The pixel shader combines their weights directly with precomputed color coefficients.");
         return new ScrollViewer { Content = text, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     }
 
     private static ScrollViewer BuildTradeoffs() {
         StackPanel text = new();
-        AddExplanation(text, "What stays the same", "Both models share every material control, their front highlight direction, their silhouette tone, and their color response. The front maximum is (s, 0, sqrt(1-s*s)) before undoing Rotation.");
-        AddExplanation(text, "What changes", "At zero Shift the original facing is z on the front hemisphere, while the proposed facing is z squared. The proposal has a second, antipodal maximum on the back. The original back hemisphere stays at Dark Point. The facing graph's Back range reveals this difference.");
+        AddExplanation(text, "Shared parameters and extrema", "Both models share every material control, their front highlight direction, their silhouette tone, and their color response. The front maximum is (s, 0, sqrt(1-s*s)) before undoing Rotation.");
+        AddExplanation(text, "Facing differences", "At zero Shift the original facing is z on the front hemisphere, while the proposed facing is z squared. The proposal has a second, antipodal maximum on the back. The original back hemisphere stays at Dark Point. The facing graph's Back range controls how much of that region is visible.");
         AddExplanation(text, "Infinite differentiability", "The original is smooth inside the front hemisphere, but generally has a derivative discontinuity where it meets its constant back hemisphere. The proposed facing and linear RGB are ratios of polynomials with positive denominators for every nonzero normal and Shift < 1, so they are infinitely differentiable there. The final sRGB encoding is piecewise defined. This claim excludes that display encoding, finite pixels, triangle seams, and quantization.");
-        AddExplanation(text, "Where the shader work happens", "CPU: material validation, sRGB decoding, angle constants, and color coefficients.\nVertex stage: original rotation; proposed rotation plus a linear warp. Both commute with interpolation.\nPixel facing: original uses one square root at zero Shift and two otherwise. Proposed uses just P = z*z and Q = dot(xy,xy).\nPixel color: both retain the channel-wise rational curve and its divisions.");
-        AddExplanation(text, "What this app measures", "This app evaluates the shader mathematics in double precision on the CPU and renders analytic spheres. It is an educational reference, not a GPU benchmark, a bit-for-bit emulation of binary32, or proof of a production speedup. Pixel coverage can miss very narrow peaks near maximum Shift.");
-        AddExplanation(text, "Sources", "Original: 3dTestScene_CppDx12/Source/SimplePaint/Specification.md, SimplePaintCore.hlsli, and Material.cpp. Original facing-lobe and anchored color-curve construction: Kevin Vu. The linear-warp model implements the proposal from this conversation.");
+        AddExplanation(text, "Shader stage operations", "CPU: material validation, sRGB decoding, angle constants, and color coefficients.\nVertex stage: original rotation; proposed rotation plus a linear warp. Both commute with interpolation.\nPixel facing: original uses one square root at zero Shift and two otherwise. Proposed uses P = z*z and Q = dot(xy,xy).\nPixel color: both retain the channel-wise rational curve and its divisions.");
+        AddExplanation(text, "Preview precision and resolution", "The app evaluates analytic sphere normals in CPU double precision and converts the results to 448x448, 8-bit previews. It does not measure GPU execution time or reproduce binary32 rounding. Near maximum Shift, a highlight can be narrower than one pixel; Probe peak reports its exact mathematical value.");
+        AddExplanation(text, "Sources", "Original: 3dTestScene_CppDx12/Source/SimplePaint/Specification.md, SimplePaintCore.hlsli, and Material.cpp. Original facing-lobe and anchored color-curve construction: Kevin Vu. Proposed evaluator: ShaderUnderstandingApp/Source/ShaderMathematics/PaintMathematics.cs.");
         return new ScrollViewer { Content = text, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     }
 
@@ -499,7 +497,7 @@ internal sealed class MainWindow : Window {
         this.stageNote.Text = this.StageSelector.SelectedIndex switch {
             1 => "Facing diagnostic: 0 = black, 1 = white. P and Q have arbitrary common scale; f = P/(P+Q).",
             2 => "Tone diagnostic: 0 = black, 1 = white, before the RGB curve. Tone is not displayed luminance.",
-            3 => "Normal diagnostic: XYZ mapped to RGB as (normalized vector + 1)/2. The proposal shows the warped vector.",
+            3 => "Normal display: RGB = (unit vector + 1)/2. Original: rotated normal. Proposed: warped normal.",
             _ => "Painted color uses the shared curve in linear RGB, then one sRGB encoding. Inspector colors always show final paint."
         };
     }
@@ -524,32 +522,32 @@ internal sealed class MainWindow : Window {
         switch (index) {
         case 2:
             parameters = parameters with { Shift = 0, RotationDegrees = 0 };
-            note = "Switch Display to Facing f. On the front, compare z with z squared. Rotation has no effect at zero Shift.";
+            note = "Shift = 0: original f = z; proposed f = z*z on the front hemisphere. Select Facing f to view these values. Rotation has no shading effect.";
             probe = PaintMath.Sweep(60, 0);
             break;
         case 3:
             parameters = parameters with { Shift = 0.6, RotationDegrees = 0 };
             probe = PaintMath.Sweep(88, 0);
-            note = "The probe is 2 degrees from the silhouette. Click and drag the facing plot across +90 to inspect the front/back transition.";
+            note = "Probe tilt = 88 degrees, 2 degrees from the silhouette. Drag the facing graph across +90 to inspect the front/back transition.";
             break;
         case 4:
             parameters = parameters with { DarkPoint = 0.85, LightPoint = 0.15 };
-            note = "The facing functions are unchanged. The tone remap runs backward, so the geometric maximum now receives the darker tone.";
+            note = "Tone decreases as facing increases: f = 0 gives t = 0.85; f = 1 gives t = 0.15.";
             break;
         case 5:
             parameters = parameters with { DarkPoint = 0.5, LightPoint = 0.5 };
-            note = "Both models give the base color everywhere at Brightness 0.5. Switch to Facing f to see the underlying shapes still differ.";
+            note = "Dark Point = Light Point = 0.5. With Brightness 0.5, both models output the base color for every normal.";
             break;
         case 6:
             parameters = parameters with { Brightness = 0.126, Shift = 0, RotationDegrees = 0 };
-            note = "The sphere material from the current C++ scene. Increasing Brightness shifts the base-color anchor left on the color plot.";
+            note = "C++ scene sphere material. The base-color anchor is at tone 0.874 (1 - Brightness).";
             break;
         case 7:
             parameters = parameters with { BaseColor = new(PaintParameters.Margin, 0.45466664, 0.88), Brightness = 0.3070000145825, Shift = 0.394000018715, RotationDegrees = 60.00000285 };
-            note = "The body material from the current C++ scene. The very small red channel makes the final white highlight narrow.";
+            note = "C++ scene body material. The small base-color red channel produces a narrow white highlight.";
             break;
         default:
-            note = "Both highlights occupy the same position. Compare the gradient toward the rim, then switch Display to Facing f to remove color from the comparison.";
+            note = "Both models peak at the same normal. Facing f displays their different responses independently of the color curve.";
             break;
         }
         this.updating = true;

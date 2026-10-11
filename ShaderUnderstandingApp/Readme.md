@@ -30,10 +30,10 @@ Each application run creates `LogOutput/yyyy-MM-dd_HH-mm-ss`. The folder contain
 - The **Shared color response** plot defaults to **Facing f to RGB**: its horizontal input is facing, and it includes `t = DarkPoint*(1-f) + LightPoint*f`. Changing either endpoint changes the curves. The left and right endpoints show the actual colors at facing 0 and 1, including reversed or constant tone ranges.
 - Switch that plot to **Tone t to RGB** to inspect the underlying curve `F(t)` over the full tone interval. This curve depends on Base Color and Brightness; the shaded interval shows the tones selected by Dark Point and Light Point. These endpoints change the selected interval, rather than the underlying curve's shape.
 - Hover the RGB curve to read its input, tone, and linear output. Its gray dashed line marks the base-color anchor when reachable; teal and amber dotted lines mark the inspected normal's facing or tone according to the selected axis. If the base-color tone lies outside the selected range, the facing view reports "base absent". Equal endpoints at the base-color tone instead give that color everywhere.
-- Read **Equations and meaning** and **Smoothness and cost** for the mathematical steps and shader implementation implications. The panels scroll at smaller window sizes.
+- Read **Shader equations** and **Smoothness and cost** for the mathematical steps and shader implementation implications. **Probe values** lists the intermediate and final values at the inspected normal. The panels scroll at smaller window sizes.
 - **Save parameters** and **Load parameters** round-trip the complete material as JSON. **Export PNG** captures the current comparison after the latest preview finishes.
 
-Suggested order: **No shift: z versus z squared**, **Near the silhouette**, then **Reverse the tones** and **Make a constant color**. Two additional explorations reproduce the sphere and body materials in the C++ scene's `Assets/Settings.json` at the source revision below.
+**Parameter presets** includes **Zero Shift: z versus z squared**, **Silhouette transition**, **Reversed tone endpoints**, and **Constant tone**. **Scene sphere material** and **Scene body material** reproduce the materials in the C++ scene's `Assets/Settings.json` at the source revision below.
 
 ## Shared controls
 
