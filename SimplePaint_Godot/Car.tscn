@@ -1,9 +1,67 @@
 [gd_scene format=3 uid="uid://tm7xdcgki10t"]
 
 [ext_resource type="PackedScene" uid="uid://bx1qfncch8vxn" path="res://Car.glb" id="1_1k6jk"]
+[ext_resource type="Shader" uid="uid://ctjasqjhi4b48" path="res://SimplePaint.gdshader" id="2_y2uan"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_u5o7h"]
+render_priority = 0
+shader = ExtResource("2_y2uan")
+shader_parameter/BaseColorSrgb = Color(0.107, 0.223, 0.578, 1)
+shader_parameter/Brightness = 0.5
+shader_parameter/Shift = 0.0
+shader_parameter/RotationDegrees = 0.0
+shader_parameter/DarkPoint = 0.0
+shader_parameter/LightPoint = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_47788"]
+render_priority = 0
+shader = ExtResource("2_y2uan")
+shader_parameter/BaseColorSrgb = Color(0.19331017, 0.25161922, 0.43807337, 1)
+shader_parameter/Brightness = 0.5
+shader_parameter/Shift = 0.0
+shader_parameter/RotationDegrees = 0.0
+shader_parameter/DarkPoint = 0.0
+shader_parameter/LightPoint = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_w13o2"]
+render_priority = 0
+shader = ExtResource("2_y2uan")
+shader_parameter/BaseColorSrgb = Color(0.10602916, 0.28360596, 0.3819805, 1)
+shader_parameter/Brightness = 0.5
+shader_parameter/Shift = 0.0
+shader_parameter/RotationDegrees = 0.0
+shader_parameter/DarkPoint = 0.0
+shader_parameter/LightPoint = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gvgjh"]
+render_priority = 0
+shader = ExtResource("2_y2uan")
+shader_parameter/BaseColorSrgb = Color(0.36998883, 0.16482574, 0.40531626, 1)
+shader_parameter/Brightness = 0.5
+shader_parameter/Shift = 0.0
+shader_parameter/RotationDegrees = 0.0
+shader_parameter/DarkPoint = 0.0
+shader_parameter/LightPoint = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_y2uan"]
+render_priority = 0
+shader = ExtResource("2_y2uan")
+shader_parameter/BaseColorSrgb = Color(0.34394002, 0.2390796, 0.13684478, 1)
+shader_parameter/Brightness = 0.5
+shader_parameter/Shift = 0.0
+shader_parameter/RotationDegrees = 0.0
+shader_parameter/DarkPoint = 0.0
+shader_parameter/LightPoint = 1.0
 
 [node name="Node3D" type="Node3D" unique_id=1790123038]
 
 [node name="Car" parent="." unique_id=382530805 instance=ExtResource("1_1k6jk")]
+
+[node name="SlopeCarBlue" parent="Car" index="0" unique_id=1199377031]
+surface_material_override/0 = SubResource("ShaderMaterial_u5o7h")
+surface_material_override/1 = SubResource("ShaderMaterial_47788")
+surface_material_override/2 = SubResource("ShaderMaterial_w13o2")
+surface_material_override/3 = SubResource("ShaderMaterial_gvgjh")
+surface_material_override/4 = SubResource("ShaderMaterial_y2uan")
 
 [editable path="Car"]
