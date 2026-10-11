@@ -1009,3 +1009,38 @@ I'll make the app start maximized and verify the startup setting.
 ## Assistant
 
 The app now starts in **maximized windowed mode**. Rebuilt and verified. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the update.
+
+
+## Facing curve inflection points
+
+## User
+
+how many inflection points does the teal vs amber curve have
+
+Attached image: `C:/Users/k/AppData/Local/Temp/codex-clipboard-cfcbeebb-aa31-463a-9e89-cfc7ddb200bd.png`.
+
+![Facing curve inflection point question](2026-10-11_06-35_UTC_SimplePaintAnalysisImages/FacingCurveInflectionPointQuestion.png)
+
+
+## Assistant
+
+I'll calculate where each curve changes concavity for the settings shown, using the same slice as the graph.
+
+
+## Assistant
+
+The screenshot includes the shaded back regions, so I'll report both the front-only count and the count across -180° to 180°. The original curve's joins at ±90° need separate treatment because they are not smooth.
+
+
+## Assistant
+
+For the settings and probe shown:
+
+| Curve            | Front: -90° to 90° | Full: -180° to 180° |
+| ---------------- | ----------------- | ------------------ |
+| Teal (original)  | 1                 | 1                  |
+| Amber (proposed) | 4                 | 8                  |
+
+The front inflections are approximately **69.1°** for teal and **-84.4°, -2.8°, 64.4°, 83.0°** for amber.
+
+An inflection is a change in concavity. The teal joins at ±90° do not count. These counts depend on Shift and the probe slice.
