@@ -137,3 +137,7 @@ Do not attempt to maintain any sort of application compatibility between differe
 ## Target platform compatibility
 
 Support Windows 11 x64 as the only target platform.
+
+## Using physical displays
+
+If you need a display, only use NE18NZ2.
