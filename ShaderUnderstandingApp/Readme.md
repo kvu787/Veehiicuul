@@ -37,6 +37,8 @@ Each application run creates `LogOutput/yyyy-MM-dd_HH-mm-ss`. The folder contain
 
 ## Shared controls
 
+Startup, **Reset**, and **Default parameters** use **Dark Point = 0.3** and **Light Point = 0.9**. The scene material presets use the C++ scene's endpoints, 0 and 1.
+
 The ranges follow the existing module's numerical contract. Let `m = 1/1024 = 0.0009765625` and `M = 1-m = 0.9990234375`.
 
 | Control           | Range       | Meaning                                                                     |

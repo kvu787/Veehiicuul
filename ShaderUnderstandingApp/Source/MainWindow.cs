@@ -139,8 +139,8 @@ internal sealed class MainWindow : Window {
         this.AddControl(content, "Brightness", "Brightness", PaintParameters.Margin, PaintParameters.MaximumInterior, 0.5, "The base color appears at tone 1 - Brightness. Increasing this value moves the anchor left; it does not multiply RGB.");
         this.AddControl(content, "Shift", "Shift", 0, PaintParameters.MaximumInterior, 0.6, "Moves the highlight from the center toward the silhouette. The maximum's sideways component is Shift; its tilt is asin(Shift).");
         this.AddControl(content, "Rotation", "Rotation / degrees", 0, Math.BitDecrement(360), 45, "Counterclockwise on screen: 0 right, 90 up, 180 left, 270 down. At zero Shift, Rotation has no visible effect.", 1);
-        this.AddControl(content, "Dark", "Dark Point", 0, PaintParameters.MaximumInterior, 0, "Input tone at facing 0. The Facing f to RGB plot shows its output color at the left endpoint. It may exceed Light Point.");
-        this.AddControl(content, "Light", "Light Point", PaintParameters.Margin, 1, 1, "Input tone at facing 1. The Facing f to RGB plot shows its output color at the right endpoint. Equal endpoints give a constant color; reversed endpoints invert the gradient.");
+        this.AddControl(content, "Dark", "Dark Point", 0, PaintParameters.MaximumInterior, this.Parameters.DarkPoint, "Input tone at facing 0. The Facing f to RGB plot shows its output color at the left endpoint. It may exceed Light Point.");
+        this.AddControl(content, "Light", "Light Point", PaintParameters.Margin, 1, this.Parameters.LightPoint, "Input tone at facing 1. The Facing f to RGB plot shows its output color at the right endpoint. Equal endpoints give a constant color; reversed endpoints invert the gradient.");
         TextBlock heading = Appearance.Label("Parameter presets", 18, Appearance.Quiet, true);
         heading.Margin = new(0, 8, 0, 12);
         content.Children.Add(heading);
@@ -538,11 +538,11 @@ internal sealed class MainWindow : Window {
             note = "Dark Point = Light Point = 0.5. With Brightness 0.5, both models output the base color for every normal.";
             break;
         case 6:
-            parameters = parameters with { Brightness = 0.126, Shift = 0, RotationDegrees = 0 };
+            parameters = parameters with { Brightness = 0.126, Shift = 0, RotationDegrees = 0, DarkPoint = 0, LightPoint = 1 };
             note = "C++ scene sphere material. The base-color anchor is at tone 0.874 (1 - Brightness).";
             break;
         case 7:
-            parameters = parameters with { BaseColor = new(PaintParameters.Margin, 0.45466664, 0.88), Brightness = 0.3070000145825, Shift = 0.394000018715, RotationDegrees = 60.00000285 };
+            parameters = parameters with { BaseColor = new(PaintParameters.Margin, 0.45466664, 0.88), Brightness = 0.3070000145825, Shift = 0.394000018715, RotationDegrees = 60.00000285, DarkPoint = 0, LightPoint = 1 };
             note = "C++ scene body material. The small base-color red channel produces a narrow white highlight.";
             break;
         default:

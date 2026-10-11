@@ -27,8 +27,8 @@ public sealed record PaintParameters {
     public double Brightness { get; init; } = 0.5;
     public double Shift { get; init; } = 0.6;
     public double RotationDegrees { get; init; } = 45;
-    public double DarkPoint { get; init; }
-    public double LightPoint { get; init; } = 1;
+    public double DarkPoint { get; init; } = 0.3;
+    public double LightPoint { get; init; } = 0.9;
 
     public void Validate() {
         Check(this.BaseColor.Red, Margin, MaximumInterior, "Red");
