@@ -25,6 +25,13 @@ internal sealed class CurveView : FrameworkElement {
     public double BackRangeDegrees { get; set; } = 90;
     internal double FacingHalfRange => 90 + this.BackRangeDegrees;
     internal double BackRegionFraction => this.BackRangeDegrees / (2 * this.FacingHalfRange);
+    internal double FacingProbeTilt {
+        get {
+            Direction rotated = RotateForSweep(this.Probe, this.Paint.Parameters.RotationDegrees);
+            return Math.Atan2(rotated.X, rotated.Z) * 180 / Math.PI;
+        }
+    }
+    internal double FacingProbeFraction => this.FacingFractionAt(this.FacingProbeTilt);
     internal IEnumerable<double> FacingAxisTicks {
         get {
             double limit = this.FacingHalfRange;
@@ -68,17 +75,28 @@ internal sealed class CurveView : FrameworkElement {
         this.MouseMove += (_, arguments) => this.Interact(arguments.GetPosition(this), this.IsMouseCaptured);
         this.MouseLeftButtonUp += (_, _) => this.ReleaseMouseCapture();
         this.MouseLeave += (_, _) => { this.hoveredInput = null; this.InvalidateVisual(); };
-        this.ToolTip = "Click or drag the facing plot to select a normal. Hover over the color plot to read linear RGB. Its axis selector switches between the complete facing-to-color response and the underlying tone curve.";
+        this.ToolTip = "The facing graph's slice follows the sphere probe; colored dots show the actual inspected values. Click or drag that curve to select a normal in the same slice. A probe outside the visible range stays marked at the nearest edge. Hover over the color plot to read linear RGB; its axis selector chooses facing or tone as the input.";
     }
 
     private Rect Plot => new(48, 16, Math.Max(1, this.ActualWidth - 84), Math.Max(1, this.ActualHeight - 84));
     private Point Map(double fraction, double value) => new(this.Plot.Left + fraction * this.Plot.Width, this.Plot.Bottom - value * this.Plot.Height);
     internal double FacingAngleAt(double fraction) => (2 * fraction - 1) * this.FacingHalfRange;
     private double FacingFractionAt(double angle) => (angle / this.FacingHalfRange + 1) / 2;
+    internal Direction FacingNormalAt(double fraction) {
+        double rotation = this.Paint.Parameters.RotationDegrees;
+        Direction rotated = RotateForSweep(this.Probe, rotation);
+        double radius = Math.Sqrt(rotated.X * rotated.X + rotated.Z * rotated.Z);
+        double tilt = this.FacingAngleAt(fraction) * Math.PI / 180;
+        double azimuth = rotation * Math.PI / 180;
+        double x = radius * Math.Sin(tilt);
+        return new(x * Math.Cos(azimuth) - rotated.Y * Math.Sin(azimuth),
+            x * Math.Sin(azimuth) + rotated.Y * Math.Cos(azimuth), radius * Math.Cos(tilt));
+    }
+    internal Point FacingMarkerPoint(PaintModel model) => this.Map(Math.Clamp(this.FacingProbeFraction, 0, 1), this.Paint.Evaluate(this.Probe, model).Facing);
     public Direction? NormalAt(Point point) {
         if (this.ColorCurve || !this.Plot.Contains(point)) return null;
         double fraction = (point.X - this.Plot.Left) / this.Plot.Width;
-        return PaintMath.Sweep(this.FacingAngleAt(fraction), this.Paint.Parameters.RotationDegrees);
+        return this.FacingNormalAt(fraction);
     }
 
     private void Interact(Point point, bool selecting) {
@@ -97,7 +115,7 @@ internal sealed class CurveView : FrameworkElement {
             double width = plot.Width * this.BackRegionFraction;
             drawing.DrawRectangle(backFill, null, new(plot.Left, plot.Top, width, plot.Height));
             drawing.DrawRectangle(backFill, null, new(plot.Right - width, plot.Top, width, plot.Height));
-        } else if (this.ColorAxis == ColorResponseAxis.Tone) {
+        } else if (this.ColorCurve && this.ColorAxis == ColorResponseAxis.Tone) {
             double first = Math.Min(this.Paint.Parameters.DarkPoint, this.Paint.Parameters.LightPoint);
             double last = Math.Max(this.Paint.Parameters.DarkPoint, this.Paint.Parameters.LightPoint);
             drawing.DrawRectangle(Appearance.Brush("#243245"), null, new(this.Map(first, 0).X, plot.Top, plot.Width * (last - first), plot.Height));
@@ -116,26 +134,29 @@ internal sealed class CurveView : FrameworkElement {
 
     private void DrawFacingCurves(DrawingContext drawing) {
         foreach (double angle in this.FacingAxisTicks) {
-            double fraction = this.FacingFractionAt(angle);
-            double x = this.Map(fraction, 0).X;
+            double tickFraction = this.FacingFractionAt(angle);
+            double x = this.Map(tickFraction, 0).X;
             drawing.DrawLine(new(Appearance.Line, 0.6), new(x, this.Plot.Top), new(x, this.Plot.Bottom));
-            PlotText.Draw(drawing, angle.ToString("0.#", CultureInfo.InvariantCulture), new(x, this.Plot.Bottom + 6), Appearance.Quiet, this, alignment: HorizontalAlignment.Center);
+            PlotText.Draw(drawing, angle.ToString("0.#", CultureInfo.InvariantCulture), new(x, this.Plot.Bottom + 8), Appearance.Quiet, this, alignment: HorizontalAlignment.Center);
         }
-        this.DrawPath(drawing, value => this.Paint.Evaluate(PaintMath.Sweep(this.FacingAngleAt(value), this.Paint.Parameters.RotationDegrees), PaintModel.Original).Facing, Appearance.Original);
-        this.DrawPath(drawing, value => this.Paint.Evaluate(PaintMath.Sweep(this.FacingAngleAt(value), this.Paint.Parameters.RotationDegrees), PaintModel.LinearWarp).Facing, Appearance.Proposed);
-        Direction rotated = this.Paint.Parameters.Shift == 0
-            ? RotateForSweep(this.Probe, this.Paint.Parameters.RotationDegrees)
-            : this.Paint.Rotate(this.Probe);
-        if (Math.Abs(rotated.Y) < 0.00001 && Math.Abs(Math.Atan2(rotated.X, rotated.Z) * 180 / Math.PI) <= this.FacingHalfRange) {
-            double tilt = Math.Atan2(rotated.X, rotated.Z) * 180 / Math.PI;
-            double fraction = this.FacingFractionAt(tilt);
-            drawing.DrawLine(new(Appearance.Quiet, 1) { DashStyle = DashStyles.Dot }, this.Map(fraction, 0), this.Map(fraction, 1));
-            foreach (PaintModel model in Enum.GetValues<PaintModel>()) {
-                Brush brush = model == PaintModel.Original ? Appearance.Original : Appearance.Proposed;
-                drawing.DrawEllipse(brush, new(Appearance.Panel, 1), this.Map(fraction, this.Paint.Evaluate(this.Probe, model).Facing), 4, 4);
-            }
+        this.DrawPath(drawing, value => this.Paint.Evaluate(this.FacingNormalAt(value), PaintModel.Original).Facing, Appearance.Original);
+        this.DrawPath(drawing, value => this.Paint.Evaluate(this.FacingNormalAt(value), PaintModel.LinearWarp).Facing, Appearance.Proposed);
+        double fraction = Math.Clamp(this.FacingProbeFraction, 0, 1);
+        drawing.DrawLine(new(Appearance.Quiet, 1) { DashStyle = DashStyles.Dot }, this.Map(fraction, 0), this.Map(fraction, 1));
+        foreach (PaintModel model in Enum.GetValues<PaintModel>()) {
+            Brush brush = model == PaintModel.Original ? Appearance.Original : Appearance.Proposed;
+            // Different sizes keep both colors visible when their values agree.
+            double radius = model == PaintModel.Original ? 6.5 : 3.5;
+            drawing.DrawEllipse(brush, new(Appearance.Panel, 1), this.FacingMarkerPoint(model), radius, radius);
         }
-        PlotText.Draw(drawing, this.BackRangeDegrees == 0 ? "Normal tilt (degrees) | front hemisphere only" : "Normal tilt (degrees) | shaded regions: back", new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Quiet, this);
+        bool outside = this.FacingProbeFraction < 0 || this.FacingProbeFraction > 1;
+        if (outside) {
+            string edge = this.FacingProbeFraction < 0 ? "<" : ">";
+            PlotText.Draw(drawing, edge, new(this.Map(fraction, 1).X + (fraction == 0 ? 12 : -12), this.Plot.Top + 4), Appearance.Text, this, 20, HorizontalAlignment.Center);
+        }
+        string footer = outside ? $"Probe {this.FacingProbeTilt:F1}° outside view | tilt (°)"
+            : this.BackRangeDegrees == 0 ? "Tilt (°) | slice follows probe | front only" : "Tilt (°) | slice follows probe | back shaded";
+        PlotText.Draw(drawing, footer, new(this.Plot.Left, this.Plot.Bottom + 34), Appearance.Quiet, this);
     }
 
     private void DrawColorCurves(DrawingContext drawing) {

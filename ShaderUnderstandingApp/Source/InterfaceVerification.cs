@@ -82,6 +82,77 @@ internal static class InterfaceVerification {
         Require(window.FacingPlot.FacingHalfRange == 180 && window.FacingPlot.BackRegionFraction == 0.25 &&
             window.FacingPlot.FacingAxisTicks.SequenceEqual(new double[] { -180, -90, 0, 90, 180 }), "maximum Back range restores the complete angle axis");
 
+        // Moving on the sphere used to remove the facing indicators as soon as
+        // the selected normal left the fixed Rotation plane. Verify a slice
+        // through each arbitrary probe, not a projected point on an unrelated
+        // curve, and confirm that the colored markers actually render.
+        void RequireMarkerPixels(PaintModel model) {
+            CurveView view = window.FacingPlot;
+            RenderTargetBitmap image = new((int)Math.Ceiling(window.Root.ActualWidth), (int)Math.Ceiling(window.Root.ActualHeight), 96, 96, PixelFormats.Pbgra32);
+            image.Render(window.Root);
+            Point marker = view.TransformToAncestor(window.Root).Transform(view.FacingMarkerPoint(model));
+            Color expected = (model == PaintModel.Original ? Appearance.Original : Appearance.Proposed).Color;
+            byte[] pixels = Pixels(image);
+            bool found = false;
+            for (int y = Math.Max(0, (int)marker.Y - 7); y <= Math.Min(image.PixelHeight - 1, (int)marker.Y + 7); y++) {
+                for (int x = Math.Max(0, (int)marker.X - 7); x <= Math.Min(image.PixelWidth - 1, (int)marker.X + 7); x++) {
+                    int offset = (y * image.PixelWidth + x) * 4;
+                    if (Math.Abs(pixels[offset] - expected.B) < 3 && Math.Abs(pixels[offset + 1] - expected.G) < 3 &&
+                        Math.Abs(pixels[offset + 2] - expected.R) < 3 && pixels[offset + 3] == 255) found = true;
+                }
+            }
+            Require(found, "facing marker pixels render for " + model);
+        }
+        foreach (double rotation in new[] { 0.0, 45, 123 }) {
+            window.SetParameters(rangeMaterial with { RotationDegrees = rotation, Shift = rotation == 123 ? 0 : 0.6 });
+            await Settle();
+            foreach (Direction normal in new Direction[] { new(-0.0510, -0.0332, 0.9981), new(0.3, -0.7, 0.6), new(0.2, 0.4, -0.8) }) {
+                window.SetProbe(normal);
+                await Settle();
+                Direction sampled = window.FacingPlot.FacingNormalAt(window.FacingPlot.FacingProbeFraction);
+                Require((sampled + window.Probe * -1).Length < 1e-12, "facing slice passes through an arbitrary sphere probe at rotation " + rotation);
+                foreach (PaintModel model in Enum.GetValues<PaintModel>()) {
+                    CompiledPaint probePaint = new(window.Parameters);
+                    Require(Math.Abs(probePaint.Evaluate(sampled, model).Facing - probePaint.Evaluate(window.Probe, model).Facing) < 1e-12,
+                        "facing curve agrees with the inspected value for " + model);
+                    RequireMarkerPixels(model);
+                }
+            }
+        }
+        window.SetParameters(rangeMaterial);
+        window.SetProbe(new(0.3, -0.7, 0.6));
+        await Settle();
+        Direction centerOfSlice = window.FacingPlot.NormalAt(FacingPoint(0.5))!.Value;
+        double azimuth = window.Parameters.RotationDegrees * Math.PI / 180;
+        double crossOffset = -window.Probe.X * Math.Sin(azimuth) + window.Probe.Y * Math.Cos(azimuth);
+        Require(Math.Abs(-centerOfSlice.X * Math.Sin(azimuth) + centerOfSlice.Y * Math.Cos(azimuth) - crossOffset) < 1e-12 &&
+            centerOfSlice.Z > 0, "facing graph clicks preserve the probe's offset from the Rotation plane");
+        Capture("SphereProbeFacingMarkers");
+        window.BackRangeSelector.Value = 0;
+        window.SetProbe(new(0.2, 0.4, -0.8));
+        await Settle();
+        Require(window.FacingPlot.FacingProbeFraction > 1 && window.FacingPlot.FacingMarkerPoint(PaintModel.Original).X == FacingPoint(1).X,
+            "a back probe outside the front-only view stays marked at the right edge");
+        foreach (PaintModel model in Enum.GetValues<PaintModel>()) RequireMarkerPixels(model);
+        Capture("ProbeOutsideFacingRange");
+        window.SetProbe(new(-0.8, -0.2, -0.1));
+        await Settle();
+        Require(window.FacingPlot.FacingProbeFraction < 0 && window.FacingPlot.FacingMarkerPoint(PaintModel.Original).X == FacingPoint(0).X,
+            "a probe beyond the left boundary stays marked at the left edge");
+        foreach (PaintModel model in Enum.GetValues<PaintModel>()) RequireMarkerPixels(model);
+        // Exact slice poles have no defined tilt; their constant slice and both
+        // markers must still render without invalid normals or divisions.
+        window.SetParameters(rangeMaterial with { RotationDegrees = 0 });
+        window.SetProbe(new(0, 1, 0));
+        await Settle();
+        Require(window.FacingPlot.FacingProbeTilt == 0 && window.FacingPlot.FacingNormalAt(0) == window.Probe &&
+            window.FacingPlot.FacingNormalAt(1) == window.Probe, "slice pole produces a finite constant facing curve");
+        foreach (PaintModel model in Enum.GetValues<PaintModel>()) RequireMarkerPixels(model);
+        window.SetParameters(rangeMaterial);
+        window.SetProbe(rangeProbe);
+        window.BackRangeSelector.Value = 90;
+        await Settle();
+
         // Exercise the real drag bar handlers, including both zero-height
         // collapse and upward restoration using the same bar. Layout
         // changes must reclaim space for both graphs without changing previews.
