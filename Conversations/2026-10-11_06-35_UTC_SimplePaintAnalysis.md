@@ -776,3 +776,37 @@ Implemented and rebuilt:
 Sphere sizes stay fixed during these adjustments. All 184 GUI checks and mathematical tests pass.
 
 Double-click [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) to open the updated app.
+
+
+## Hide and restore details using only the drag bar
+
+## User
+
+i should be able to fully hide the bottom pane using the drag bar
+
+
+## Assistant
+
+I'll make dragging the divider down fully collapse the bottom pane. The Show details button will still restore it.
+
+
+## User
+
+also, don't have a "show/hide details" button. just make it so that the drag bar can fully hide and then restore the bottom pane.
+
+
+## Assistant
+
+I'll remove the button and keep the drag bar at the bottom when the pane is hidden, so you can drag it back up to restore the pane.
+
+
+## Assistant
+
+The drag bar now reduces the pane to zero height and stays visible at the bottom so you can drag it back up. The button is removed. All 188 GUI checks pass, including collapse and restoration at both window sizes.
+
+
+## Assistant
+
+Done. Drag the bar all the way down to fully hide the bottom pane, then drag it up to restore it. The show/hide button is removed.
+
+Rebuilt and verified with 188 GUI checks. Open [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) for the updated version.
