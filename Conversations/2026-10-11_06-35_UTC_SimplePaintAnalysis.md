@@ -736,3 +736,43 @@ You can now double-click [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnders
 Each launch uses a private copy. Open windows keep their version and parameters; new launches use the latest completed build.
 
 Verified with 30 launcher checks, including rebuilding with DLLs locked and launching during a build.
+
+
+## More vertical space for the graphs
+
+## User
+
+i want more vertical space for the two graph panes. (one way you could do this is to have an option to hide the bottom pane.) determine the best way to achieve more vertical space for the two graph panes and do it.
+
+
+## Assistant
+
+I'll make the divider above the bottom pane draggable and add a control to collapse that pane. That will let you give the graphs more height while keeping the inspector available when you need it.
+
+
+## Assistant
+
+I'll also make the graphs taller by default. The divider and collapse control will give space directly to the graphs, keeping the sphere previews the same size.
+
+
+## Assistant
+
+The new controls work in the first layout checks: hiding the details pane adds about 320 pixels to each graph at 1440p, and showing it restores the previous size and tab. I'm checking the smaller window layout and updating an older test that assumes a fixed sphere position.
+
+
+## Assistant
+
+All 184 GUI checks pass, including dragging the divider, hiding and restoring the pane, and resizing the window while it's hidden. I've also checked the rendered layouts at 1440p and the minimum window size. The updated build is ready for Run.cmd.
+
+
+## Assistant
+
+Implemented and rebuilt:
+
+- Both graphs are taller by default.
+- Drag the divider above the bottom pane to adjust their height.
+- Click **Hide details** at the upper right for maximum graph space. **Show details** restores the previous size and tab.
+
+Sphere sizes stay fixed during these adjustments. All 184 GUI checks and mathematical tests pass.
+
+Double-click [Run.cmd](C:/Users/k/Repository/Veehiicuul/ShaderUnderstandingApp/Run.cmd) to open the updated app.
