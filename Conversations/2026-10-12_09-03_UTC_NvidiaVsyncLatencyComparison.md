@@ -189,3 +189,53 @@ The validation targets are:
 - PresentMon's input estimate approaches the C++ result of about 9 ms.
 
 That is a concrete route to matching the pipeline. The resulting latency still needs measurement; matching actual gamepad response additionally requires associating a gamepad reading with the frame that displays its effect.
+
+## User
+
+i would like you to do this engine change and somehow have this saved as part of this repo. tell me how you would do this.
+
+## Assistant Commentary
+
+I'll inspect the Godot checkout and build tools, then propose a way to keep the engine patch, build process, and export integration reproducible in this repo.
+
+## Assistant Commentary
+
+The local Godot checkout is clean and matches the captured engine version exactly: `4.7.2-stable`, commit `ed1daf0bf001b61586d9930840f2f1394092c079`. I'd store our patch and build scripts in this repo, apply them to a separate generated checkout, and point both game export presets at the resulting template. Visual Studio and .NET are installed; SCons needs to be set up.
+
+## Assistant Final
+
+I would keep this as a **pinned Godot source revision plus a reviewable patch and build scripts in this repo**. A fresh checkout would contain everything needed to reconstruct our modified engine.
+
+The tracked files would look like this:
+
+```text
+Engine/
+  Godot/
+    Upstream.json
+    Requirements.txt
+    Patches/
+      PresentationLatency.patch
+    Build.cmd
+    Build.ps1
+    Readme.md
+```
+
+`Upstream.json` would pin Godot `4.7.2-stable` at `ed1daf0bf001b61586d9930840f2f1394092c079`, which matches your installed engine and the clean local source checkout. It would also record the required dependency versions. `PresentationLatency.patch` would contain our engine changes.
+
+The build script would create a separate, ignored source checkout under `Engine/Godot/`, verify that revision, apply the patch, and compile an optimized Windows x64 .NET release export template with D3D12 enabled. It would use a local Python environment with pinned SCons dependencies. Visual Studio and .NET are already installed; SCons currently isn't. Generated source, dependencies, binaries, and timestamped `LogOutput` would be gitignored. `Build.cmd` would invoke `pwsh`.
+
+For the engine patch, I would:
+
+- Add the DXGI waitable swap chain and maximum presentation latency of one.
+- Add a frame admission step before Windows input processing and the game update, including GPU readiness, so input is sampled after the waits.
+- Handle the first frame, resize, minimize/restore, shutdown, and swap-chain recreation without hanging the message loop.
+- Keep Godot's two allocated frame contexts, while limiting admitted work separately.
+- Log the engine revision, patch identity, and active queue policy at startup so captures identify the running implementation.
+
+Godot supports [custom Windows export templates](https://docs.godotengine.org/en/stable/engine_details/development/compiling/compiling_for_windows.html), including [builds with .NET support](https://docs.godotengine.org/en/stable/engine_details/development/compiling/compiling_with_dotnet.html). I'd keep the C# API unchanged so the installed Godot editor can continue importing and exporting the project using our custom release template.
+
+I'd then integrate it into [the game build script](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Build.ps1) and both release export presets in [export_presets.cfg](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/export_presets.cfg). The game build would check the engine manifest and patch fingerprint, rebuilding when needed and failing if it cannot produce the required template. This makes the normal build produce the modified game consistently.
+
+Finally, I'd test the window lifecycle and take matching PresentMon captures on **NE18NZ2 at 120 Hz**, retaining your NVIDIA VSync override. Success means the two future presents disappear, Present-to-GPU-completion approaches the C++ result, and Present-to-display approaches one refresh interval. I'd save the capture analysis and measured result in the repo; reaching roughly 9 ms would be a measured outcome, not an assumption.
+
+I'd split the work into separate commits for the engine patch/build support, game export integration, and validation results. Conversation commits would remain separate.
