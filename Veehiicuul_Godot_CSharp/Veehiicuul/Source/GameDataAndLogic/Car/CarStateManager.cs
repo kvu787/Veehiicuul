@@ -48,8 +48,7 @@ public sealed class CarStateManager {
     private readonly InputManager InputManager;
 
     private readonly Vector3 StartingPosition;
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0032:Use auto property", Justification = "Readability")]
-    private readonly float StartingRotation;
+    private float StartingRotation { get; }
 
     private float? Rotation_ForMostRecentNonZeroVelocity;
     private Vector3 Velocity_WorldSpace;
