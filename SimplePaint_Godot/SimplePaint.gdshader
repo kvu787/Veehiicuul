@@ -18,19 +18,19 @@ render_mode unshaded, cull_back, fog_disabled;
 uniform vec3 BaseColorSrgb : source_color = vec3(0.107, 0.223, 0.578);
 
 /** Base color appears at tone 1 - Brightness. Increasing this moves the color anchor toward the dark end; it is not an RGB multiplier. */
-uniform float Brightness : hint_range(0.0009765625, 0.9990234375, 0.001) = 0.5;
+uniform float Brightness : hint_range(0.0009765625, 0.9990234375, 0.0009765625) = 0.5;
 
 /** Moves the facing maximum sideways. Exact zero selects symmetric facing and makes RotationDegrees irrelevant. */
-uniform float Shift : hint_range(0.0, 0.9990234375, 0.001) = 0.0;
+uniform float Shift : hint_range(0.0, 0.9990234375, 0.0009765625) = 0.0;
 
 /** Counterclockwise screen direction: 0 right, 90 up, 180 left, 270 down. Valid range is [0, 360); the hint maximum is the largest binary32 value below 360. */
-uniform float RotationDegrees : hint_range(0.0, 359.999969482421875, 0.01) = 0.0;
+uniform float RotationDegrees : hint_range(0.0, 359.9990234375, 0.0009765625) = 0.0;
 
 /** Tone at the silhouette and throughout the back hemisphere. May exceed or equal LightPoint. Zero produces exact black. */
-uniform float DarkPoint : hint_range(0.0, 0.9990234375, 0.001) = 0.0;
+uniform float DarkPoint : hint_range(0.0, 0.9990234375, 0.0009765625) = 0.0;
 
 /** Tone at the shifted facing maximum. May be below or equal DarkPoint. One produces exact white. */
-uniform float LightPoint : hint_range(0.0009765625, 1.0, 0.001) = 1.0;
+uniform float LightPoint : hint_range(0.0009765625, 1.0, 0.0009765625) = 1.0;
 
 // Use our own unnormalized varying instead of Godot's normalized NORMAL.
 // With orthographic projection, smooth interpolation equals noperspective.
