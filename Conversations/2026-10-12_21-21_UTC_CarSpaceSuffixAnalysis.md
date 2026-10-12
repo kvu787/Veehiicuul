@@ -225,3 +225,33 @@ That negative Z selects `AccelerationMap.Reverse`. The sign comes from `-acceler
 The car's front being local +Z is correct. **Your expected +Z acceleration does not happen in that setup.**
 
 Camera yaw zero alone doesn't determine the car-space result: if the car instead faces track-space -Z (car yaw 180 degrees), the same stick-up input becomes car-space +Z.
+
+## User
+
+okay, i think the _carSpace variables are fine. what about accelerationInput_xzPlane and accelerationInput_trackSpace? should those be renamed to accelerationInput_trackSpace and accelerationInput_cameraTrackSpace?
+
+## Assistant
+
+I'll check which axes those two vectors use before assessing the proposed names.
+
+## Assistant
+
+I would rename the first to **`accelerationInput_cameraYawSpace`** and keep **`accelerationInput_trackSpace`**.
+
+The names should describe the axes used to express each vector:
+
+- Before applying camera yaw, the input uses the camera rig's horizontal axes.
+- After applying camera yaw, the direction is expressed in the track's axes.
+- After applying negative car yaw, it is expressed in the car's axes.
+
+That gives:
+
+```csharp
+Vector3 accelerationInput_cameraYawSpace = new(accelerationInput.X, 0f, -accelerationInput.Y);
+Vector3 accelerationInput_trackSpace = accelerationInput_cameraYawSpace.Rotated(Vector3.Up, this.CameraYawManager.Yaw);
+Vector3 accelerationInput_carSpace = accelerationInput_trackSpace.Rotated(Vector3.Up, -1f * this.Rotation);
+```
+
+`_xzPlane` describes the plane, but all three vectors lie in that plane. `_cameraYawSpace` identifies the frame and makes clear that camera pitch isn't involved.
+
+I wouldn't use `_cameraTrackSpace`: the camera determines the requested direction, while `_trackSpace` identifies the axes expressing it. With camera yaw zero, the first two vectors happen to have identical components; with nonzero yaw, the distinction becomes visible.
