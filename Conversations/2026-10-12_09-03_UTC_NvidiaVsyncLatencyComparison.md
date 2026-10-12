@@ -154,3 +154,38 @@ With forced VSync, that pipeline settles into displaying frames about three refr
 
 The 9 and 25 ms figures specifically match `MsAllInputToPhotonLatency`, PresentMon's keyboard/mouse estimate. It associates input events with presented frames; it does not inspect pixels to verify a visible response or measure gamepad input. The C++ scene mostly animates independently of input, so these captures demonstrate the pipeline difference rather than a verified physical button-to-pixel measurement.
 
+## User
+
+how do we get the godot game to match the input latency of the c++ app
+
+## Assistant Commentary
+
+I'll check which Godot settings can reduce the queue and what needs to change in its DirectX 12 backend to reproduce the C++ frame loop.
+
+## Assistant Commentary
+
+One useful detail: Godot 4.7.2 clamps `frame_queue_size` to at least two, so setting it to one would have no effect. The useful change is presentation admission control, with the wait placed before Windows input processing and the game update.
+
+## Assistant Final
+
+**To match the C++ application's behavior with VSync still on, we should add the same presentation admission control to Godot's D3D12 backend and build a custom Godot export template.** The game's C# API does not expose that swap-chain control.
+
+Your project already uses two swap-chain images and disables accumulated input. Also, setting `frame_queue_size=1` would accomplish nothing: the inspected Godot 4.7.2 engine [clamps it to at least two](C:/Users/k/Repository/External/Godot_4-7-2/servers/rendering/rendering_device.cpp:8366).
+
+The engine change should do this:
+
+1. **Create a waitable swap chain.** Add `DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT`, call `SetMaximumFrameLatency(1)`, and obtain its wait handle. Preserve this configuration through resizing and swap-chain recreation.
+2. **Wait before processing fresh input.** At the start of each game frame, wait for presentation admission and the previous frame's GPU completion. In Godot's Windows loop, this belongs before [input event processing](C:/Users/k/Repository/External/Godot_4-7-2/platform/windows/os_windows.cpp:2349). Placing the wait immediately before Present would leave the frame based on older input.
+3. **Process input, update the game, render, and present immediately.** Keep the wait responsive to window messages, and refresh input after any blocking wait. Microsoft documents this [frame-loop ordering](https://learn.microsoft.com/en-us/windows/uwp/gaming/reduce-latency-with-dxgi-1-3-swap-chains).
+4. **Keep resource buffering separate from admission.** Godot can retain two allocated frame contexts while allowing only one frame of work to proceed. Simply removing its minimum-two clamp needs a wider audit and would not implement the presentation control we need.
+
+Then build a Windows x64 .NET release export template from the patched Godot 4.7.2 source, configure the game's export to use it, and repeat the captures under the same NVIDIA VSync override and monitor conditions. Your captured render-thread setting is already `Safe`; the implementation should preserve that and avoid letting simulation run ahead of admitted rendering.
+
+The validation targets are:
+
+- Present-to-GPU-completion falls from about 16 ms toward the C++ application's sub-millisecond result.
+- Present-to-display falls from about 24 ms toward one refresh interval, about 8.33 ms.
+- The two later Present calls before each frame's display disappear.
+- PresentMon's input estimate approaches the C++ result of about 9 ms.
+
+That is a concrete route to matching the pipeline. The resulting latency still needs measurement; matching actual gamepad response additionally requires associating a gamepad reading with the frame that displays its effect.
