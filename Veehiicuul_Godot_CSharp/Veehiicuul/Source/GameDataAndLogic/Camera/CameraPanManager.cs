@@ -25,6 +25,6 @@ public sealed class CameraPanManager {
     }
 
     public void ApplyInternalStateToCameraPosition() {
-        this.TrackObjects.CameraPanAndYaw.Position = this.CameraFollowManager.FollowsCarLocation ? this.CarStateManager.Position : this.OriginalCameraPosition;
+        this.TrackObjects.CameraPanAndYaw.Position = this.CameraFollowManager.FollowsCarLocation ? this.CarStateManager.Position_WorldSpace : this.OriginalCameraPosition;
     }
 }

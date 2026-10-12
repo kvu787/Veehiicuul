@@ -48,18 +48,15 @@ public sealed class CarStateManager {
     private readonly InputManager InputManager;
 
     private readonly Vector3 StartingPosition;
-    // Car yaw uses native Godot radians from model front (+Z), relative to the track.
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0032:Use auto property", Justification = "Readability")]
     private readonly float StartingRotation;
 
     private float? Rotation_ForMostRecentNonZeroVelocity;
-    private Vector3 Velocity;
+    private Vector3 Velocity_WorldSpace;
 
-    /// <summary>The managed yaw applied to the car; collision queries share this authoritative pose.</summary>
     public float Rotation => this.Rotation_ForMostRecentNonZeroVelocity ?? this.StartingRotation;
 
-    /// <summary>Car position relative to the track root; Model has an identity local transform.</summary>
-    public Vector3 Position { get; private set; }
+    public Vector3 Position_WorldSpace { get; private set; }
 
     public CarStateManager(CarSwitcher carSwitcher, CameraYawManager cameraYawManager, InputManager inputManager, TrackNodes trackObjects) {
         ArgumentNullException.ThrowIfNull(trackObjects);
@@ -83,68 +80,73 @@ public sealed class CarStateManager {
         CarDynamic carDynamic = this.CarSwitcher.CurrentCar.Dynamic;
 
         if (this.InputManager.Brake == 0f) {
-            Vector3 accelerationInput_xzPlane = new(accelerationInput.X, 0f, -accelerationInput.Y);
-            Vector3 accelerationInput_trackSpace = accelerationInput_xzPlane.Rotated(Vector3.Up, this.CameraYawManager.Yaw);
+            // Translate stick input from controller space to car space
+            Vector3 accelerationInput_cameraSpace = new(accelerationInput.X, 0f, -accelerationInput.Y);
+            Vector3 accelerationInput_worldSpace = accelerationInput_cameraSpace.Rotated(Vector3.Up, this.CameraYawManager.Yaw);
+            Vector3 accelerationInput_carSpace = accelerationInput_worldSpace.Rotated(Vector3.Up, -1f * this.Rotation);
 
-            Vector3 accelerationInput_carSpace = accelerationInput_trackSpace.Rotated(Vector3.Up, -1f * this.Rotation);
+            // Apply axial deadzones and clamp length
             accelerationInput_carSpace.X = InputUtility.AxialDeadzone(accelerationInput_carSpace.X, AxialDeadzone_Inner_LeftRight, AxialDeadzone_Outer_LeftRight);
             accelerationInput_carSpace.Y = 0f;
             accelerationInput_carSpace.Z = InputUtility.AxialDeadzone(accelerationInput_carSpace.Z, AxialDeadzone_Inner_ForwardBackward, AxialDeadzone_Outer_ForwardBackward);
             accelerationInput_carSpace = accelerationInput_carSpace.LimitLength(1f);
 
             if (accelerationInput_carSpace != Vector3.Zero) {
+                // Apply acceleration map
                 Vector3 accelerationOutput_carSpace = new(
                     accelerationInput_carSpace.X * (accelerationInput_carSpace.X < 0f ? carDynamic.AccelerationMap.Right : carDynamic.AccelerationMap.Left),
                     0f,
                     accelerationInput_carSpace.Z * (accelerationInput_carSpace.Z < 0f ? carDynamic.AccelerationMap.Reverse : carDynamic.AccelerationMap.Forward)
                 );
 
-                Vector3 accelerationOutput_trackSpace = accelerationOutput_carSpace.Rotated(Vector3.Up, this.Rotation);
-                Vector3 deltaVelocity_trackSpace = (float)delta * accelerationOutput_trackSpace;
-                this.Velocity += deltaVelocity_trackSpace;
+                // Translate acceleration to world space
+                Vector3 accelerationOutput_worldSpace = accelerationOutput_carSpace.Rotated(Vector3.Up, this.Rotation);
+
+                // Apply acceleration to velocity
+                this.Velocity_WorldSpace += (float)delta * accelerationOutput_worldSpace;
             } else {
                 // Brake and acceleration are zero, so do nothing
             }
         } else {
-            if (this.Velocity == Vector3.Zero) {
+            if (this.Velocity_WorldSpace == Vector3.Zero) {
                 // Brake is non-zero, but velocity is already zero, so do nothing
             } else {
-                float velocityLengthSquared = this.Velocity.LengthSquared();
+                float velocityLengthSquared = this.Velocity_WorldSpace.LengthSquared();
                 if (velocityLengthSquared < 0.0001f) {
-                    this.Velocity = Vector3.Zero;
+                    this.Velocity_WorldSpace = Vector3.Zero;
                 } else {
-                    Vector3 brakeDirection = -this.Velocity.Normalized();
+                    Vector3 brakeDirection = -this.Velocity_WorldSpace.Normalized();
                     Vector3 brakeDeltaVelocity = carDynamic.AccelerationMap.Reverse * this.InputManager.Brake * (float)delta * brakeDirection;
                     if (brakeDeltaVelocity.LengthSquared() >= velocityLengthSquared) {
-                        this.Velocity = Vector3.Zero;
+                        this.Velocity_WorldSpace = Vector3.Zero;
                     } else {
-                        this.Velocity += brakeDeltaVelocity;
+                        this.Velocity_WorldSpace += brakeDeltaVelocity;
                     }
                 }
             }
         }
 
         if (carDynamic.VelocityLimiter > 0f) {
-            this.Velocity = this.Velocity.LimitLength(carDynamic.VelocityLimiter);
+            this.Velocity_WorldSpace = this.Velocity_WorldSpace.LimitLength(carDynamic.VelocityLimiter);
         }
 
-        if (this.Velocity != Vector3.Zero) {
-            this.Rotation_ForMostRecentNonZeroVelocity = this.Velocity.Get2DRotation();
+        if (this.Velocity_WorldSpace != Vector3.Zero) {
+            this.Rotation_ForMostRecentNonZeroVelocity = this.Velocity_WorldSpace.Get2DRotation();
         }
     }
 
     public void UpdatePosition(double delta) {
-        this.Position += this.Velocity * (float)delta;
+        this.Position_WorldSpace += this.Velocity_WorldSpace * (float)delta;
     }
 
     public void Reset_PositionRotationVelocity() {
-        this.Position = this.StartingPosition;
+        this.Position_WorldSpace = this.StartingPosition;
         this.Rotation_ForMostRecentNonZeroVelocity = null;
-        this.Velocity = Vector3.Zero;
+        this.Velocity_WorldSpace = Vector3.Zero;
     }
 
     public void ApplyInternalStateToCarTransform() {
-        this.CarSwitcher.CurrentCar.Node!.Position = this.Position;
+        this.CarSwitcher.CurrentCar.Node!.Position = this.Position_WorldSpace;
         this.CarSwitcher.CurrentCar.Node!.Rotation = new Vector3(0f, this.Rotation, 0f);
     }
 }
