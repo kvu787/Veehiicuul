@@ -171,3 +171,29 @@ For example, with camera yaw zero:
 There is another detail: the [heading update](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs:132) automatically points the car along its resulting velocity. From rest in the first example, it initially accelerates backward relative to its old orientation, then turns to face -Z. Continued stick-up then produces forward acceleration.
 
 So `_carSpace` accurately describes the coordinates, but it does **not** mean stick-up is defined as car-forward. If you want stick-up to always accelerate along the car's +Z, the input mapping needs to change. Changing the sign alone would reverse camera-relative up/down; it would not make the controls car-relative.
+
+## User
+
+fixed my prompt:
+the thing that confuses me is what happens when i push the analog stick "up". this results in +y stick input. this should result in +z acceleration in car space, because the front of the car faces towards +z. is this what happens?
+
+## Assistant
+
+I'll clarify the acceleration mapping and add your corrected prompt to the conversation log.
+
+## Assistant
+
+**Not always.** In the current code, +Y stick input produces +Z car-space acceleration only when the car faces the camera-relative direction selected by stick-up.
+
+The mapping is:
+
+1. Stick `(0, +1)` becomes `(0, 0, -1)` because of `-accelerationInput.Y`.
+2. Camera yaw rotates that into track space.
+3. Negative car yaw expresses it in car space.
+4. Its car-space components select the directional acceleration settings.
+
+For example, if both camera yaw and car yaw are zero, stick-up produces **-Z car-space acceleration**, using `AccelerationMap.Reverse`.
+
+Your statement that the car's front faces local +Z is correct. The missing connection is that **stick-up is camera-relative**, so it need not point toward the car's front. `_carSpace` describes which axes express the input; it doesn't define stick-up as forward.
+
+If your intended rule is "stick +Y always means car-space +Z acceleration", the current code does not implement that rule.
