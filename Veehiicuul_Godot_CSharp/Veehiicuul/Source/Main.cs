@@ -86,7 +86,7 @@ public class Main {
         } else {
             if (this.CarSwitcher.ReadInputAndSwitchCar()
                 || this.InputManager.ResetCar
-                || this.CollisionManager.IsCarColliding(this.CarStateManager.Position_WorldSpace, this.CarStateManager.Rotation)) {
+                || this.CollisionManager.IsCarColliding(this.CarStateManager.Position_WorldSpace, this.CarStateManager.Rotation_WorldSpace)) {
                 this.CarControlTimeoutStart = DateTime.Now;
                 this.CarStateManager.Reset_PositionRotationVelocity();
             }

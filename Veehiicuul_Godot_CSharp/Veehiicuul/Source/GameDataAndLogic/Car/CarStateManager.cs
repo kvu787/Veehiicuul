@@ -53,8 +53,14 @@ public sealed class CarStateManager {
     private float? Rotation_ForMostRecentNonZeroVelocity;
     private Vector3 Velocity_WorldSpace;
 
-    public float Rotation => this.Rotation_ForMostRecentNonZeroVelocity ?? this.StartingRotation;
+    /// <summary>
+    /// "WorldSpace" means 0 deg starts at +Z and positive Rotation travels clockwise from +Z to +X.
+    /// </summary>
+    public float Rotation_WorldSpace => this.Rotation_ForMostRecentNonZeroVelocity ?? this.StartingRotation;
 
+    /// <summary>
+    /// "WorldSpace" means the Godot axes of +Y up, -Z forward, +X right.
+    /// </summary>
     public Vector3 Position_WorldSpace { get; private set; }
 
     public CarStateManager(CarSwitcher carSwitcher, CameraYawManager cameraYawManager, InputManager inputManager, TrackNodes trackObjects) {
@@ -82,7 +88,7 @@ public sealed class CarStateManager {
             // Translate stick input from controller space to car space
             Vector3 accelerationInput_cameraSpace = new(accelerationInput.X, 0f, -accelerationInput.Y);
             Vector3 accelerationInput_worldSpace = accelerationInput_cameraSpace.Rotated(Vector3.Up, this.CameraYawManager.Yaw);
-            Vector3 accelerationInput_carSpace = accelerationInput_worldSpace.Rotated(Vector3.Up, -1f * this.Rotation);
+            Vector3 accelerationInput_carSpace = accelerationInput_worldSpace.Rotated(Vector3.Up, -1f * this.Rotation_WorldSpace);
 
             // Apply axial deadzones and clamp length
             accelerationInput_carSpace.X = InputUtility.AxialDeadzone(accelerationInput_carSpace.X, AxialDeadzone_Inner_LeftRight, AxialDeadzone_Outer_LeftRight);
@@ -99,7 +105,7 @@ public sealed class CarStateManager {
                 );
 
                 // Translate acceleration to world space
-                Vector3 accelerationOutput_worldSpace = accelerationOutput_carSpace.Rotated(Vector3.Up, this.Rotation);
+                Vector3 accelerationOutput_worldSpace = accelerationOutput_carSpace.Rotated(Vector3.Up, this.Rotation_WorldSpace);
 
                 // Apply acceleration to velocity
                 this.Velocity_WorldSpace += (float)delta * accelerationOutput_worldSpace;
@@ -146,6 +152,6 @@ public sealed class CarStateManager {
 
     public void ApplyInternalStateToCarTransform() {
         this.CarSwitcher.CurrentCar.Node!.Position = this.Position_WorldSpace;
-        this.CarSwitcher.CurrentCar.Node!.Rotation = new Vector3(0f, this.Rotation, 0f);
+        this.CarSwitcher.CurrentCar.Node!.Rotation = new Vector3(0f, this.Rotation_WorldSpace, 0f);
     }
 }
