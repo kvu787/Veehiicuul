@@ -63,7 +63,7 @@ reflected_light_source = 1
 
 [node name="Car" parent="." unique_id=382530805 instance=ExtResource("1_1k6jk")]
 
-[node name="SlopeCarBlue" parent="Car" index="0" unique_id=1199377031]
+[node name="SlopeCarBlue" parent="Car" index="0" unique_id=725012431]
 surface_material_override/0 = SubResource("ShaderMaterial_u5o7h")
 surface_material_override/1 = SubResource("ShaderMaterial_47788")
 surface_material_override/2 = SubResource("ShaderMaterial_w13o2")
