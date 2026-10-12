@@ -1,11 +1,96 @@
 Set-StrictMode -Version "Latest"
 $ErrorActionPreference = "Stop"
 
-$EXE_NAME = "Veehiicuul.exe"
+$MainProcessPath = "$env:UserProfile\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyBuildOutput\Veehiicuul_Godot_CSharp.exe"
+$MainProcessName = Split-Path -Path $MainProcessPath -Leaf
+$PresentMonPath = "$env:UserProfile\Program\PresentMon-2.6.0-x64.exe"
+$PresentMonStandardLogFileName = "PresentMonOutput_Standard.log"
+$PresentMonErrorLogFileName = "PresentMonOutput_Error.log"
 
-$logFolderPath = "$env:UserProfile\Downloads\$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss") $EXE_NAME logs"
-New-Item -ItemType "Directory" -Path $logFolderPath
+$LogFolderPath = "$env:UserProfile\Downloads\$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")"
+$GodotLogFilePath = "$LogFolderPath\Godot.log"
+$PresentMonLogFilePath = "$LogFolderPath\PresentMon.csv"
+$PresentMonSessionName = "$([System.IO.Path]::GetFileNameWithoutExtension($MainProcessPath))_$([Guid]::NewGuid().ToString('N'))"
 
-$presentMonPath = "$env:UserProfile\Program\PresentMon-2.5.1-x64.exe"
-$presentMonLogFilePath  = "$($logFolderPath)\PresentMon.csv"
-& $presentMonPath --process_name $EXE_NAME --output_file $presentMonLogFilePath
+New-Item -ItemType "Directory" -Path $LogFolderPath | Out-Null
+
+Start-Transcript -Path "$LogFolderPath\Launcher.log"
+
+try {
+    . {
+        Write-Host "ProcessPath = $($MainProcessPath)"
+        Write-Host "PresentMonPath = $($PresentMonPath)"
+
+        if (-not (Test-Path $MainProcessPath)) {
+            throw "Invalid ProcessPath='$($MainProcessPath)'"
+        }
+
+        if (@(Get-Process | Select-Object -ExpandProperty Path | Where-Object { $_ -and (Split-Path -Path $_ -Leaf) -eq $MainProcessName }).Count -gt 0) {
+            throw "Error: Multiple processes have the target process name of '$MainProcessName'"
+        }
+
+        $presentMonProcess = $null
+        if (-not (Test-Path $PresentMonPath)) {
+            throw "Invalid PresentMonPath='$($PresentMonPath)'"
+        }
+
+        $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = [System.Security.Principal.WindowsPrincipal]::new($identity)
+        $groupSid = [System.Security.Principal.SecurityIdentifier]::new('S-1-5-32-559') # S-1-5-32-559 is the stable identifier for the "Performance Log Users" group
+        if (-not $principal.IsInRole($groupSid)) {
+            throw "Trying to run PresentMon, but user '$($identity.Name)' must belong to the 'Performance Log Users' (S-1-5-32-559) group."
+        }
+
+        # `--terminate_on_proc_exit` isn't used because I've observed it not stopping PresentMon even after the game exits.
+        $presentMonProcess = Start-Process `
+            -FilePath $PresentMonPath `
+            -ArgumentList "--process_name `"$($MainProcessName)`" --session_name `"$($PresentMonSessionName)`" --output_file `"$($PresentMonLogFilePath)`" --set_circular_buffer_size 65536 --no_console_stats --qpc_time --track_etw_status" `
+            -PassThru `
+            -RedirectStandardOutput "$($LogFolderPath)\$($PresentMonStandardLogFileName)" `
+            -RedirectStandardError "$($LogFolderPath)\$($PresentMonErrorLogFileName)"
+
+        # Work around Windows PowerShell 5.1 returning a null ExitCode for redirected
+        # Start-Process output, even after WaitForExit(). Retain the handle while the
+        # process is running so the later exit-code check can read the actual result.
+        # https://github.com/PowerShell/PowerShell/issues/5421
+        $null = $presentMonProcess.Handle
+
+        Write-Host "'$($PresentMonPath)' launched with PID='$($presentMonProcess.Id)', session_name='$($PresentMonSessionName)'"
+
+        $mainProcess = Start-Process `
+            -FilePath $MainProcessPath `
+            -ArgumentList "--log-file `"$GodotLogFilePath`"" `
+            -PassThru `
+            -RedirectStandardOutput 'NUL' `
+            -RedirectStandardError '\\.\NUL'
+
+        Write-Host "'$($MainProcessPath)' launched with PID='$($mainProcess.Id)'"
+
+        Wait-Process -Id $mainProcess.Id
+
+        if ($null -ne $presentMonProcess) {
+            if (-not $presentMonProcess.HasExited) {
+                & $PresentMonPath --terminate_existing_session --session_name $PresentMonSessionName
+                if ($LASTEXITCODE -ne 0) {
+                    throw "PresentMon shutdown failed with exit code $LASTEXITCODE."
+                }
+            }
+            $presentMonProcess.WaitForExit()
+
+            $utf8WithoutBom = [System.Text.UTF8Encoding]::new($false)
+            foreach ($fileName in $PresentMonStandardLogFileName, $PresentMonErrorLogFileName) {
+                $filePath = Join-Path $LogFolderPath $fileName
+                $content = [System.IO.File]::ReadAllText($filePath)
+                [System.IO.File]::WriteAllText($filePath, $content, $utf8WithoutBom)
+            }
+            if ($presentMonProcess.ExitCode -ne 0) {
+                throw "PresentMon exited with code $($presentMonProcess.ExitCode). See PresentMonOutput_Error.log."
+            }
+        }
+    } | Out-Default
+} catch {
+    Write-Error -Message $_.Exception.ToString() -ErrorAction Continue
+    Read-Host "Launcher threw an exception. Read the console output. Press ENTER to exit"
+} finally {
+    Stop-Transcript
+}
