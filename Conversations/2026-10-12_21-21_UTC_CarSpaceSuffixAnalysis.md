@@ -255,3 +255,38 @@ Vector3 accelerationInput_carSpace = accelerationInput_trackSpace.Rotated(Vector
 `_xzPlane` describes the plane, but all three vectors lie in that plane. `_cameraYawSpace` identifies the frame and makes clear that camera pitch isn't involved.
 
 I wouldn't use `_cameraTrackSpace`: the camera determines the requested direction, while `_trackSpace` identifies the axes expressing it. With camera yaw zero, the first two vectors happen to have identical components; with nonzero yaw, the distinction becomes visible.
+
+## User
+
+do a from-scratch analysis of C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\Source\GameDataAndLogic\Car\CarStateManager.cs and determine if any of these should be renamed:
+accelerationInput_xzPlane
+accelerationInput_trackSpace 
+accelerationInput_carSpace
+
+## Assistant
+
+I'll trace the vectors from stick input through the camera and car rotations, then assess each name from that flow.
+
+## Assistant
+
+The rotation back into track space confirms that `_trackSpace` and `_carSpace` fit their roles. The first vector's name only says that it is horizontal; a name identifying its camera frame would make the sequence clearer.
+
+## Assistant
+
+**I recommend renaming only `accelerationInput_xzPlane`.** The other two names accurately describe their coordinate frames.
+
+| Current name                   | Recommendation                               |
+| ------------------------------ | -------------------------------------------- |
+| `accelerationInput_xzPlane`    | Rename to `accelerationInput_cameraYawSpace` |
+| `accelerationInput_trackSpace` | Keep                                         |
+| `accelerationInput_carSpace`   | Keep                                         |
+
+Tracing the [three assignments](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs:86) and their subsequent use:
+
+1. **`accelerationInput_xzPlane`** embeds stick input as `(X, 0, -Y)`. Its components describe the requested direction along the camera rig's horizontal axes, before converting into track coordinates. `_xzPlane` is accurate, but all three vectors are horizontal, so it doesn't identify this vector's frame. `_cameraYawSpace` does, and specifies the orientation used by this code: the yaw of `CameraPanAndYaw`, without camera pitch.
+
+2. **`accelerationInput_trackSpace`** applies camera yaw to that vector. This expresses the camera-relative request along the track root's axes. The camera determines the direction, but the resulting components use track coordinates, so `_trackSpace` fits.
+
+3. **`accelerationInput_carSpace`** applies negative car yaw, expressing the track-relative vector along the car's axes. Those components receive the car's lateral and longitudinal deadzones and acceleration settings. The resulting acceleration is subsequently rotated by positive car yaw before being added to track-relative velocity, confirming this interpretation.
+
+I also checked the rotations using the installed Godot 4.7.2 library. For stick-up and camera yaw 90 degrees, the first vector is `(0, 0, -1)`, while the track-space vector is `(-1, 0, 0)`. This illustrates why the first should identify the camera frame and the second should retain `_trackSpace`.
