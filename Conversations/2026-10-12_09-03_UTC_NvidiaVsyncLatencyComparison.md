@@ -239,3 +239,70 @@ I'd then integrate it into [the game build script](C:/Users/k/Repository/Veehiic
 Finally, I'd test the window lifecycle and take matching PresentMon captures on **NE18NZ2 at 120 Hz**, retaining your NVIDIA VSync override. Success means the two future presents disappear, Present-to-GPU-completion approaches the C++ result, and Present-to-display approaches one refresh interval. I'd save the capture analysis and measured result in the repo; reaching roughly 9 ms would be a measured outcome, not an assumption.
 
 I'd split the work into separate commits for the engine patch/build support, game export integration, and validation results. Conversation commits would remain separate.
+
+## User
+
+i have moved to a higher tier model and effort level.
+reanswer this prompt:
+
+i would like you to do this engine change and somehow have this saved as part of this repo. tell me how you would do this.
+
+## Assistant Commentary
+
+I'll review the proposed engine hook and repository layout again, focusing on where Godot can wait safely and how to make the modified build reproducible.
+
+## Assistant Commentary
+
+Two details need to be explicit in the plan. The latency mode must work while Godot reports VSync disabled, because your NVIDIA override is external. Also, the wait must run at a safe frame boundary before fresh input is processed; putting it inside Present or framebuffer acquisition would be too late for that frame's input.
+
+## Assistant Commentary
+
+I'd compare an unmodified source build with the patched build using the same compiler settings and game executable path. That controls for build differences and the NVIDIA application profile. Both export presets also need to package the D3D12 runtime dependencies consistently; they currently differ there.
+
+## Assistant Final
+
+I recommend committing **the exact Godot revision, a small series of engine patches, and scripts that build and validate the modified engine**. That keeps the change reviewable and lets a fresh checkout reconstruct it.
+
+I would add this package at the repo root:
+
+```text
+Engine/
+  Godot/
+    Upstream.json
+    BuildConfiguration.json
+    Requirements.txt
+    Patches/
+      WaitableSwapChain.patch
+      FrameAdmission.patch
+    PrepareSource.ps1
+    UpdatePatches.ps1
+    Build.cmd
+    Build.ps1
+    Readme.md
+    Validation/
+      CompareCaptures.ps1
+```
+
+The upstream revision would be Godot `4.7.2-stable`, commit `ed1daf0bf001b61586d9930840f2f1394092c079`. The scripts would obtain that exact source, using your existing local checkout as a source when available, and prepare a separate working copy. They would verify the base revision and apply the committed patches. I would generate those patches from engine Git commits, so subsequent edits have a straightforward path back into this repository.
+
+Generated source, downloaded dependencies, the Python environment, build products, and timestamped `LogOutput` would be ignored. Git would hold our modifications and the reconstruction recipe. A fresh machine would also need the documented compiler prerequisites and access to the pinned upstream sources and dependencies.
+
+I would carry out the work in four stages:
+
+1. **Establish a reproducible baseline build.** Build an unmodified Windows x64 .NET D3D12 export template first and verify that it runs your game. Pin downloaded dependency versions and hashes, record the MSVC/Windows SDK versions and build options, and write those identities into a build manifest. Then use the same configuration for the patched build. This lets us attribute a latency change to the patch. SCons would be installed in the local build environment; Visual Studio and .NET are already available.
+
+2. **Implement the frame admission policy in the engine.** The D3D12 backend would create a waitable swap chain, set maximum frame latency to one, and manage the handle through creation, resize, recreation, and destruction. A native engine hook would wait for presentation admission and the relevant GPU completion before processing fresh input and advancing the game frame. It must run outside rendering locks and service window messages safely. Microsoft requires the wait for every rendered frame, including the first. [DXGI documentation](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-getframelatencywaitableobject)
+
+   **The policy must be enabled independently of Godot's VSync setting.** Your game reports VSync disabled while NVIDIA forces it on. Conditioning the new behavior on `VSYNC_ENABLED` would miss your actual use case. I would enable the policy explicitly for this game and initially support its existing `Safe` render-thread mode. Godot's two resource contexts would remain allocated; the new admission policy would limit how far execution advances.
+
+   The handle and GPU fence need separate treatment: Godot currently [signals the frame fence before calling Present](C:/Users/k/Repository/External/Godot_4-7-2/drivers/d3d12/rendering_device_driver_d3d12.cpp:2472). GPU completion alone cannot establish that presentation has caught up. I would add diagnostic timestamps to verify that the final wait precedes the input used by the frame.
+
+3. **Make the normal game build use the custom engine.** Update the game build and both export presets to select the custom release template through repository-relative paths. Package the matching D3D12 runtime dependencies consistently; the two presets currently differ there. Before export, check the template's source, patch, and configuration identities and rebuild when they change. Record the active engine identity and latency policy in the game's startup log.
+
+   The initial measurement would use the exported executable, matching your captures. Running through the editor's Play button uses the editor binary, so I would also provide a matching patched editor build for that workflow. The build must include the appropriate .NET bindings and support files, following [Godot's .NET build process](https://docs.godotengine.org/en/stable/engine_details/development/compiling/compiling_with_dotnet.html).
+
+4. **Verify both correctness and latency.** Exercise startup, resize, fullscreen transitions, minimize/restore, closing during a wait, and swap-chain recreation. Then compare repeated unmodified and patched captures on **NE18NZ2 at 120 Hz**, using the same game executable path, NVIDIA application profile, scene, and presentation mode. Save the build identities, captures, analysis script, and results in the repo.
+
+The performance target is to eliminate the two later presents currently submitted before each frame reaches display, bring Present-to-display near one refresh interval, and retain steady 120 FPS. I would compare distributions and outliers as well as means. Approaching the C++ application's roughly 9 ms PresentMon input estimate is the expected result to test; actual gamepad response would need input-to-frame instrumentation.
+
+I would commit the build infrastructure, engine patches, game integration, and validation results as separate reviewable changes, with conversation commits kept separate.
