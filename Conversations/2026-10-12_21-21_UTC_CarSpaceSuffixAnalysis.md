@@ -197,3 +197,31 @@ For example, if both camera yaw and car yaw are zero, stick-up produces **-Z car
 Your statement that the car's front faces local +Z is correct. The missing connection is that **stick-up is camera-relative**, so it need not point toward the car's front. `_carSpace` describes which axes express the input; it doesn't define stick-up as forward.
 
 If your intended rule is "stick +Y always means car-space +Z acceleration", the current code does not implement that rule.
+
+## User
+
+fixed my prompt:
+let's say that camera yaw is 0 deg. the thing that confuses me is what happens when i push the analog stick "up". this results in +y stick input. this should result in +z acceleration in car space, because the front of the car faces towards +z. is this what happens?
+
+## Assistant
+
+I'll trace the zero-camera-yaw case explicitly, including where the car's yaw affects the result.
+
+## Assistant
+
+With camera yaw zero, **if the car is also facing track-space +Z (car yaw zero), no: stick-up produces -Z acceleration in car space.**
+
+The calculation is:
+
+```text
+Stick input:           (0, +1)
+XZ input:              (0, 0, -1)
+After camera rotation: (0, 0, -1)  [zero yaw]
+After car rotation:    (0, 0, -1)  [zero yaw]
+```
+
+That negative Z selects `AccelerationMap.Reverse`. The sign comes from `-accelerationInput.Y` in [CarStateManager.cs](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs:86).
+
+The car's front being local +Z is correct. **Your expected +Z acceleration does not happen in that setup.**
+
+Camera yaw zero alone doesn't determine the car-space result: if the car instead faces track-space -Z (car yaw 180 degrees), the same stick-up input becomes car-space +Z.
