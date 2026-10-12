@@ -1,0 +1,29 @@
+**********************
+PowerShell transcript start
+Start time: 20261012010817
+Username: DESKTOP-9H66NOJ\k
+RunAs User: DESKTOP-9H66NOJ\k
+Configuration Name: 
+Machine: DESKTOP-9H66NOJ (Microsoft Windows NT 10.0.26300.0)
+Host Application: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.6.0_x64__8wekyb3d8bbwe\pwsh.dll
+Process ID: 34428
+PSVersion: 7.6.6
+PSEdition: Core
+GitCommitId: 7.6.6
+OS: Microsoft Windows 10.0.26300
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+Transcript started, output file is C:\Users\k\Downloads\2026-10-12_01-08-17\Launcher.log
+ProcessPath = C:\Users\k\Repository\Veehiicuul\3dTestScene_CppDx12\MyBuildOutput\Release\Veehiicuul.exe
+PresentMonPath = C:\Users\k\Program\PresentMon-2.6.0-x64.exe
+'C:\Users\k\Program\PresentMon-2.6.0-x64.exe' launched with PID='15100', session_name='Veehiicuul_4de383168e264389a4034667ed9a7ce9'
+'C:\Users\k\Repository\Veehiicuul\3dTestScene_CppDx12\MyBuildOutput\Release\Veehiicuul.exe' launched with PID='35784'
+
+**********************
+PowerShell transcript end
+End time: 20261012010842
+**********************

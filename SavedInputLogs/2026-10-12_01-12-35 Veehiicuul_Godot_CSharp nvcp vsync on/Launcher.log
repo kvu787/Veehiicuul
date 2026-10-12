@@ -1,0 +1,29 @@
+**********************
+PowerShell transcript start
+Start time: 20261012011235
+Username: DESKTOP-9H66NOJ\k
+RunAs User: DESKTOP-9H66NOJ\k
+Configuration Name: 
+Machine: DESKTOP-9H66NOJ (Microsoft Windows NT 10.0.26300.0)
+Host Application: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.6.0_x64__8wekyb3d8bbwe\pwsh.dll
+Process ID: 34428
+PSVersion: 7.6.6
+PSEdition: Core
+GitCommitId: 7.6.6
+OS: Microsoft Windows 10.0.26300
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+Transcript started, output file is C:\Users\k\Downloads\2026-10-12_01-12-35\Launcher.log
+ProcessPath = C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyBuildOutput\Veehiicuul_Godot_CSharp.exe
+PresentMonPath = C:\Users\k\Program\PresentMon-2.6.0-x64.exe
+'C:\Users\k\Program\PresentMon-2.6.0-x64.exe' launched with PID='26356', session_name='Veehiicuul_Godot_CSharp_4dd983f0bc174e32ac59c7d3a4c98755'
+'C:\Users\k\Repository\Veehiicuul\Veehiicuul_Godot_CSharp\Veehiicuul\MyBuildOutput\Veehiicuul_Godot_CSharp.exe' launched with PID='38604'
+
+**********************
+PowerShell transcript end
+End time: 20261012011310
+**********************
