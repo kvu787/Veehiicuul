@@ -144,3 +144,30 @@ That distinction matters for the following operations:
 Rotation alone is appropriate here because this is an input/direction vector; the car's position does not affect it.
 
 `accelerationInput_inCarCoordinates` would spell out the meaning more explicitly, but `_carSpace` is concise and accurate. Removing the suffix would hide useful information about which axes the values use.
+
+## User
+
+the thing that confuses me is what happens when i push the analog stick "up". this results in +y stick input. this should result in +z movement in car space, because the front of the car faces towards +z. is this what happens?
+
+## Assistant
+
+I'll trace stick-up through the input and rotations, including what happens when the car and camera face different directions.
+
+## Assistant
+
+Stick-up does not always become car-space +Z. With both yaws at zero, it becomes -Z and uses the reverse acceleration setting. The car then turns to face its resulting velocity, which can make continued stick-up look like forward acceleration.
+
+## Assistant
+
+Not always. **Car-space +Z is forward, but the current stick mapping is camera-relative.**
+
+Given stick input `(0, +1)`, [this line](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs:86) first creates `(0, 0, -1)` because of `-accelerationInput.Y`. It then rotates by camera yaw, followed by negative car yaw.
+
+For example, with camera yaw zero:
+
+- **Car yaw zero:** its front faces track-space +Z. Stick-up becomes **car-space -Z**, using `AccelerationMap.Reverse`.
+- **Car yaw 180 degrees:** its front faces track-space -Z. Stick-up becomes **car-space +Z**, using `AccelerationMap.Forward`.
+
+There is another detail: the [heading update](C:/Users/k/Repository/Veehiicuul/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs:132) automatically points the car along its resulting velocity. From rest in the first example, it initially accelerates backward relative to its old orientation, then turns to face -Z. Continued stick-up then produces forward acceleration.
+
+So `_carSpace` accurately describes the coordinates, but it does **not** mean stick-up is defined as car-forward. If you want stick-up to always accelerate along the car's +Z, the input mapping needs to change. Changing the sign alone would reverse camera-relative up/down; it would not make the controls car-relative.
