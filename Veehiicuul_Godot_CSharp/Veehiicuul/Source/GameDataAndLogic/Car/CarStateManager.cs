@@ -50,13 +50,12 @@ public sealed class CarStateManager {
     private Vector3 StartingPosition { get; }
     private float StartingRotation { get; }
 
-    private float? Rotation_ForMostRecentNonZeroVelocity;
     private Vector3 Velocity_WorldSpace;
 
     /// <summary>
     /// "WorldSpace" means 0 deg starts at +Z and positive Rotation travels clockwise from +Z to +X.
     /// </summary>
-    public float Rotation_WorldSpace => this.Rotation_ForMostRecentNonZeroVelocity ?? this.StartingRotation;
+    public float Rotation_WorldSpace { get; private set; }
 
     /// <summary>
     /// "WorldSpace" means the Godot axes of +Y up, -Z forward, +X right.
@@ -136,7 +135,7 @@ public sealed class CarStateManager {
         }
 
         if (this.Velocity_WorldSpace != Vector3.Zero) {
-            this.Rotation_ForMostRecentNonZeroVelocity = this.Velocity_WorldSpace.Get2DRotation();
+            this.Rotation_WorldSpace = this.Velocity_WorldSpace.Get2DRotation();
         }
     }
 
@@ -146,7 +145,7 @@ public sealed class CarStateManager {
 
     public void Reset_PositionRotationVelocity() {
         this.Position_WorldSpace = this.StartingPosition;
-        this.Rotation_ForMostRecentNonZeroVelocity = null;
+        this.Rotation_WorldSpace = this.StartingRotation;
         this.Velocity_WorldSpace = Vector3.Zero;
     }
 
