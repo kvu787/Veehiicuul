@@ -47,7 +47,7 @@ public sealed class CarStateManager {
     private readonly CameraYawManager CameraYawManager;
     private readonly InputManager InputManager;
 
-    private readonly Vector3 StartingPosition;
+    private Vector3 StartingPosition { get; }
     private float StartingRotation { get; }
 
     private float? Rotation_ForMostRecentNonZeroVelocity;
