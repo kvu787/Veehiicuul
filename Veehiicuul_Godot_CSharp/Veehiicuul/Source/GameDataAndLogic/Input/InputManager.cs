@@ -45,7 +45,10 @@ public sealed class InputManager {
         this.QuitGame = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonBack) || Input.IsActionJustPressed(this.DigitalInputMap.KeyEscape);
         this.ToggleBetweenFixedAndFollowCamera = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonStart);
         this.ResetCar = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonX);
+
+        // For Input.GetJoyAxis, pushing the gamepad stick left corresponds to +X and up corresponds to -Y.
         this.AccelerationInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX), -Input.GetJoyAxis(0, JoyAxis.RightY));
+
         this.Brake = Input.GetJoyAxis(0, JoyAxis.TriggerLeft);
         this.ResetCameraZoom = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonY);
         if (Input.IsActionPressed(this.DigitalInputMap.JoyButtonRightShoulder)) {
