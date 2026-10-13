@@ -1,0 +1,160 @@
+diff --git a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs
+index acf224d..1b7713e 100644
+--- a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs
++++ b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs
+@@ -42,6 +42,8 @@ public sealed class CarStateManager {
+     private const float AxialDeadzone_Outer_LeftRight = 0.95f;
+     private const float AxialDeadzone_Inner_ForwardBackward = 0.05f;
+     private const float AxialDeadzone_Outer_ForwardBackward = 0.95f;
++    private const float RadialDeadzone_Inner = 0.05f;
++    private const float RadialDeadzone_Outer = 0.95f;
+ 
+     private readonly CarSwitcher CarSwitcher;
+     private readonly CameraYawManager CameraYawManager;
+@@ -79,7 +81,19 @@ public sealed class CarStateManager {
+         this.ApplyInternalStateToCarTransform();
+     }
+ 
++    private const float DriftFactor = 5f;
++    private const float ForwardReverseFactor = 2f;
++
+     public void ReadAccelerationAndBrakeInput_AndUpdateVelocity(double delta) {
++        Vector2 movementModifierInput = this.InputManager.MovementModifierInput;
++        Vector3 movementModifierInput_cameraSpace = new(movementModifierInput.X, 0f, -movementModifierInput.Y);
++        Vector3 movementModifierInput_worldSpace = movementModifierInput_cameraSpace.Rotated(Vector3.Up, this.CameraYawManager.Yaw);
++        Vector3 movementModifierInput_carSpace = movementModifierInput_worldSpace.Rotated(Vector3.Up, -1f * this.Rotation_WorldSpace);
++        movementModifierInput_carSpace = InputUtility.RadialDeadzone(movementModifierInput_carSpace, RadialDeadzone_Inner, RadialDeadzone_Outer);
++
++        Vector3 movementModifier_WorldSpace = new Vector3(0f, 0f, movementModifierInput_carSpace.Z + 1).Rotated(Vector3.Up, this.Rotation_WorldSpace);
++        //this.Velocity_WorldSpace = this.Velocity_WorldSpace.Rotated(Vector3.Up, (float)delta * DriftFactor * m1MovementInput_carSpace.X);
++
+         Vector2 accelerationInput = this.InputManager.AccelerationInput;
+         CarDynamic carDynamic = this.CarSwitcher.CurrentCar.Dynamic;
+ 
+@@ -130,6 +144,7 @@ public sealed class CarStateManager {
+             }
+         }
+ 
++        // TODO: Remove velocity limiter
+         if (carDynamic.VelocityLimiter > 0f) {
+             this.Velocity_WorldSpace = this.Velocity_WorldSpace.LimitLength(carDynamic.VelocityLimiter);
+         }
+@@ -137,10 +152,12 @@ public sealed class CarStateManager {
+         if (this.Velocity_WorldSpace != Vector3.Zero) {
+             this.Rotation_WorldSpace = this.Velocity_WorldSpace.Get2DRotation();
+         }
+-    }
+ 
+-    public void UpdatePosition(double delta) {
+-        this.Position_WorldSpace += this.Velocity_WorldSpace * (float)delta;
++        Vector3 velocity_CarSpace = this.Velocity_WorldSpace.Rotated(Vector3.Up, -1f * this.Rotation_WorldSpace);
++        Vector3 movementModifier_CarSpace = movementModifier_WorldSpace.Rotated(Vector3.Up, -1f * this.Rotation_WorldSpace);
++        //this.Velocity_WorldSpace = (velocity_CarSpace * movementModifier_CarSpace.Z).Rotated(Vector3.Up, this.Rotation_WorldSpace);
++
++        this.Position_WorldSpace += (velocity_CarSpace * movementModifier_CarSpace.Z).Rotated(Vector3.Up, this.Rotation_WorldSpace) * (float)delta;
+     }
+ 
+     public void Reset_PositionRotationVelocity() {
+diff --git a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Input/InputManager.cs b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Input/InputManager.cs
+index eec0049..96169c8 100644
+--- a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Input/InputManager.cs
++++ b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Input/InputManager.cs
+@@ -5,6 +5,7 @@ namespace Veehiicuul_Godot_CSharp;
+ 
+ public sealed class InputManager {
+     public float Brake { get; private set; }
++    public Vector2 MovementModifierInput { get; private set; }
+     public Vector2 AccelerationInput { get; private set; }
+     public bool ResetCameraZoom { get; private set; }
+     public bool QuitGame { get; private set; }
+@@ -47,16 +48,17 @@ public sealed class InputManager {
+         this.ResetCar = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonX);
+ 
+         // For Input.GetJoyAxis, pushing the gamepad stick left corresponds to +X and up corresponds to -Y.
+-        this.AccelerationInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX), -Input.GetJoyAxis(0, JoyAxis.RightY));
++        this.MovementModifierInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX), -Input.GetJoyAxis(0, JoyAxis.RightY));
++        this.AccelerationInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.LeftX), -Input.GetJoyAxis(0, JoyAxis.LeftY));
+ 
+         this.Brake = Input.GetJoyAxis(0, JoyAxis.TriggerLeft);
+         this.ResetCameraZoom = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonY);
+-        if (Input.IsActionPressed(this.DigitalInputMap.JoyButtonRightShoulder)) {
+-            const float innerDeadzone = 0.0078125f;
+-            const float outerDeadzone = 0.95f;
+-            this.CameraZoom = DeadzoneFilter(Input.GetJoyAxis(0, JoyAxis.LeftY), innerDeadzone, outerDeadzone);
+-        } else {
+-            this.CameraZoom = 0f;
+-        }
++        //if (Input.IsActionPressed(this.DigitalInputMap.JoyButtonRightShoulder)) {
++        //    const float innerDeadzone = 0.0078125f;
++        //    const float outerDeadzone = 0.95f;
++        //    this.CameraZoom = DeadzoneFilter(Input.GetJoyAxis(0, JoyAxis.LeftY), innerDeadzone, outerDeadzone);
++        //} else {
++        //    this.CameraZoom = 0f;
++        //}
+     }
+ }
+diff --git a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs
+index f5a4878..fea629b 100644
+--- a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs
++++ b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Main.cs
+@@ -97,7 +97,6 @@ public class Main {
+ 
+             if (!this.InCarControlTimeout()) {
+                 this.CarStateManager.ReadAccelerationAndBrakeInput_AndUpdateVelocity(delta);
+-                this.CarStateManager.UpdatePosition(delta);
+             }
+ 
+             this.CameraPanManager.ApplyInternalStateToCameraPosition();
+diff --git a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Utility/InputUtility.cs b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Utility/InputUtility.cs
+index acf790e..03f9948 100644
+--- a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Utility/InputUtility.cs
++++ b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/Utility/InputUtility.cs
+@@ -24,4 +24,23 @@ public static class InputUtility {
+         float sign = Mathf.Sign(value);
+         return magnitude > outerDeadzone ? sign : sign * (magnitude - innerDeadzone) / (outerDeadzone - innerDeadzone);
+     }
++
++    public static Vector3 RadialDeadzone(Vector3 value, float innerDeadzone, float outerDeadzone) {
++        if (!(0f <= innerDeadzone && innerDeadzone <= 1f)) {
++            throw new ArgumentOutOfRangeException(nameof(innerDeadzone), innerDeadzone, "Inner deadzone must be in [0, 1].");
++        }
++        if (!(0f <= outerDeadzone && outerDeadzone <= 1f)) {
++            throw new ArgumentOutOfRangeException(nameof(outerDeadzone), outerDeadzone, "Outer deadzone must be in [0, 1].");
++        }
++        if (innerDeadzone >= outerDeadzone) {
++            throw new ArgumentException("Inner deadzone must be less than outer deadzone.", nameof(innerDeadzone));
++        }
++        float magnitude = value.Length();
++        if (magnitude <= innerDeadzone) {
++            return Vector3.Zero;
++        }
++        Vector3 direction = value / magnitude;
++        float adjustedMagnitude = magnitude >= outerDeadzone ? 1f : (magnitude - innerDeadzone) / (outerDeadzone - innerDeadzone);
++        return direction * adjustedMagnitude;
++    }
+ }
+diff --git a/Veehiicuul_Godot_CSharp/Veehiicuul/Tracks/Ribeye/Ribeye_Settings.json b/Veehiicuul_Godot_CSharp/Veehiicuul/Tracks/Ribeye/Ribeye_Settings.json
+index bf9c566..a3a7073 100644
+--- a/Veehiicuul_Godot_CSharp/Veehiicuul/Tracks/Ribeye/Ribeye_Settings.json
++++ b/Veehiicuul_Godot_CSharp/Veehiicuul/Tracks/Ribeye/Ribeye_Settings.json
+@@ -1,7 +1,7 @@
+ {
+     "CameraFollowsCarLocation": false,
+     "FollowCameraSize": 45,
+-    "StartCarIndex": 3,
++    "StartCarIndex": 1,
+     "Cars": [
+         {
+             "GameObjectName": "SlopeCarGreen",
+diff --git a/Veehiicuul_Godot_CSharp/Veehiicuul/project.godot b/Veehiicuul_Godot_CSharp/Veehiicuul/project.godot
+index 09df1d4..61a602e 100644
+--- a/Veehiicuul_Godot_CSharp/Veehiicuul/project.godot
++++ b/Veehiicuul_Godot_CSharp/Veehiicuul/project.godot
+@@ -24,7 +24,6 @@ window/size/mode=4
+ window/size/window_width_override=1280
+ window/size/window_height_override=720
+ window/stretch/mode="viewport"
+-window/vsync/vsync_mode=0
+ 
+ [dotnet]
+ 
