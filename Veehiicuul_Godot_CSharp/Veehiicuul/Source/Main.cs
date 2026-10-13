@@ -96,8 +96,7 @@ public class Main {
             this.CameraZoomManager.ReadInputAndResetZoom();
 
             if (!this.InCarControlTimeout()) {
-                this.CarStateManager.ReadAccelerationAndBrakeInput_AndUpdateVelocity(delta);
-                this.CarStateManager.UpdatePosition(delta);
+                this.CarStateManager.ProcessPrimaryMovement(delta);
             }
 
             this.CameraPanManager.ApplyInternalStateToCameraPosition();

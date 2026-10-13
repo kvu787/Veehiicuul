@@ -79,7 +79,7 @@ public sealed class CarStateManager {
         this.ApplyInternalStateToCarTransform();
     }
 
-    public void ReadAccelerationAndBrakeInput_AndUpdateVelocity(double delta) {
+    public void ProcessPrimaryMovement(double delta) {
         Vector2 accelerationInput = this.InputManager.AccelerationInput;
         CarDynamic carDynamic = this.CarSwitcher.CurrentCar.Dynamic;
 
@@ -137,9 +137,7 @@ public sealed class CarStateManager {
         if (this.Velocity_WorldSpace != Vector3.Zero) {
             this.Rotation_WorldSpace = this.Velocity_WorldSpace.Get2DRotation();
         }
-    }
 
-    public void UpdatePosition(double delta) {
         this.Position_WorldSpace += this.Velocity_WorldSpace * (float)delta;
     }
 
