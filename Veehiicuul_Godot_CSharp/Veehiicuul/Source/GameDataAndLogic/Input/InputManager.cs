@@ -51,12 +51,12 @@ public sealed class InputManager {
 
         this.Brake = Input.GetJoyAxis(0, JoyAxis.TriggerLeft);
         this.ResetCameraZoom = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonY);
-        if (Input.IsActionPressed(this.DigitalInputMap.JoyButtonRightShoulder)) {
-            const float innerDeadzone = 0.0078125f;
-            const float outerDeadzone = 0.95f;
-            this.CameraZoom = DeadzoneFilter(Input.GetJoyAxis(0, JoyAxis.LeftY), innerDeadzone, outerDeadzone);
-        } else {
-            this.CameraZoom = 0f;
-        }
+        //if (Input.IsActionPressed(this.DigitalInputMap.JoyButtonRightShoulder)) {
+        //    const float innerDeadzone = 0.0078125f;
+        //    const float outerDeadzone = 0.95f;
+        //    this.CameraZoom = DeadzoneFilter(Input.GetJoyAxis(0, JoyAxis.LeftY), innerDeadzone, outerDeadzone);
+        //} else {
+        //    this.CameraZoom = 0f;
+        //}
     }
 }
