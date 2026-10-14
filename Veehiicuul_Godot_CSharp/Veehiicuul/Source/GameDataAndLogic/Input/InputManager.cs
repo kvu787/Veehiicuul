@@ -6,6 +6,7 @@ namespace Veehiicuul_Godot_CSharp;
 public sealed class InputManager {
     public float Brake { get; private set; }
     public Vector2 AccelerationInput { get; private set; }
+    public Vector2 MovementModifierInput { get; private set; }
     public bool ResetCameraZoom { get; private set; }
     public bool QuitGame { get; private set; }
     public bool PreviousTrack { get; private set; }
@@ -48,6 +49,7 @@ public sealed class InputManager {
 
         // For Input.GetJoyAxis, pushing the gamepad stick left corresponds to +X and up corresponds to -Y.
         this.AccelerationInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX), -Input.GetJoyAxis(0, JoyAxis.RightY));
+        this.MovementModifierInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.LeftX), -Input.GetJoyAxis(0, JoyAxis.LeftY));
 
         this.Brake = Input.GetJoyAxis(0, JoyAxis.TriggerLeft);
         this.ResetCameraZoom = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonY);
