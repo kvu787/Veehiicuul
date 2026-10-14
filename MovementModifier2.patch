@@ -1,0 +1,73 @@
+diff --git a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs
+index 378979a..06e7e0b 100644
+--- a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs
++++ b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Car/CarStateManager.cs
+@@ -42,6 +42,8 @@ public sealed class CarStateManager {
+     private const float AxialDeadzone_Outer_LeftRight = 0.95f;
+     private const float AxialDeadzone_Inner_ForwardBackward = 0.05f;
+     private const float AxialDeadzone_Outer_ForwardBackward = 0.95f;
++    private const float RadialDeadzone_Inner = 0.05f;
++    private const float RadialDeadzone_Outer = 0.95f;
+ 
+     private readonly CarSwitcher CarSwitcher;
+     private readonly CameraYawManager CameraYawManager;
+@@ -79,6 +81,35 @@ public sealed class CarStateManager {
+         this.ApplyInternalStateToCarTransform();
+     }
+ 
++    public void ProcessMovementModifier(double delta) {
++        Vector2 movementModifierInput = this.InputManager.MovementModifier;
++        Vector3 movementModifierInput_cameraSpace = new(movementModifierInput.X, 0f, -movementModifierInput.Y);
++        Vector3 movementModifierInput_worldSpace = movementModifierInput_cameraSpace.Rotated(Vector3.Up, this.CameraYawManager.Yaw);
++        Vector3 movementModifierInput_carSpace = movementModifierInput_worldSpace.Rotated(Vector3.Up, -1f * this.Rotation_WorldSpace);
++        movementModifierInput_carSpace = InputUtility.RadialDeadzone(movementModifierInput_carSpace, RadialDeadzone_Inner, RadialDeadzone_Outer);
++
++        // Separate into forward, backward, left/right
++        float forward = movementModifierInput_carSpace.Z > 0 ? movementModifierInput_carSpace.Z : 0;
++        float backward = movementModifierInput_carSpace.Z < 0 ? Mathf.Abs(movementModifierInput_carSpace.Z) : 0;
++
++        Vector3 movementModifier_WorldSpace = new Vector3(0f, 0f, movementModifierInput_carSpace.Z + 1).Rotated(Vector3.Up, this.Rotation_WorldSpace);
++        //this.Velocity_WorldSpace = this.Velocity_WorldSpace.Rotated(Vector3.Up, (float)delta * DriftFactor * m1MovementInput_carSpace.X);
++
++        Vector3 velocity_CarSpace = this.Velocity_WorldSpace.Rotated(Vector3.Up, -1f * this.Rotation_WorldSpace);
++        Vector3 movementModifier_CarSpace = movementModifier_WorldSpace.Rotated(Vector3.Up, -1f * this.Rotation_WorldSpace);
++        //this.Velocity_WorldSpace = (velocity_CarSpace * movementModifier_CarSpace.Z).Rotated(Vector3.Up, this.Rotation_WorldSpace);
++        this.Position_WorldSpace += (velocity_CarSpace * movementModifier_CarSpace.Z).Rotated(Vector3.Up, this.Rotation_WorldSpace) * (float)delta;
++
++        // boost options
++        // can multiply velocity or acceleration
++        // or, can add velocity/accel
++        // adding a velocity results in jerky movement
++        // adding accel is like extending the AccelerationMap by chaining a vector
++        // adding position vector is like teleporting
++        // can affect only forward, or all directions
++        // also consider higher-order derivatives: jerk, snap, crackle, pop
++    }
++
+     public void ProcessPrimaryMovement(double delta) {
+         Vector2 accelerationInput = this.InputManager.AccelerationInput;
+         CarDynamic carDynamic = this.CarSwitcher.CurrentCar.Dynamic;
+diff --git a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Input/InputManager.cs b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Input/InputManager.cs
+index 72bcc09..4f4f425 100644
+--- a/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Input/InputManager.cs
++++ b/Veehiicuul_Godot_CSharp/Veehiicuul/Source/GameDataAndLogic/Input/InputManager.cs
+@@ -6,7 +6,8 @@ namespace Veehiicuul_Godot_CSharp;
+ public sealed class InputManager {
+     public float Brake { get; private set; }
+     public Vector2 AccelerationInput { get; private set; }
+-    public Vector2 MovementModifierInput { get; private set; }
++    public Vector2 MovementModifier { get; private set; }
++    public float Boost { get; private set; }
+     public bool ResetCameraZoom { get; private set; }
+     public bool QuitGame { get; private set; }
+     public bool PreviousTrack { get; private set; }
+@@ -49,7 +50,8 @@ public sealed class InputManager {
+ 
+         // For Input.GetJoyAxis, pushing the gamepad stick left corresponds to +X and up corresponds to -Y.
+         this.AccelerationInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX), -Input.GetJoyAxis(0, JoyAxis.RightY));
+-        this.MovementModifierInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.LeftX), -Input.GetJoyAxis(0, JoyAxis.LeftY));
++        this.MovementModifier = new Vector2(Input.GetJoyAxis(0, JoyAxis.LeftX), -Input.GetJoyAxis(0, JoyAxis.LeftY));
++        this.Boost = Input.GetJoyAxis(0, JoyAxis.TriggerRight);
+ 
+         this.Brake = Input.GetJoyAxis(0, JoyAxis.TriggerLeft);
+         this.ResetCameraZoom = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonY);
