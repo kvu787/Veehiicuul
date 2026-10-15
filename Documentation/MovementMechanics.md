@@ -24,3 +24,22 @@
 - This is more like typical car braking.
 - Braking can be combined with turning.
 - The new velocity is computed with other mechanics, and then braking input decreases the magnitude the new velocity.
+
+# Core movement
+
+# Simple forward/reverse and turn
+
+- This is the simplest car-like movement model.
+- Forward/reverse input sets the car's forward/reverse speed.
+- Left/right input sets the car's clockwise/counterclockwise angular speed.
+- There is no need for braking because the car immediately stops when there is no input.
+- Movement looks some what abrupt because acceleration isn't used.
+
+# Simple acceleration
+
+- This is the simplest smooth-looking movement model.
+- Stick input corresponds to applying an acceleration with the given direction and magnitude.
+- The rotation of the vehicle isn't controlled by input at all.
+  - The rotation is set to the direction of velocity.
+- Braking is needed to easily stop the vehicle.
+  - Without braking, using acceleration inputs to try and stop the vehicle will result in continual tiny overshoots at very low speeds.
