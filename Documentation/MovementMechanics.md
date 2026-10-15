@@ -1,3 +1,15 @@
+# Gamepad controls
+
+- Any control that isn't directional such as triggers and buttons are vehicle-relative
+  - This means that holding the right trigger always means "move the vehicle forward".
+- By default, the orientation of the analog stick is basically "point in the direction you want the vehicle to move"
+  - This is called "view-relative" orientation.
+  - This means that pushing the stick up doesn't always mean "move the vehicle forward".
+  - This means the stick vector is translated through the camera, world, and vehicle rotation to get the vehicle-relative stick input.
+- Alternatively, the analog sticks can be configured to use "vehicle-relative" orientation.
+- Digital d-pads have eight effective directions and can be mapped to an analog stick control
+  - Smoothing may be applied so that the magnitude isn't always 1
+
 # Physics
 
 - Veehiicuul mostly doesn't implement real-world physics.
@@ -27,7 +39,7 @@
 
 # Core movement
 
-# Simple forward/reverse and turn
+## Simple forward/reverse and turn
 
 - This is the simplest car-like movement model.
 - Forward/reverse input sets the car's forward/reverse speed.
@@ -35,7 +47,7 @@
 - There is no need for braking because the car immediately stops when there is no input.
 - Movement looks some what abrupt because acceleration isn't used.
 
-# Simple acceleration
+## Simple acceleration
 
 - This is the simplest smooth-looking movement model.
 - Stick input corresponds to applying an acceleration with the given direction and magnitude.
