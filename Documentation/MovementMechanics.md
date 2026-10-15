@@ -8,7 +8,7 @@
   - This means the stick vector is translated through the camera, world, and vehicle rotation to get the vehicle-relative stick input.
 - Alternatively, the analog sticks can be configured to use "vehicle-relative" orientation.
 - Digital d-pads have eight effective directions and can be mapped to an analog stick control
-  - Smoothing may be applied so that the magnitude isn't always 1
+  - Smoothing may be applied so that the magnitude isn't always 1.
 
 # Physics
 
@@ -45,7 +45,7 @@
 - Forward/reverse input sets the car's forward/reverse speed.
 - Left/right input sets the car's clockwise/counterclockwise angular speed.
 - There is no need for braking because the car immediately stops when there is no input.
-- Movement looks some what abrupt because acceleration isn't used.
+- Movement looks somewhat abrupt because acceleration isn't used.
 
 ## Simple acceleration
 
