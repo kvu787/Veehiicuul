@@ -60,6 +60,8 @@ TrackBuilder/
   * Orthographic Scale = 300
   * Clip Start = 1 m
   * Clip End = 1000 m
+  * Sensor Fit = Vertical
+    * This makes Blender's camera "Orthographic Scale" value match Godot Engine's camera "Size" property
   * Properties > Data > Viewport Display > Show > Limit = Checked
 
 # Materials
