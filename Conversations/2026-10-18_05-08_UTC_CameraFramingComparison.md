@@ -157,3 +157,28 @@ The camera distances also differ: Blender uses 500 and Godot uses about 170.885.
 There are separate appearance differences: Blender is showing **Material Preview**, with scene lights and scene world disabled; Godot uses its scene lighting. Blender's grid is an editor overlay.
 
 Also, your [export script disables camera export](C:/Users/k/Repository/Veehiicuul/Blender/Scripts/ExportToVeehiicuul.py:189), so Blender's camera settings are not automatically transferred to Godot.
+
+## User
+
+okay, i think the camera setups are identical now. verify this.
+
+## Assistant
+
+I will re-read both saved files and compare the camera transforms, orthographic framing, and clipping settings.
+
+## Assistant
+
+Verified from both saved files: **the zoom mismatch is resolved, and the camera angles match.**
+
+| Setting             | Blender                | Godot                  |
+| ------------------- | ---------------------- | ---------------------- |
+| Projection          | Orthographic           | Orthographic           |
+| Vertical span       | 150                    | 150                    |
+| Frame at 16:9       | 266.667 x 150          | 266.667 x 150          |
+| Angles (degrees)    | 45 yaw, 45 down, 0 roll | Same                   |
+| Camera distance     | 500                    | 170.88507              |
+| Near / far clipping | 1 / 1000               | 10 / 1000              |
+
+They are **not literally identical**: distance and near clipping still differ. Distance does not change orthographic framing, but it changes where the clipping planes lie.
+
+There is also a tiny frame-center difference of approximately **0.00042 world units**, equivalent to about **0.004 pixels at 2560 x 1440**.
