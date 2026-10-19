@@ -179,3 +179,42 @@ That lets the input retain modeling vertices while the output omits selected one
 **Cinema 4D:** It has live half-mesh symmetry, and its separate Symmetrize command has a Dissolve option for removing cut-generated points and edges. However, I could not verify your required independent keep/remove choice within the live Symmetry object, so I would not call it a confirmed match. [Live Symmetry](https://help.maxon.net/c4d/en-us/Content/html/OSYMMETRYGENERATOR.html), [Symmetrize options](https://help.maxon.net/c4d/2025/en-us/Content/html/Symmeterize_Tool.html).
 
 For your exact requirement, **I'd investigate Houdini first**, with the understanding that it requires a small node setup.
+
+## User
+
+this is what i want: If you need to model only one half, automatically mirror new geometry, and independently choose which center vertices disappear, that requires an additional cleanup step or custom tooling.
+
+how do i get this in blender?
+
+## Assistant
+
+I'll set up a live cleanup step after Mirror, with a vertex group to choose which center vertices disappear, and test it against your `DesiredOutput` mesh.
+
+## Assistant
+
+The tool will leave your half mesh editable and generate a separate result. Mirror will still create new geometry; the cleanup will join coplanar faces across the seam and remove straight center vertices assigned to `RemoveCenter`. I'll also save a working copy of your example with the rear center vertex marked for removal.
+
+## Assistant
+
+The tests pass in Blender 4.5.14. The output matches `DesiredOutput` exactly, both center-vertex choices work independently, and new geometry added in Edit Mode appears on both sides. The cleanup also preserves corners and seam creases, since removing those would change the shape.
+
+## Assistant
+
+The working copy is ready. Save/reopen tests also pass, and the generated mesh remains visible when the add-on is inactive. I'm checking the embedded script now; once activated, the panel provides `Remove Center` and `Keep Center` buttons for the input mesh.
+
+## Assistant
+
+I made a working add-on and a prepared example.
+
+1. Open [MirrorWorkflowLive.blend](C:/Users/k/Repository/Veehiicuul/Blender/MirrorWorkflowLive.blend).
+2. Change an editor to **Text Editor**, select the embedded `LiveMirrorCleanup.py`, and press **Alt+P**.
+3. In the 3D Viewport, press **N** and open **Mirror Cleanup**.
+4. Edit `AttemptedInput`. Select center vertices and click **Remove Center** or **Keep Center**.
+
+Continue modeling one half; the separate `AttemptedInputOutput` mesh updates automatically. The example already removes the rear center vertex and keeps the raised one, matching `DesiredOutput`.
+
+For permanent installation, use **Preferences > Add-ons > Install from Disk** with [LiveMirrorCleanup.py](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup/LiveMirrorCleanup.py), then enable it. [Full instructions](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup/ReadMe.md).
+
+Removal is limited to straight center vertices connecting two edges. Corners, junctions, and seam creases are preserved.
+
+Tested in Blender 4.5.14, including new geometry and save/reopen. Your original file is unchanged.
