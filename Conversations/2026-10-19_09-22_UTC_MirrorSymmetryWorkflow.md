@@ -383,3 +383,45 @@ There are two possible routes:
 **My recommendation is to extend the native Mirror modifier if a custom Blender build is acceptable.** That is the most direct route to the conventional workflow you described. If stock Blender is required, the next step is a Geometry Nodes feasibility prototype.
 
 Moving cleanup into the stack would not automatically remove its current bend and crease restrictions; changing those is a separate decision about how the topology should be generated.
+
+## User
+
+attempt to implement this with geometry nodes in this folder: "C:\Users\k\Repository\Veehiicuul\Blender\MirrorCleanup_GeometryNodes"
+
+## Assistant
+
+I will build a Geometry Nodes prototype in that folder and test whether it can preserve your selective center topology before subdivision in a single-object modifier stack.
+
+## Assistant
+
+I found a viable approach: group faces across removable seam edges, rebuild each group's boundary as a polygon, then remove only marked, straight center points. This can run entirely inside Geometry Nodes. I am testing the topology reconstruction first, especially face winding and vertices where mirror planes intersect.
+
+## Assistant
+
+The first prototype matches your `DesiredOutput` exactly, including face winding, while leaving the editable input unchanged. It now runs as `Mirror -> Selective Mirror Cleanup -> Subdivision` on one object. I am checking axis combinations, live edits, and subdivision creases before saving the example.
+
+## Assistant
+
+All eight axis states pass, including transformed Mirror Objects and kept vertices at plane intersections. The subdivision result also matches the reference, with edge creases preserved. The remaining work is packaging and a few safeguards: regions with holes will produce a visible warning and pass through unchanged.
+
+## Assistant
+
+The saved file works in a fresh Blender process with automatic Python execution disabled, including live keep/remove changes and axis toggles. The main remaining limitation is attribute handling: this prototype preserves subdivision creases and materials, but rebuilt faces lose UV maps and other corner attributes. I am documenting that clearly and finishing the checks.
+
+## Assistant
+
+The prototype now skips faces that do not need cleanup. On this machine, test grids with 100 and 900 input faces evaluated in about 5 ms and 20 ms respectively, before subdivision. The saved stack also renders successfully, and its result matches the reference.
+
+## Assistant
+
+Implemented a working Geometry Nodes prototype.
+
+Open [MirrorWorkflowGeometryNodes.blend](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup_GeometryNodes/MirrorWorkflowGeometryNodes.blend). `AttemptedInput` now uses **Mirror -> Selective Mirror Cleanup -> Subdivision** on one object. It works after reopening without running Python.
+
+- Assign center vertices to **RemoveCenter** at weight 1 to request removal; remove membership to keep them.
+- Change XYZ on the normal Mirror modifier; cleanup follows every combination.
+- `DesiredOutput` is only a reference object.
+
+Tests confirm exact reference topology and subdivision, live Edit Mode updates, crease preservation, reopening, and rendering.
+
+**Prototype limits:** bends and non-coplanar seams remain; regions with holes pass through with a warning; rebuilt faces do not preserve UV/corner data. [Full instructions and limitations](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup_GeometryNodes/ReadMe.md).
