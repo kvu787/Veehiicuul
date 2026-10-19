@@ -284,3 +284,48 @@ Your `RemoveCenter` group is also empty. But assigning vertices would not solve 
 The file also contains an empty `UVMap` layer, which explains the UV warning even though there are no faces or UV coordinates to lose currently.
 
 I did not modify or save `Spaceship.blend`.
+
+## User
+
+implement support for wire geometry
+
+## Assistant
+
+I'll add wire cleanup so marked, straight vertices on an enabled mirror plane can be removed from loose edge chains. I'll preserve bends, branches, face connections, and creases, and test it against the Spaceship outline.
+
+## Assistant
+
+The existing graph already identifies marked points, mirror planes, creases, and sharp edges. I'll reuse those checks for wire chains and weld retained connections by vertex identity. I'll also remove the spurious internal-attribute warning and make the UV warning depend on faces actually being rebuilt.
+
+## Assistant
+
+Wire points are now being removed; the old test that required every wire vertex to survive fails on the new behavior. The face-cleanup tests still pass. I'm checking open chains, closed loops, coincident wires, branches, face attachments, and protected features.
+
+## Assistant
+
+The expanded suite passes. On your saved Spaceship outline, marking the center points reduces the result from 20 vertices and 20 edges to 16 of each, matching an independent BMesh dissolve. Removing the marks restores the original result, and neither warning appears. The Spaceship file remains unchanged.
+
+## Assistant
+
+The tests now cover wire cleanup and the warning behavior, and the documentation treats Subdivision as optional. I'm checking that the saved graph works in a fresh Blender process with automatic script execution disabled, then checking performance and the final diff.
+
+## Assistant
+
+The saved wire graph passes fresh-process verification, and adding wire edges in Edit Mode updates the cleanup correctly. The face-grid benchmark shows no slowdown. I'll commit the changes now; to use them in Spaceship, reload and rerun the updated script, then mark the center points in `RemoveCenter`.
+
+## Assistant
+
+Implemented and committed wire support in [GeometryNodesMirrorCleanup.py](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup_GeometryNodes/GeometryNodesMirrorCleanup.py).
+
+- Removes marked, straight points on mirror planes from open chains and closed loops.
+- Preserves endpoints, bends, branches, face connections, creases, and sharp edges.
+- Fixes the missing internal-attribute warning and suppresses the UV warning for wire-only cleanup.
+
+Validated your Spaceship outline: **20 vertices/20 edges becomes 16 vertices/16 edges** when the center points are marked. Your saved Spaceship file was left unchanged.
+
+To activate it:
+
+1. Reload the updated script from disk and run it in **Object Mode**.
+2. In **Edit Mode**, assign the desired center points to `RemoveCenter` at weight **1**.
+
+Regression tests, live Edit Mode updates, fresh-process verification, and benchmarks passed. The packaged example was rebuilt, and the working tree is clean.
