@@ -35,7 +35,7 @@ Toggle axes on the normal Mirror modifier. The cleanup's axis inputs follow thro
 3. Add Subdivision after Selective Mirror Cleanup, or keep the existing later Subdivision modifier.
 4. Assign chosen center vertices to the new `RemoveCenter` group.
 
-Running setup again replaces this prototype's cleanup modifier and refreshes its attribute/material configuration. It preserves the source mesh, vertex groups, Mirror, and other modifiers. It uses the last Mirror in the stack.
+Running setup again replaces this prototype's cleanup modifier and refreshes its attribute/material configuration. It preserves the cleanup's tolerances and display toggles, the source mesh, vertex groups, Mirror, and other modifiers. It uses the last Mirror in the stack. Setup requires Object Mode and constructs the replacement before removing the working modifier; a construction failure leaves the existing setup intact.
 
 If the Mirror modifier uses a Mirror Object, setup copies that reference into the cleanup. Later movement, rotation, and nonuniform scaling of that object are evaluated automatically. **If you change which object is used as the Mirror Object, rerun setup**, or update both `Mirror Object` and `Use Mirror Object` in the cleanup modifier. Axis toggles follow automatically; object-reference changes do not.
 
@@ -78,11 +78,12 @@ The PowerShell wrapper defaults to `%USERPROFILE%\Program\blender-4.5.14-windows
 .\Run.cmd -Mode Prepare
 .\Run.cmd -Mode Verify
 .\Run.cmd -Mode Preview
+.\Run.cmd -Mode Benchmark
 ```
 
-Each wrapper run writes logs under `LogOutput/yyyy-MM-dd_HH-mm-ss/`. LogOutput is ignored by Git. No build step or custom Blender executable is required. Preview renders the saved modifier stack to `Preview.png` without saving camera or display changes into the example.
+Each wrapper run writes logs under `LogOutput/yyyy-MM-dd_HH-mm-ss/`. Runs started in the same second wait for separate timestamp folders. LogOutput is ignored by Git. Background modes use factory startup settings so personal add-ons cannot affect the checks. No build step or custom Blender executable is required. Preview renders the saved modifier stack to `Preview.png` without saving camera or display changes into the example.
 
-The tests check exact control-mesh coordinates, edges, face boundaries and winding, matching level-2 subdivision, reversible point choices, all eight axis states, transformed Mirror Objects, kept plane intersections, small and ordinary subdivision creases, all supported point attribute types, vertex groups, mesh/object material assignment, smooth shading, new Edit Mode geometry, frame changes, disabling the cleanup modifier, complete fallback for holes/retained interior geometry/warped faces, concave regions, bends, coincident disconnected shells, and empty/point-only/wire-only meshes.
+The tests check exact control-mesh coordinates, edges, face boundaries and winding, matching level-2 subdivision, reversible point choices, all eight axis states, transformed Mirror Objects, kept plane intersections, small and ordinary subdivision creases, all supported point attribute types, vertex groups, mesh/object material assignment, smooth shading, new Edit Mode geometry, frame changes, disabling the cleanup modifier, complete fallback for holes/retained interior geometry/warped faces, concave regions, bends, coincident disconnected shells, and empty/point-only/wire-only meshes. Setup checks cover construction failure, shared node groups, preserved settings, multiple Mirror modifiers, escaped modifier names, unrelated drivers, and invalid setup states.
 
 `BenchmarkGeometryNodes.py` measures repeated evaluation after source edits. On the development machine, half-grids with 100 and 900 input faces produced 190 and 1770 cleaned faces in approximately 5 ms and 20 ms per warm evaluation, respectively. These timings cover Mirror and cleanup, exclude Subdivision, and are examples rather than performance guarantees for other topology.
 

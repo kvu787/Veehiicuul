@@ -67,8 +67,12 @@ def assert_topology(actual, expected):
 
 def assert_surface(actual, expected):
     assert len(actual.vertices) == len(expected.vertices)
-    assert max(min((vertex.co - other.co).length for other in expected.vertices)
-               for vertex in actual.vertices) < 0.00002
+    # Match each expected point once, so duplicate actual points cannot hide a
+    # missing point elsewhere on the subdivided surface.
+    remaining = list(expected.vertices)
+    for vertex in actual.vertices:
+        closest = min(range(len(remaining)), key=lambda index: (vertex.co - remaining[index].co).length)
+        assert (vertex.co - remaining.pop(closest).co).length < 0.00002
 
 
 def add_subdivision(obj):
@@ -463,6 +467,88 @@ def test_warped_faces():
     print('PASS: warped faces with matching average normals preserve their original topology')
 
 
+def test_setup_lifecycle():
+    source, target, mirror, modifier = fixtures()
+    subdivision = add_subdivision(source)
+    last_mirror = source.modifiers.new('Last "Mirror" \\', 'MIRROR')
+    source.modifiers.move(list(source.modifiers).index(last_mirror), 1)
+    mirror.use_axis = (False, False, False)
+    last_mirror.use_axis = (True, False, False)
+    source.driver_add('location', 2).driver.expression = '0'
+    set_input(modifier, 'Plane Tolerance', 0.00002)
+    set_input(modifier, 'Direction Tolerance', 0.0002)
+    modifier.show_render = False
+    previous_tree = modifier.node_group
+    previous_groups = set(bpy.data.node_groups)
+    original_builder = cleanup.build_group
+
+    def failing_builder(obj):
+        original_builder(obj)
+        raise RuntimeError('Deliberate construction failure')
+
+    cleanup.build_group = failing_builder
+    try:
+        try:
+            cleanup.setup(source)
+        except RuntimeError as error:
+            assert str(error) == 'Deliberate construction failure'
+        else:
+            raise AssertionError('Expected the simulated construction failure')
+    finally:
+        cleanup.build_group = original_builder
+    assert modifier in list(source.modifiers) and modifier.node_group == previous_tree
+    assert set(bpy.data.node_groups) == previous_groups
+    assert len(source.animation_data.drivers) == 4
+
+    # The old node group may also be used by a duplicated object.
+    other = source.copy()
+    bpy.context.collection.objects.link(other)
+    modifier = cleanup.setup(source)
+    assert previous_tree in list(bpy.data.node_groups)
+    assert [item.type for item in source.modifiers] == ['MIRROR', 'MIRROR', 'NODES', 'SUBSURF']
+    assert source.modifiers[-1] == subdivision
+    assert len(source.animation_data.drivers) == 4
+    assert not modifier.show_render
+    for socket in modifier.node_group.interface.items_tree:
+        if socket.item_type == 'SOCKET' and socket.in_out == 'INPUT':
+            if socket.name in ('Plane Tolerance', 'Direction Tolerance'):
+                assert abs(modifier[socket.identifier] - (0.00002 if socket.name == 'Plane Tolerance' else 0.0002)) < 1e-9
+    subdivision.show_viewport = False
+    assert_topology(evaluated(source), target.data)
+    assert all(curve.is_valid for curve in source.animation_data.drivers)
+    last_mirror.use_axis = (False, False, False)
+    assert_topology(evaluated(source), source.data)
+    last_mirror.use_axis = (True, False, False)
+    assert_topology(evaluated(source), target.data)
+
+    for invalid_state in ('Merge', 'EditMode'):
+        previous_groups = set(bpy.data.node_groups)
+        if invalid_state == 'Merge':
+            last_mirror.use_mirror_merge = False
+        else:
+            bpy.ops.object.select_all(action='DESELECT')
+            source.select_set(True)
+            bpy.context.view_layer.objects.active = source
+            bpy.ops.object.mode_set(mode='EDIT')
+        try:
+            try:
+                cleanup.setup(source)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError('Expected setup to reject ' + invalid_state)
+            assert modifier in list(source.modifiers)
+            assert set(bpy.data.node_groups) == previous_groups
+        finally:
+            last_mirror.use_mirror_merge = True
+            if source.mode != 'OBJECT':
+                bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.data.objects.remove(other, do_unlink=True)
+    bpy.data.objects.remove(source, do_unlink=True)
+    bpy.data.objects.remove(target, do_unlink=True)
+    print('PASS: setup rollback, shared groups, retained settings, last-Mirror drivers, unrelated modifiers/drivers, invalid setup states')
+
+
 def main():
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete(use_global=False)
@@ -476,6 +562,7 @@ def main():
     test_retained_interior_geometry()
     test_empty_and_wire_meshes()
     test_warped_faces()
+    test_setup_lifecycle()
 
 
 if __name__ == '__main__':

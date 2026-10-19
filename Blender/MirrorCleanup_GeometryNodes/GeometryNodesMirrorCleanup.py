@@ -452,53 +452,90 @@ def build_group(source):
     return g.finish(geometry)
 
 
+def remove_cleanup_modifier(source, modifier):
+    """Remove only this modifier's drivers and its unused generated groups."""
+    if source.animation_data:
+        path = modifier.path_from_id()
+        for curve in list(source.animation_data.drivers):
+            if curve.data_path.startswith((path + '[', path + '.')):
+                source.animation_data.drivers.remove(curve)
+    tree = modifier.node_group
+    children = {node.node_tree for node in tree.nodes if node.type == 'GROUP' and node.node_tree} if tree else set()
+    source.modifiers.remove(modifier)
+    if tree and tree.users == 0:
+        bpy.data.node_groups.remove(tree)
+        for child in children:
+            if child.users == 0:
+                bpy.data.node_groups.remove(child)
+
+
 def setup(source):
     """Install/replace cleanup immediately after the last Mirror on this object."""
     if source is None or source.type != 'MESH':
         raise ValueError('Select the editable mesh object first.')
+    if source.mode != 'OBJECT':
+        raise ValueError('Switch to Object Mode before setting up cleanup.')
     mirrors = [modifier for modifier in source.modifiers if modifier.type == 'MIRROR']
     if not mirrors:
         raise ValueError('Add a Mirror modifier to the selected mesh first.')
     mirror = mirrors[-1]
     if not mirror.use_mirror_merge:
         raise ValueError('Enable Merge on the Mirror modifier before setting up cleanup.')
-    source.vertex_groups.get(MARK) or source.vertex_groups.new(name=MARK)
     existing = [modifier for modifier in source.modifiers if modifier.type == 'NODES'
                 and modifier.node_group and modifier.node_group.get('MirrorCleanupVersion')]
-    for modifier in existing:
-        if source.animation_data:
-            path = modifier.path_from_id()
-            for curve in list(source.animation_data.drivers):
-                if curve.data_path.startswith(path + '['):
-                    source.animation_data.drivers.remove(curve)
-        old_group = modifier.node_group
-        children = [node.node_tree for node in old_group.nodes if node.type == 'GROUP']
-        source.modifiers.remove(modifier)
-        if old_group.users == 0:
-            bpy.data.node_groups.remove(old_group)
-            for child in children:
-                if child.users == 0:
-                    bpy.data.node_groups.remove(child)
-    modifier = source.modifiers.new('Selective Mirror Cleanup', 'NODES')
-    modifier.node_group = build_group(source)
-    modifier.show_in_editmode = True
-    source.modifiers.move(list(source.modifiers).index(modifier), list(source.modifiers).index(mirror) + 1)
-    for socket in modifier.node_group.interface.items_tree:
-        if socket.item_type != 'SOCKET' or socket.in_out != 'INPUT':
-            continue
-        if socket.name.startswith('Mirror ') and socket.name[-1] in 'XYZ':
-            axis = 'XYZ'.index(socket.name[-1])
-            curve = modifier.driver_add('["' + socket.identifier + '"]')
-            curve.driver.type = 'AVERAGE'
-            variable = curve.driver.variables.new()
-            variable.name = 'EnabledAxis'
-            variable.type = 'SINGLE_PROP'
-            variable.targets[0].id = source
-            variable.targets[0].data_path = mirror.path_from_id('use_axis') + '[' + str(axis) + ']'
-        elif socket.name == 'Use Mirror Object':
-            modifier[socket.identifier] = mirror.mirror_object is not None
-        elif socket.name == 'Mirror Object':
-            modifier[socket.identifier] = mirror.mirror_object
+    settings = {}
+    display = {}
+    if existing:
+        current = existing[-1]
+        for socket in current.node_group.interface.items_tree:
+            if socket.item_type == 'SOCKET' and socket.in_out == 'INPUT' and socket.name.endswith('Tolerance'):
+                settings[socket.name] = current.get(socket.identifier, socket.default_value)
+        display = {name: getattr(current, name) for name in
+                   ('show_viewport', 'show_render', 'show_in_editmode', 'show_on_cage', 'show_expanded')}
+    # Prepare and configure the replacement before removing a working setup.
+    # Construction can fail, for example when Blender cannot create a node.
+    previous_groups = set(bpy.data.node_groups)
+    modifier = None
+    created_mark = None
+    try:
+        tree = build_group(source)
+        if source.vertex_groups.get(MARK) is None:
+            created_mark = source.vertex_groups.new(name=MARK)
+        modifier = source.modifiers.new('Selective Mirror Cleanup', 'NODES')
+        modifier.node_group = tree
+        modifier.show_in_editmode = True
+        for name, value in display.items():
+            setattr(modifier, name, value)
+        source.modifiers.move(list(source.modifiers).index(modifier), list(source.modifiers).index(mirror) + 1)
+        for socket in tree.interface.items_tree:
+            if socket.item_type != 'SOCKET' or socket.in_out != 'INPUT':
+                continue
+            if socket.name in ('Mirror X', 'Mirror Y', 'Mirror Z'):
+                axis = 'XYZ'.index(socket.name[-1])
+                curve = modifier.driver_add('["' + socket.identifier + '"]')
+                curve.driver.type = 'AVERAGE'
+                variable = curve.driver.variables.new()
+                variable.name = 'EnabledAxis'
+                variable.type = 'SINGLE_PROP'
+                variable.targets[0].id = source
+                variable.targets[0].data_path = mirror.path_from_id('use_axis') + '[' + str(axis) + ']'
+            elif socket.name == 'Use Mirror Object':
+                modifier[socket.identifier] = mirror.mirror_object is not None
+            elif socket.name == 'Mirror Object':
+                modifier[socket.identifier] = mirror.mirror_object
+            elif socket.name in settings:
+                modifier[socket.identifier] = settings[socket.name]
+    except Exception:
+        if modifier is not None:
+            remove_cleanup_modifier(source, modifier)
+        if created_mark is not None:
+            source.vertex_groups.remove(created_mark)
+        for tree in set(bpy.data.node_groups) - previous_groups:
+            bpy.data.node_groups.remove(tree)
+        raise
+    for old_modifier in existing:
+        remove_cleanup_modifier(source, old_modifier)
+    modifier.name = 'Selective Mirror Cleanup'
     source.update_tag()
     return modifier
 
