@@ -292,3 +292,29 @@ No. **The current add-on accepts exactly one enabled axis:** X only, Y only, or 
 **XY, XZ, YZ, and XYZ are unsupported.** Enabling multiple axes produces "Use one mirror axis at a time" and leaves the previous generated output unchanged.
 
 Supporting combinations would require cleanup across every enabled symmetry plane, including handling vertices where those planes intersect. This is a limitation of my add-on, not Blender's Mirror modifier.
+
+## User
+
+implement support for any combination of mirror axis xyz toggles
+
+## Assistant
+
+I'll extend the cleanup to all enabled mirror planes and test every axis combination, including vertices where planes intersect.
+
+## Assistant
+
+At plane intersections, removing all seam edges could also remove a vertex you chose to keep. I'll preserve its connecting edges in that case. I'll also support all toggles off by passing the input through unchanged.
+
+## Assistant
+
+All eight axis states pass: X, Y, Z, XY, XZ, YZ, XYZ, and all off. The tests also cover moved and rotated Mirror Objects, keep/remove choices at plane intersections, new geometry in Edit Mode, and cleanup before Subdivision. I'll update the instructions and embedded script in the working example.
+
+## Assistant
+
+Implemented all eight states: **X, Y, Z, XY, XZ, YZ, XYZ, and all axes off**.
+
+Axis changes rebuild automatically. Kept vertices at plane intersections retain their necessary connections, and cleanup still runs before the unapplied Subdivision modifier.
+
+Use the updated [add-on](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup/LiveMirrorCleanup.py) or open [MirrorWorkflowLive.blend](C:/Users/k/Repository/Veehiicuul/Blender/MirrorWorkflowLive.blend) and run its embedded script again.
+
+Tests pass in Blender 4.5.14 for every combination, transformed Mirror Objects, intersection choices, and Subdivision. Existing bend and crease restrictions still apply.
