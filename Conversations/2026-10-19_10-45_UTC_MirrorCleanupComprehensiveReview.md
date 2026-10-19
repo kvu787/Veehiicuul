@@ -329,3 +329,25 @@ To activate it:
 2. In **Edit Mode**, assign the desired center points to `RemoveCenter` at weight **1**.
 
 Regression tests, live Edit Mode updates, fresh-process verification, and benchmarks passed. The packaged example was rebuilt, and the working tree is clean.
+
+## User
+
+am i using the cleanup modifier properly in "C:\Users\k\Repository\Veehiicuul\Blender\Spaceship2.blend"
+
+## Assistant
+
+I'll inspect the saved modifier settings and compare the mesh before and after cleanup, without changing the file.
+
+## Assistant
+
+Yes. The saved setup in [Spaceship2.blend](C:/Users/k/Repository/Veehiicuul/Blender/Spaceship2.blend) is correct, and cleanup is working:
+
+- Stack: `Mirror -> Selective Mirror Cleanup`, using version 4 with wire support.
+- Mirror: X and Z enabled, Merge enabled; cleanup settings match and all five drivers are valid.
+- `RemoveCenter`: eight source vertices assigned at weight 1.
+- Result: **44 vertices / 74 edges -> 30 vertices / 60 edges**, removing 14 mirrored seam points.
+- No modifier warnings.
+
+Temporarily marking every vertex produced the same result, so your current selection already covers all eligible points. Subdivision is not required.
+
+I left the saved file unchanged.
