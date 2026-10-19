@@ -188,3 +188,26 @@ A few distinctions matter:
 - Rerunning setup replaces this tool's existing cleanup modifier while retaining its tolerances and display settings.
 
 The insertion and validation logic is in [setup()](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup_GeometryNodes/GeometryNodesMirrorCleanup.py:506).
+
+## User
+
+although using a modifier stack of `Mirror -> Selective Mirror Cleanup -> Subdivision` will be common use case, using this without subdivision will also be common: `Mirror -> Selective Mirror Cleanup`. are there any issues with this use case?
+
+## Assistant
+
+I'll check whether cleanup relies on a later Subdivision modifier, and which limitations matter when using its output directly.
+
+## Assistant
+
+**`Mirror -> Selective Mirror Cleanup` is a valid, already-tested use case.** Cleanup produces a mesh independently; it neither requires nor checks for a Subdivision modifier. The regression suite checks the cleaned mesh's coordinates, edges, face boundaries, and winding before adding Subdivision.
+
+The relevant caveats are:
+
+- **Attribute preservation:** rebuilt faces lose UVs, corner attributes, custom split normals, and arbitrary face attributes. This matters if the cleanup output is your finished textured mesh. Adding Subdivision would not resolve those losses.
+- **Shading:** material assignments, smooth/flat shading flags, and sharp edges are supported. Preserving those flags does not guarantee identical shading after changing topology, especially when custom normals were involved.
+- **N-gons:** merged regions become polygons that can have more than four sides. The result is not guaranteed to be all triangles or quads. Reconstruction checks planarity and boundary validity; unsupported regions cause the entire input mesh to pass through unchanged.
+- **Creases still protect geometry:** vertex and edge crease weights prevent certain removals even when there is no Subdivision modifier. Existing crease data can therefore explain why a requested vertex or seam remains.
+
+You do not need a different setup procedure or a special mode for using cleanup alone.
+
+The documentation currently emphasizes subdivision control meshes too strongly. Both stacks should be described as normal use cases, with Subdivision explicitly optional. The existing attribute-transfer limitations are documented in [ReadMe](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup_GeometryNodes/ReadMe.md:61).
