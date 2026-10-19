@@ -493,3 +493,22 @@ Two settings to be aware of:
 The open boundaries in the original quarter mesh are expected: Mirror closes them correctly. No mesh repair is indicated by these checks.
 
 I left the file unchanged.
+
+## User
+
+i don't need any uvmap. how do i remove this.
+
+## Assistant
+
+You can delete the unused UV layer from the mesh's Object Data Properties. I'll verify the UI steps.
+
+## Assistant
+
+1. Select your spaceship in **Object Mode**.
+2. In Properties, click **Object Data Properties** (the green triangle icon).
+3. Expand **UV Maps**.
+4. Select **UVMap** and click the **minus (-)** button beside the list. [Blender manual](https://docs.blender.org/manual/en/4.4/modeling/meshes/uv/uv_texture_spaces.html)
+
+**To clear the cleanup warning too**, rerun `GeometryNodesMirrorCleanup.py` afterward with the spaceship selected. The current script decides whether to include that warning when it builds the node group, so deleting the UV map alone does not remove the existing warning.
+
+This does not delete faces or change the shape.
