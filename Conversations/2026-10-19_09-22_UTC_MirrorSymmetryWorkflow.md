@@ -318,3 +318,36 @@ Axis changes rebuild automatically. Kept vertices at plane intersections retain 
 Use the updated [add-on](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup/LiveMirrorCleanup.py) or open [MirrorWorkflowLive.blend](C:/Users/k/Repository/Veehiicuul/Blender/MirrorWorkflowLive.blend) and run its embedded script again.
 
 Tests pass in Blender 4.5.14 for every combination, transformed Mirror Objects, intersection choices, and Subdivision. Existing bend and crease restrictions still apply.
+
+## User
+
+based on "C:\Users\k\Repository\Veehiicuul\Blender\MirrorWorkflowLive.blend", it appears that this workflow does not use the typical "stacking modifiers on one object" approach, because i don't see a subd modifier stacked atop a mirror modifier on the same object. explain what's going on.
+
+## Assistant
+
+I'll check how the two objects and their modifier stacks are connected in the saved file.
+
+## Assistant
+
+You're reading it correctly. **This implementation uses two objects, with Python connecting them.**
+
+| Object                 | Role                                     | Modifier    |
+| ---------------------- | ---------------------------------------- | ----------- |
+| `AttemptedInput`       | The half mesh you edit                    | Mirror      |
+| `AttemptedInputOutput` | The generated, cleaned control mesh       | Subdivision |
+| `DesiredOutput`        | Your reference, independent of the system | Subdivision |
+
+When the input changes, the add-on:
+
+1. Reads the input's evaluated mesh **after Mirror**.
+2. Copies that mesh and performs the seam cleanup on the copy.
+3. Replaces `AttemptedInputOutput`'s base mesh with the cleaned result.
+4. Blender evaluates the output object's **Subdivision modifier** on that new base mesh.
+
+Thus, **Mirror -> cleanup -> Subdivision describes the processing order across two objects**, not a modifier stack on one object.
+
+I implemented the custom cleanup as a Python mesh-generation step rather than a real modifier. The input appears as a wire cage and is hidden from rendering; the output supplies the visible subdivided surface.
+
+Subdivision remains unapplied, and cleanup is reversible by rebuilding from the editable input. However, **the connection between the objects depends on the add-on running**. Without it, the output remains the last generated snapshot. Cleanup also cannot be reordered or disabled through the normal modifier stack.
+
+So this provides editable input and non-destructive subdivision, but **it is not the conventional single-object modifier workflow**.
