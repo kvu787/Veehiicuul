@@ -7,6 +7,7 @@ import tempfile
 
 import bmesh
 import bpy
+from mathutils.bvhtree import BVHTree
 
 
 DIRECTORY = Path(__file__).resolve().parent
@@ -35,6 +36,13 @@ def assert_symmetric(mesh):
         assert (-x, y, z) in positions, (x, y, z)
 
 
+def evaluated_geometry(obj):
+    graph = bpy.context.evaluated_depsgraph_get()
+    mesh = obj.evaluated_get(graph).data
+    return ([vertex.co.copy() for vertex in mesh.vertices],
+            [tuple(face.vertices) for face in mesh.polygons])
+
+
 bpy.ops.wm.open_mainfile(filepath=str(DIRECTORY.parent / 'MirrorWorkflow.blend'))
 source = bpy.data.objects['AttemptedInput']
 reference = bpy.data.objects['DesiredOutput']
@@ -48,6 +56,44 @@ cleanup.refresh_output(output)
 assert snapshot(output.data) == snapshot(reference.data), 'Target topology or face winding differs.'
 assert snapshot(source.data) == original, 'The source mesh was changed.'
 print('PASS: exact DesiredOutput geometry, edges, faces and winding; input unchanged')
+
+# Subdivision must consume the cleaned control mesh and remain an editable modifier.
+subdivision = output.modifiers.new('Subdivision', 'SUBSURF')
+subdivision.levels = 2
+subdivision.render_levels = 2
+target_points, target_faces = evaluated_geometry(reference)
+target_surface = BVHTree.FromPolygons(target_points, target_faces)
+
+
+def assert_subdivision_match():
+    points, unused_faces = evaluated_geometry(output)
+    assert len(points) == len(target_points) == 74
+    assert max(min((point - target).length for target in target_points)
+               for point in points) < 0.000001
+
+
+assert_subdivision_match()
+group.remove([4])
+cleanup.refresh_output(output)
+points, unused_faces = evaluated_geometry(output)
+assert len(output.data.vertices) == 7 and len(points) == 82
+assert max(target_surface.find_nearest(point)[3] for point in points) > 0.001
+group.add([4], 1.0, 'REPLACE')
+group.add([3], 1.0, 'REPLACE')
+cleanup.refresh_output(output)
+points, unused_faces = evaluated_geometry(output)
+assert len(output.data.vertices) == 5 and len(points) == 66
+assert max(target_surface.find_nearest(point)[3] for point in points) > 0.001
+group.remove([3])
+cleanup.refresh_output(output)
+assert_subdivision_match()
+subdivision.levels = 3
+points, unused_faces = evaluated_geometry(output)
+assert len(points) > 74
+assert len(output.data.vertices) == 6 and snapshot(source.data) == original
+subdivision.levels = 2
+assert_subdivision_match()
+print('PASS: live unapplied Subdivision receives cleaned topology; both center choices change the surface')
 
 group.add([3], 1.0, 'REPLACE')
 cleanup.refresh_output(output)

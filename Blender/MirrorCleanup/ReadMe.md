@@ -14,6 +14,14 @@ The rear center vertex is already assigned to `RemoveCenter`. The raised ridge c
 
 The original `Blender/MirrorWorkflow.blend` is unchanged. The live file contains a saved generated mesh, so its last saved result is visible even before the add-on runs. Run the script or install the add-on to resume automatic updates.
 
+## Non-destructive subdivision
+
+The evaluation order is **editable half mesh > Mirror > selective seam cleanup > output Subdivision Surface modifier**. Subdivision receives the cleaned control topology. The output modifier is never applied and retains its adjustable viewport and render levels when cleanup rebuilds the base mesh.
+
+In the example, the intended 6-vertex control mesh produces the same level 2 subdivided surface as `DesiredOutput`, within 0.000001 local units. Keeping the rear center vertex changes the control mesh to 7 vertices; removing the raised center as well changes it to 5. Both alternatives change the subdivided surface. Restoring the choices restores the reference result.
+
+Removing a straight midpoint can preserve the unsubdivided polygon surface while changing the subdivision result. That change is intentional. The automatic cleanup still preserves bends, junctions, and non-coplanar seam edges; it is not an unrestricted dissolve tool for arbitrary control topology.
+
 ## Install for normal use
 
 Open **Edit > Preferences > Add-ons**, open the menu at the top right, and choose **Install from Disk**. Select `Blender/MirrorCleanup/LiveMirrorCleanup.py` and enable **Live Mirror Cleanup**. Installation makes the panel available in future Blender sessions, without running the embedded script. Use either installation or the embedded script.
@@ -47,6 +55,6 @@ Run from the repository root in modern PowerShell:
 & "$env:USERPROFILE\Program\blender-4.5.14-windows-x64\blender.exe" --background --factory-startup --python-exit-code 1 --python 'Blender\MirrorCleanup\TestLiveMirrorCleanup.py'
 ```
 
-The checks compare exact base geometry and face winding to `DesiredOutput`, toggle the two center choices independently, exercise the marking buttons in Edit Mode, add new input geometry, verify mirrored movements and transforms, preserve a new seam crease, and check invalid-setting recovery and registration cleanup.
+The checks compare exact base geometry and face winding to `DesiredOutput`, verify the unapplied Subdivision result and adjustable levels, confirm both center choices change the subdivided surface, toggle the two center choices independently, exercise the marking buttons in Edit Mode, add new input geometry, verify mirrored movements and transforms, preserve a new seam crease, and check invalid-setting recovery and registration cleanup.
 
 Recreate the sample with `PrepareMirrorWorkflow.py` using the same Blender command. It saves only `MirrorWorkflowLive.blend` and embeds the current add-on source.
