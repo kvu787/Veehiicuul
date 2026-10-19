@@ -247,3 +247,40 @@ They have different causes:
    The warning is enabled unconditionally at setup when such attributes are detected. It does **not** establish that faces are currently being rebuilt or that data has already been lost. A UV map alone can trigger it, even if you are not using textures.
 
    If you need those UVs or other corner data preserved, this remains a real limitation of the current implementation. It applies with or without Subdivision.
+
+## User
+
+am i using the mirror cleanup modifier properly in this: "C:\Users\k\Repository\Veehiicuul\Blender\Spaceship.blend"
+
+## Assistant
+
+I'll inspect the saved file's modifier stack, cleanup settings, and mesh, then check how the cleanup evaluates without changing the file.
+
+## Assistant
+
+**Your modifier settings are correct. However, this file contains only edges, and the current cleanup does not dissolve vertices on edge-only geometry.**
+
+I inspected [Spaceship.blend](C:/Users/k/Repository/Veehiicuul/Blender/Spaceship.blend):
+
+- Stack: `Mirror -> Selective Mirror Cleanup`.
+- Mirror: X and Z enabled, Merge enabled at `0.001`, Clipping enabled.
+- Cleanup: axes match Mirror; all five drivers are valid.
+- Tolerances are the intended defaults: `0.00001` and `0.0001`, despite the UI rounding their display.
+
+The evaluated geometry is:
+
+| Stage         | Vertices | Edges | Faces |
+| ------------- | -------- | ----- | ----- |
+| Editable mesh | 6        | 5     | 0     |
+| After Mirror  | 20       | 20    | 0     |
+| After Cleanup | 20       | 20    | 0     |
+
+The current implementation removes eligible seams between faces and selected vertices during face reconstruction. It deliberately preserves loose edges, so your outline passes through without topology changes.
+
+Your `RemoveCenter` group is also empty. But assigning vertices would not solve the edge-only limitation: I temporarily marked every source vertex in a separate background session, and the result remained 20 vertices and 20 edges.
+
+**If you want the straight center vertices dissolved along this outline, the tool needs explicit support for wire geometry.** You have not configured it incorrectly.
+
+The file also contains an empty `UVMap` layer, which explains the UV warning even though there are no faces or UV coordinates to lose currently.
+
+I did not modify or save `Spaceship.blend`.
