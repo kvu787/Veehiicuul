@@ -218,3 +218,36 @@ For permanent installation, use **Preferences > Add-ons > Install from Disk** wi
 Removal is limited to straight center vertices connecting two edges. Corners, junctions, and seam creases are preserved.
 
 Tested in Blender 4.5.14, including new geometry and save/reopen. Your original file is unchanged.
+
+## User
+
+a key requirement for this workflow is that it works well with non-destructive subdivision, because the presence or not of vertices for the topology that is input into subd affects the end result. does your approach meet this requirement?
+
+## Assistant
+
+I'll verify that Subdivision receives the cleaned topology and that changing a center-vertex choice updates the subdivided result.
+
+## Assistant
+
+Yes, for your example: cleanup produces the control mesh before Subdivision evaluates it. I verified that changing either center-vertex choice changes the subdivided result, and restoring your choices reproduces `DesiredOutput`.
+
+One limitation remains: the cleanup preserves bends, junctions, and non-coplanar seam edges. Those restrictions may matter as you develop a more complex control mesh.
+
+## Assistant
+
+**Yes, for your example. Cleanup happens before Subdivision:**
+
+`Editable half -> Mirror -> selective cleanup -> Subdivision`
+
+The output's Subdivision modifier remains **unapplied and adjustable**. Rebuilding the output replaces only its base control mesh.
+
+I verified that:
+
+- Your intended 6-vertex control mesh produces the same subdivided result as `DesiredOutput`.
+- Keeping the rear center vertex changes the control mesh to 7 vertices and changes the subdivided surface.
+- Removing the raised center vertex as well produces 5 vertices and another different subdivided surface.
+- Restoring your choices restores the target result, within floating-point tolerance.
+
+**Qualification:** the current cleanup only dissolves coplanar seam edges and marked, straight center vertices connecting two edges. It preserves bends, junctions, and non-coplanar seam edges. That restriction may become limiting for more complex subdivision control meshes.
+
+I added these subdivision checks to the [regression tests](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup/TestLiveMirrorCleanup.py); they pass in Blender 4.5.14.
