@@ -251,3 +251,28 @@ I verified that:
 **Qualification:** the current cleanup only dissolves coplanar seam edges and marked, straight center vertices connecting two edges. It preserves bends, junctions, and non-coplanar seam edges. That restriction may become limiting for more complex subdivision control meshes.
 
 I added these subdivision checks to the [regression tests](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup/TestLiveMirrorCleanup.py); they pass in Blender 4.5.14.
+
+## User
+
+i don't fully understand this. explain:
+Qualification: the current cleanup only dissolves coplanar seam edges and marked, straight center vertices connecting two edges. It preserves bends, junctions, and non-coplanar seam edges. That restriction may become limiting for more complex subdivision control meshes.
+
+## Assistant
+
+I'll explain what each restriction means for the control mesh, and how it can affect your choice of subdivision topology.
+
+## Assistant
+
+**These are restrictions I added to the tool, not requirements of mirroring or subdivision.** They mean that clicking **Remove Center** can sometimes leave the vertex in place.
+
+The tool performs two separate operations:
+
+1. **Remove edges running along the symmetry plane.** If the faces on either side form one flat surface, it removes their dividing edge. That is what "coplanar" means. If the faces meet at an angle, like the two sides of a roof, it keeps that edge.
+
+2. **Remove the center vertices you marked.** After the first step, it removes a marked vertex only when exactly two edges meet there and form a straight line: `A---V---B` becomes `A-------B`. It keeps `V` if the edges bend there, or if three or more edges connect to it. A point where several edges meet is a "junction".
+
+I chose these rules to preserve the **unsubdivided polygon surface**. Removing a straight midpoint can still change the **subdivided surface**, which is the effect you want to control.
+
+The troublesome part is that these rules depend on the geometry. Moving a control point could make a previously flat seam non-flat. The tool would then keep that seam edge, potentially bringing back a center vertex and changing the subdivision result.
+
+**For your intended workflow, this is a real limitation:** your keep/remove choices currently work only when those checks allow them. The tool does not yet give your explicit choices unconditional control over the center topology.
