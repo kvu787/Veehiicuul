@@ -394,3 +394,46 @@ I tested this on your saved `Spaceship2.blend` without saving changes: the conve
 Avoid applying Mirror separately first: cleanup has drivers that reference it. Converting the complete stack captures the result while those dependencies still exist. If you later include Subdivision, conversion bakes that too, using the current viewport result.
 
 One implementation detail: Blender leaves the cleanup's five drivers behind after conversion, which can produce invalid-driver console warnings. They no longer affect the baked geometry; they can be deleted in the Drivers Editor.
+
+## User
+
+in the blender ui, what order are the modifiers applied in
+
+## Assistant
+
+Blender evaluates modifiers **from top to bottom** in the modifier panel.
+
+For your stack:
+
+1. **Mirror** creates and merges the mirrored geometry.
+2. **Selective Mirror Cleanup** processes that result.
+3. **Subdivision**, if present below cleanup, subdivides the cleaned result.
+
+**Object > Convert > Mesh** bakes that final result, preserving this order.
+
+## User
+
+i added a subd modifier but i'm not seeing any subd
+
+![Attached screenshot](Attachments/SpaceshipWireSubdivision.png)
+
+Original attachment: C:/Users/k/AppData/Local/Temp/codex-clipboard-1d28c51d-05d6-469e-82d3-f6fc78ff0671.png
+
+## Assistant
+
+Your earlier mesh had edges but no faces. I'll check whether Subdivision is adding points along those edges while Optimal Display hides them, and whether that explains the unchanged shape.
+
+## Assistant
+
+**Subdivision is working, but your mesh contains only edges and no faces.** I checked the saved file:
+
+- After cleanup: **30 vertices, 60 edges, 0 faces**.
+- After Subdivision: **450 vertices, 480 edges, 0 faces**.
+
+The added vertices lie along the same straight edges, so the shape stays unchanged. **Optimal Display** is also enabled, hiding the extra subdivision edges.
+
+To get a rounded spaceship surface, you need to **create faces between the wires**, preferably quads. In Edit Mode, select the vertices around each intended panel and press **F** to create its face. Keep the stack as `Mirror -> Cleanup -> Subdivision`; do not fill across the mirror planes where the halves should join.
+
+The "disabling GPU subdivision" message means Blender uses CPU subdivision instead. It is not stopping subdivision.
+
+Your file was left unchanged.
