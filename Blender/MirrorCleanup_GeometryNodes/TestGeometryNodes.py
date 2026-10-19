@@ -320,6 +320,149 @@ def test_editing_and_materials():
     print('PASS: materials, smooth shading, repeated setup, live Edit Mode geometry, frame changes, modifier toggle')
 
 
+def test_small_creases():
+    for domain in ('POINT', 'EDGE'):
+        source, target, mirror, modifier = fixtures()
+        name = 'crease_vert' if domain == 'POINT' else 'crease_edge'
+        crease = source.data.attributes.new(name, 'FLOAT', domain)
+        # Both the direct crease check and edge-to-point averaging must preserve
+        # positive weights below Blender Compare's default epsilon of 0.001.
+        crease.data[4].value = 0.0001
+        actual = evaluated(source)
+        assert len(actual.vertices) == 7, (domain, len(actual.vertices))
+        assert sum(item.value > 0 for item in actual.attributes[name].data) == (1 if domain == 'POINT' else 2)
+        bpy.data.objects.remove(source, do_unlink=True)
+        bpy.data.objects.remove(target, do_unlink=True)
+    print('PASS: small positive point and edge creases preserve marked vertices')
+
+
+def test_point_attributes():
+    source, target, mirror, modifier = fixtures()
+    attributes = [('Scalar', 'FLOAT', 'value', lambda i: i / 10),
+                  ('Integer', 'INT', 'value', lambda i: 16777217 + i),
+                  ('SmallInteger', 'INT8', 'value', lambda i: i - 2),
+                  ('Direction', 'FLOAT_VECTOR', 'vector', lambda i: (i, i + 0.25, i + 0.5)),
+                  ('Coordinates', 'FLOAT2', 'vector', lambda i: (i + 0.25, i + 0.5)),
+                  ('Color', 'FLOAT_COLOR', 'color', lambda i: (i / 10, 0.5, 0.75, 1)),
+                  ('ByteColor', 'BYTE_COLOR', 'color', lambda i: (i / 10, 0.5, 0.75, 1)),
+                  ('Flag', 'BOOLEAN', 'value', lambda i: i % 2 == 0),
+                  ('Rotation', 'QUATERNION', 'value', lambda i: Euler((i / 10, 0, 0)).to_quaternion())]
+    for name, kind, property_name, make_value in attributes:
+        attribute = source.data.attributes.new(name, kind, 'POINT')
+        for index, item in enumerate(attribute.data):
+            setattr(item, property_name, make_value(index))
+    influence = source.vertex_groups.new(name='Influence')
+    for index in range(len(source.data.vertices)):
+        influence.add([index], (index + 1) / 10, 'REPLACE')
+    cleanup.setup(source)
+    actual = evaluated(source)
+    assert_topology(actual, target.data)
+    for vertex in actual.vertices:
+        point = Vector((-abs(vertex.co.x), vertex.co.y, vertex.co.z))
+        original = min(source.data.vertices, key=lambda item: (item.co - point).length)
+        assert (original.co - point).length < 0.00001
+        for name, kind, property_name, unused in attributes:
+            assert actual.attributes[name].data_type == kind
+            expected_value = getattr(source.data.attributes[name].data[original.index], property_name)
+            actual_value = getattr(actual.attributes[name].data[vertex.index], property_name)
+            if kind in ('INT', 'INT8', 'BOOLEAN'):
+                assert actual_value == expected_value, (name, actual_value, expected_value)
+            elif kind == 'FLOAT':
+                assert abs(actual_value - expected_value) < 0.000001
+            else:
+                assert all(abs(a - b) < 0.000001 for a, b in zip(actual_value, expected_value)), (name, actual_value, expected_value)
+        weights = {item.group: item.weight for item in vertex.groups}
+        assert abs(weights[influence.index] - (original.index + 1) / 10) < 0.000001
+    assert not any(attribute.name.startswith(cleanup.PREFIX) for attribute in actual.attributes)
+    bpy.data.objects.remove(source, do_unlink=True)
+    bpy.data.objects.remove(target, do_unlink=True)
+    print('PASS: all nine supported point attribute types and vertex groups survive by identity')
+
+
+def test_material_slots():
+    for override in (False, True):
+        source, target, mirror, modifier = fixtures()
+        material = bpy.data.materials.new('MeshMaterial')
+        source.data.materials.append(material)
+        source.data.materials.append(material)
+        source.material_slots[0].material = None
+        if override:
+            material = bpy.data.materials.new('ObjectMaterial')
+            source.material_slots[1].link = 'OBJECT'
+            source.material_slots[1].material = material
+        for face in source.data.polygons:
+            face.material_index = 0 if face.index == 3 else 1
+        cleanup.setup(source)
+        actual = evaluated(source)
+        for face in actual.polygons:
+            bottom = all(abs(actual.vertices[index].co.z) < 0.000001 for index in face.vertices)
+            assert actual.materials[face.material_index] == (None if bottom else material)
+        bpy.data.objects.remove(source, do_unlink=True)
+        bpy.data.objects.remove(target, do_unlink=True)
+    print('PASS: empty slots and mesh/object material assignments on rebuilt and untouched faces')
+
+
+def test_retained_interior_geometry():
+    # Exercise the reusable graph directly on a four-face plane. Connectivity
+    # around a retained spoke must not turn the whole region into a single ngon.
+    vertices = [(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0), (-1, 1, 0),
+                (-1, 0, 0), (-1, -1, 0), (0, -1, 0), (1, -1, 0)]
+    faces = [[0, 1, 2, 3], [0, 3, 4, 5], [0, 5, 6, 7], [0, 7, 8, 1]]
+    for feature in ('crease_edge', 'sharp_edge', 'Wire'):
+        source = create_mesh('RetainedInterior', vertices + ([(0, 0, 1)] if feature == 'Wire' else []),
+                             faces, [(0, 9)] if feature == 'Wire' else [])
+        group = source.vertex_groups.new(name=cleanup.MARK)
+        group.add(list(range(len(source.data.vertices))), 1, 'REPLACE')
+        if feature != 'Wire':
+            attribute = source.data.attributes.new(feature, 'FLOAT' if feature == 'crease_edge' else 'BOOLEAN', 'EDGE')
+            for edge in source.data.edges:
+                if set(edge.vertices) == {0, 1}:
+                    attribute.data[edge.index].value = 0.8 if feature == 'crease_edge' else True
+        # Unsupported custom edge/face/corner values must also survive fallback.
+        for name, domain in (('EdgeLabel', 'EDGE'), ('FaceLabel', 'FACE'), ('CornerLabel', 'CORNER')):
+            attribute = source.data.attributes.new(name, 'INT', domain)
+            for index, item in enumerate(attribute.data):
+                item.value = index + 1
+        expected = evaluated(source)
+        modifier = source.modifiers.new('Cleanup', 'NODES')
+        modifier.node_group = cleanup.build_group(source)
+        set_input(modifier, 'Mirror Y', True)
+        actual = evaluated(source)
+        assert_topology(actual, expected)
+        assert set(actual.attributes.keys()) == set(expected.attributes.keys())
+        for name in ('EdgeLabel', 'FaceLabel', 'CornerLabel'):
+            assert [item.value for item in actual.attributes[name].data] == [item.value for item in expected.attributes[name].data]
+        if feature != 'Wire':
+            assert [item.value for item in actual.attributes[feature].data] == [item.value for item in expected.attributes[feature].data]
+        bpy.data.objects.remove(source, do_unlink=True)
+    print('PASS: creased/sharp interior edges and attached wires trigger complete attribute-preserving fallback')
+
+
+def test_empty_and_wire_meshes():
+    for vertices, edges in (([], []), ([(0, 0, 0)], []),
+                            ([(0, 0, 0), (-1, 0, 0), (-2, 0, 0)], [[0, 1], [1, 2]])):
+        source = create_mesh('Wire', vertices, [], edges)
+        source.modifiers.new('Mirror', 'MIRROR')
+        expected = evaluated(source)
+        cleanup.setup(source)
+        if vertices:
+            source.vertex_groups[cleanup.MARK].add(list(range(len(vertices))), 1, 'REPLACE')
+        assert_topology(evaluated(source), expected)
+        bpy.data.objects.remove(source, do_unlink=True)
+    print('PASS: empty, point-only, and wire-only meshes')
+
+
+def test_warped_faces():
+    source = create_mesh('WarpedQuad', [(0, -1, 0), (1, -1, 1), (1, 1, -1), (0, 1, 0)], [[0, 1, 2, 3]])
+    source.modifiers.new('Mirror', 'MIRROR')
+    expected = evaluated(source)
+    assert (expected.polygons[0].normal - expected.polygons[1].normal).length < 0.000001
+    cleanup.setup(source)
+    assert_topology(evaluated(source), expected)
+    bpy.data.objects.remove(source, do_unlink=True)
+    print('PASS: warped faces with matching average normals preserve their original topology')
+
+
 def main():
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete(use_global=False)
@@ -327,6 +470,12 @@ def main():
     test_axes()
     test_boundaries()
     test_editing_and_materials()
+    test_small_creases()
+    test_point_attributes()
+    test_material_slots()
+    test_retained_interior_geometry()
+    test_empty_and_wire_meshes()
+    test_warped_faces()
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ GROUP = PREFIX + 'Region'
 REMOVE = PREFIX + 'RemoveEdge'
 DEGREE = PREFIX + 'Degree'
 MARK = 'RemoveCenter'
-VERSION = 1
+VERSION = 2
 
 
 class Graph:
@@ -27,6 +27,8 @@ class Graph:
             socket = self.tree.interface.new_socket(name=name, in_out='INPUT', socket_type=kind)
             if default is not None:
                 socket.default_value = default
+            if name.endswith('Tolerance'):
+                socket.min_value = 0
         self.frame = None
         self.number = 0
         self.input = self.node('NodeGroupInput', 'Inputs')
@@ -74,7 +76,12 @@ class Graph:
                               {0: a, 1: b}, operation=operation)
 
     def compare(self, operation, a, b, label=None):
-        return self.operation('FunctionNodeCompare', label or operation, {0: a, 1: b},
+        values = {0: a, 1: b}
+        # Blender defaults to an epsilon of 0.001, which would erase small
+        # creases. Geometric tolerances use explicit inequalities instead.
+        if operation in ('EQUAL', 'NOT_EQUAL'):
+            values['Epsilon'] = 0
+        return self.operation('FunctionNodeCompare', label or operation, values,
                               data_type='FLOAT', operation=operation)
 
     def vector(self, operation, a, b=None, label=None):
@@ -216,16 +223,17 @@ def build_analysis():
     can_remove = g.boolean('AND', can_remove, g.compare('EQUAL', feature_average, 0))
     can_remove = g.boolean('AND', can_remove, g.named(PREFIX + 'OnPlane', 'BOOLEAN'))
     geometry = g.store(geometry, PREFIX + 'CanRemove', can_remove, kind='BOOLEAN')
-    groups = g.operation('GeometryNodeEdgesToFaceGroups', 'Regions separated by retained edges',
-                         {'Boundary Edges': g.boolean('NOT', g.named(REMOVE, 'BOOLEAN'))}, output='Face Group ID')
-    geometry = g.store(geometry, GROUP, groups, 'FACE', 'INT')
     return g.finish(geometry)
 
 
 def build_reconstruction():
     g = Graph('Mirror Cleanup - Rebuild Polygons', [('Geometry', 'NodeSocketGeometry', None),
+                                                   ('Plane Tolerance', 'NodeSocketFloat', 0.00001),
                                                    ('Direction Tolerance', 'NodeSocketFloat', 0.0001)])
+    g.tree.interface.new_socket(name='Valid', in_out='OUTPUT', socket_type='NodeSocketBool')
     geometry = g.input.outputs['Geometry']
+    position = g.node('GeometryNodeInputPosition', 'Position').outputs[0]
+    normal = g.node('GeometryNodeInputNormal', 'Face normal').outputs[0]
     g.stage('1. Iterate over connected face regions', 0)
     # Most control faces do not touch the seam. Pass those through directly;
     # looping over every face would make even modest control grids expensive.
@@ -265,10 +273,40 @@ def build_reconstruction():
     boundary = g.compare('EQUAL', g.node('GeometryNodeInputMeshEdgeNeighbors', 'Region edge faces').outputs['Face Count'], 1)
     curves = g.operation('GeometryNodeMeshToCurve', 'Ordered boundary loops',
                          {'Mesh': selected, 'Selection': boundary}, mode='EDGES')
+    g.stage('2. Validate the complete region before rebuilding', 2400)
+    # Face groups describe connectivity, not a guaranteed disk. In particular,
+    # a path around a retained edge can put both of its faces in the same group.
+    # Rebuilding just the exterior would silently discard that edge. Interior
+    # vertices attached to loose edges also cannot be represented by one ngon.
+    boundary_fraction = g.on_domain(g.on_domain(boundary, 'EDGE'), 'POINT')
+    required = g.boolean('OR', g.boolean('NOT', g.named(PREFIX + 'CanRemove', 'BOOLEAN')),
+                         g.compare('GREATER_THAN', g.named(DEGREE), 0))
+    enclosed = g.boolean('AND', g.compare('EQUAL', boundary_fraction, 0), required)
+    enclosed_count = g.operation('GeometryNodeAttributeStatistic', 'Required interior vertices',
+                                 {'Geometry': selected, 'Attribute': enclosed},
+                                 output='Sum', domain='POINT', data_type='FLOAT')
+    retained_inside = g.boolean('AND', g.boolean('NOT', boundary),
+                                g.boolean('NOT', g.named(REMOVE, 'BOOLEAN')))
+    retained_count = g.operation('GeometryNodeAttributeStatistic', 'Retained interior edges',
+                                 {'Geometry': selected, 'Attribute': retained_inside},
+                                 output='Sum', domain='EDGE', data_type='FLOAT')
+    valid = g.compare('EQUAL', g.size(curves, 'Spline Count', 'CURVE'), 1)
+    cyclic = g.node('GeometryNodeInputSplineCyclic', 'Closed boundary').outputs[0]
+    valid = g.boolean('AND', valid, g.sample(curves, cyclic, 0, 'CURVE', 'BOOLEAN'))
+    valid = g.boolean('AND', valid, g.compare('EQUAL', enclosed_count, 0))
+    valid = g.boolean('AND', valid, g.compare('EQUAL', retained_count, 0))
+    # Matching average face normals do not prove that ngons are planar. A pair
+    # of mirrored, warped quads can have equal normals but different surfaces.
+    target_normal = g.sample(selected, normal, 0, 'FACE', 'FLOAT_VECTOR', 'Preserve source winding')
+    anchor = g.sample(selected, position, 0, kind='FLOAT_VECTOR')
+    distance = g.math('ABSOLUTE', g.vector('DOT_PRODUCT', g.vector('SUBTRACT', position, anchor), target_normal))
+    maximum_distance = g.operation('GeometryNodeAttributeStatistic', 'Distance from the region plane',
+                                   {'Geometry': selected, 'Attribute': distance},
+                                   output='Max', domain='POINT', data_type='FLOAT')
+    valid = g.boolean('AND', valid, g.compare('LESS_EQUAL', maximum_distance, g.input.outputs['Plane Tolerance']))
 
-    g.stage('2. Select marked, straight boundary points of degree two', 2400)
+    g.stage('3. Select marked, straight boundary points of degree two', 5000)
     index = g.node('GeometryNodeInputIndex', 'Boundary point index').outputs[0]
-    position = g.node('GeometryNodeInputPosition', 'Boundary position').outputs[0]
     directions = []
     for offset in (-1, 1):
         neighbor = g.operation('GeometryNodeOffsetPointInCurve', 'Neighbor along boundary',
@@ -282,7 +320,7 @@ def build_reconstruction():
     curves = g.operation('GeometryNodeDeleteGeometry', 'Remove selected boundary midpoints',
                          {'Geometry': curves, 'Selection': removable}, domain='POINT')
 
-    g.stage('3. Make one ngon from the ordered boundary', 4200)
+    g.stage('4. Make one ngon from the ordered boundary', 6800)
     count = g.size(curves, 'Point Count', 'CURVE')
     circle = g.operation('GeometryNodeMeshCircle', 'Ngon with the same corner count',
                          {'Vertices': count}, fill_type='NGON')
@@ -291,8 +329,6 @@ def build_reconstruction():
     points = g.sample(curves, position, index, kind='FLOAT_VECTOR', label='Exact boundary positions')
     polygon = g.operation('GeometryNodeSetPosition', 'Reconstruct the original boundary',
                           {'Geometry': polygon, 'Position': points})
-    normal = g.node('GeometryNodeInputNormal', 'Face normal').outputs[0]
-    target_normal = g.sample(selected, normal, 0, 'FACE', 'FLOAT_VECTOR', 'Preserve source winding')
     flip = g.compare('LESS_THAN', g.vector('DOT_PRODUCT', normal, target_normal), 0)
     polygon = g.operation('GeometryNodeFlipFaces', 'Correct boundary orientation',
                           {'Mesh': polygon, 'Selection': flip})
@@ -300,16 +336,12 @@ def build_reconstruction():
     for name, kind in (('material_index', 'INT'), ('sharp_face', 'BOOLEAN')):
         value = g.sample(selected, g.named(name, kind), 0, 'FACE', kind)
         polygon = g.store(polygon, PREFIX + 'Material' if name == 'material_index' else name, value, 'FACE', kind)
-    valid = g.compare('EQUAL', g.size(curves, 'Spline Count', 'CURVE'), 1)
-    cyclic = g.node('GeometryNodeInputSplineCyclic', 'Closed boundary').outputs[0]
-    closed = g.sample(curves, cyclic, 0, 'CURVE', 'BOOLEAN')
-    valid = g.boolean('AND', valid, closed)
     valid = g.boolean('AND', valid, g.compare('GREATER_EQUAL', count, 3))
     g.put(end, 'Source', source)
     g.put(end, 'Polygons', g.join(start.outputs['Polygons'], polygon))
     g.put(end, 'Valid', g.boolean('AND', start.outputs['Valid'], valid))
 
-    g.stage('4. Keep loose geometry and weld by original vertex identity', 6500)
+    g.stage('5. Keep loose geometry and weld by original vertex identity', 9100)
     faces = g.node('GeometryNodeInputMeshEdgeNeighbors', 'Loose edges').outputs['Face Count']
     loose_edges = g.operation('GeometryNodeSeparateGeometry', 'Retain wire edges',
                               {'Geometry': geometry, 'Selection': g.compare('EQUAL', faces, 0)},
@@ -330,7 +362,8 @@ def build_reconstruction():
                            {'Geometry': combined, 'Position': points})
     warning = g.node('GeometryNodeWarning', 'Unsupported boundary warning', warning_type='WARNING')
     g.put(warning, 'Show', g.boolean('NOT', end.outputs['Valid']))
-    g.put(warning, 'Message', 'Mirror Cleanup: a region has holes or a branching boundary. Passing the entire mirrored mesh through unchanged.')
+    g.put(warning, 'Message', 'Mirror Cleanup: a region is nonplanar, has holes, a branching boundary, or retained interior geometry. Passing the entire mirrored mesh through unchanged.')
+    g.put(g.output, 'Valid', g.boolean('NOT', warning.outputs['Show']))
     result = g.switch(warning.outputs['Show'], combined, geometry, label='Safe fallback for unsupported regions')
     return g.finish(result)
 
@@ -346,6 +379,7 @@ def build_group(source):
     g.stage('Reconstruct control mesh before Subdivision', 900)
     rebuild = g.node('GeometryNodeGroup', 'Rebuild polygons and remove chosen midpoints', node_tree=build_reconstruction())
     g.put(rebuild, 'Geometry', analysis.outputs['Geometry'])
+    g.put(rebuild, 'Plane Tolerance', g.input.outputs['Plane Tolerance'])
     g.put(rebuild, 'Direction Tolerance', g.input.outputs['Direction Tolerance'])
     geometry = rebuild.outputs['Geometry']
     g.stage('Restore point attributes', 1700)
@@ -353,14 +387,16 @@ def build_group(source):
     # Point attributes are sampled by identity, never by nearest spatial point.
     attributes = {'crease_vert': 'FLOAT', MARK: 'FLOAT'}
     attributes.update({group.name: 'FLOAT' for group in source.vertex_groups})
-    supported = {'FLOAT', 'INT', 'FLOAT_VECTOR', 'FLOAT_COLOR', 'BOOLEAN', 'QUATERNION', 'FLOAT2', 'INT8'}
+    supported = {'FLOAT', 'INT', 'FLOAT_VECTOR', 'FLOAT_COLOR', 'BYTE_COLOR',
+                 'BOOLEAN', 'QUATERNION', 'FLOAT2', 'INT8'}
     attributes.update({attr.name: attr.data_type for attr in source.data.attributes
                        if attr.domain == 'POINT' and attr.data_type in supported
                        and attr.name != 'position' and not attr.name.startswith('.')})
     for name, kind in attributes.items():
-        if kind in ('FLOAT2', 'INT8'):
-            continue
-        value = g.sample(original, g.named(name, kind), g.named(VERTEX, 'INT'), kind=kind)
+        # Compact storage types do not have their own field socket types. Read
+        # and sample through the corresponding full type, then store exactly.
+        field_kind = {'BYTE_COLOR': 'FLOAT_COLOR', 'FLOAT2': 'FLOAT_VECTOR', 'INT8': 'INT'}.get(kind, kind)
+        value = g.sample(original, g.named(name, field_kind), g.named(VERTEX, 'INT'), kind=field_kind)
         geometry = g.store(geometry, name, value, kind=kind)
 
     g.stage('Restore crease and sharpness on surviving edges', 3000)
@@ -391,7 +427,8 @@ def build_group(source):
         geometry = g.store(geometry, name, value, 'EDGE', kind)
     # Primitive ngons have no material slots of their own. Restore actual slots,
     # not merely the material_index numbers copied from the input faces.
-    for index, material in enumerate(source.data.materials):
+    for index, slot in enumerate(source.material_slots):
+        material = slot.material
         if material is not None:
             geometry = g.operation('GeometryNodeSetMaterial', 'Restore material ' + material.name,
                                    {'Geometry': geometry, 'Selection': g.compare('EQUAL', g.named(PREFIX + 'Material', 'INT'), index),
@@ -408,6 +445,9 @@ def build_group(source):
     for name in (VERTEX, GROUP, REMOVE, DEGREE, PREFIX + 'OnPlane', PREFIX + 'CanRemove', PREFIX + 'Material'):
         geometry = g.operation('GeometryNodeRemoveAttribute', 'Remove temporary attribute',
                                {'Geometry': geometry, 'Name': name})
+    # Bypass restoration as well as reconstruction on failure, so the fallback
+    # preserves all input attributes and material slots without modification.
+    active = g.boolean('AND', active, rebuild.outputs['Valid'])
     geometry = g.switch(active, original, geometry)
     return g.finish(geometry)
 
