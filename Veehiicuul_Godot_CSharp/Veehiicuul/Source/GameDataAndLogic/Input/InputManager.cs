@@ -5,6 +5,7 @@ namespace Veehiicuul_Godot_CSharp;
 
 public sealed class InputManager {
     public float Brake { get; private set; }
+    public float Boost { get; private set; }
     public Vector2 AccelerationInput { get; private set; }
     public Vector2 MovementModifierInput { get; private set; }
     public bool ResetCameraZoom { get; private set; }
@@ -52,6 +53,7 @@ public sealed class InputManager {
         this.MovementModifierInput = new Vector2(Input.GetJoyAxis(0, JoyAxis.LeftX), -Input.GetJoyAxis(0, JoyAxis.LeftY));
 
         this.Brake = Input.GetJoyAxis(0, JoyAxis.TriggerLeft);
+        this.Boost = Mathf.Clamp(Input.GetJoyAxis(0, JoyAxis.TriggerRight), 0f, 1f);
         this.ResetCameraZoom = Input.IsActionJustPressed(this.DigitalInputMap.JoyButtonY);
         //if (Input.IsActionPressed(this.DigitalInputMap.JoyButtonRightShoulder)) {
         //    const float innerDeadzone = 0.0078125f;

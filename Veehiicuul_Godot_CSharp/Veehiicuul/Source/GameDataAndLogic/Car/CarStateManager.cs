@@ -134,11 +134,19 @@ public sealed class CarStateManager {
             this.Velocity_WorldSpace = this.Velocity_WorldSpace.LimitLength(carDynamic.VelocityLimiter);
         }
 
-        if (this.Velocity_WorldSpace != Vector3.Zero) {
-            this.Rotation_WorldSpace = this.Velocity_WorldSpace.Get2DRotation();
+        // Keep boost out of the stored velocity so it does not compound and ends when released.
+        Vector3 movementVelocity_worldSpace = this.Velocity_WorldSpace;
+        if (this.InputManager.Boost > 0f) {
+            Vector3 forwardDirection_worldSpace = Vector3.Back.Rotated(Vector3.Up, this.Rotation_WorldSpace);
+            float forwardSpeed = Mathf.Max(movementVelocity_worldSpace.Dot(forwardDirection_worldSpace), 0f);
+            movementVelocity_worldSpace += forwardDirection_worldSpace * forwardSpeed * this.InputManager.Boost;
         }
 
-        this.Position_WorldSpace += this.Velocity_WorldSpace * (float)delta;
+        if (movementVelocity_worldSpace != Vector3.Zero) {
+            this.Rotation_WorldSpace = movementVelocity_worldSpace.Get2DRotation();
+        }
+
+        this.Position_WorldSpace += movementVelocity_worldSpace * (float)delta;
     }
 
     public void Reset_PositionRotationVelocity() {
