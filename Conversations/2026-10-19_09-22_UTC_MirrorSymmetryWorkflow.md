@@ -276,3 +276,19 @@ I chose these rules to preserve the **unsubdivided polygon surface**. Removing a
 The troublesome part is that these rules depend on the geometry. Moving a control point could make a previously flat seam non-flat. The tool would then keep that seam edge, potentially bringing back a center vertex and changing the subdivision result.
 
 **For your intended workflow, this is a real limitation:** your keep/remove choices currently work only when those checks allow them. The tool does not yet give your explicit choices unconditional control over the center topology.
+
+## User
+
+does this work with any combination of mirror axis xyz toggles
+
+## Assistant
+
+I'll check which axis combinations the add-on currently supports.
+
+## Assistant
+
+No. **The current add-on accepts exactly one enabled axis:** X only, Y only, or Z only.
+
+**XY, XZ, YZ, and XYZ are unsupported.** Enabling multiple axes produces "Use one mirror axis at a time" and leaves the previous generated output unchanged.
+
+Supporting combinations would require cleanup across every enabled symmetry plane, including handling vertices where those planes intersect. This is a limitation of my add-on, not Blender's Mirror modifier.
