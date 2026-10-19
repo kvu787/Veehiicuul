@@ -14,7 +14,34 @@ GROUP = PREFIX + 'Region'
 REMOVE = PREFIX + 'RemoveEdge'
 DEGREE = PREFIX + 'Degree'
 MARK = 'RemoveCenter'
-VERSION = 2
+VERSION = 3
+
+# Named Attribute nodes share Blender's attribute namespace with vertex groups.
+# In particular, storing a float vertex group called position can corrupt the
+# mesh's built-in position layer and crash Blender during evaluation.
+MESH_ATTRIBUTES = {'position': ('POINT', 'FLOAT_VECTOR'),
+                   'material_index': ('FACE', 'INT'),
+                   'sharp_face': ('FACE', 'BOOLEAN'),
+                   'sharp_edge': ('EDGE', 'BOOLEAN'),
+                   'crease_vert': ('POINT', 'FLOAT'),
+                   'crease_edge': ('EDGE', 'FLOAT')}
+
+
+def validate_attribute_names(source):
+    """Reject ambiguous inputs before constructing or replacing any node group."""
+    for group in source.vertex_groups:
+        if (group.name in MESH_ATTRIBUTES or group.name.startswith(('.', PREFIX))
+                or source.data.attributes.get(group.name) is not None):
+            raise ValueError('Rename vertex group ' + repr(group.name)
+                             + ': its name conflicts with a mesh or cleanup attribute.')
+    for attribute in source.data.attributes:
+        if attribute.name == MARK or attribute.name.startswith(PREFIX):
+            raise ValueError('Rename mesh attribute ' + repr(attribute.name)
+                             + ': this name is reserved for mirror cleanup.')
+        expected = MESH_ATTRIBUTES.get(attribute.name)
+        if expected and (attribute.domain, attribute.data_type) != expected:
+            raise ValueError('Mesh attribute ' + repr(attribute.name) + ' must use '
+                             + expected[0] + ' domain and ' + expected[1] + ' type.')
 
 
 class Graph:
@@ -369,7 +396,10 @@ def build_reconstruction():
 
 
 def build_group(source):
-    g = Graph('Selective Mirror Cleanup', INPUTS)
+    validate_attribute_names(source)
+    g = Graph('Selective Mirror Cleanup', INPUTS + [
+        ('Mirror in Viewport', 'NodeSocketBool', True),
+        ('Mirror in Render', 'NodeSocketBool', True)])
     g.tree.is_modifier = True
     g.tree['MirrorCleanupVersion'] = VERSION
     g.stage('Analyze mirrored mesh', 0)
@@ -433,9 +463,13 @@ def build_group(source):
             geometry = g.operation('GeometryNodeSetMaterial', 'Restore material ' + material.name,
                                    {'Geometry': geometry, 'Selection': g.compare('EQUAL', g.named(PREFIX + 'Material', 'INT'), index),
                                     'Material': material})
-    g.stage('No enabled mirror axes means no cleanup', 5200)
+    g.stage('Honor Mirror visibility and enabled axes', 5200)
     active = g.boolean('OR', g.input.outputs['Mirror X'], g.input.outputs['Mirror Y'])
     active = g.boolean('OR', active, g.input.outputs['Mirror Z'])
+    viewport = g.node('GeometryNodeIsViewport', 'Current evaluation context').outputs[0]
+    enabled = g.switch(viewport, g.input.outputs['Mirror in Render'],
+                       g.input.outputs['Mirror in Viewport'], 'BOOLEAN', 'Mirror enabled in this context')
+    active = g.boolean('AND', active, enabled)
     if any(attribute.domain == 'CORNER' and not attribute.name.startswith('.')
            for attribute in source.data.attributes):
         warning = g.node('GeometryNodeWarning', 'Prototype attribute limitation', warning_type='WARNING')
@@ -512,13 +546,19 @@ def setup(source):
                 continue
             if socket.name in ('Mirror X', 'Mirror Y', 'Mirror Z'):
                 axis = 'XYZ'.index(socket.name[-1])
+                data_path = mirror.path_from_id('use_axis') + '[' + str(axis) + ']'
+            elif socket.name in ('Mirror in Viewport', 'Mirror in Render'):
+                data_path = mirror.path_from_id('show_viewport' if socket.name == 'Mirror in Viewport' else 'show_render')
+            else:
+                data_path = None
+            if data_path is not None:
                 curve = modifier.driver_add('["' + socket.identifier + '"]')
                 curve.driver.type = 'AVERAGE'
                 variable = curve.driver.variables.new()
-                variable.name = 'EnabledAxis'
+                variable.name = 'MirrorSetting'
                 variable.type = 'SINGLE_PROP'
                 variable.targets[0].id = source
-                variable.targets[0].data_path = mirror.path_from_id('use_axis') + '[' + str(axis) + ']'
+                variable.targets[0].data_path = data_path
             elif socket.name == 'Use Mirror Object':
                 modifier[socket.identifier] = mirror.mirror_object is not None
             elif socket.name == 'Mirror Object':

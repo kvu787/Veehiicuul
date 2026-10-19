@@ -293,7 +293,7 @@ def test_editing_and_materials():
     source.data.polygons[0].material_index = 1
     source.data.polygons[0].use_smooth = True
     modifier = cleanup.setup(source)
-    assert len(source.animation_data.drivers) == 3
+    assert len(source.animation_data.drivers) == 5
     actual = evaluated(source)
     assert first in list(actual.materials) and second in list(actual.materials)
     colored = [face for face in actual.polygons if actual.materials[face.material_index] == second]
@@ -498,7 +498,7 @@ def test_setup_lifecycle():
         cleanup.build_group = original_builder
     assert modifier in list(source.modifiers) and modifier.node_group == previous_tree
     assert set(bpy.data.node_groups) == previous_groups
-    assert len(source.animation_data.drivers) == 4
+    assert len(source.animation_data.drivers) == 6
 
     # The old node group may also be used by a duplicated object.
     other = source.copy()
@@ -507,7 +507,7 @@ def test_setup_lifecycle():
     assert previous_tree in list(bpy.data.node_groups)
     assert [item.type for item in source.modifiers] == ['MIRROR', 'MIRROR', 'NODES', 'SUBSURF']
     assert source.modifiers[-1] == subdivision
-    assert len(source.animation_data.drivers) == 4
+    assert len(source.animation_data.drivers) == 6
     assert not modifier.show_render
     for socket in modifier.node_group.interface.items_tree:
         if socket.item_type == 'SOCKET' and socket.in_out == 'INPUT':
@@ -549,6 +549,122 @@ def test_setup_lifecycle():
     print('PASS: setup rollback, shared groups, retained settings, last-Mirror drivers, unrelated modifiers/drivers, invalid setup states')
 
 
+def test_attribute_name_validation():
+    source, target, mirror, modifier = fixtures()
+    tree = modifier.node_group
+    previous_groups = set(bpy.data.node_groups)
+    previous_drivers = list(source.animation_data.drivers)
+
+    def rejected():
+        try:
+            cleanup.setup(source)
+        except ValueError as error:
+            assert 'attribute' in str(error)
+        else:
+            raise AssertionError('Expected conflicting attribute names to be rejected')
+        assert modifier in list(source.modifiers) and modifier.node_group == tree
+        assert set(bpy.data.node_groups) == previous_groups
+        assert list(source.animation_data.drivers) == previous_drivers
+
+    for name in (*cleanup.MESH_ATTRIBUTES, '.select_vert', cleanup.PREFIX + 'Vertex'):
+        group = source.vertex_groups.new(name=name)
+        group.add([0, 1, 2, 3, 4], 0.25, 'REPLACE')
+        rejected()
+        source.vertex_groups.remove(group)
+    attribute = source.data.attributes.new(cleanup.PREFIX + 'Vertex', 'INT', 'POINT')
+    rejected()
+    source.data.attributes.remove(attribute)
+    attribute = source.data.attributes.new('crease_edge', 'FLOAT', 'POINT')
+    rejected()
+    source.data.attributes.remove(attribute)
+    assert_topology(evaluated(source), target.data)
+    bpy.data.objects.remove(source, do_unlink=True)
+    bpy.data.objects.remove(target, do_unlink=True)
+
+    # A preexisting generic attribute must not silently replace the user-facing
+    # RemoveCenter vertex group or cause it to be created under a different name.
+    source = create_mesh('ConflictingControl', [(0, 0, 0)], [])
+    source.modifiers.new('Mirror', 'MIRROR')
+    source.data.attributes.new(cleanup.MARK, 'FLOAT', 'POINT')
+    previous_groups = set(bpy.data.node_groups)
+    try:
+        cleanup.setup(source)
+    except ValueError as error:
+        assert cleanup.MARK in str(error)
+    else:
+        raise AssertionError('Expected the reserved control attribute to be rejected')
+    assert len(source.vertex_groups) == 0 and len(source.modifiers) == 1
+    assert set(bpy.data.node_groups) == previous_groups
+    bpy.data.objects.remove(source, do_unlink=True)
+    print('PASS: conflicting vertex groups, reserved attributes, and invalid crease domains are rejected without altering setup')
+
+
+def test_mirror_visibility():
+    # Bisect makes the enabled modifier produce a simple full plane. Disabling
+    # Mirror must preserve the original two-face plane even while cleanup is on.
+    source = create_mesh('Visibility', [(-1, -1, 0), (0, -1, 0), (1, -1, 0),
+                                       (-1, 1, 0), (0, 1, 0), (1, 1, 0)],
+                         [[0, 1, 4, 3], [1, 2, 5, 4]])
+    for domain in ('EDGE', 'FACE', 'CORNER'):
+        attribute = source.data.attributes.new(domain + 'Label', 'INT', domain)
+        for index, item in enumerate(attribute.data):
+            item.value = index + 1
+    mirror = source.modifiers.new('Mirror', 'MIRROR')
+    mirror.use_bisect_axis[0] = True
+    cleanup.setup(source)
+    source.vertex_groups[cleanup.MARK].add([1, 4], 1, 'REPLACE')
+    reference = create_mesh('CleanedPlane', [(-1, -1, 0), (1, -1, 0), (1, 1, 0), (-1, 1, 0)],
+                            [[0, 1, 2, 3]])
+
+    def assert_visibility(mesh, enabled):
+        assert_topology(mesh, reference.data if enabled else source.data)
+        if not enabled:
+            for domain in ('EDGE', 'FACE', 'CORNER'):
+                attribute = mesh.attributes[domain + 'Label']
+                assert attribute.domain == domain and attribute.data_type == 'INT'
+                assert [item.value for item in attribute.data] == list(range(1, len(attribute.data) + 1))
+
+    # A test-only render engine inspects Blender's actual render dependency graph
+    # without a GPU, a physical display, or image-based geometry comparisons.
+    rendered = []
+
+    class ValidationEngine(bpy.types.RenderEngine):
+        bl_idname = 'MIRROR_CLEANUP_VALIDATION'
+        bl_label = 'Mirror cleanup regression validation'
+
+        def render(self, depsgraph):
+            assert depsgraph.mode == 'RENDER'
+            rendered.append(bpy.data.meshes.new_from_object(source.evaluated_get(depsgraph),
+                            preserve_all_data_layers=True, depsgraph=depsgraph))
+            result = self.begin_result(0, 0, 1, 1)
+            self.end_result(result)
+
+    bpy.utils.register_class(ValidationEngine)
+    scene = bpy.context.scene
+    previous_engine, previous_camera = scene.render.engine, scene.camera
+    camera = bpy.data.objects.new('ValidationCamera', bpy.data.cameras.new('ValidationCamera'))
+    scene.collection.objects.link(camera)
+    scene.camera = camera
+    scene.render.engine = ValidationEngine.bl_idname
+    try:
+        for viewport, render in ((False, False), (True, False), (False, True), (True, True)):
+            mirror.show_viewport, mirror.show_render = viewport, render
+            assert_visibility(evaluated(source), viewport)
+            bpy.ops.render.render()
+            assert len(rendered) == 1, 'The render dependency graph was not evaluated'
+            result = rendered.pop()
+            assert_visibility(result, render)
+            bpy.data.meshes.remove(result)
+        assert all(curve.is_valid for curve in source.animation_data.drivers)
+    finally:
+        scene.render.engine, scene.camera = previous_engine, previous_camera
+        bpy.data.objects.remove(camera, do_unlink=True)
+        bpy.utils.unregister_class(ValidationEngine)
+        bpy.data.objects.remove(source, do_unlink=True)
+        bpy.data.objects.remove(reference, do_unlink=True)
+    print('PASS: Mirror viewport and render toggles independently bypass cleanup in the correct dependency graph')
+
+
 def main():
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete(use_global=False)
@@ -563,6 +679,8 @@ def main():
     test_empty_and_wire_meshes()
     test_warped_faces()
     test_setup_lifecycle()
+    test_attribute_name_validation()
+    test_mirror_visibility()
 
 
 if __name__ == '__main__':

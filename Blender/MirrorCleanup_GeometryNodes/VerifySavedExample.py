@@ -17,6 +17,7 @@ assert len(source.data.vertices) == 5
 assert not bpy.context.preferences.filepaths.use_scripts_auto_execute
 assert bpy.context.scene['MirrorCleanupExampleVersion'] == cleanup.VERSION
 assert source.modifiers['Selective Mirror Cleanup'].node_group['MirrorCleanupVersion'] == cleanup.VERSION
+assert len(source.animation_data.drivers) == 5
 for text_name, file_name in (('ReadMe', 'ReadMe.md'), ('GeometryNodesMirrorCleanup.py', 'GeometryNodesMirrorCleanup.py')):
     assert bpy.data.texts[text_name].as_string() == (DIRECTORY / file_name).read_text(encoding='utf-8'), file_name + ' is stale in the saved example'
 assert not bpy.data.texts['GeometryNodesMirrorCleanup.py'].use_module
@@ -40,5 +41,11 @@ source.modifiers['Mirror'].use_axis = (False, False, False)
 assert len(points(source)) == 5
 source.modifiers['Mirror'].use_axis = (True, False, False)
 assert len(points(source)) == 6
+source.modifiers['Mirror'].show_viewport = False
+assert_topology(evaluated(source), source.data)
+source.modifiers['Mirror'].show_render = False
+source.modifiers['Mirror'].show_viewport = True
+assert_topology(evaluated(source), evaluated(reference))
+source.modifiers['Mirror'].show_render = True
 assert all(curve.is_valid for curve in source.animation_data.drivers)
-print('PASS: fresh process, current embedded source/documentation, saved graph, scripts autoexec disabled, exact topology, matching subdivision, live group and axis changes')
+print('PASS: fresh process, current embedded source/documentation, saved graph, scripts autoexec disabled, exact topology, matching subdivision, live group, axis, and visibility changes')
