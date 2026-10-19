@@ -151,3 +151,40 @@ Validation passed in Blender 4.5.14: full regression suite, actual render-contex
 Remaining limitations include UV/corner attribute transfer and manually synchronized Edit Mode visibility; see [ReadMe](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup_GeometryNodes/ReadMe.md).
 
 Two implementation commits and a separate conversation commit are recorded. The working tree is clean.
+
+## User
+
+explain the preconditions for running GeometryNodesMirrorCleanup.py. i assume one precondition is a mirror modifier with merge enabled. what happens if the object has other modifiers after the mirror modifier?
+
+## Assistant
+
+I'll check the setup code for its preconditions and how it handles modifiers after Mirror.
+
+## Assistant
+
+Yes: **the active mesh must have a Mirror modifier with Merge enabled.** Mirror does not need to be the last modifier.
+
+The setup preconditions are:
+
+- Run the script inside Blender, with the intended mesh as the **active object**, in **Object Mode**. The supported Blender version is 4.5.14.
+- Have at least one Mirror modifier. If there are several, setup uses the **last Mirror in the stack**, and that one must have Merge enabled.
+- Avoid conflicting vertex group or attribute names. For example, a vertex group named `position` is rejected. The full rules are in [ReadMe](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup_GeometryNodes/ReadMe.md).
+
+**Other modifiers after Mirror are preserved.** Setup inserts cleanup immediately after the chosen Mirror, pushing the later modifiers down while keeping their relative order. For example:
+
+```text
+Before: Mirror -> Subdivision -> Bevel
+After:  Mirror -> Selective Mirror Cleanup -> Subdivision -> Bevel
+```
+
+Those later modifiers operate on the cleaned geometry. They are not applied or otherwise reconfigured. Because cleanup changes topology, downstream operations that depend on particular vertex indices or attributes may need checking.
+
+A few distinctions matter:
+
+- **Clipping is not required.** Merge is required, and its distance must actually join the halves for seam cleanup to work.
+- **Subdivision is optional.** If present, putting it after cleanup is the intended workflow.
+- **You do not need to create `RemoveCenter` first.** Setup creates the vertex group if missing. Assigning vertices at weights above 0.5 requests their removal; eligible seam edges can be dissolved independently of those vertex requests.
+- All mirror axes can be off, or Mirror can be disabled for the viewport/render. Setup still succeeds; cleanup bypasses evaluation in the corresponding case.
+- Rerunning setup replaces this tool's existing cleanup modifier while retaining its tolerances and display settings.
+
+The insertion and validation logic is in [setup()](C:/Users/k/Repository/Veehiicuul/Blender/MirrorCleanup_GeometryNodes/GeometryNodesMirrorCleanup.py:506).
