@@ -182,6 +182,11 @@ cleanup.refresh_pending()
 assert output['MirrorCleanupError'] == ''
 print('PASS: generated output cannot be overwritten while it is in Edit Mode')
 
+axis_specification = importlib.util.spec_from_file_location('TestMirrorAxes', DIRECTORY / 'TestMirrorAxes.py')
+axis_tests = importlib.util.module_from_spec(axis_specification)
+axis_specification.loader.exec_module(axis_tests)
+axis_tests.test_axes(cleanup)
+
 expected = snapshot(output.data)
 output_name = output.name
 with tempfile.TemporaryDirectory(prefix='MirrorCleanup') as temporary:

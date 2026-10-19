@@ -7,10 +7,10 @@ Use the 3D Viewport sidebar's Mirror Cleanup panel to create an output mesh.
 bl_info = {
     'name': 'Live Mirror Cleanup',
     'author': 'Veehiicuul',
-    'version': (1, 0, 0),
+    'version': (1, 1, 0),
     'blender': (4, 5, 0),
     'location': '3D Viewport > Sidebar > Mirror Cleanup',
-    'description': 'Mirror a half mesh and selectively dissolve center vertices',
+    'description': 'Mirror a mesh on any axis combination and selectively dissolve center vertices',
     'category': 'Mesh',
 }
 
@@ -45,20 +45,21 @@ def mirror_for(source):
     if not active or active[-1].type != 'MIRROR':
         raise ValueError('The last enabled input modifier must be Mirror. Put Subdivision on the output.')
     modifier = active[-1]
-    if sum(modifier.use_axis) != 1:
-        raise ValueError('Use one mirror axis at a time.')
-    if not modifier.use_mirror_merge:
+    if any(modifier.use_axis) and not modifier.use_mirror_merge:
         raise ValueError('Enable Merge on the Mirror modifier.')
-    if not modifier.show_in_editmode:
+    if any(modifier.use_axis) and not modifier.show_in_editmode:
         raise ValueError('Enable the Mirror modifier in Edit Mode.')
     return modifier
 
 
 def clean_mesh(mesh, source, mirror, tolerance, angle_limit):
     """Mutate only a generated mesh; preserve all unmarked source vertices."""
-    axis = next(index for index, enabled in enumerate(mirror.use_axis) if enabled)
+    axes = [index for index, enabled in enumerate(mirror.use_axis) if enabled]
+    if not axes:
+        return
     plane_matrix = (mirror.mirror_object.matrix_world.inverted() @ source.matrix_world
                     if mirror.mirror_object else None)
+    direction_tolerance = 2.0 * math.sin(angle_limit * 0.5)
     group = source.vertex_groups.get(GROUP_NAME)
     bm = bmesh.new()
     try:
@@ -66,18 +67,29 @@ def clean_mesh(mesh, source, mirror, tolerance, angle_limit):
         bm.normal_update()
         deform = bm.verts.layers.deform.active
 
-        def on_plane(vertex):
+        def planes_for(vertex):
             position = plane_matrix @ vertex.co if plane_matrix else vertex.co
-            return abs(position[axis]) <= tolerance
+            return sum(1 << axis for axis in axes if abs(position[axis]) <= tolerance)
 
+        planes = {vertex: planes_for(vertex) for vertex in bm.verts}
         marked = {vertex for vertex in bm.verts
                   if group is not None and deform is not None
                   and vertex[deform].get(group.index, 0.0) > 0.5
-                  and on_plane(vertex)}
+                  and planes[vertex]}
         # A crease on the symmetry plane defines the shape and must survive.
         edges = [edge for edge in bm.edges
-                 if edge.is_manifold and all(on_plane(vertex) for vertex in edge.verts)
-                 and edge.calc_face_angle(math.pi) <= angle_limit]
+                 if edge.is_manifold and planes[edge.verts[0]] & planes[edge.verts[1]]
+                 and (edge.link_faces[0].normal - edge.link_faces[1].normal).length
+                 <= direction_tolerance]
+        eligible = set(edges)
+        # At intersecting planes a flat face can have an entirely internal seam
+        # junction. Removing every incident edge would also delete that vertex,
+        # even with use_verts=False. Keep its edges unless removal was requested.
+        protected = {edge for vertex in bm.verts
+                     if vertex not in marked and vertex.link_edges
+                     and all(edge in eligible for edge in vertex.link_edges)
+                     for edge in vertex.link_edges}
+        edges = [edge for edge in edges if edge not in protected]
         if edges:
             bmesh.ops.dissolve_edges(bm, edges=edges, use_verts=False, use_face_split=False)
 
@@ -89,7 +101,7 @@ def clean_mesh(mesh, source, mirror, tolerance, angle_limit):
             if min(direction.length for direction in directions) <= tolerance:
                 continue
             # Only a straight edge can lose its midpoint without changing shape.
-            if abs(math.pi - directions[0].angle(directions[1])) <= angle_limit:
+            if (directions[0].normalized() + directions[1].normalized()).length <= direction_tolerance:
                 removable.append(vertex)
         if removable:
             bmesh.ops.dissolve_verts(bm, verts=removable, use_face_split=False,
@@ -109,7 +121,7 @@ def refresh_output(output, depsgraph=None):
     if not isinstance(source, bpy.types.Object) or source.type != 'MESH':
         raise ValueError('The input mesh no longer exists.')
     if output.mode != 'OBJECT':
-        raise ValueError('Return the output to Object Mode. Edit the input half mesh instead.')
+        raise ValueError('Return the output to Object Mode. Edit the input mesh instead.')
     mirror = mirror_for(source)
     generated = None
     _updating = True
@@ -210,7 +222,7 @@ class MIRRORCLEANUP_OT_create(bpy.types.Operator):
     def execute(self, context):
         source = context.active_object
         if source is None or source.type != 'MESH':
-            self.report({'ERROR'}, 'Select your half mesh first.')
+            self.report({'ERROR'}, 'Select your input mesh first.')
             return {'CANCELLED'}
         try:
             create_output(source)
@@ -235,7 +247,7 @@ class MIRRORCLEANUP_OT_mark(bpy.types.Operator):
         source = context.active_object
         output = output_for(source)
         if source == output:
-            self.report({'ERROR'}, 'Edit the input half mesh, not the generated output.')
+            self.report({'ERROR'}, 'Edit the input mesh, not the generated output.')
             return {'CANCELLED'}
         group = source.vertex_groups.get(GROUP_NAME) or source.vertex_groups.new(name=GROUP_NAME)
         bm = bmesh.from_edit_mesh(source.data)
@@ -298,7 +310,7 @@ class MIRRORCLEANUP_PT_panel(bpy.types.Panel):
         layout = self.layout
         output = output_for(context.active_object)
         if output is None:
-            layout.label(text='Select a half mesh with a Mirror modifier.')
+            layout.label(text='Select an input mesh with a Mirror modifier.')
             layout.operator(MIRRORCLEANUP_OT_create.bl_idname)
             return
         layout.label(text='Input: ' + output[SOURCE_PROPERTY].name)

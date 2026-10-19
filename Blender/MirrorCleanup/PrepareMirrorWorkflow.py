@@ -32,6 +32,7 @@ instructions.write('Open LiveMirrorCleanup.py in a Blender Text Editor and press
                    'Then open the 3D Viewport sidebar (N) and select Mirror Cleanup.\n'
                    'Edit AttemptedInput. The generated AttemptedInputOutput updates automatically.\n'
                    'Select center vertices and choose Remove Center or Keep Center.\n'
+                   'All Mirror axis combinations are supported: X, Y, Z, XY, XZ, YZ, XYZ, or all off.\n'
                    'The rear center is marked RemoveCenter; the raised center is kept.\n'
                    'Subdivision is on the generated output. Disable it to inspect the base topology.\n'
                    'The original MirrorWorkflow.blend was not changed.\n')
