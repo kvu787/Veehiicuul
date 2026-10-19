@@ -371,3 +371,26 @@ Your screenshot shows Edit Mode, where the original editable vertices remain vis
 Press **Tab** to switch to Object Mode and view the result without the editable vertex overlay. For straight wire segments, removing an intermediate vertex leaves the same visible line, so the shape can look identical.
 
 In your saved file, cleanup does remove **14 vertices**, reducing the evaluated mesh from **44 to 30 vertices**. Seeing those source points in Edit Mode does not indicate a failure.
+
+## User
+
+what is the proper way to fully apply this modifier stack
+
+## Assistant
+
+I'll check Blender's apply workflow for your Mirror and cleanup stack, including the order needed to preserve the result.
+
+## Assistant
+
+For this stack, use **Object > Convert > Mesh** to bake the complete evaluated result at once:
+
+1. Press **Tab** to enter Object Mode.
+2. Select only the spaceship. Optionally duplicate it first to keep an editable backup.
+3. Choose **Object > Convert > Mesh**.
+4. Return to Edit Mode. The cleaned geometry is now the actual editable mesh, and the modifiers are gone.
+
+I tested this on your saved `Spaceship2.blend` without saving changes: the converted mesh has **30 vertices and 60 edges**, matching the cleanup output.
+
+Avoid applying Mirror separately first: cleanup has drivers that reference it. Converting the complete stack captures the result while those dependencies still exist. If you later include Subdivision, conversion bakes that too, using the current viewport result.
+
+One implementation detail: Blender leaves the cleanup's five drivers behind after conversion, which can produce invalid-driver console warnings. They no longer affect the baked geometry; they can be deleted in the Drivers Editor.
