@@ -351,3 +351,23 @@ Yes. The saved setup in [Spaceship2.blend](C:/Users/k/Repository/Veehiicuul/Blen
 Temporarily marking every vertex produced the same result, so your current selection already covers all eligible points. Subdivision is not required.
 
 I left the saved file unchanged.
+
+## User
+
+am i supposed to still see the vertices that are meant to be removed?
+
+![Attached screenshot](Attachments/MirrorCleanupEditModeVertices.png)
+
+Original attachment: C:/Users/k/AppData/Local/Temp/codex-clipboard-c40d9632-ad1b-41a4-981c-e8b50cb55e4c.png
+
+## Assistant
+
+Your screenshot shows Edit Mode, where the original editable vertices remain visible even when the modifier removes them from its output.
+
+## Assistant
+
+**Yes, in Edit Mode.** The orange points in your screenshot belong to the original editable mesh. Cleanup removes eligible points from the modifier's evaluated output while keeping the source vertices available for editing and changing `RemoveCenter` assignments.
+
+Press **Tab** to switch to Object Mode and view the result without the editable vertex overlay. For straight wire segments, removing an intermediate vertex leaves the same visible line, so the shape can look identical.
+
+In your saved file, cleanup does remove **14 vertices**, reducing the evaluated mesh from **44 to 30 vertices**. Seeing those source points in Edit Mode does not indicate a failure.
