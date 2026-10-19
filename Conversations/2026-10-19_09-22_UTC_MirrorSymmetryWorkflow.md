@@ -331,8 +331,8 @@ I'll check how the two objects and their modifier stacks are connected in the sa
 
 You're reading it correctly. **This implementation uses two objects, with Python connecting them.**
 
-| Object                 | Role                                     | Modifier    |
-| ---------------------- | ---------------------------------------- | ----------- |
+| Object                 | Role                                      | Modifier    |
+| ---------------------- | ----------------------------------------- | ----------- |
 | `AttemptedInput`       | The half mesh you edit                    | Mirror      |
 | `AttemptedInputOutput` | The generated, cleaned control mesh       | Subdivision |
 | `DesiredOutput`        | Your reference, independent of the system | Subdivision |
@@ -351,3 +351,35 @@ I implemented the custom cleanup as a Python mesh-generation step rather than a 
 Subdivision remains unapplied, and cleanup is reversible by rebuilding from the editable input. However, **the connection between the objects depends on the add-on running**. Without it, the output remains the last generated snapshot. Cleanup also cannot be reordered or disabled through the normal modifier stack.
 
 So this provides editable input and non-destructive subdivision, but **it is not the conventional single-object modifier workflow**.
+
+## User
+
+what would it take to make this a conventional single-object modifier workflow?
+
+## Assistant
+
+I'll check Blender's options for putting the cleanup directly between Mirror and Subdivision on one object, and what each would take to implement.
+
+## Assistant
+
+Blender 4.5.14 cannot register a new mesh modifier from Python, and its Geometry Nodes have no direct Dissolve node. The cleanup therefore needs a substantial rewrite: either a Geometry Nodes reconstruction, whose feasibility still needs testing, or native C++ changes in a custom Blender build.
+
+## Assistant
+
+**The cleanup must become part of Blender's modifier evaluation**, producing this stack on one object:
+
+```text
+Editable mesh -> Mirror -> Seam Cleanup -> Subdivision
+```
+
+That is a substantial rewrite. I checked your installed Blender 4.5.14: it rejects registering a new modifier type from Python. The existing cleanup functions cannot simply be wrapped in a Python modifier class.
+
+There are two possible routes:
+
+1. **Implement it in Blender's C++ source.** Add a native Seam Cleanup modifier, or add the cleanup options directly to the existing Mirror modifier. The latter would give you **Mirror with selective cleanup -> Subdivision**. We would port the algorithm, expose the vertex-group controls, preserve mesh attributes, and test axis combinations, Edit Mode, undo, rendering, and subdivision. You would need to build and use a **custom Windows Blender executable**, and maintain the changes when upgrading. [Blender development setup](https://developer.blender.org/docs/handbook/new_developers/setup/).
+
+2. **Reimplement it using Geometry Nodes.** A Geometry Nodes modifier can occupy the cleanup slot in a normal stack and run in stock Blender. However, Blender 4.5.14 has no direct Dissolve geometry node. Reproducing our operation would require constructing the resulting topology using other nodes. That needs a feasibility prototype; I have not established a robust equivalent that preserves the required topology and attributes. [Geometry Nodes as custom modifiers](https://docs.blender.org/manual/en/4.5/modeling/modifiers/introduction.html).
+
+**My recommendation is to extend the native Mirror modifier if a custom Blender build is acceptable.** That is the most direct route to the conventional workflow you described. If stock Blender is required, the next step is a Geometry Nodes feasibility prototype.
+
+Moving cleanup into the stack would not automatically remove its current bend and crease restrictions; changing those is a separate decision about how the topology should be generated.
