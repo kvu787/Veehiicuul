@@ -149,3 +149,33 @@ For ongoing editing, you can use the complete `DesiredOutput` mesh and enable **
 **The limitation:** Edit Mode symmetry does not mirror every topology operation. If you need to model only one half, automatically mirror new geometry, and independently choose which center vertices disappear, that requires an additional cleanup step or custom tooling.
 
 Your `.blend` file is unchanged.
+
+## User
+
+this is what i want: If you need to model only one half, automatically mirror new geometry, and independently choose which center vertices disappear, that requires an additional cleanup step or custom tooling.
+
+are there other 3d modeling programs that provide this workflow
+
+## Assistant
+
+I'll check which modeling programs support this workflow, especially whether they let you control the center topology while continuing to model only one half.
+
+## Assistant
+
+Houdini looks promising because it can keep mirroring and selective cleanup as live steps. 3ds Max also supports cleanup above a live Symmetry modifier, though changes to the input topology can invalidate those edits. I haven't found a documented single symmetry tool with the exact per-vertex control you want.
+
+## Assistant
+
+**Yes, through built-in procedural workflows. Houdini is the strongest fit I found.** I haven't verified a program with your exact behavior packaged as a single symmetry setting.
+
+**Houdini:** You can keep the half mesh editable, mirror it, and perform selective cleanup downstream. Its Mirror node welds the seam; Dissolve merges selected faces across edges; point groups can identify individual center points for removal. A suitable setup would be:
+
+`Half mesh -> Mirror -> Dissolve seam edges -> Remove chosen center points -> Subdivision`
+
+That lets the input retain modeling vertices while the output omits selected ones. This is a proposed setup using documented native tools, rather than a tested import of your example. [Mirror](https://www.sidefx.com/docs/houdini/nodes/sop/mirror.html), [Dissolve](https://www.sidefx.com/docs/houdini/nodes/sop/dissolve.html), [Blast point groups](https://www.sidefx.com/docs/houdini/nodes/sop/blast.html).
+
+**3ds Max:** A stack of `Editable Poly -> Symmetry -> Edit Poly -> TurboSmooth` lets you model the half below Symmetry and selectively remove seam edges and vertices in the Edit Poly above it. However, adding or deleting input geometry can invalidate the stored cleanup selections. It supports the arrangement, but that limitation matters for your requirement to keep creating geometry. [Symmetry](https://help.autodesk.com/cloudhelp/2026/ENU/3DSMax-Modifiers/files/GUID-EB0B7B9B-117D-4CC3-A966-A3E007E0C68A.htm), [Edit Poly](https://help.autodesk.com/cloudhelp/2026/ENU/3DSMax-Modifiers/files/GUID-1230619A-8CB3-4411-B07D-C133716F61F9.htm), [topology dependencies](https://help.autodesk.com/cloudhelp/2017/ENU/3DSMax/files/GUID-BBC25115-E5C2-4E81-BF39-0CE1BC727070.htm).
+
+**Cinema 4D:** It has live half-mesh symmetry, and its separate Symmetrize command has a Dissolve option for removing cut-generated points and edges. However, I could not verify your required independent keep/remove choice within the live Symmetry object, so I would not call it a confirmed match. [Live Symmetry](https://help.maxon.net/c4d/en-us/Content/html/OSYMMETRYGENERATOR.html), [Symmetrize options](https://help.maxon.net/c4d/2025/en-us/Content/html/Symmeterize_Tool.html).
+
+For your exact requirement, **I'd investigate Houdini first**, with the understanding that it requires a small node setup.
