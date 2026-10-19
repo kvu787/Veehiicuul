@@ -7,7 +7,7 @@ import bpy
 sys.dont_write_bytecode = True
 DIRECTORY = Path(__file__).resolve().parent
 sys.path.insert(0, str(DIRECTORY))
-from TestGeometryNodes import assert_surface, assert_topology, cleanup, evaluated
+from TestGeometryNodes import assert_surface, assert_topology, cleanup, create_mesh, evaluated
 
 source = bpy.data.objects['AttemptedInput']
 reference = bpy.data.objects['DesiredOutput']
@@ -48,4 +48,17 @@ source.modifiers['Mirror'].show_viewport = True
 assert_topology(evaluated(source), evaluated(reference))
 source.modifiers['Mirror'].show_render = True
 assert all(curve.is_valid for curve in source.animation_data.drivers)
+# Exercise the saved wire path without constructing any node groups. The
+# example's graph works on a different mesh with no Subdivision modifier.
+wire = create_mesh('SavedWireCheck', [(-1, 0, 0), (0, 0, 0)], [], [(0, 1)])
+wire.modifiers.new('Mirror', 'MIRROR')
+modifier = wire.modifiers.new('Cleanup', 'NODES')
+modifier.node_group = source.modifiers['Selective Mirror Cleanup'].node_group
+wire.vertex_groups.new(name=cleanup.MARK).add([1], 1, 'REPLACE')
+expected_wire = create_mesh('ExpectedWire', [(-1, 0, 0), (1, 0, 0)], [], [(0, 1)])
+assert_topology(evaluated(wire), expected_wire.data)
+assert not list(modifier.node_warnings)
+wire.vertex_groups[cleanup.MARK].remove([1])
+assert len(evaluated(wire).vertices) == 3
+print('PASS: saved wire graph removes marked center points without Subdivision, warnings, or reconstruction by Python')
 print('PASS: fresh process, current embedded source/documentation, saved graph, scripts autoexec disabled, exact topology, matching subdivision, live group, axis, and visibility changes')

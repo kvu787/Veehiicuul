@@ -1,4 +1,4 @@
-"""Build a real Mirror -> Geometry Nodes -> Subdivision stack in Blender 4.5.14.
+"""Build Mirror -> Geometry Nodes cleanup, with optional later Subdivision.
 
 Run this file in Blender's Text Editor with the editable mesh selected. Python
 only constructs the node groups and ordinary property drivers. Mesh evaluation
@@ -14,7 +14,7 @@ GROUP = PREFIX + 'Region'
 REMOVE = PREFIX + 'RemoveEdge'
 DEGREE = PREFIX + 'Degree'
 MARK = 'RemoveCenter'
-VERSION = 3
+VERSION = 4
 
 # Named Attribute nodes share Blender's attribute namespace with vertex groups.
 # In particular, storing a float vertex group called position can corrupt the
@@ -225,7 +225,8 @@ def build_analysis():
     geometry = g.store(geometry, REMOVE, eligible, 'EDGE', 'BOOLEAN')
 
     g.stage('3. Preserve kept junctions and subdivision creases', 4800)
-    edge_degree = g.node('GeometryNodeInputMeshVertexNeighbors', 'Original vertex degree').outputs['Vertex Count']
+    neighbors = g.node('GeometryNodeInputMeshVertexNeighbors', 'Original vertex connections')
+    edge_degree = neighbors.outputs['Vertex Count']
     def remaining_degree(selection):
         keep = g.math('SUBTRACT', 1, selection)
         average = g.on_domain(keep, 'EDGE')
@@ -250,7 +251,49 @@ def build_analysis():
     can_remove = g.boolean('AND', can_remove, g.compare('EQUAL', feature_average, 0))
     can_remove = g.boolean('AND', can_remove, g.named(PREFIX + 'OnPlane', 'BOOLEAN'))
     geometry = g.store(geometry, PREFIX + 'CanRemove', can_remove, kind='BOOLEAN')
+    # Use original connectivity here, before face seams disappear. A wire point
+    # attached to a face or branch must remain even if a curve splits there.
+    wire_point = g.boolean('AND', can_remove, g.compare('EQUAL', edge_degree, 2))
+    wire_point = g.boolean('AND', wire_point, g.compare('EQUAL', neighbors.outputs['Face Count'], 0))
+    geometry = g.store(geometry, PREFIX + 'WireCandidate', wire_point, kind='BOOLEAN')
     return g.finish(geometry)
+
+
+def rebuild_wires(g, geometry):
+    """Build wire chains as poly curves, then reconnect retained points as edges."""
+    faces = g.node('GeometryNodeInputMeshEdgeNeighbors', 'Wire edge face count').outputs['Face Count']
+    curves = g.operation('GeometryNodeMeshToCurve', 'Order loose edge chains and loops',
+                         {'Mesh': geometry, 'Selection': g.compare('EQUAL', faces, 0)}, mode='EDGES')
+    index = g.node('GeometryNodeInputIndex', 'Wire point index').outputs[0]
+    position = g.node('GeometryNodeInputPosition', 'Wire point position').outputs[0]
+    removable = g.named(PREFIX + 'WireCandidate', 'BOOLEAN')
+    directions = []
+    for offset in (-1, 1):
+        neighbor = g.node('GeometryNodeOffsetPointInCurve', 'Adjacent wire point')
+        g.put(neighbor, 'Point Index', index)
+        g.put(neighbor, 'Offset', offset)
+        point = g.sample(curves, position, neighbor.outputs['Point Index'], kind='FLOAT_VECTOR')
+        delta = g.vector('SUBTRACT', point, position)
+        directions.append(g.vector('NORMALIZE', delta))
+        removable = g.boolean('AND', removable, neighbor.outputs['Is Valid Offset'])
+        removable = g.boolean('AND', removable, g.compare('GREATER_THAN', g.vector('LENGTH', delta), 0))
+    straight = g.compare('LESS_EQUAL', g.vector('LENGTH', g.vector('ADD', *directions)),
+                         g.input.outputs['Direction Tolerance'])
+    removable = g.boolean('AND', removable, straight)
+    # Keep a valid chain/loop even with unusually permissive direction tolerance.
+    count = g.node('GeometryNodeSplineLength', 'Points in this wire chain').outputs['Point Count']
+    kept_fraction = g.on_domain(g.on_domain(g.math('SUBTRACT', 1, removable), 'POINT'), 'CURVE')
+    kept_count = g.math('ROUND', g.math('MULTIPLY', kept_fraction, count))
+    cyclic = g.node('GeometryNodeInputSplineCyclic', 'Closed wire loop').outputs[0]
+    minimum = g.switch(cyclic, 2, 3, 'INT')
+    removable = g.boolean('AND', removable, g.compare('GREATER_EQUAL', kept_count, minimum))
+    removed_count = g.operation('GeometryNodeAttributeStatistic', 'Removed wire point count',
+                               {'Geometry': curves, 'Attribute': removable},
+                               output='Sum', domain='POINT', data_type='FLOAT')
+    curves = g.operation('GeometryNodeDeleteGeometry', 'Dissolve marked straight wire points',
+                         {'Geometry': curves, 'Selection': removable}, domain='POINT')
+    wires = g.operation('GeometryNodeCurveToMesh', 'Reconnect retained wire points', {'Curve': curves})
+    return wires, g.compare('GREATER_THAN', removed_count, 0)
 
 
 def build_reconstruction():
@@ -258,10 +301,18 @@ def build_reconstruction():
                                                    ('Plane Tolerance', 'NodeSocketFloat', 0.00001),
                                                    ('Direction Tolerance', 'NodeSocketFloat', 0.0001)])
     g.tree.interface.new_socket(name='Valid', in_out='OUTPUT', socket_type='NodeSocketBool')
+    g.tree.interface.new_socket(name='Changed', in_out='OUTPUT', socket_type='NodeSocketBool')
+    g.tree.interface.new_socket(name='Rebuilt Faces', in_out='OUTPUT', socket_type='NodeSocketBool')
     geometry = g.input.outputs['Geometry']
     position = g.node('GeometryNodeInputPosition', 'Position').outputs[0]
     normal = g.node('GeometryNodeInputNormal', 'Face normal').outputs[0]
     g.stage('1. Iterate over connected face regions', 0)
+    # Keep wires out of the face pass, including its no-affected-faces shortcut.
+    # Otherwise the original wire vertices could be joined back after removal.
+    edge_faces = g.node('GeometryNodeInputMeshEdgeNeighbors', 'Surface edge faces').outputs['Face Count']
+    surfaces = g.operation('GeometryNodeSeparateGeometry', 'Faces and their edges only',
+                           {'Geometry': geometry, 'Selection': g.compare('GREATER_THAN', edge_faces, 0)},
+                           domain='EDGE', output='Selection')
     # Most control faces do not touch the seam. Pass those through directly;
     # looping over every face would make even modest control grids expensive.
     edge_fraction = g.on_domain(g.math('ADD', g.named(REMOVE, 'BOOLEAN'), 0), 'EDGE')
@@ -273,7 +324,7 @@ def build_reconstruction():
     affected = g.boolean('OR', g.compare('GREATER_THAN', edge_fraction, 0),
                          g.compare('GREATER_THAN', point_fraction, 0))
     partition = g.node('GeometryNodeSeparateGeometry', 'Rebuild only affected faces', domain='FACE')
-    g.put(partition, 'Geometry', geometry)
+    g.put(partition, 'Geometry', surfaces)
     g.put(partition, 'Selection', affected)
     compact_groups = g.operation('GeometryNodeEdgesToFaceGroups', 'Compact affected region indices',
                                  {'Boundary Edges': g.boolean('NOT', g.named(REMOVE, 'BOOLEAN'))}, output='Face Group ID')
@@ -282,7 +333,8 @@ def build_reconstruction():
     maximum = g.operation('GeometryNodeAttributeStatistic', 'Last face region',
                           {'Geometry': affected_geometry, 'Attribute': region}, output='Max', domain='FACE', data_type='FLOAT')
     iterations = g.math('ADD', maximum, 1)
-    iterations = g.switch(g.compare('GREATER_THAN', g.size(affected_geometry, 'Face Count'), 0), 0, iterations, 'INT')
+    rebuilt_faces = g.compare('GREATER_THAN', g.size(affected_geometry, 'Face Count'), 0)
+    iterations = g.switch(rebuilt_faces, 0, iterations, 'INT')
     end = g.node('GeometryNodeRepeatOutput', 'Collected polygons')
     end.repeat_items.clear()
     for kind, name in (('GEOMETRY', 'Source'), ('GEOMETRY', 'Polygons'), ('BOOLEAN', 'Valid')):
@@ -368,11 +420,9 @@ def build_reconstruction():
     g.put(end, 'Polygons', g.join(start.outputs['Polygons'], polygon))
     g.put(end, 'Valid', g.boolean('AND', start.outputs['Valid'], valid))
 
-    g.stage('5. Keep loose geometry and weld by original vertex identity', 9100)
-    faces = g.node('GeometryNodeInputMeshEdgeNeighbors', 'Loose edges').outputs['Face Count']
-    loose_edges = g.operation('GeometryNodeSeparateGeometry', 'Retain wire edges',
-                              {'Geometry': geometry, 'Selection': g.compare('EQUAL', faces, 0)},
-                              domain='EDGE', output='Selection')
+    g.stage('5. Clean wire chains while preserving branches and face connections', 9100)
+    loose_edges, changed_wires = rebuild_wires(g, geometry)
+    g.stage('6. Keep isolated points and weld by original vertex identity', 12400)
     degree = g.node('GeometryNodeInputMeshVertexNeighbors', 'Isolated vertices').outputs['Vertex Count']
     loose_points = g.operation('GeometryNodeSeparateGeometry', 'Retain isolated points',
                                {'Geometry': geometry, 'Selection': g.compare('EQUAL', degree, 0)},
@@ -391,6 +441,8 @@ def build_reconstruction():
     g.put(warning, 'Show', g.boolean('NOT', end.outputs['Valid']))
     g.put(warning, 'Message', 'Mirror Cleanup: a region is nonplanar, has holes, a branching boundary, or retained interior geometry. Passing the entire mirrored mesh through unchanged.')
     g.put(g.output, 'Valid', g.boolean('NOT', warning.outputs['Show']))
+    g.put(g.output, 'Changed', g.boolean('OR', rebuilt_faces, changed_wires))
+    g.put(g.output, 'Rebuilt Faces', rebuilt_faces)
     result = g.switch(warning.outputs['Show'], combined, geometry, label='Safe fallback for unsupported regions')
     return g.finish(result)
 
@@ -406,7 +458,7 @@ def build_group(source):
     analysis = g.node('GeometryNodeGroup', 'Identify seam edges and keep/remove choices', node_tree=build_analysis())
     for socket in analysis.inputs:
         g.put(analysis, socket.name, g.input.outputs[socket.name])
-    g.stage('Reconstruct control mesh before Subdivision', 900)
+    g.stage('Reconstruct faces and wire chains', 900)
     rebuild = g.node('GeometryNodeGroup', 'Rebuild polygons and remove chosen midpoints', node_tree=build_reconstruction())
     g.put(rebuild, 'Geometry', analysis.outputs['Geometry'])
     g.put(rebuild, 'Plane Tolerance', g.input.outputs['Plane Tolerance'])
@@ -473,15 +525,17 @@ def build_group(source):
     if any(attribute.domain == 'CORNER' and not attribute.name.startswith('.')
            for attribute in source.data.attributes):
         warning = g.node('GeometryNodeWarning', 'Prototype attribute limitation', warning_type='WARNING')
-        g.put(warning, 'Show', True)
+        g.put(warning, 'Show', g.boolean('AND', rebuild.outputs['Valid'], rebuild.outputs['Rebuilt Faces']))
         g.put(warning, 'Message', 'Mirror Cleanup prototype: rebuilt faces do not retain UV maps or other corner attributes.')
-        active = g.boolean('AND', active, warning.outputs['Show'])
-    for name in (VERTEX, GROUP, REMOVE, DEGREE, PREFIX + 'OnPlane', PREFIX + 'CanRemove', PREFIX + 'Material'):
-        geometry = g.operation('GeometryNodeRemoveAttribute', 'Remove temporary attribute',
-                               {'Geometry': geometry, 'Name': name})
+        # The warning must be connected for evaluation without gating wire-only
+        # cleanup on the presence of reconstructed faces.
+        geometry = g.switch(warning.outputs['Show'], geometry, geometry)
+    geometry = g.operation('GeometryNodeRemoveAttribute', 'Remove temporary attributes',
+                           {'Geometry': geometry, 'Name': PREFIX + '*'}, pattern_mode='WILDCARD')
     # Bypass restoration as well as reconstruction on failure, so the fallback
     # preserves all input attributes and material slots without modification.
     active = g.boolean('AND', active, rebuild.outputs['Valid'])
+    active = g.boolean('AND', active, rebuild.outputs['Changed'])
     geometry = g.switch(active, original, geometry)
     return g.finish(geometry)
 

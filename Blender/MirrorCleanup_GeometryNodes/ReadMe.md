@@ -1,10 +1,13 @@
 # Geometry Nodes mirror cleanup prototype
 
-This folder contains a conventional, single-object modifier workflow for Blender 4.5.14 LTS on Windows 11 x64:
+This folder contains a conventional, single-object modifier workflow for face meshes and wire outlines in Blender 4.5.14 LTS on Windows 11 x64. Both stacks are supported:
 
 ```text
+Editable mesh -> Mirror -> Selective Mirror Cleanup
 Editable mesh -> Mirror -> Selective Mirror Cleanup -> Subdivision
 ```
+
+Subdivision is optional. Cleanup produces a complete mesh of faces, edges, and vertices on its own.
 
 The cleanup is an actual Geometry Nodes modifier. The saved node groups and ordinary property drivers do all evaluation. There are no Python update handlers, timers, generated output objects, or add-ons required while modeling, reopening the file, or rendering. Python is used once to construct the node graph.
 
@@ -32,7 +35,7 @@ Toggle axes on the normal Mirror modifier. The cleanup's axis inputs follow thro
 
 1. Add a Mirror modifier to the editable mesh and enable Merge. Enable its Edit Mode display as well.
 2. Select that mesh in Object Mode. Open `GeometryNodesMirrorCleanup.py` in Blender's Text Editor and run it with Alt+P.
-3. Add Subdivision after Selective Mirror Cleanup, or keep the existing later Subdivision modifier.
+3. Optionally add Subdivision after Selective Mirror Cleanup, or keep existing later modifiers. Setup inserts cleanup immediately after the last Mirror and preserves the order of other modifiers.
 4. Assign chosen center vertices to the new `RemoveCenter` group.
 
 Running setup again replaces this prototype's cleanup modifier and refreshes its attribute/material configuration. It preserves the cleanup's tolerances and display toggles, the source mesh, vertex groups, Mirror, and other modifiers. It uses the last Mirror in the stack. Setup requires Object Mode and constructs the replacement before removing the working modifier; a construction failure leaves the existing setup intact.
@@ -41,6 +44,22 @@ Setup rejects vertex group names that conflict with geometry attributes: `positi
 
 If the Mirror modifier uses a Mirror Object, setup copies that reference into the cleanup. Later movement, rotation, and nonuniform scaling of that object are evaluated automatically. **If you change which object is used as the Mirror Object, rerun setup**, or update both `Mirror Object` and `Use Mirror Object` in the cleanup modifier. Axis toggles follow automatically; object-reference changes do not.
 
+## Wire outlines
+
+Wire geometry means mesh edges that do not belong to faces. Open chains, closed loops, and wires attached to face meshes are supported. Use the same `RemoveCenter` vertex group; no separate mode or Subdivision modifier is needed.
+
+A wire vertex is removed only when all of these conditions hold:
+
+- Its `RemoveCenter` weight is greater than 0.5.
+- It lies on at least one enabled mirror plane, within Plane Tolerance.
+- It has exactly two incident edges in the original mirrored mesh and belongs to no faces.
+- Its two nonzero edge directions are opposite within Direction Tolerance.
+- It has no vertex crease, and neither incident edge has a crease or sharp flag.
+
+The two edges are replaced by one edge connecting the retained neighbors. Consecutive eligible points can be removed in one evaluation. Endpoints, bends, branch vertices, face attachments, unmarked points, and isolated points remain. Closed loops stay closed, and coincident disconnected wires remain disconnected. If a permissive tolerance would leave fewer than two points in an open chain or three in a loop, that chain's points are kept.
+
+For an existing file, reload the updated `GeometryNodesMirrorCleanup.py` from disk and run it in Object Mode to replace the saved graph. Existing `RemoveCenter` assignments are preserved. A saved graph does not update merely because the Python file changed. Then enter Edit Mode and assign the desired seam points to `RemoveCenter` at weight 1. Removing their membership restores them in the evaluated wire.
+
 ## How the node graph works
 
 1. Identify manifold edges whose two endpoints lie on the same enabled mirror plane and whose adjacent face normals agree within tolerance.
@@ -48,22 +67,23 @@ If the Mirror modifier uses a Mirror Object, setup copies that reference into th
 3. Pass unaffected faces through directly. Group affected faces across the remaining removable seam edges, then iterate over those groups in a Repeat Zone.
 4. Verify that each group is planar, has a single closed boundary, and contains no retained interior edges or required interior vertices. Convert its boundary into an ordered cyclic curve. Delete marked, straight boundary points only when their degree after seam removal is two and they carry no subdivision crease.
 5. Generate an ngon with that exact corner count, place its vertices at the boundary coordinates, and correct its winding using the original face normal.
-6. Join polygons by original vertex identity, restore positions and supported attributes, and pass the result to the next modifier.
+6. Convert loose edges into ordered poly curves, remove eligible wire points, and convert the curves back into mesh edges.
+7. Join polygons and wires by original vertex identity, restore positions and supported attributes, and produce the final mesh or pass it to the next modifier.
 
-Welding uses encoded original vertex indices, rather than proximity in the actual model. Coincident disconnected shells remain disconnected. Concave polygon boundaries are supported. Loose edges and isolated vertices are retained.
+Welding uses encoded original vertex indices, rather than proximity in the actual model. Coincident disconnected shells remain disconnected. Concave polygon boundaries are supported. Wire branches and face connections are restored by the same vertex identity. If neither faces nor wires need reconstruction, the original input passes through with its attributes unchanged.
 
 The original editable mesh keeps its center vertices. Only the modifier's evaluated topology loses the selected points. This is why the operation remains reversible and why center vertices can still be selected in Edit Mode.
 
 ## Prototype limits
 
 - The conservative geometric rules remain: non-coplanar seam edges, bends, and junctions with retained incident edges survive. A removal request is not an unconditional dissolve.
-- A region must be planar and have one closed, non-branching boundary with at least three remaining points. It cannot enclose retained edges or vertices that still connect to other geometry. If any region fails these checks, the modifier displays a warning and passes the **entire mirrored mesh, including its attributes,** through unchanged. This avoids a partial cleanup producing mismatched neighboring boundaries. Matching average face normals alone do not qualify warped faces for cleanup.
-- **UV maps and other corner attributes, UV seam flags, custom split normals, and arbitrary face attributes are not transferred to rebuilt faces.** Blender's `.uv_seam` attribute is not accessible through Named Attribute nodes, so it cannot act as a boundary in this prototype. Setup adds a modifier warning when it finds user corner attributes. This prototype is intended for control-mesh topology experiments, not a finished textured-asset pipeline.
+- A face region must be planar and have one closed, non-branching boundary with at least three remaining points. It cannot enclose retained edges or vertices that still connect to other geometry. If any face region fails these checks, the modifier displays a warning and passes the **entire mirrored mesh, including its wires and attributes,** through unchanged. This avoids a partial cleanup producing mismatched neighboring boundaries. Matching average face normals alone do not qualify warped faces for cleanup. Wire loops do not need to be planar.
+- **UV maps and other corner attributes, UV seam flags, custom split normals, and arbitrary face attributes are not transferred to rebuilt faces.** Blender's `.uv_seam` attribute is not accessible through Named Attribute nodes, so it cannot act as a boundary in this prototype. When setup detects user corner attributes, it adds a warning that appears only while faces are actually being reconstructed. An empty UV map on a wire-only mesh does not warn. This prototype is intended for topology experiments, not a finished textured-asset pipeline.
 - Vertex and edge subdivision creases, sharp edges, smooth/flat face shading, and assigned materials (including object-linked material overrides and empty slots) are supported. Any positive crease weight protects its feature, even below 0.001. Creased vertices and vertices touching creased or sharp edges are preserved even when marked for removal.
 - Point attributes of types FLOAT, INT, INT8, FLOAT_VECTOR, FLOAT2, FLOAT_COLOR, BYTE_COLOR, BOOLEAN, and QUATERNION, plus vertex groups, are copied by original vertex identity. Compact storage types retain their original type and values.
 - Material slots and the list of copied point attributes are captured at setup. Rerun setup after adding/replacing material slots or adding custom point attributes/vertex groups that should propagate. Changes to already configured values evaluate normally.
 - Other edge attributes and point attribute types are not transferred to rebuilt geometry. Internal temporary attribute names start with `__MirrorCleanup`; reserve that prefix.
-- The Repeat Zone scans the affected geometry for each affected face region; unaffected faces bypass reconstruction. This is a prototype for modest subdivision control meshes; large or highly fragmented seams can evaluate slowly. Do not place Subdivision before cleanup.
+- The Repeat Zone scans the affected geometry for each affected face region; unaffected faces bypass reconstruction. Wire cleanup processes all chains together without a per-chain Repeat Zone. This is a prototype for modest meshes; large or highly fragmented face seams can evaluate slowly. If using Subdivision, place it after cleanup.
 - Mirror Merge must be enabled, and its merge distance must actually connect the halves. The cleanup's Plane Tolerance is separate from Mirror's merge distance. It limits distance to a mirror plane in mirror-frame coordinates, and also limits a rebuilt region's deviation from its face plane in object-local coordinates. Direction Tolerance limits differences between unit face normals and between opposite boundary directions. Both tolerances must be nonnegative.
 - Mirror's viewport and render visibility are followed automatically. Its Edit Mode display must remain enabled while cleanup is displayed in Edit Mode; if you hide Mirror only in Edit Mode, hide cleanup there too.
 - The topology identity encoding uses 32-bit floating point coordinates internally. Meshes with 16 million or more vertices are outside the supported scope.
@@ -87,6 +107,8 @@ The PowerShell wrapper defaults to `%USERPROFILE%\Program\blender-4.5.14-windows
 Each wrapper run writes logs under `LogOutput/yyyy-MM-dd_HH-mm-ss/`. Runs started in the same second wait for separate timestamp folders. LogOutput is ignored by Git. Background modes use factory startup settings so personal add-ons cannot affect the checks. No build step or custom Blender executable is required. Preview renders the saved modifier stack to `Preview.png` without saving camera or display changes into the example.
 
 The tests check exact control-mesh coordinates, edges, face boundaries and winding, matching level-2 subdivision, reversible point choices, all eight axis states, transformed Mirror Objects, kept plane intersections, small and ordinary subdivision creases, all supported point attribute types, vertex groups, mesh/object material assignment, smooth shading, new Edit Mode geometry, frame changes, disabling the cleanup modifier, complete fallback for holes/retained interior geometry/warped faces, concave regions, bends, coincident disconnected shells, and empty/point-only/wire-only meshes. Setup checks cover construction failure, shared node groups, preserved settings, multiple Mirror modifiers, escaped modifier names, unrelated drivers, invalid setup states, conflicting attribute names, and incorrect crease domains. A temporary test render engine checks all four combinations of Mirror's viewport/render visibility against both dependency graphs, without a GPU or physical display. That engine is used only by the test script and is not saved in the example.
+
+Wire regression cases cover consecutive removals, open chains, closed loops, branches, face attachments, coincident disconnected chains, zero-length edges, off-plane points, creases, sharp edges, point identity, marking changes, transformed mirror frames, and an XZ outline reduced from 20 to 16 vertices and edges. Warning checks cover empty UV layers and internal attribute cleanup. Fresh-process verification also exercises the saved wire graph without constructing it again or adding Subdivision.
 
 `BenchmarkGeometryNodes.py` measures repeated evaluation after source edits. On the development machine, half-grids with 100 and 900 input faces produced 190 and 1770 cleaned faces in approximately 5 ms and 20 ms per warm evaluation, respectively. These timings cover Mirror and cleanup, exclude Subdivision, and are examples rather than performance guarantees for other topology.
 

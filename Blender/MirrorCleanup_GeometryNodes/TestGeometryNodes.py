@@ -449,11 +449,188 @@ def test_empty_and_wire_meshes():
         source.modifiers.new('Mirror', 'MIRROR')
         expected = evaluated(source)
         cleanup.setup(source)
-        if vertices:
-            source.vertex_groups[cleanup.MARK].add(list(range(len(vertices))), 1, 'REPLACE')
         assert_topology(evaluated(source), expected)
         bpy.data.objects.remove(source, do_unlink=True)
-    print('PASS: empty, point-only, and wire-only meshes')
+    print('PASS: empty, point-only, and unmarked wire-only meshes')
+
+
+def wire_graph(vertices, edges, faces=()):
+    source = create_mesh('WireCase', vertices, faces, edges)
+    source.vertex_groups.new(name=cleanup.MARK).add(list(range(len(vertices))), 1, 'REPLACE')
+    identity = source.data.attributes.new('Identity', 'INT', 'POINT')
+    for index, item in enumerate(identity.data):
+        item.value = index
+    modifier = source.modifiers.new('Cleanup', 'NODES')
+    modifier.node_group = cleanup.build_group(source)
+    set_input(modifier, 'Mirror X', False)
+    set_input(modifier, 'Mirror Z', True)
+    return source, modifier
+
+
+def assert_wire_identity(mesh, source, vertices, edges, faces=()):
+    identities = [item.value for item in mesh.attributes['Identity'].data]
+    assert sorted(identities) == sorted(vertices), identities
+    assert sorted(tuple(sorted(identities[i] for i in edge.vertices)) for edge in mesh.edges) == sorted(
+        tuple(sorted(edge)) for edge in edges)
+    assert sorted(cycle([identities[i] for i in face.vertices]) for face in mesh.polygons) == sorted(
+        cycle(list(face)) for face in faces)
+    for vertex, original in zip(mesh.vertices, identities):
+        assert (vertex.co - source.data.vertices[original].co).length < 0.000001
+    assert not any(attribute.name.startswith(cleanup.PREFIX) for attribute in mesh.attributes)
+
+
+def test_wire_topology():
+    cases = [
+        ('Consecutive', [(-2, 0, 0), (-1, 0, 0), (0, 0, 0), (1, 0, 0), (2, 0, 0)],
+         [(0, 1), (1, 2), (2, 3), (3, 4)], (), [0, 4], [(0, 4)], ()),
+        ('ClosedLoop', [(-1, -1, 0), (0, -1, 0), (1, -1, 0), (1, 0, 0),
+                        (1, 1, 0), (0, 1, 0), (-1, 1, 0), (-1, 0, 0)],
+         [(i, (i + 1) % 8) for i in range(8)], (), [0, 2, 4, 6], [(0, 2), (2, 4), (4, 6), (6, 0)], ()),
+        ('Branch', [(-2, 0, 0), (-1, 0, 0), (0, 0, 0), (1, 0, 0), (2, 0, 0), (0, 1, 0)],
+         [(0, 1), (1, 2), (2, 3), (3, 4), (2, 5)], (), [0, 2, 4, 5], [(0, 2), (2, 4), (2, 5)], ()),
+        ('FaceAttachment', [(-2, 0, 0), (-1, 0, 0), (0, 0, 0), (1, 0, 0),
+                            (2, 0, 0), (0, 1, 0), (1, 1, 0)],
+         [(0, 1), (1, 2), (2, 3), (3, 4)], [(2, 5, 6)], [0, 2, 4, 5, 6],
+         [(0, 2), (2, 4), (2, 5), (5, 6), (6, 2)], [(2, 5, 6)]),
+        ('CoincidentChains', [(-1, 0, 0), (0, 0, 0), (1, 0, 0)] * 2,
+         [(0, 1), (1, 2), (3, 4), (4, 5)], (), [0, 2, 3, 5], [(0, 2), (3, 5)], ()),
+        ('BendAndIsolatedPoint', [(-1, 0, 0), (0, 1, 0), (1, 0, 0), (4, 0, 0)],
+         [(0, 1), (1, 2)], (), [0, 1, 2, 3], [(0, 1), (1, 2)], ()),
+        ('OffPlane', [(-1, 0, 1), (0, 0, 1), (1, 0, 1)],
+         [(0, 1), (1, 2)], (), [0, 1, 2], [(0, 1), (1, 2)], ()),
+        ('ZeroLength', [(-1, 0, 0), (0, 0, 0), (0, 0, 0)],
+         [(0, 1), (1, 2)], (), [0, 1, 2], [(0, 1), (1, 2)], ())]
+    for name, points, edges, faces, kept, result_edges, result_faces in cases:
+        source, modifier = wire_graph(points, edges, faces)
+        assert_wire_identity(evaluated(source), source, kept, result_edges, result_faces)
+        assert not list(modifier.node_warnings), (name, [warning.message for warning in modifier.node_warnings])
+        if name == 'ClosedLoop':
+            set_input(modifier, 'Direction Tolerance', 3)
+            assert_wire_identity(evaluated(source), source, list(range(8)), edges)
+        bpy.data.objects.remove(source, do_unlink=True)
+    print('PASS: open and closed wires, consecutive removals, branches, face attachments, coincident chains, bends, off-plane and zero-length edges')
+
+
+def test_wire_features():
+    points = [(-1, 0, 0), (0, 0, 0), (1, 0, 0), (-1, 2, 0), (0, 2, 0), (1, 2, 0)]
+    edges = [(0, 1), (1, 2), (3, 4), (4, 5)]
+    for name, domain, kind, index, value in (('crease_vert', 'POINT', 'FLOAT', 1, 0.0001),
+                                           ('crease_edge', 'EDGE', 'FLOAT', 0, 0.0001),
+                                           ('sharp_edge', 'EDGE', 'BOOLEAN', 0, True)):
+        source, modifier = wire_graph(points, edges)
+        feature = source.data.attributes.new(name, kind, domain)
+        feature.data[index].value = value
+        actual = evaluated(source)
+        assert_wire_identity(actual, source, [0, 1, 2, 3, 5], [(0, 1), (1, 2), (3, 5)])
+        assert sum(item.value > 0 for item in actual.attributes[name].data) == 1
+        identities = [item.value for item in actual.attributes['Identity'].data]
+        if domain == 'POINT':
+            assert abs(actual.attributes[name].data[identities.index(1)].value - value) < 1e-8
+        else:
+            index = next(edge.index for edge in actual.edges if {identities[i] for i in edge.vertices} == {0, 1})
+            assert abs(actual.attributes[name].data[index].value - value) < 1e-8
+        source.data.attributes.remove(feature)
+        source.vertex_groups[cleanup.MARK].add([1], 0.5, 'REPLACE')
+        assert_wire_identity(evaluated(source), source, [0, 1, 2, 3, 5], [(0, 1), (1, 2), (3, 5)])
+        source.vertex_groups[cleanup.MARK].add([1], 1, 'REPLACE')
+        assert_wire_identity(evaluated(source), source, [0, 2, 3, 5], [(0, 2), (3, 5)])
+        bpy.data.objects.remove(source, do_unlink=True)
+    print('PASS: wire point attributes, small creases, sharp edges, weight threshold, and reversible marking')
+
+
+def test_mirrored_wires():
+    for transformed in (False, True):
+        frame = None
+        transform = Matrix.Identity(4)
+        if transformed:
+            frame = bpy.data.objects.new('WireFrame', None)
+            bpy.context.collection.objects.link(frame)
+            frame.matrix_world = Matrix.Translation((1, 2, 3)) @ Euler((0.2, -0.3, 0.4)).to_matrix().to_4x4() @ Matrix.Diagonal((-2, 0.7, 1.1, 1))
+            transform = frame.matrix_world.copy()
+        for axis in range(3):
+            points = [Vector(tuple(distance if i == axis else 0 for i in range(3))) for distance in (0, 1, 2)]
+            source = create_mesh('MirroredWire', [transform @ point for point in points], [], [(0, 1), (1, 2)])
+            # An empty UV map must not warn on a wire-only object.
+            source.data.uv_layers.new(name='UVMap')
+            mirror = source.modifiers.new('Mirror', 'MIRROR')
+            mirror.use_axis = tuple(i == axis for i in range(3))
+            mirror.mirror_object = frame
+            modifier = cleanup.setup(source)
+            source.vertex_groups[cleanup.MARK].add([0], 1, 'REPLACE')
+            expected = create_mesh('ExpectedWire', [transform @ point for point in (-points[2], -points[1], points[1], points[2])],
+                                   [], [(0, 1), (1, 2), (2, 3)])
+            assert_topology(evaluated(source), expected.data)
+            assert not list(modifier.node_warnings), [warning.message for warning in modifier.node_warnings]
+            if not transformed and axis == 0:
+                # Model a longer wire in Edit Mode while the cleanup is active.
+                bpy.ops.object.select_all(action='DESELECT')
+                source.select_set(True)
+                bpy.context.view_layer.objects.active = source
+                bpy.ops.object.mode_set(mode='EDIT')
+                try:
+                    editable = bmesh.from_edit_mesh(source.data)
+                    editable.verts.ensure_lookup_table()
+                    endpoint = editable.verts[2]
+                    editable.edges.new((endpoint, editable.verts.new((3, 0, 0))))
+                    bmesh.update_edit_mesh(source.data)
+                    source.update_from_editmode()
+                    extended = create_mesh('ExtendedWire', [(x, 0, 0) for x in (-3, -2, -1, 1, 2, 3)],
+                                           [], [(i, i + 1) for i in range(5)])
+                    assert_topology(evaluated(source), extended.data)
+                    bpy.data.objects.remove(extended, do_unlink=True)
+                finally:
+                    bpy.ops.object.mode_set(mode='OBJECT')
+            mirror.use_axis = (False, False, False)
+            assert_topology(evaluated(source), source.data)
+            mirror.use_axis = tuple(i == axis for i in range(3))
+            mirror.show_viewport = False
+            assert_topology(evaluated(source), source.data)
+            bpy.data.objects.remove(source, do_unlink=True)
+            bpy.data.objects.remove(expected, do_unlink=True)
+        if frame:
+            bpy.data.objects.remove(frame, do_unlink=True)
+    print('PASS: marked mirrored wires on X/Y/Z, transformed mirror frame, live Edit Mode additions, axis/viewport bypass, empty UV maps, no spurious warnings')
+
+
+def test_attribute_warnings():
+    source, target, mirror, modifier = fixtures()
+    source.data.uv_layers.new(name='UVMap')
+    modifier = cleanup.setup(source)
+    assert_topology(evaluated(source), target.data)
+    warnings = [warning.message for warning in modifier.node_warnings]
+    assert warnings == ['Mirror Cleanup prototype: rebuilt faces do not retain UV maps or other corner attributes.'], warnings
+    bpy.data.objects.remove(source, do_unlink=True)
+    bpy.data.objects.remove(target, do_unlink=True)
+    print('PASS: UV warning remains visible when faces are actually rebuilt')
+
+
+def test_wire_outline():
+    # A quarter outline mirrored over X and Z, with the same connectivity as
+    # Spaceship. Keep the fixture local so this suite remains self-contained.
+    points = [(3, -1, 1), (2, 1, 2), (1, 2, 3), (3, -2, 1), (3, -2, 0), (0, 2, 3)]
+    source = create_mesh('WireOutline', points, [], [(0, 1), (1, 2), (0, 3), (3, 4), (2, 5)])
+    source.data.uv_layers.new(name='UVMap')
+    mirror = source.modifiers.new('Mirror', 'MIRROR')
+    mirror.use_axis = (True, False, True)
+    mirrored = evaluated(source)
+    modifier = cleanup.setup(source)
+    group = source.vertex_groups[cleanup.MARK]
+    assert_topology(evaluated(source), mirrored)
+    group.add([4], 1, 'REPLACE')
+    assert len(evaluated(source).vertices) == 18
+    group.add([5], 1, 'REPLACE')
+    expected_points = [(x * sign_x, y, z * sign_z) for sign_z in (1, -1) for sign_x in (1, -1)
+                       for x, y, z in (points[i] for i in (3, 0, 1, 2))]
+    expected_edges = [(offset + i, offset + i + 1) for offset in (0, 4, 8, 12) for i in range(3)]
+    expected_edges += [(3, 7), (11, 15), (0, 8), (4, 12)]
+    target = create_mesh('ExpectedOutline', expected_points, [], expected_edges)
+    assert_topology(evaluated(source), target.data)
+    assert not list(modifier.node_warnings)
+    group.remove([4, 5])
+    assert_topology(evaluated(source), mirrored)
+    bpy.data.objects.remove(source, do_unlink=True)
+    bpy.data.objects.remove(target, do_unlink=True)
+    print('PASS: XZ mirrored outline with reversible 20 -> 18 -> 16 vertex cleanup and no warnings')
 
 
 def test_warped_faces():
@@ -677,6 +854,11 @@ def main():
     test_material_slots()
     test_retained_interior_geometry()
     test_empty_and_wire_meshes()
+    test_wire_topology()
+    test_wire_features()
+    test_mirrored_wires()
+    test_attribute_warnings()
+    test_wire_outline()
     test_warped_faces()
     test_setup_lifecycle()
     test_attribute_name_validation()
