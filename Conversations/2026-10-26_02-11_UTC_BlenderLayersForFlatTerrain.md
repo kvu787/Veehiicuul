@@ -56,11 +56,11 @@ My hope was that EEVEE's **Blended** materials would let you keep all geometry a
 
 Not into the renderers themselves. Add-ons can't change how EEVEE, Cycles or Workbench depth-test or order objects, and materials have no depth-bias setting. What you can do:
 
-| Approach                      | Live in viewport | Final render | Exports as meshes | Notes                                                                                     |
-| ----------------------------- | ---------------- | ------------ | ----------------- | ----------------------------------------------------------------------------------------- |
-| Grease Pencil, 2D depth order | Yes              | Yes          | Poorly            | Object Data > Stroke Depth Order = 2D Layers. A real ordered layer stack, but strokes/fills, not meshes. |
-| View layers + compositor      | No               | Yes          | Yes               | Render each layer in its own view layer, then stack them with Alpha Over nodes.           |
-| Custom add-on viewport overlay | Yes             | No           | Yes               | Uses the `gpu` module to draw your layer meshes in order with depth testing off. Preview only, flat colors or simple textures. A moderate amount of Python. |
+| Approach                       | Live in viewport | Final render | Exports as meshes | Notes                                                                                                                                                       |
+| ------------------------------ | ---------------- | ------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Grease Pencil, 2D depth order  | Yes              | Yes          | Poorly            | Object Data > Stroke Depth Order = 2D Layers. A real ordered layer stack, but strokes/fills, not meshes.                                                    |
+| View layers + compositor       | No               | Yes          | Yes               | Render each layer in its own view layer, then stack them with Alpha Over nodes.                                                                             |
+| Custom add-on viewport overlay | Yes              | No           | Yes               | Uses the `gpu` module to draw your layer meshes in order with depth testing off. Preview only, flat colors or simple textures. A moderate amount of Python. |
 
 ### Do it in the engine instead
 
